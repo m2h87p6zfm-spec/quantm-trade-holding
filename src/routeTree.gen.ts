@@ -10,10 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignaleRouteImport } from './routes/signale'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
@@ -23,6 +26,11 @@ import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candle
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaerkteRoute = MaerkteRouteImport.update({
@@ -40,9 +48,19 @@ const EinstellungenRoute = EinstellungenRouteImport.update({
   path: '/einstellungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BacktestRoute = BacktestRouteImport.update({
+  id: '/backtest',
+  path: '/backtest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyseRoute = AnalyseRouteImport.update({
   id: '/analyse',
   path: '/analyse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -73,10 +91,13 @@ const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -85,10 +106,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
@@ -98,10 +122,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -112,10 +139,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -124,10 +154,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte'
@@ -136,10 +169,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -149,10 +185,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
+  BacktestRoute: typeof BacktestRoute
   EinstellungenRoute: typeof EinstellungenRoute
   HeatmapRoute: typeof HeatmapRoute
   MaerkteRoute: typeof MaerkteRoute
+  PortfolioRoute: typeof PortfolioRoute
   SignaleRoute: typeof SignaleRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
@@ -167,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/signale'
       fullPath: '/signale'
       preLoaderRoute: typeof SignaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maerkte': {
@@ -190,11 +236,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EinstellungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/backtest': {
+      id: '/backtest'
+      path: '/backtest'
+      fullPath: '/backtest'
+      preLoaderRoute: typeof BacktestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analyse': {
       id: '/analyse'
       path: '/analyse'
       fullPath: '/analyse'
       preLoaderRoute: typeof AnalyseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -237,10 +297,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
+  BacktestRoute: BacktestRoute,
   EinstellungenRoute: EinstellungenRoute,
   HeatmapRoute: HeatmapRoute,
   MaerkteRoute: MaerkteRoute,
+  PortfolioRoute: PortfolioRoute,
   SignaleRoute: SignaleRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
