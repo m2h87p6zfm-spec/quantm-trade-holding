@@ -11,54 +11,28 @@ function useQuotes(symbols: string[]) {
       queryKey: ["quote", s],
       queryFn: () => fetchQuote(s),
       enabled: !!getApiKey(),
-      refetchInterval: 30000,
+      refetchInterval: false,
+      staleTime: 10 * 60 * 1000,
+      gcTime: 2 * 60 * 60 * 1000,
+      refetchOnWindowFocus: false,
     })),
   });
 }
 
 function SectorBlock({ sector }: { sector: string }) {
   const list = PRODUCTS.filter((p) => p.sector === sector);
-  const symbols = list.map((p) => p.symbol);
-  const qs = useQuotes(symbols);
-  const enriched = list.map((p, i) => ({ p, q: qs[i].data })).filter((x) => x.q);
-  const sorted = [...enriched].sort((a, b) => (b.q!.dp ?? 0) - (a.q!.dp ?? 0));
-  const top = sorted.slice(0, 3);
-  const flop = sorted.slice(-3).reverse();
+  const preview = list.slice(0, 12);
 
   return (
     <div className="rounded-lg border border-border bg-card p-4">
       <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted-foreground">{sector}</h3>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <div className="mb-1 text-[10px] font-semibold text-bull">TOP 3</div>
-          {top.length ? top.map((x) => (
-            <Link key={x.p.symbol} to="/produkte/$symbol" params={{ symbol: x.p.symbol }} className="flex justify-between text-xs py-0.5 hover:text-cyan-accent">
-              <span>{x.p.symbol}</span>
-              <span className="font-mono text-bull">+{x.q!.dp.toFixed(2)}%</span>
-            </Link>
-          )) : <div className="text-xs text-muted-foreground">—</div>}
-        </div>
-        <div>
-          <div className="mb-1 text-[10px] font-semibold text-bear">FLOP 3</div>
-          {flop.length ? flop.map((x) => (
-            <Link key={x.p.symbol} to="/produkte/$symbol" params={{ symbol: x.p.symbol }} className="flex justify-between text-xs py-0.5 hover:text-cyan-accent">
-              <span>{x.p.symbol}</span>
-              <span className="font-mono text-bear">{x.q!.dp.toFixed(2)}%</span>
-            </Link>
-          )) : <div className="text-xs text-muted-foreground">—</div>}
-        </div>
-      </div>
-      <div className="mt-3 grid grid-cols-6 gap-0.5">
-        {enriched.map((x) => {
-          const dp = x.q!.dp;
-          const intensity = Math.min(1, Math.abs(dp) / 4);
-          const color = dp >= 0 ? `color-mix(in oklab, var(--bull) ${15 + intensity * 70}%, transparent)` : `color-mix(in oklab, var(--bear) ${15 + intensity * 70}%, transparent)`;
-          return (
-            <Link key={x.p.symbol} to="/produkte/$symbol" params={{ symbol: x.p.symbol }} title={`${x.p.symbol} ${dp.toFixed(2)}%`} className="aspect-square rounded-sm flex items-center justify-center text-[9px] font-mono" style={{ background: color }}>
-              {x.p.symbol.slice(0, 4)}
-            </Link>
-          );
-        })}
+      <div className="mb-3 text-xs text-muted-foreground">{list.length} Vorlagen — Kursdaten werden erst in Analyse, Watchlist oder Detailansicht geladen.</div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {preview.map((p) => (
+          <Link key={p.symbol} to="/produkte/$symbol" params={{ symbol: p.symbol }} className="rounded-md border border-border bg-background/60 px-2 py-1 text-xs font-mono hover:border-primary/50 hover:text-cyan-accent">
+            {p.symbol}
+          </Link>
+        ))}
       </div>
     </div>
   );
