@@ -41,7 +41,7 @@ function BacktestPage() {
         <FlaskConical className="h-6 w-6 text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Backtest Lab</h1>
-          <p className="text-sm text-muted-foreground">Teste die AlphaEdge-Strategie auf realer Historie (~260 Handelstage).</p>
+          <p className="text-sm text-muted-foreground">Teste die Setup-Score-Strategie auf realer Historie (~260 Handelstage).</p>
         </div>
       </div>
 

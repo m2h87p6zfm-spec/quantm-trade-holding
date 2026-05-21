@@ -116,9 +116,9 @@ function Cockpit() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
             <MarketPulse long={longCount} short={shortCount} neutral={neutralCount} />
             {featured ? (
-              <AlphaScoreGauge score={featured.alpha} label={`AlphaEdge · ${featured.symbol}`} />
+              <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
             ) : (
-              <SkeletonCard label="AlphaEdge Score" />
+              <SkeletonCard label="Setup-Score" />
             )}
           </div>
         </div>
