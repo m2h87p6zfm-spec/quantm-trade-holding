@@ -56,6 +56,8 @@ function extractSymbol(q: string): string | null {
     dax: "EWG", "s&p": "SPY", "s&p 500": "SPY", nasdaq: "QQQ", "dow jones": "DIA", dow: "DIA", nikkei: "EWJ",
   };
   for (const [k, v] of Object.entries(aliases)) if (lower.includes(k)) return v;
+  const ticker = upper.match(/\b[A-Z]{1,5}(?:[.:-][A-Z]{1,5})?\b/);
+  if (ticker && !["ICH", "WIE", "KAUFEN", "VERKAUFEN", "ANALYSIERE", "SOLL"].includes(ticker[0])) return ticker[0];
   return null;
 }
 
@@ -65,7 +67,7 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const { settings } = useSettings();
 
   if (candles.isLoading) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
-  if (candles.error) return <div className="text-sm text-bear">Datenfeed-Fehler: {(candles.error as Error).message}<div className="mt-1 text-xs text-muted-foreground">Twelve Data Free erlaubt nur 8 Anfragen/Minute. Kurz warten und erneut senden, oder Watchlist verkleinern (Einstellungen).</div></div>;
+  if (candles.error) return <div className="text-sm text-bear">Datenfeed-Fehler: {(candles.error as Error).message}<div className="mt-1 text-xs text-muted-foreground">Die App lädt jetzt nur noch bei Bedarf. Falls trotzdem ein Limit kommt: kurz warten oder den API-Tarif erhöhen.</div></div>;
   if (!candles.data) return <div className="text-sm text-muted-foreground">Keine Kerzendaten für {symbol}. Symbol prüfen.</div>;
   if (!indicators) return <div className="text-sm text-muted-foreground">Keine Daten verfügbar.</div>;
 
