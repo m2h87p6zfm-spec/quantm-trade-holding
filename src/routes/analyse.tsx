@@ -4,7 +4,8 @@ import { Send } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis } from "@/lib/useMarketData";
-import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
+import { brokerNarrative, scoreIndicators, buildDecision } from "@/lib/analysis";
+import { DecisionCard } from "@/components/DecisionCard";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
@@ -90,6 +91,7 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const text = brokerNarrative(symbol, product?.name ?? symbol, indicators, sig);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
+  const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
   const record = useServerFn(recordPrediction);
 
   useEffect(() => {
@@ -110,7 +112,8 @@ function AgentResponse({ symbol }: { symbol: string }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <DecisionCard report={decision} symbol={symbol} />
+      <div className="flex items-center gap-2 pt-1">
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">Detailansicht →</Link>
       </div>
