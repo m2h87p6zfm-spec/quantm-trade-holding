@@ -38,9 +38,11 @@ type Msg = { role: "user" | "agent"; text: string; symbol?: string };
 
 function extractSymbol(q: string): string | null {
   const upper = q.toUpperCase();
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   // Direkter Symbol-Match
   for (const p of PRODUCTS) {
-    if (upper.includes(p.symbol.toUpperCase())) return p.symbol;
+    const symbol = p.symbol.toUpperCase();
+    if (new RegExp(`(^|[^A-Z0-9])${escapeRe(symbol)}($|[^A-Z0-9])`).test(upper)) return p.symbol;
   }
   // Name-Match
   const lower = q.toLowerCase();
