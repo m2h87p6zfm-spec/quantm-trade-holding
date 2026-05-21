@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Activity, Bell, Bot, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Search, Settings, Sparkles, Swords, Wallet, Star, Eye } from "lucide-react";
+import { Activity, Bell, Bot, Calendar, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Newspaper, Search, Settings, Sparkles, Swords, Wallet, Star, Eye } from "lucide-react";
 import { PRODUCTS } from "@/lib/products";
 import { useSettings } from "@/lib/settings";
 
@@ -13,6 +13,8 @@ const ROUTES = [
   { label: "Portfolio Tracker", to: "/portfolio", icon: Wallet },
   { label: "Smart Alerts", to: "/alerts", icon: Bell },
   { label: "Backtest Lab", to: "/backtest", icon: FlaskConical },
+  { label: "News & Sentiment", to: "/news", icon: Newspaper },
+  { label: "Wirtschaftskalender", to: "/kalender", icon: Calendar },
   { label: "Märkte & Sektoren", to: "/maerkte", icon: Activity },
   { label: "Heatmap", to: "/heatmap", icon: Flame },
   { label: "Trends & Signale", to: "/signale", icon: Sparkles },
