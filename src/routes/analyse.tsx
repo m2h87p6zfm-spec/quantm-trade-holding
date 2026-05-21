@@ -111,22 +111,7 @@ function AgentResponse({ symbol }: { symbol: string }) {
   );
 }
 
-function Stat({ label, v, hint }: { label: string; v: string; hint?: string }) {
-  return (
-    <div className="group relative rounded-md border border-border bg-background/60 px-2 py-1.5" title={hint}>
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>{label}</span>
-        {hint && <span className="text-muted-foreground/60 cursor-help">ⓘ</span>}
-      </div>
-      <div className="font-mono text-sm tabular-nums">{v}</div>
-      {hint && (
-        <div className="pointer-events-none absolute left-0 right-0 top-full z-20 mt-1 hidden rounded-md border border-border bg-popover p-2 text-[11px] font-normal normal-case tracking-normal leading-snug text-popover-foreground shadow-lg group-hover:block">
-          {hint}
-        </div>
-      )}
-    </div>
-  );
-}
+
 
 function AnalysePage() {
   const [input, setInput] = useState("");
