@@ -41,6 +41,8 @@ function Cockpit() {
       <TickerBand />
 
       <div className="mx-auto max-w-7xl space-y-6 px-6">
+        <MarketPulseHeader rows={rows} />
+
         {/* Kompakte Hero-Leiste */}
         <div className="pt-2 animate-fade-up">
           <div className="flex flex-wrap items-end justify-between gap-3">
