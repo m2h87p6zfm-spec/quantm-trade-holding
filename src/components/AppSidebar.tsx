@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, BarChart3, LineChart, ListOrdered, MessageSquare, Settings as SettingsIcon, Sparkles } from "lucide-react";
+import { Activity, BarChart3, Flame, LineChart, ListOrdered, MessageSquare, Settings as SettingsIcon, Sparkles } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const items = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
   { title: "Analyse-Agent", url: "/analyse", icon: MessageSquare },
   { title: "Märkte & Sektoren", url: "/maerkte", icon: BarChart3 },
+  { title: "Heatmap", url: "/heatmap", icon: Flame },
   { title: "Trends & Signale", url: "/signale", icon: Sparkles },
   { title: "Produktkatalog", url: "/produkte", icon: LineChart },
   { title: "Einstellungen", url: "/einstellungen", icon: SettingsIcon },
