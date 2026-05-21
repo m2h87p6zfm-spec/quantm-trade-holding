@@ -6,9 +6,10 @@ type Settings = {
   theme: "dark" | "light";
   minConfidence: number;
   watchlist: string[];
+  lastSelected?: string;
 };
 
-const DEFAULT: Settings = { risk: "ausgewogen", theme: "dark", minConfidence: 60, watchlist: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"] };
+const DEFAULT: Settings = { risk: "ausgewogen", theme: "dark", minConfidence: 60, watchlist: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"], lastSelected: undefined };
 
 function read(): Settings {
   if (typeof window === "undefined") return DEFAULT;
