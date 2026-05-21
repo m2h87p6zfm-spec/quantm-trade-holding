@@ -75,7 +75,8 @@ function HeatmapPage() {
     queries: products.map((p) => ({
       queryKey: ["heatmap-candles", p.symbol, range],
       queryFn: () => fetchCandles(p.symbol, "D", range === "D" ? 7 : 30),
-      staleTime: 5 * 60 * 1000,
+      staleTime: 60 * 60 * 1000, // 1h — Heatmap muss nicht sekundengenau sein
+      gcTime: 2 * 60 * 60 * 1000,
       retry: 1,
     })),
   });
