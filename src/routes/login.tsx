@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LineChart, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { ApexLogo } from "@/components/ApexLogo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
