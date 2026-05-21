@@ -156,6 +156,82 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border">
+        <AuthSection collapsed={collapsed} />
+      </SidebarFooter>
     </Sidebar>
+  );
+}
+
+function AuthSection({ collapsed }: { collapsed: boolean }) {
+  const { user, loading, signOut } = useAuth();
+
+  if (loading) {
+    return <div className="h-10 animate-pulse rounded-md bg-muted/30" />;
+  }
+
+  if (!user) {
+    if (collapsed) {
+      return (
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Anmelden">
+              <Link to="/login"><LogIn className="h-4 w-4" /></Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Upgrade">
+              <Link to="/preise"><CreditCard className="h-4 w-4 text-gold" /></Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      );
+    }
+    return (
+      <div className="space-y-2 p-1">
+        <div className="rounded-lg border border-gold/30 bg-gradient-to-br from-gold/10 via-primary/[0.04] to-transparent p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-gold">Pro freischalten</div>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            Voller Zugriff auf Quant-Signale, AI Learning & Smart Alerts.
+          </p>
+          <Button asChild size="sm" className="mt-2 h-8 w-full text-xs">
+            <Link to="/preise"><CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pläne ansehen</Link>
+          </Button>
+        </div>
+        <Button asChild size="sm" variant="outline" className="h-8 w-full text-xs">
+          <Link to="/login"><LogIn className="mr-1.5 h-3.5 w-3.5" /> Anmelden / Registrieren</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (collapsed) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Konto">
+            <Link to="/konto"><UserIcon className="h-4 w-4" /></Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5 p-1">
+      <Link to="/konto" className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/30">
+          <UserIcon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <div className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate text-xs font-medium">{user.email}</span>
+          <span className="text-[10px] text-muted-foreground">Konto verwalten</span>
+        </div>
+      </Link>
+      <Button onClick={() => signOut()} size="sm" variant="ghost" className="h-7 w-full justify-start text-xs text-muted-foreground hover:text-foreground">
+        <LogOut className="mr-1.5 h-3.5 w-3.5" /> Abmelden
+      </Button>
+    </div>
   );
 }
