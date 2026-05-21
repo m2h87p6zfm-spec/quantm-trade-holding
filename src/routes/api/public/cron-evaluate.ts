@@ -101,88 +101,78 @@ async function detectPatterns(scenarioTag: string, regime: string) {
   });
 }
 
+async function runEvaluation(): Promise<Response> {
+  const now = new Date();
+
+  const { data: pending } = await supabaseAdmin
+    .from("ai_predictions")
+    .select("id, symbol, verdict, horizon_days, price_at_prediction, created_at, scenario_tag, market_regime")
+    .order("created_at", { ascending: true })
+    .limit(500);
+
+  if (!pending || pending.length === 0) {
+    return new Response(JSON.stringify({ evaluated: 0 }), { headers: { "Content-Type": "application/json" } });
+  }
+
+  const candidateIds = pending
+    .filter((p) => new Date(new Date(p.created_at).getTime() + p.horizon_days * 86400000) <= now)
+    .map((p) => p.id);
+
+  if (candidateIds.length === 0) {
+    return new Response(JSON.stringify({ evaluated: 0 }), { headers: { "Content-Type": "application/json" } });
+  }
+
+  const { data: existing } = await supabaseAdmin
+    .from("ai_outcomes")
+    .select("prediction_id")
+    .in("prediction_id", candidateIds);
+  const done = new Set((existing ?? []).map((x) => x.prediction_id));
+
+  const todo = pending.filter((p) => candidateIds.includes(p.id) && !done.has(p.id)).slice(0, 100);
+
+  const symbols = Array.from(new Set(todo.map((p) => p.symbol)));
+  const priceMap = new Map<string, number | null>();
+  for (const s of symbols) priceMap.set(s, await fetchSpotPrice(s));
+
+  const clustersTouched = new Set<string>();
+  let evaluated = 0;
+
+  for (const p of todo) {
+    const spot = priceMap.get(p.symbol);
+    if (spot == null) continue;
+    const entry = Number(p.price_at_prediction);
+    if (!isFinite(entry) || entry <= 0) continue;
+    const ret = (spot - entry) / entry;
+    const correct = isCorrect(p.verdict, ret);
+    const { error } = await supabaseAdmin.from("ai_outcomes").insert({
+      prediction_id: p.id,
+      price_at_eval: spot,
+      realized_return: ret,
+      correct,
+      error_magnitude: Math.abs(ret),
+    });
+    if (!error) {
+      evaluated += 1;
+      clustersTouched.add(`${p.scenario_tag}::${p.market_regime}`);
+    }
+  }
+
+  for (const key of clustersTouched) {
+    const [tag, regime] = key.split("::");
+    await detectPatterns(tag, regime);
+  }
+
+  return new Response(
+    JSON.stringify({ evaluated, clusters_analyzed: clustersTouched.size }),
+    { headers: { "Content-Type": "application/json" } },
+  );
+}
+
 export const Route = createFileRoute("/api/public/cron-evaluate")({
   server: {
     handlers: {
-      POST: async () => {
-        const now = new Date();
-
-        // Hole alle fälligen, noch nicht ausgewerteten Predictions (max 200/Lauf)
-        const { data: pending } = await supabaseAdmin
-          .from("ai_predictions")
-          .select("id, symbol, verdict, horizon_days, price_at_prediction, created_at, scenario_tag, market_regime")
-          .order("created_at", { ascending: true })
-          .limit(500);
-
-        if (!pending || pending.length === 0) {
-          return new Response(JSON.stringify({ evaluated: 0 }), {
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-
-        // Filter: Horizont abgelaufen + kein Outcome
-        const candidateIds = pending
-          .filter((p) => {
-            const due = new Date(new Date(p.created_at).getTime() + p.horizon_days * 24 * 60 * 60 * 1000);
-            return due <= now;
-          })
-          .map((p) => p.id);
-
-        if (candidateIds.length === 0) {
-          return new Response(JSON.stringify({ evaluated: 0 }), { headers: { "Content-Type": "application/json" } });
-        }
-
-        const { data: existing } = await supabaseAdmin
-          .from("ai_outcomes")
-          .select("prediction_id")
-          .in("prediction_id", candidateIds);
-        const done = new Set((existing ?? []).map((x) => x.prediction_id));
-
-        const todo = pending.filter((p) => candidateIds.includes(p.id) && !done.has(p.id)).slice(0, 100);
-
-        // Spot-Preise cachen
-        const symbols = Array.from(new Set(todo.map((p) => p.symbol)));
-        const priceMap = new Map<string, number | null>();
-        for (const s of symbols) priceMap.set(s, await fetchSpotPrice(s));
-
-        const clustersTouched = new Set<string>();
-        let evaluated = 0;
-
-        for (const p of todo) {
-          const spot = priceMap.get(p.symbol);
-          if (spot == null) continue;
-          const entry = Number(p.price_at_prediction);
-          if (!isFinite(entry) || entry <= 0) continue;
-          const ret = (spot - entry) / entry;
-          const correct = isCorrect(p.verdict, ret);
-          const { error } = await supabaseAdmin.from("ai_outcomes").insert({
-            prediction_id: p.id,
-            price_at_eval: spot,
-            realized_return: ret,
-            correct,
-            error_magnitude: Math.abs(ret),
-          });
-          if (!error) {
-            evaluated += 1;
-            clustersTouched.add(`${p.scenario_tag}::${p.market_regime}`);
-          }
-        }
-
-        // Pattern-Detection für berührte Cluster
-        for (const key of clustersTouched) {
-          const [tag, regime] = key.split("::");
-          await detectPatterns(tag, regime);
-        }
-
-        return new Response(
-          JSON.stringify({ evaluated, clusters_analyzed: clustersTouched.size }),
-          { headers: { "Content-Type": "application/json" } },
-        );
-      },
-      GET: async () => {
-        // Erlaube manuelles Auslösen via Browser-URL für Test/Debug
-        return Route.options.server!.handlers!.POST!({} as never);
-      },
+      POST: () => runEvaluation(),
+      GET: () => runEvaluation(),
     },
   },
 });
