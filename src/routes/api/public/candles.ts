@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
