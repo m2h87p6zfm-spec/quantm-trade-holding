@@ -5,7 +5,7 @@ import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
 import { TickerBand } from "@/components/TickerBand";
-import { MarketPulse } from "@/components/MarketPulse";
+import { MarketPulseHeader } from "@/components/MarketPulseHeader";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
