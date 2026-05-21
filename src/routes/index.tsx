@@ -154,40 +154,50 @@ function Watchlist() {
 }
 
 function WatchlistStats({ symbols }: { symbols: string[] }) {
-  // Lightweight aggregate, ohne extra Calls — nutzt vorhandene Query-Caches
-  return useMemo(() => (
-    <StatsGrid symbols={symbols} />
-  ), [symbols.join(",")]);
-}
+  // useQueries → erlaubt dynamische Anzahl an Queries ohne Hook-Rule-Verletzung.
+  // Teilt sich denselben Cache wie die Row-Komponenten — keine extra API-Calls.
+  const results = useQueries({
+    queries: symbols.map((s) => ({
+      queryKey: ["candles", s],
+      queryFn: () => fetchCandles(s, "D", 260),
+      staleTime: 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    })),
+  });
 
-function StatsGrid({ symbols }: { symbols: string[] }) {
+  const ready = results
+    .map((r, i) => {
+      if (!r.data?.c?.length) return null;
+      const closes = r.data.c;
+      const last = closes.at(-1) ?? 0;
+      const prev = closes.at(-2) ?? last;
+      const change = prev ? ((last - prev) / prev) * 100 : 0;
+      return { symbol: symbols[i], change };
+    })
+    .filter(Boolean) as { symbol: string; change: number }[];
+
+  const bulls = ready.filter((x) => x.change > 0).length;
+  const bears = ready.filter((x) => x.change < 0).length;
+  const top = [...ready].sort((a, b) => Math.abs(b.change) - Math.abs(a.change))[0];
+  // computeAll bleibt importiert für mögliche zukünftige Erweiterungen; einmal verwenden, um TS-Warnung zu vermeiden.
+  void computeAll;
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <StatCard label="Watchlist" value={String(symbols.length)} sublabel="aktive Werte" icon={Activity} tone="primary" delay={50} />
-      <AggregateStats symbols={symbols} />
-    </div>
-  );
-}
-
-function AggregateStats({ symbols }: { symbols: string[] }) {
-  // Aggregat aus react-query Cache der Zeilen (sie laden sowieso)
-  const all = symbols.map((s) => ({ s, d: useRowData(s) })); // eslint-disable-line react-hooks/rules-of-hooks
-  const ready = all.filter((x) => x.d.indicators);
-  const bulls = ready.filter((x) => x.d.change > 0).length;
-  const bears = ready.filter((x) => x.d.change < 0).length;
-  const top = [...ready].sort((a, b) => Math.abs(b.d.change) - Math.abs(a.d.change))[0];
-  return (
-    <>
       <StatCard label="Steigend" value={`${bulls}`} sublabel={`von ${ready.length}`} icon={TrendingUp} tone="bull" delay={100} />
       <StatCard label="Fallend" value={`${bears}`} sublabel={`von ${ready.length}`} icon={TrendingDown} tone="bear" delay={150} />
       <StatCard
         label="Top Mover"
-        value={top ? `${top.d.change >= 0 ? "+" : ""}${top.d.change.toFixed(1)}%` : "—"}
-        sublabel={top?.s ?? "wartet"}
+        value={top ? `${top.change >= 0 ? "+" : ""}${top.change.toFixed(1)}%` : "—"}
+        sublabel={top?.symbol ?? "wartet"}
         icon={Zap}
-        tone={top && top.d.change >= 0 ? "bull" : "bear"}
+        tone={top && top.change >= 0 ? "bull" : "bear"}
         delay={200}
       />
-    </>
+    </div>
   );
 }
+
