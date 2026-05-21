@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, Link } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DisclaimerBanner } from "@/components/Disclaimer";
@@ -7,6 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { MarketClock } from "@/components/MarketClock";
 import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { Button } from "@/components/ui/button";
 
 import appCss from "../styles.css?url";
 
