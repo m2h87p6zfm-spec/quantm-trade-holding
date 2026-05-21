@@ -71,7 +71,16 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const { settings } = useSettings();
 
   if (candles.isLoading) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
-  if (candles.error) return <div className="text-sm text-bear">Datenfeed-Fehler: {(candles.error as Error).message}<div className="mt-1 text-xs text-muted-foreground">Die App lädt jetzt nur noch bei Bedarf. Falls trotzdem ein Limit kommt: kurz warten oder den API-Tarif erhöhen.</div></div>;
+  if (candles.error) {
+    const msg = (candles.error as Error).message;
+    return (
+      <div className="text-sm">
+        <div className="text-bear">Datenfeed-Fehler: {msg}</div>
+        <div className="mt-1 text-xs text-muted-foreground">Die App lädt nur bei Bedarf. Falls trotzdem ein Limit kommt: kurz warten oder den API-Tarif erhöhen.</div>
+        <FeedErrorDiagnose symbol={symbol} errorMessage={msg} context="Kerzendaten 1d für Analyse" />
+      </div>
+    );
+  }
   if (!candles.data) return <div className="text-sm text-muted-foreground">Keine Kerzendaten für {symbol}. Symbol prüfen.</div>;
   if (!indicators) return <div className="text-sm text-muted-foreground">Keine Daten verfügbar.</div>;
 
