@@ -29,14 +29,17 @@ function SettingsPage() {
 
       <section className="rounded-lg border border-border bg-card p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Finnhub API-Key</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Twelve Data API-Key</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Kostenlosen Key auf <a href="https://finnhub.io/register" target="_blank" rel="noreferrer" className="text-cyan-accent inline-flex items-center gap-0.5 hover:underline">finnhub.io/register <ExternalLink className="h-3 w-3" /></a> registrieren. Wird ausschließlich lokal im Browser gespeichert.
+            Kostenlosen Key (800 Calls/Tag) auf <a href="https://twelvedata.com/register" target="_blank" rel="noreferrer" className="text-cyan-accent inline-flex items-center gap-0.5 hover:underline">twelvedata.com/register <ExternalLink className="h-3 w-3" /></a> erstellen. Liefert globale Aktien, Indizes &amp; ETFs inkl. Historie. Lokal im Browser gespeichert.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Hinweis: Finnhub Free liefert keine Kerzendaten mehr (Premium-only) — daher der Wechsel.
           </p>
         </div>
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <input value={key} onChange={(e) => setKey(e.target.value)} type={show ? "text" : "password"} placeholder="z. B. ctv8…" className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
+            <input value={key} onChange={(e) => setKey(e.target.value)} type={show ? "text" : "password"} placeholder="z. B. 1a2b3c…" className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
             <button onClick={() => setShow(!show)} className="absolute right-2 top-2.5 text-muted-foreground" aria-label="Anzeigen">
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
