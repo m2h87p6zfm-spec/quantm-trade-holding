@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, Flame, LineChart, ListOrdered, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, Swords, TrendingUp, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, Flame, LineChart, ListOrdered, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 
 // Der "Quant Core" ist das Herzstück der App: statistische & mathematische
@@ -18,7 +18,6 @@ const markets = [
 ];
 
 const trading = [
-  { title: "War Room", url: "/war-room", icon: Swords },
   { title: "Portfolio", url: "/portfolio", icon: Wallet },
   { title: "Smart Alerts", url: "/alerts", icon: Bell },
 ];
