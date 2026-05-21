@@ -9,38 +9,148 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignaleRouteImport } from './routes/signale'
+import { Route as MaerkteRouteImport } from './routes/maerkte'
+import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
+import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 
+const SignaleRoute = SignaleRouteImport.update({
+  id: '/signale',
+  path: '/signale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaerkteRoute = MaerkteRouteImport.update({
+  id: '/maerkte',
+  path: '/maerkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EinstellungenRoute = EinstellungenRouteImport.update({
+  id: '/einstellungen',
+  path: '/einstellungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyseRoute = AnalyseRouteImport.update({
+  id: '/analyse',
+  path: '/analyse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProdukteIndexRoute = ProdukteIndexRouteImport.update({
+  id: '/produkte/',
+  path: '/produkte/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdukteSymbolRoute = ProdukteSymbolRouteImport.update({
+  id: '/produkte/$symbol',
+  path: '/produkte/$symbol',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/analyse': typeof AnalyseRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/maerkte': typeof MaerkteRoute
+  '/signale': typeof SignaleRoute
+  '/produkte/$symbol': typeof ProdukteSymbolRoute
+  '/produkte/': typeof ProdukteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analyse': typeof AnalyseRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/maerkte': typeof MaerkteRoute
+  '/signale': typeof SignaleRoute
+  '/produkte/$symbol': typeof ProdukteSymbolRoute
+  '/produkte': typeof ProdukteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/analyse': typeof AnalyseRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/maerkte': typeof MaerkteRoute
+  '/signale': typeof SignaleRoute
+  '/produkte/$symbol': typeof ProdukteSymbolRoute
+  '/produkte/': typeof ProdukteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/analyse'
+    | '/einstellungen'
+    | '/maerkte'
+    | '/signale'
+    | '/produkte/$symbol'
+    | '/produkte/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/analyse'
+    | '/einstellungen'
+    | '/maerkte'
+    | '/signale'
+    | '/produkte/$symbol'
+    | '/produkte'
+  id:
+    | '__root__'
+    | '/'
+    | '/analyse'
+    | '/einstellungen'
+    | '/maerkte'
+    | '/signale'
+    | '/produkte/$symbol'
+    | '/produkte/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AnalyseRoute: typeof AnalyseRoute
+  EinstellungenRoute: typeof EinstellungenRoute
+  MaerkteRoute: typeof MaerkteRoute
+  SignaleRoute: typeof SignaleRoute
+  ProdukteSymbolRoute: typeof ProdukteSymbolRoute
+  ProdukteIndexRoute: typeof ProdukteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signale': {
+      id: '/signale'
+      path: '/signale'
+      fullPath: '/signale'
+      preLoaderRoute: typeof SignaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maerkte': {
+      id: '/maerkte'
+      path: '/maerkte'
+      fullPath: '/maerkte'
+      preLoaderRoute: typeof MaerkteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/einstellungen': {
+      id: '/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof EinstellungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analyse': {
+      id: '/analyse'
+      path: '/analyse'
+      fullPath: '/analyse'
+      preLoaderRoute: typeof AnalyseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +158,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/produkte/': {
+      id: '/produkte/'
+      path: '/produkte'
+      fullPath: '/produkte/'
+      preLoaderRoute: typeof ProdukteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produkte/$symbol': {
+      id: '/produkte/$symbol'
+      path: '/produkte/$symbol'
+      fullPath: '/produkte/$symbol'
+      preLoaderRoute: typeof ProdukteSymbolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AnalyseRoute: AnalyseRoute,
+  EinstellungenRoute: EinstellungenRoute,
+  MaerkteRoute: MaerkteRoute,
+  SignaleRoute: SignaleRoute,
+  ProdukteSymbolRoute: ProdukteSymbolRoute,
+  ProdukteIndexRoute: ProdukteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
