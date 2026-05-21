@@ -14,7 +14,7 @@ export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
       { title: "Preise — Apex Markets" },
-      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 29,99 €/Monat. Setup-Score, Backtest Lab, War Room, Realtime-Daten und AI-Analysen." },
+      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Setup-Score, Backtest Lab, War Room, Realtime-Daten und AI-Analysen." },
     ],
   }),
   component: PricingPage,
@@ -78,8 +78,8 @@ const plans: Plan[] = [
     name: "Elite",
     tagline: "Für Power-User & Day-Trader",
     icon: Crown,
-    monthlyPrice: 29.99,
-    yearlyPrice: 287.88,
+    monthlyPrice: 19.99,
+    yearlyPrice: 191.88,
     monthlyPriceId: "apex_elite_monthly",
     yearlyPriceId: "apex_elite_yearly",
     features: [
