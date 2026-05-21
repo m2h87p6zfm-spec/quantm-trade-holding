@@ -46,7 +46,6 @@ export const Route = createFileRoute("/api/public/quote")({
               status: 200, headers: { "Content-Type": "application/json", ...CORS },
             });
           }
-          const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
           const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
           const data = cached.value ? buildQuote(cached.value, symbol) : null;
           if (!data) {
