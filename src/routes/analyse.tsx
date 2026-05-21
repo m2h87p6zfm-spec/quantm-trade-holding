@@ -10,6 +10,30 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
+function renderMd(md: string): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const lines = md.split("\n");
+  const out: string[] = [];
+  let inList = false;
+  const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { closeList(); continue; }
+    if (line.startsWith("### ")) { closeList(); out.push(`<h3>${inline(esc(line.slice(4)))}</h3>`); continue; }
+    if (line.startsWith("## ")) { closeList(); out.push(`<h2>${inline(esc(line.slice(3)))}</h2>`); continue; }
+    if (line.startsWith("• ") || line.startsWith("- ")) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${inline(esc(line.slice(2)))}</li>`);
+      continue;
+    }
+    closeList();
+    out.push(`<p>${inline(esc(line))}</p>`);
+  }
+  closeList();
+  return out.join("");
+  function inline(s: string) { return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+}
+
 type Msg = { role: "user" | "agent"; text: string; symbol?: string };
 
 function extractSymbol(q: string): string | null {
