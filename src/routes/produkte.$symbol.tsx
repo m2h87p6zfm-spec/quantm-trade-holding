@@ -18,7 +18,6 @@ function ProductDetail() {
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
-  const text = indicators && sig ? brokerNarrative(symbol, product?.name ?? symbol, indicators, sig) : null;
   const closes = candles.data?.c ?? [];
   const last = closes.at(-1) ?? indicators?.price ?? 0;
   const prev = closes.at(-2) ?? last;
