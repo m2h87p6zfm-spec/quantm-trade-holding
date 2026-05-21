@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Send } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis } from "@/lib/useMarketData";
 import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
+import { LearningProgressBlock } from "@/components/LearningProgressBlock";
+import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
+import { recordPrediction } from "@/lib/ai-learning.functions";
 
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
