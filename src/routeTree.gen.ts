@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
@@ -25,6 +26,11 @@ import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 
+const WarRoomRoute = WarRoomRouteImport.update({
+  id: '/war-room',
+  path: '/war-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/maerkte': typeof MaerkteRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
+  '/war-room': typeof WarRoomRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/maerkte': typeof MaerkteRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
+  '/war-room': typeof WarRoomRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/maerkte': typeof MaerkteRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
+  '/war-room': typeof WarRoomRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/maerkte'
     | '/portfolio'
     | '/signale'
+    | '/war-room'
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/maerkte'
     | '/portfolio'
     | '/signale'
+    | '/war-room'
     | '/produkte/$symbol'
     | '/produkte'
     | '/api/public/agent-chat'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/maerkte'
     | '/portfolio'
     | '/signale'
+    | '/war-room'
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
@@ -218,6 +230,7 @@ export interface RootRouteChildren {
   MaerkteRoute: typeof MaerkteRoute
   PortfolioRoute: typeof PortfolioRoute
   SignaleRoute: typeof SignaleRoute
+  WarRoomRoute: typeof WarRoomRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
@@ -227,6 +240,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/war-room': {
+      id: '/war-room'
+      path: '/war-room'
+      fullPath: '/war-room'
+      preLoaderRoute: typeof WarRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signale': {
       id: '/signale'
       path: '/signale'
@@ -346,6 +366,7 @@ const rootRouteChildren: RootRouteChildren = {
   MaerkteRoute: MaerkteRoute,
   PortfolioRoute: PortfolioRoute,
   SignaleRoute: SignaleRoute,
+  WarRoomRoute: WarRoomRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
@@ -355,3 +376,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
