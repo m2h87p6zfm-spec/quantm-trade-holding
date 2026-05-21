@@ -106,6 +106,9 @@
   --bear: oklch(0.55 0.22 25);
   --neutral-signal: oklch(0.55 0.02 245);
   --cyan-accent: oklch(0.60 0.15 200);
+  --gold: oklch(0.68 0.15 85);
+  --ticker: oklch(0.62 0.18 95);
+  --violet-accent: oklch(0.55 0.20 295);
   --sidebar: oklch(0.97 0.005 240);
   --sidebar-foreground: oklch(0.18 0.02 250);
   --sidebar-primary: oklch(0.55 0.18 240);
