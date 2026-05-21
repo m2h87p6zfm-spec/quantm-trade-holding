@@ -70,9 +70,9 @@ function RootComponent() {
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
-            <div className="flex flex-1 w-full">
+            <div className="flex flex-1 w-full min-w-0">
               <AppSidebar />
-              <div className="flex flex-1 flex-col relative">
+              <div className="flex flex-1 flex-col relative min-w-0">
                 <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl">
                   <SidebarTrigger />
                   <div className="ml-2 flex items-center gap-2 text-xs text-muted-foreground">
