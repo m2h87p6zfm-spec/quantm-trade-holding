@@ -61,15 +61,15 @@ function ProductDetail() {
                 </div>
                 <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
               </div>
-              {candles.data && <PriceChart closes={candles.data.c} times={candles.data.t} />}
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">RSI (14)</div>
-              {candles.data && <RsiChart closes={candles.data.c} />}
-            </div>
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">MACD (12/26/9)</div>
-              {candles.data && <MacdChart closes={candles.data.c} />}
+              {candles.data && (
+                <ProChart
+                  data={candles.data}
+                  height={520}
+                  overlays={["ema20", "ema50", "sma200", "bbands"]}
+                  subcharts={["volume", "rsi", "macd"]}
+                  showZones
+                />
+              )}
             </div>
           </div>
 
