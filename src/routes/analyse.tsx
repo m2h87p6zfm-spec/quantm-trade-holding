@@ -56,8 +56,10 @@ function extractSymbol(q: string): string | null {
     dax: "EWG", "s&p": "SPY", "s&p 500": "SPY", nasdaq: "QQQ", "dow jones": "DIA", dow: "DIA", nikkei: "EWJ",
   };
   for (const [k, v] of Object.entries(aliases)) if (lower.includes(k)) return v;
-  const ticker = upper.match(/\b[A-Z]{1,5}(?:[.:-][A-Z]{1,5})?\b/);
-  if (ticker && !["ICH", "WIE", "KAUFEN", "VERKAUFEN", "ANALYSIERE", "SOLL"].includes(ticker[0])) return ticker[0];
+  const blocked = new Set(["ICH", "WIE", "KAUF", "KAUFEN", "VERKAUF", "VERKAUFEN", "HALTEN", "SOLL", "LONG", "SHORT"]);
+  for (const match of upper.matchAll(/\b[A-Z]{1,5}(?:[.:-][A-Z]{1,5})?\b/g)) {
+    if (!blocked.has(match[0])) return match[0];
+  }
   return null;
 }
 
