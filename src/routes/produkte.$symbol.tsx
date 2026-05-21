@@ -41,7 +41,12 @@ function ProductDetail() {
         </button>
       </div>
 
-      {candles.error && <div className="rounded-md border border-bear/40 bg-bear/10 p-4 text-sm text-bear">{(candles.error as Error).message}</div>}
+      {(candles.isError || candles.data?.stale) && (
+        <div className="rounded-md border border-border bg-card/60 px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+          Live-Daten werden aktualisiert… letzte gültige Werte werden angezeigt.
+        </div>
+      )}
 
       {indicators && sig && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
