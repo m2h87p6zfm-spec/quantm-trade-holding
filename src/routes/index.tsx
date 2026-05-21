@@ -6,7 +6,10 @@ import { scoreIndicators } from "@/lib/analysis";
 import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
-import { useMemo } from "react";
+import { useQueries } from "@tanstack/react-query";
+import { fetchCandles } from "@/lib/finnhub";
+import { computeAll } from "@/lib/indicators";
+
 
 export const Route = createFileRoute("/")({ component: Watchlist });
 
