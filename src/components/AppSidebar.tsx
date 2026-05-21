@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, BarChart3, Bell, Bot, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Settings as SettingsIcon, Sparkles, Wallet } from "lucide-react";
+import { Activity, BarChart3, Bell, Bot, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Settings as SettingsIcon, Sparkles, Swords, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const items = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
+  { title: "War Room", url: "/war-room", icon: Swords },
   { title: "AI Analyst", url: "/agent", icon: Bot },
   { title: "Analyse-Agent", url: "/analyse", icon: MessageSquare },
   { title: "Portfolio", url: "/portfolio", icon: Wallet },
