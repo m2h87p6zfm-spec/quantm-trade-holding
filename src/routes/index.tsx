@@ -65,7 +65,7 @@ function Watchlist() {
 
       {!hasKey && (
         <div className="rounded-lg border border-bear/40 bg-bear/10 p-4 text-sm">
-          <strong className="text-bear">Kein API-Key konfiguriert.</strong> Öffne <Link to="/einstellungen" className="underline">Einstellungen</Link> und hinterlege deinen Finnhub-API-Key, um Echtzeit-Daten zu laden.
+          <strong className="text-bear">Kein API-Key konfiguriert.</strong> Öffne <Link to="/einstellungen" className="underline">Einstellungen</Link> und hinterlege deinen Twelve-Data-Key, um Marktdaten zu laden.
         </div>
       )}
 
