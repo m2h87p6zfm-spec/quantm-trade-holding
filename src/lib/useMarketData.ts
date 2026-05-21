@@ -11,8 +11,7 @@ export function useQuote(symbol: string, refetchMs = 0) {
     enabled: !!symbol && !!getApiKey(),
     staleTime: 10 * 60 * 1000,
     gcTime: 2 * 60 * 60 * 1000,
-    retry: (n, e: any) => (e?.status === 429 ? n < 3 : false),
-    retryDelay: (n) => 8000 * (n + 1),
+    retry: false,
   });
 }
 
@@ -24,8 +23,7 @@ export function useCandles(symbol: string) {
     staleTime: 12 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: (n, e: any) => (e?.status === 429 ? n < 3 : false),
-    retryDelay: (n) => 8000 * (n + 1),
+    retry: false,
   });
 }
 
