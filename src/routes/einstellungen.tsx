@@ -1,25 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Check, Eye, EyeOff, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
-import { getApiKey, setApiKey } from "@/lib/finnhub";
 
 export const Route = createFileRoute("/einstellungen")({ component: SettingsPage });
 
 function SettingsPage() {
   const { settings, update } = useSettings();
-  const [key, setKey] = useState("");
-  const [show, setShow] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [watchSymbol, setWatchSymbol] = useState("");
 
-  useEffect(() => { setKey(getApiKey()); }, []);
-
-  const save = () => {
-    setApiKey(key);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
   const addWatch = () => {
     const symbol = watchSymbol.trim().toUpperCase().replace(/\s+/g, "");
     if (!symbol || settings.watchlist.includes(symbol)) return;
@@ -34,27 +23,12 @@ function SettingsPage() {
         <p className="text-sm text-muted-foreground">Konfiguration des Trading-Agents und Datenfeeds.</p>
       </div>
 
-      <section className="rounded-lg border border-border bg-card p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Twelve Data API-Key</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Kostenlosen Key (800 Calls/Tag) auf <a href="https://twelvedata.com/register" target="_blank" rel="noreferrer" className="text-cyan-accent inline-flex items-center gap-0.5 hover:underline">twelvedata.com/register <ExternalLink className="h-3 w-3" /></a> erstellen. Die App lädt jetzt API-schonend nur bei Bedarf und cached Tagesdaten für 12 Stunden.
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Hinweis: Finnhub Free liefert keine Kerzendaten mehr (Premium-only) — daher der Wechsel.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <input value={key} onChange={(e) => setKey(e.target.value)} type={show ? "text" : "password"} placeholder="z. B. 1a2b3c…" className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
-            <button onClick={() => setShow(!show)} className="absolute right-2 top-2.5 text-muted-foreground" aria-label="Anzeigen">
-              {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-          <button onClick={save} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-            {saved ? <><Check className="h-4 w-4" /> Gespeichert</> : "Speichern"}
-          </button>
-        </div>
+      <section className="rounded-lg border border-border bg-card p-5 space-y-2">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Datenfeed</h2>
+        <p className="text-xs text-muted-foreground">
+          Kursdaten werden serverseitig über Yahoo Finance bezogen und gecached (Tageskerzen 1 h, Quotes 1 min).
+          <strong className="text-foreground"> Kein API-Key nötig</strong> — Daten sind ca. 15 Min. verzögert.
+        </p>
       </section>
 
       <section className="rounded-lg border border-border bg-card p-5 space-y-4">
