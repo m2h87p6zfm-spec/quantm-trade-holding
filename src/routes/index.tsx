@@ -1,57 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Star, X, TrendingUp, TrendingDown, Activity, Zap } from "lucide-react";
-import { useMemo } from "react";
-import { useQueries } from "@tanstack/react-query";
 import { useSettings } from "@/lib/settings";
-import { scoreIndicators, alphaEdgeScore } from "@/lib/analysis";
 import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
-import { fetchCandles } from "@/lib/finnhub";
-import { computeAll } from "@/lib/indicators";
 import { TickerBand } from "@/components/TickerBand";
 import { MarketPulse } from "@/components/MarketPulse";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
+import { useCockpitData } from "@/lib/cockpit";
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
 // Default-Set wenn Watchlist leer ist — damit das Cockpit nie tot wirkt.
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
-function useCockpitData(symbols: string[]) {
-  const results = useQueries({
-    queries: symbols.map((s) => ({
-      queryKey: ["candles", s],
-      queryFn: () => fetchCandles(s, "D", 260),
-      staleTime: 60 * 60 * 1000,
-      gcTime: 24 * 60 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    })),
-  });
 
-  return useMemo(() => {
-    const rows = symbols.map((symbol, i) => {
-      const data = results[i].data;
-      if (!data?.c?.length) return null;
-      const closes = data.c;
-      const last = closes.at(-1)!;
-      const prev = closes.at(-2) ?? last;
-      const change = prev ? ((last - prev) / prev) * 100 : 0;
-      const ind = computeAll(closes);
-      const sig = scoreIndicators(ind, "ausgewogen");
-      const alpha = alphaEdgeScore(ind);
-      return { symbol, closes, last, prev, change, ind, sig, alpha };
-    }).filter(Boolean) as Array<{
-      symbol: string; closes: number[]; last: number; prev: number; change: number;
-      ind: ReturnType<typeof computeAll>; sig: ReturnType<typeof scoreIndicators>; alpha: number;
-    }>;
-    return rows;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [results.map((r) => r.dataUpdatedAt).join(","), symbols.join(",")]);
-}
 
 
 
