@@ -33,8 +33,25 @@ function useCockpitData(symbols: string[]) {
   });
 
   return useMemo(() => {
-    const { settings } = { settings: { risk: "ausgewogen" as const } };
     const rows = symbols.map((symbol, i) => {
+      const data = results[i].data;
+      if (!data?.c?.length) return null;
+      const closes = data.c;
+      const last = closes.at(-1)!;
+      const prev = closes.at(-2) ?? last;
+      const change = prev ? ((last - prev) / prev) * 100 : 0;
+      const ind = computeAll(closes);
+      const sig = scoreIndicators(ind, "ausgewogen");
+      const alpha = alphaEdgeScore(ind);
+      return { symbol, closes, last, prev, change, ind, sig, alpha };
+    }).filter(Boolean) as Array<{
+      symbol: string; closes: number[]; last: number; prev: number; change: number;
+      ind: ReturnType<typeof computeAll>; sig: ReturnType<typeof scoreIndicators>; alpha: number;
+    }>;
+    return rows;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results.map((r) => r.dataUpdatedAt).join(","), symbols.join(",")]);
+}
       const data = results[i].data;
       if (!data?.c?.length) return null;
       const closes = data.c;
