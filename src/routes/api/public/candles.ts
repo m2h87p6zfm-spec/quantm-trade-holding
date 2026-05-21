@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -35,25 +34,48 @@ export const Route = createFileRoute("/api/public/candles")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
-        const interval = url.searchParams.get("interval") || "1d";
-        const range = url.searchParams.get("range") || "1y";
-        if (!symbol || symbol.length > 16 || !/^[A-Z0-9.\-^]+$/i.test(symbol)) {
-          return new Response(JSON.stringify({ status: "invalid", message: "Ungültiges Symbol" }), {
-            status: 200, headers: { "Content-Type": "application/json", ...CORS },
+        try {
+          const url = new URL(request.url);
+          const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
+          const interval = url.searchParams.get("interval") || "1d";
+          const range = url.searchParams.get("range") || "1y";
+          if (!symbol || symbol.length > 16 || !/^[A-Z0-9.\-^]+$/i.test(symbol)) {
+            return new Response(JSON.stringify({ status: "invalid", message: "Ungültiges Symbol" }), {
+              status: 200, headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          if (!VALID_INTERVAL.has(interval) || !VALID_RANGE.has(range)) {
+            return new Response(JSON.stringify({ status: "invalid", message: "Ungültige Parameter" }), {
+              status: 200, headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          const ttl = interval === "1d" || interval === "1wk" || interval === "1mo" ? 3600 : 300;
+          const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
+          const cached = await fetchYahooChartCached(symbol, interval, range, ttl);
+          const data = cached.value ? transform(cached.value) : null;
+          if (!data) {
+            return new Response(JSON.stringify({
+              status: "reconnecting",
+              stale: true,
+              lastUpdated: 0,
+              message: "Live-Daten werden aktualisiert…",
+            }), {
+              status: 200, headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          return new Response(JSON.stringify({
+            ...data,
+            stale: cached.stale,
+            lastUpdated: cached.lastUpdated,
+          }), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": `public, max-age=${ttl}, s-maxage=${ttl}`,
+              ...CORS,
+            },
           });
-        }
-        if (!VALID_INTERVAL.has(interval) || !VALID_RANGE.has(range)) {
-          return new Response(JSON.stringify({ status: "invalid", message: "Ungültige Parameter" }), {
-            status: 200, headers: { "Content-Type": "application/json", ...CORS },
-          });
-        }
-        const ttl = interval === "1d" || interval === "1wk" || interval === "1mo" ? 3600 : 300;
-        const cached = await fetchYahooChartCached(symbol, interval, range, ttl);
-        const data = cached.value ? transform(cached.value) : null;
-        if (!data) {
-          // Niemals 5xx — die UI zeigt eine ruhige Reconnect-Meldung.
+        } catch {
           return new Response(JSON.stringify({
             status: "reconnecting",
             stale: true,
@@ -63,18 +85,6 @@ export const Route = createFileRoute("/api/public/candles")({
             status: 200, headers: { "Content-Type": "application/json", ...CORS },
           });
         }
-        return new Response(JSON.stringify({
-          ...data,
-          stale: cached.stale,
-          lastUpdated: cached.lastUpdated,
-        }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": `public, max-age=${ttl}, s-maxage=${ttl}`,
-            ...CORS,
-          },
-        });
       },
     },
   },
