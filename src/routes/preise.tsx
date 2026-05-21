@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
-      { title: "Preise — Apex Markets" },
+      { title: "Preise — Apex Trades" },
       { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Setup-Score, Backtest Lab, War Room, Realtime-Daten und AI-Analysen." },
     ],
   }),

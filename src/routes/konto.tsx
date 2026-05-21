@@ -13,7 +13,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/konto")({
   head: () => ({
-    meta: [{ title: "Konto — Apex Markets" }],
+    meta: [{ title: "Konto — Apex Trades" }],
   }),
   component: AccountPage,
 });

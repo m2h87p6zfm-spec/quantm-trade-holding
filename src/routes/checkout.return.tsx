@@ -7,7 +7,7 @@ export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
     session_id: typeof search.session_id === "string" ? search.session_id : undefined,
   }),
-  head: () => ({ meta: [{ title: "Bestätigung — Apex Markets" }] }),
+  head: () => ({ meta: [{ title: "Bestätigung — Apex Trades" }] }),
   component: ReturnPage,
 });
 
