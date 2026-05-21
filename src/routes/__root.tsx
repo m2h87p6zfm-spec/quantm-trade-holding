@@ -4,6 +4,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DisclaimerBanner } from "@/components/Disclaimer";
 import { Toaster } from "@/components/ui/sonner";
+import { MarketClock } from "@/components/MarketClock";
+import { CommandPalette } from "@/components/CommandPalette";
 
 import appCss from "../styles.css?url";
 
