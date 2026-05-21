@@ -348,12 +348,12 @@ export function ProChart({
 
       {/* Legende */}
       <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
-        {overlays.includes("ema20") && <Legend swatch="var(--primary)" label="EMA 20" />}
-        {overlays.includes("ema50") && <Legend swatch="var(--gold)" label="EMA 50" />}
-        {overlays.includes("sma200") && <Legend swatch="var(--violet-accent)" label="SMA 200" />}
-        {overlays.includes("bbands") && <Legend swatch="var(--primary)" label="Bollinger 20·2σ" />}
+        {overlays.includes("ema20") && <Legend swatch="#38bdf8" label="EMA 20" />}
+        {overlays.includes("ema50") && <Legend swatch="#fbbf24" label="EMA 50" />}
+        {overlays.includes("sma200") && <Legend swatch="#c084fc" label="SMA 200" />}
+        {overlays.includes("bbands") && <Legend swatch="#38bdf8" label="Bollinger 20·2σ" />}
         {showZones && zones.length > 0 && (
-          <Legend swatch="var(--bull)" label={`${zones.length} Smart-Zones`} />
+          <Legend swatch="#22c55e" label={`${zones.length} Smart-Zones`} />
         )}
       </div>
     </div>
