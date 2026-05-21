@@ -10,19 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignaleRouteImport } from './routes/signale'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
+import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
+import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaerkteRoute = MaerkteRouteImport.update({
@@ -40,9 +50,24 @@ const EinstellungenRoute = EinstellungenRouteImport.update({
   path: '/einstellungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BacktestRoute = BacktestRouteImport.update({
+  id: '/backtest',
+  path: '/backtest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AnalyseRoute = AnalyseRouteImport.update({
   id: '/analyse',
   path: '/analyse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AlertsRoute = AlertsRouteImport.update({
+  id: '/alerts',
+  path: '/alerts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentRoute = AgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -70,41 +95,61 @@ const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
   path: '/api/public/candles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentChatRoute = ApiPublicAgentChatRouteImport.update({
+  id: '/api/public/agent-chat',
+  path: '/api/public/agent-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
+  '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
+  '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
+  '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
@@ -112,50 +157,70 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agent'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agent'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   id:
     | '__root__'
     | '/'
+    | '/agent'
+    | '/alerts'
     | '/analyse'
+    | '/backtest'
     | '/einstellungen'
     | '/heatmap'
     | '/maerkte'
+    | '/portfolio'
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentRoute: typeof AgentRoute
+  AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
+  BacktestRoute: typeof BacktestRoute
   EinstellungenRoute: typeof EinstellungenRoute
   HeatmapRoute: typeof HeatmapRoute
   MaerkteRoute: typeof MaerkteRoute
+  PortfolioRoute: typeof PortfolioRoute
   SignaleRoute: typeof SignaleRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
+  ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
 }
@@ -167,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/signale'
       fullPath: '/signale'
       preLoaderRoute: typeof SignaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maerkte': {
@@ -190,11 +262,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EinstellungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/backtest': {
+      id: '/backtest'
+      path: '/backtest'
+      fullPath: '/backtest'
+      preLoaderRoute: typeof BacktestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/analyse': {
       id: '/analyse'
       path: '/analyse'
       fullPath: '/analyse'
       preLoaderRoute: typeof AnalyseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts': {
+      id: '/alerts'
+      path: '/alerts'
+      fullPath: '/alerts'
+      preLoaderRoute: typeof AlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agent': {
+      id: '/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AgentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -232,18 +325,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCandlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent-chat': {
+      id: '/api/public/agent-chat'
+      path: '/api/public/agent-chat'
+      fullPath: '/api/public/agent-chat'
+      preLoaderRoute: typeof ApiPublicAgentChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentRoute: AgentRoute,
+  AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
+  BacktestRoute: BacktestRoute,
   EinstellungenRoute: EinstellungenRoute,
   HeatmapRoute: HeatmapRoute,
   MaerkteRoute: MaerkteRoute,
+  PortfolioRoute: PortfolioRoute,
   SignaleRoute: SignaleRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
+  ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
 }
