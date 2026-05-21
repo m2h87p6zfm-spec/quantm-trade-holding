@@ -160,18 +160,23 @@ function SignalsPage() {
         </div>
         {loading && <div className="p-6 text-center text-sm text-muted-foreground">Berechne Decision-Reports für {scanSymbols.length} Watchlist-Werte…</div>}
         {!loading && filtered.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">Keine Signale erfüllen die Filter.</div>}
-        {filtered.map(({ p, ind, regime, report, change }) => {
+        {filtered.map(({ p, ind, sig, regime, report, change }) => {
           const delta = report.confidence - report.rawConfidence;
+          const trigger = whyNow(ind, sig);
           return (
             <Link
               key={p.symbol}
               to="/produkte/$symbol"
               params={{ symbol: p.symbol }}
-              className="grid grid-cols-12 gap-2 border-b border-border px-4 py-2.5 hover:bg-accent/40 text-sm items-center"
+              className="grid grid-cols-12 gap-2 border-b border-border px-4 py-3 hover:bg-accent/40 text-sm items-center"
             >
               <div className="col-span-3">
                 <div className="font-semibold">{p.symbol}</div>
                 <div className="text-xs text-muted-foreground truncate">{p.name}</div>
+                <div className={`mt-1 flex items-start gap-1 text-[11px] leading-snug ${report.decision === "BUY" ? "text-bull/90" : report.decision === "SELL" ? "text-bear/90" : "text-muted-foreground"}`}>
+                  <span className="mt-0.5">⚡</span>
+                  <span className="truncate" title={trigger}>{trigger}</span>
+                </div>
               </div>
               <div className="col-span-2">
                 <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-medium ${regimeStyle[regime]}`}>
