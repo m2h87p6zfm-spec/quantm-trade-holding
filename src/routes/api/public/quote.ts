@@ -33,7 +33,6 @@ async function fetchYahooChart(symbol: string, interval: string, range: string) 
 
 async function fetchYahooQuote(symbol: string) {
   const j: any = await fetchYahooChart(symbol, "1d", "5d");
-  const j: any = await res.json();
   const r = j?.chart?.result?.[0];
   if (!r) throw new Error("Kein Ergebnis");
   const meta = r.meta || {};
