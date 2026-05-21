@@ -13,14 +13,17 @@ export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDe
 function ProductDetail() {
   const { symbol } = Route.useParams();
   const product = findProduct(symbol);
-  const { indicators, candles, quote } = useAnalysis(symbol);
+  const { indicators, candles } = useAnalysis(symbol);
   const { settings, toggleWatch } = useSettings();
-
-  if (!product) return <div className="p-6">Produkt nicht gefunden. <Link to="/produkte" className="text-primary underline">Zurück</Link></div>;
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
-  const text = indicators && sig ? brokerNarrative(symbol, product.name, indicators, sig) : null;
+  const text = indicators && sig ? brokerNarrative(symbol, product?.name ?? symbol, indicators, sig) : null;
+  const closes = candles.data?.c ?? [];
+  const last = closes.at(-1) ?? indicators?.price ?? 0;
+  const prev = closes.at(-2) ?? last;
+  const abs = last - prev;
+  const change = prev ? (abs / prev) * 100 : 0;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -28,10 +31,10 @@ function ProductDetail() {
         <Link to="/produkte" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /></Link>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{product.symbol}</h1>
-            <span className="rounded bg-muted px-2 py-0.5 text-xs uppercase text-muted-foreground">{product.sector}</span>
+            <h1 className="text-2xl font-bold">{symbol}</h1>
+            <span className="rounded bg-muted px-2 py-0.5 text-xs uppercase text-muted-foreground">{product?.sector ?? "Ticker"}</span>
           </div>
-          <p className="text-sm text-muted-foreground">{product.name}</p>
+          <p className="text-sm text-muted-foreground">{product?.name ?? "Freies Symbol aus dem Datenfeed"}</p>
         </div>
         <button onClick={() => toggleWatch(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent">
           {watched ? <><Star className="h-4 w-4 fill-current text-primary" /> In Watchlist</> : <><StarOff className="h-4 w-4" /> Watchlist hinzufügen</>}
@@ -40,15 +43,15 @@ function ProductDetail() {
 
       {candles.error && <div className="rounded-md border border-bear/40 bg-bear/10 p-4 text-sm text-bear">{(candles.error as Error).message}</div>}
 
-      {indicators && sig && quote.data && (
+      {indicators && sig && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
             <div className="rounded-lg border border-border bg-card p-4">
               <div className="mb-2 flex items-end justify-between">
                 <div>
                   <div className="font-mono text-3xl font-bold tabular-nums">{indicators.price.toFixed(2)}</div>
-                  <div className={`font-mono text-sm ${quote.data.dp >= 0 ? "text-bull" : "text-bear"}`}>
-                    {quote.data.dp >= 0 ? "+" : ""}{quote.data.dp.toFixed(2)}% ({quote.data.d >= 0 ? "+" : ""}{quote.data.d.toFixed(2)})
+                  <div className={`font-mono text-sm ${change >= 0 ? "text-bull" : "text-bear"}`}>
+                    {change >= 0 ? "+" : ""}{change.toFixed(2)}% ({abs >= 0 ? "+" : ""}{abs.toFixed(2)})
                   </div>
                 </div>
                 <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
