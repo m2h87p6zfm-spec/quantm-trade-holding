@@ -17,11 +17,13 @@ import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
+import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
@@ -63,6 +65,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentRoute = AgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -88,9 +95,15 @@ const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
   path: '/api/public/candles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentChatRoute = ApiPublicAgentChatRouteImport.update({
+  id: '/api/public/agent-chat',
+  path: '/api/public/agent-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -101,11 +114,13 @@ export interface FileRoutesByFullPath {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -116,12 +131,14 @@ export interface FileRoutesByTo {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agent': typeof AgentRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -132,6 +149,7 @@ export interface FileRoutesById {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
@@ -139,6 +157,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agent'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -149,11 +168,13 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agent'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -164,11 +185,13 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   id:
     | '__root__'
     | '/'
+    | '/agent'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -179,12 +202,14 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/quote'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentRoute: typeof AgentRoute
   AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
   BacktestRoute: typeof BacktestRoute
@@ -195,6 +220,7 @@ export interface RootRouteChildren {
   SignaleRoute: typeof SignaleRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
+  ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
 }
@@ -257,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agent': {
+      id: '/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -292,11 +325,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCandlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent-chat': {
+      id: '/api/public/agent-chat'
+      path: '/api/public/agent-chat'
+      fullPath: '/api/public/agent-chat'
+      preLoaderRoute: typeof ApiPublicAgentChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentRoute: AgentRoute,
   AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
   BacktestRoute: BacktestRoute,
@@ -307,9 +348,20 @@ const rootRouteChildren: RootRouteChildren = {
   SignaleRoute: SignaleRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
+  ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
