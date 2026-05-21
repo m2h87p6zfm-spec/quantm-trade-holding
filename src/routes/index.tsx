@@ -1,51 +1,190 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Star, X, TrendingUp, TrendingDown, Activity, Zap } from "lucide-react";
+import { useMemo } from "react";
+import { useQueries } from "@tanstack/react-query";
 import { useSettings } from "@/lib/settings";
-import { useAnalysis } from "@/lib/useMarketData";
-import { scoreIndicators } from "@/lib/analysis";
+import { scoreIndicators, alphaEdgeScore } from "@/lib/analysis";
 import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
-import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
+import { TickerBand } from "@/components/TickerBand";
+import { MarketPulse } from "@/components/MarketPulse";
+import { SectorHeatmap } from "@/components/SectorHeatmap";
+import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
+import { SignalOfDay } from "@/components/SignalOfDay";
 
+export const Route = createFileRoute("/")({ component: Cockpit });
 
-export const Route = createFileRoute("/")({ component: Watchlist });
+// Default-Set wenn Watchlist leer ist — damit das Cockpit nie tot wirkt.
+const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
-function useRowData(symbol: string) {
-  const { indicators, candles } = useAnalysis(symbol);
-  const { settings } = useSettings();
-  const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
-  const closes = candles.data?.c ?? [];
-  const last = closes.at(-1) ?? indicators?.price ?? 0;
-  const prev = closes.at(-2) ?? last;
-  const abs = last - prev;
-  const change = prev ? (abs / prev) * 100 : 0;
-  const price = indicators?.price ?? last;
-  return { sig, closes, last, prev, abs, change, price, candles, indicators };
+function useCockpitData(symbols: string[]) {
+  const results = useQueries({
+    queries: symbols.map((s) => ({
+      queryKey: ["candles", s],
+      queryFn: () => fetchCandles(s, "D", 260),
+      staleTime: 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    })),
+  });
+
+  return useMemo(() => {
+    const rows = symbols.map((symbol, i) => {
+      const data = results[i].data;
+      if (!data?.c?.length) return null;
+      const closes = data.c;
+      const last = closes.at(-1)!;
+      const prev = closes.at(-2) ?? last;
+      const change = prev ? ((last - prev) / prev) * 100 : 0;
+      const ind = computeAll(closes);
+      const sig = scoreIndicators(ind, "ausgewogen");
+      const alpha = alphaEdgeScore(ind);
+      return { symbol, closes, last, prev, change, ind, sig, alpha };
+    }).filter(Boolean) as Array<{
+      symbol: string; closes: number[]; last: number; prev: number; change: number;
+      ind: ReturnType<typeof computeAll>; sig: ReturnType<typeof scoreIndicators>; alpha: number;
+    }>;
+    return rows;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results.map((r) => r.dataUpdatedAt).join(","), symbols.join(",")]);
 }
 
-function Row({ symbol, idx }: { symbol: string; idx: number }) {
+
+
+function Cockpit() {
+  const { settings } = useSettings();
+  const cockpitSymbols = settings.watchlist.length > 0 ? settings.watchlist : DEFAULT_SET;
+  const rows = useCockpitData(cockpitSymbols);
+
+  // Aggregationen
+  const longCount = rows.filter((r) => r.sig.verdict === "LONG").length;
+  const shortCount = rows.filter((r) => r.sig.verdict === "SHORT").length;
+  const neutralCount = rows.filter((r) => r.sig.verdict === "NEUTRAL").length;
+
+  // Signal des Tages: höchste |score| × Konfidenz
+  const featured = [...rows].sort((a, b) =>
+    (Math.abs(b.sig.score) * b.sig.confidence) - (Math.abs(a.sig.score) * a.sig.confidence)
+  )[0];
+
+  const heatmapCells = rows.map((r) => ({ symbol: r.symbol, change: r.change, price: r.last }));
+  const usingDefault = settings.watchlist.length === 0;
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Live-Ticker-Band — sticky-feel direkt unter der Topbar */}
+      <TickerBand />
+
+      <div className="mx-auto max-w-7xl space-y-6 px-6">
+        {/* Hero */}
+        <div className="pt-2 animate-fade-up">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                <Zap className="h-3 w-3 text-gold" /> Live Cockpit
+              </div>
+              <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">
+                Markt-<span className="text-gradient-primary">Cockpit</span>.
+              </h1>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Echtzeit-Aggregation aller statistischen Signale über{" "}
+                <span className="text-foreground font-semibold">{rows.length}</span> Werte
+                {usingDefault && <> · Demo-Auswahl, da Watchlist leer</>}.
+              </p>
+            </div>
+            <Link
+              to="/produkte"
+              className="group inline-flex items-center gap-2 self-start rounded-lg bg-gradient-to-br from-primary to-cyan-accent px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow"
+            >
+              <Star className="h-4 w-4 group-hover:rotate-12 transition-transform" />
+              Watchlist verwalten
+            </Link>
+          </div>
+        </div>
+
+        {/* Top-Row: Signal of the Day (groß) + Pulse + Gauge */}
+        <div className="grid gap-4 lg:grid-cols-3 animate-fade-up" style={{ animationDelay: "60ms" }}>
+          <div className="lg:col-span-2">
+            {featured ? (
+              <SignalOfDay symbol={featured.symbol} ind={featured.ind} sig={featured.sig} closes={featured.closes} />
+            ) : (
+              <SkeletonCard label="Signal des Tages" />
+            )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <MarketPulse long={longCount} short={shortCount} neutral={neutralCount} />
+            {featured ? (
+              <AlphaScoreGauge score={featured.alpha} label={`AlphaEdge · ${featured.symbol}`} />
+            ) : (
+              <SkeletonCard label="AlphaEdge Score" />
+            )}
+          </div>
+        </div>
+
+        {/* Heatmap */}
+        <div className="animate-fade-up" style={{ animationDelay: "120ms" }}>
+          <SectorHeatmap cells={heatmapCells} />
+        </div>
+
+        {/* Watchlist-Tabelle */}
+        <div className="card-glow rounded-xl overflow-hidden animate-fade-up" style={{ animationDelay: "180ms" }}>
+          <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-4 py-3">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {usingDefault ? "Top Werte (Demo)" : "Meine Watchlist"}
+            </div>
+            <div className="text-[10px] text-muted-foreground">
+              {rows.length} aktiv · Long {longCount} · Short {shortCount} · Neutral {neutralCount}
+            </div>
+          </div>
+          <div className="grid grid-cols-12 gap-2 border-b border-border/60 bg-muted/15 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="col-span-3">Symbol</div>
+            <div className="col-span-2">Kurs</div>
+            <div className="col-span-2">Tag Δ</div>
+            <div className="col-span-2">30T Trend</div>
+            <div className="col-span-3 text-right">Signal</div>
+          </div>
+          {cockpitSymbols.length === 0 ? (
+            <EmptyWatchlist />
+          ) : (
+            cockpitSymbols.map((s, i) => <Row key={s} symbol={s} idx={i} showRemove={!usingDefault} />)
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ symbol, idx, showRemove }: { symbol: string; idx: number; showRemove: boolean }) {
   const product = findProduct(symbol);
   const { toggleWatch } = useSettings();
-  const { sig, abs, change, price, candles } = useRowData(symbol);
+  const rows = useCockpitData([symbol]);
+  const r = rows[0];
+  const change = r?.change ?? 0;
+  const sig = r?.sig;
+  const price = r?.last;
+  const closes = r?.closes ?? [];
+  const abs = price && r ? r.last - r.prev : 0;
 
   return (
     <Link
       to="/produkte/$symbol"
       params={{ symbol }}
-      className="group grid grid-cols-12 items-center gap-2 border-b border-border/50 px-4 py-3.5 hover:bg-accent/30 transition-all animate-fade-up"
-      style={{ animationDelay: `${idx * 50}ms` }}
+      className="group grid grid-cols-12 items-center gap-2 border-b border-border/40 px-4 py-3.5 hover:bg-accent/30 transition-all animate-fade-up"
+      style={{ animationDelay: `${idx * 30}ms` }}
     >
       <div className="col-span-3 flex items-center gap-3">
-        <button
-          onClick={(e) => { e.preventDefault(); toggleWatch(symbol); }}
-          className="text-muted-foreground hover:text-bear hover:scale-110 transition opacity-0 group-hover:opacity-100"
-          aria-label="Entfernen"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+        {showRemove && (
+          <button
+            onClick={(e) => { e.preventDefault(); toggleWatch(symbol); }}
+            className="text-muted-foreground hover:text-bear hover:scale-110 transition opacity-0 group-hover:opacity-100"
+            aria-label="Entfernen"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gradient-to-br from-primary/20 to-cyan-accent/10 border border-border/60 font-bold text-[10px] tracking-tight">
           {symbol.slice(0, 4)}
         </div>
@@ -65,139 +204,41 @@ function Row({ symbol, idx }: { symbol: string; idx: number }) {
         <div className="text-[10px] text-muted-foreground">{abs >= 0 ? "+" : ""}{abs.toFixed(2)}</div>
       </div>
       <div className="col-span-2">
-        <Sparkline data={(candles.data?.c ?? []).slice(-30)} up={change >= 0} />
+        <Sparkline data={closes.slice(-30)} up={change >= 0} />
       </div>
       <div className="col-span-3 flex justify-end">
         {sig ? <SignalBadge verdict={sig.verdict} confidence={sig.confidence} /> : (
-          <span className="text-xs text-muted-foreground">{candles.data ? "—" : "aktualisiert…"}</span>
+          <span className="text-xs text-muted-foreground">aktualisiert…</span>
         )}
       </div>
     </Link>
   );
 }
 
-function StatCard({ label, value, sublabel, icon: Icon, tone = "default", delay = 0 }: {
-  label: string; value: string; sublabel?: string; icon: any; tone?: "default" | "bull" | "bear" | "primary"; delay?: number;
-}) {
-  const toneClasses = {
-    default: "text-foreground",
-    bull: "text-bull",
-    bear: "text-bear",
-    primary: "text-gradient-primary",
-  };
+function EmptyWatchlist() {
   return (
-    <div className="card-glow rounded-xl p-4 animate-fade-up" style={{ animationDelay: `${delay}ms` }}>
-      <div className="flex items-center justify-between">
+    <div className="p-12 text-center">
+      <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+        <Star className="h-5 w-5 text-primary" />
+      </div>
+      <div className="text-sm font-medium">Watchlist ist leer</div>
+      <div className="mt-1 text-xs text-muted-foreground">
+        Füge Werte aus dem <Link to="/produkte" className="text-primary hover:underline">Produktkatalog</Link> hinzu.
+      </div>
+    </div>
+  );
+}
+
+function SkeletonCard({ label }: { label: string }) {
+  return (
+    <div className="card-glow rounded-xl p-5 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-        <Icon className={`h-4 w-4 ${tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-primary"}`} />
+        <Activity className="h-4 w-4 text-primary animate-pulse" />
       </div>
-      <div className={`mt-2 text-2xl font-bold tabular-nums ${toneClasses[tone]}`}>{value}</div>
-      {sublabel && <div className="mt-1 text-[11px] text-muted-foreground">{sublabel}</div>}
-    </div>
-  );
-}
-
-function Watchlist() {
-  const { settings } = useSettings();
-  return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
-      {/* Hero */}
-      <div className="relative pt-4 animate-fade-up">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              <Zap className="h-3 w-3 text-gold" /> Apex Markets
-            </div>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight">
-              Deine <span className="text-gradient-primary">Watchlist</span>.
-            </h1>
-            <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Echtzeit-Kurse, statistische Signale und Trendverlauf — gespeist aus dem
-              <span className="text-foreground"> Yahoo-Finance-Edge-Cache</span>. Kein Setup, kein API-Key.
-            </p>
-          </div>
-          <Link
-            to="/produkte"
-            className="group inline-flex items-center gap-2 self-start rounded-lg bg-gradient-to-br from-primary to-cyan-accent px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow"
-          >
-            <Star className="h-4 w-4 group-hover:rotate-12 transition-transform" /> Produkte hinzufügen
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <WatchlistStats symbols={settings.watchlist} />
-
-      {/* Tabelle */}
-      <div className="card-glow rounded-xl overflow-hidden animate-fade-up" style={{ animationDelay: "200ms" }}>
-        <div className="grid grid-cols-12 gap-2 border-b border-border/60 bg-muted/30 px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <div className="col-span-3">Symbol</div>
-          <div className="col-span-2">Kurs</div>
-          <div className="col-span-2">Tag Δ</div>
-          <div className="col-span-2">30T Trend</div>
-          <div className="col-span-3 text-right">Signal</div>
-        </div>
-        {settings.watchlist.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <Star className="h-5 w-5 text-primary" />
-            </div>
-            <div className="text-sm font-medium">Watchlist ist leer</div>
-            <div className="mt-1 text-xs text-muted-foreground">Füge Werte aus dem <Link to="/produkte" className="text-primary hover:underline">Produktkatalog</Link> hinzu, um Signale zu sehen.</div>
-          </div>
-        ) : (
-          settings.watchlist.map((s, i) => <Row key={s} symbol={s} idx={i} />)
-        )}
+      <div className="flex-1 flex items-center justify-center min-h-[180px]">
+        <div className="shimmer-text text-xs">Daten werden geladen…</div>
       </div>
     </div>
   );
 }
-
-function WatchlistStats({ symbols }: { symbols: string[] }) {
-  // useQueries → erlaubt dynamische Anzahl an Queries ohne Hook-Rule-Verletzung.
-  // Teilt sich denselben Cache wie die Row-Komponenten — keine extra API-Calls.
-  const results = useQueries({
-    queries: symbols.map((s) => ({
-      queryKey: ["candles", s],
-      queryFn: () => fetchCandles(s, "D", 260),
-      staleTime: 60 * 60 * 1000,
-      gcTime: 24 * 60 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    })),
-  });
-
-  const ready = results
-    .map((r, i) => {
-      if (!r.data?.c?.length) return null;
-      const closes = r.data.c;
-      const last = closes.at(-1) ?? 0;
-      const prev = closes.at(-2) ?? last;
-      const change = prev ? ((last - prev) / prev) * 100 : 0;
-      return { symbol: symbols[i], change };
-    })
-    .filter(Boolean) as { symbol: string; change: number }[];
-
-  const bulls = ready.filter((x) => x.change > 0).length;
-  const bears = ready.filter((x) => x.change < 0).length;
-  const top = [...ready].sort((a, b) => Math.abs(b.change) - Math.abs(a.change))[0];
-  // computeAll bleibt importiert für mögliche zukünftige Erweiterungen; einmal verwenden, um TS-Warnung zu vermeiden.
-  void computeAll;
-
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <StatCard label="Watchlist" value={String(symbols.length)} sublabel="aktive Werte" icon={Activity} tone="primary" delay={50} />
-      <StatCard label="Steigend" value={`${bulls}`} sublabel={`von ${ready.length}`} icon={TrendingUp} tone="bull" delay={100} />
-      <StatCard label="Fallend" value={`${bears}`} sublabel={`von ${ready.length}`} icon={TrendingDown} tone="bear" delay={150} />
-      <StatCard
-        label="Top Mover"
-        value={top ? `${top.change >= 0 ? "+" : ""}${top.change.toFixed(1)}%` : "—"}
-        sublabel={top?.symbol ?? "wartet"}
-        icon={Zap}
-        tone={top && top.change >= 0 ? "bull" : "bear"}
-        delay={200}
-      />
-    </div>
-  );
-}
-
