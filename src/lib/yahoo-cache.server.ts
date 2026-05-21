@@ -17,6 +17,18 @@ const HEADERS = {
   "Origin": "https://finance.yahoo.com",
 } as const;
 
+async function fetchJson(url: string): Promise<any> {
+  const res = await fetch(url, { headers: HEADERS });
+  if (!res.ok) throw new Error(`${new URL(url).host} → ${res.status}`);
+  return res.json();
+}
+
+function sparkToChart(j: any) {
+  const response = j?.spark?.result?.[0]?.response?.[0];
+  if (!response) throw new Error("Spark ohne Ergebnis");
+  return { chart: { result: [response], error: null } };
+}
+
 export async function fetchYahooChartCached(
   symbol: string,
   interval: string,
@@ -36,23 +48,36 @@ export async function fetchYahooChartCached(
 
   const p = (async () => {
     const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
+    const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
     const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
     let lastErr = "";
     for (const host of hosts) {
       try {
-        const res = await fetch(host + path, { headers: HEADERS });
-        if (res.ok) {
-          const j = await res.json();
-          STORE.set(key, {
-            value: j,
-            expires: now + ttlSec * 1000,
-            staleUntil: now + Math.max(ttlSec * 6, 3600) * 1000, // bis zu 6× TTL als Stale halten
-          });
-          return j;
-        }
-        lastErr = `${host.replace("https://", "")} → ${res.status}`;
+        const j = await fetchJson(host + path);
+        STORE.set(key, {
+          value: j,
+          expires: now + ttlSec * 1000,
+          staleUntil: now + Math.max(ttlSec * 6, 3600) * 1000, // bis zu 6× TTL als Stale halten
+        });
+        return j;
       } catch (e: any) {
-        lastErr = `${host}: ${e?.message || "fetch failed"}`;
+        lastErr = e?.message || `${host}: fetch failed`;
+      }
+    }
+
+    // Fallback: Yahoo Spark liefert denselben Timestamp/Close-Feed über einen
+    // anderen Endpoint und ist oft noch verfügbar, wenn Chart mit 429 limitiert.
+    for (const host of hosts) {
+      try {
+        const j = sparkToChart(await fetchJson(host + sparkPath));
+        STORE.set(key, {
+          value: j,
+          expires: now + ttlSec * 1000,
+          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
+        });
+        return j;
+      } catch (e: any) {
+        lastErr = e?.message || `${host}: spark failed`;
       }
     }
 
