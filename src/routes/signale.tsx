@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { fetchCandles, fetchQuote, getApiKey } from "@/lib/finnhub";
-import { PRODUCTS } from "@/lib/products";
+import { fetchCandles, getApiKey } from "@/lib/finnhub";
+import { findProduct } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
@@ -16,35 +16,32 @@ function SignalsPage() {
   const { settings } = useSettings();
   const [sortKey, setSortKey] = useState<SortKey>("confidence");
   const [side, setSide] = useState<"all" | "LONG" | "SHORT">("all");
+  const scanSymbols = settings.watchlist;
 
   const candleQs = useQueries({
-    queries: PRODUCTS.map((p) => ({
-      queryKey: ["candles", p.symbol],
-      queryFn: () => fetchCandles(p.symbol, "D", 365),
+    queries: scanSymbols.map((symbol) => ({
+      queryKey: ["candles", symbol],
+      queryFn: () => fetchCandles(symbol, "D", 260),
       enabled: !!getApiKey(),
-      staleTime: 5 * 60 * 1000,
-    })),
-  });
-  const quoteQs = useQueries({
-    queries: PRODUCTS.map((p) => ({
-      queryKey: ["quote", p.symbol],
-      queryFn: () => fetchQuote(p.symbol),
-      enabled: !!getApiKey(),
-      refetchInterval: 60000,
+      staleTime: 12 * 60 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
+      refetchOnWindowFocus: false,
     })),
   });
 
   const rows = useMemo(() => {
-    return PRODUCTS.map((p, i) => {
+    return scanSymbols.map((symbol, i) => {
+      const p = findProduct(symbol) ?? { symbol, name: "Freier Ticker" };
       const c = candleQs[i].data;
-      const q = quoteQs[i].data;
       if (!c) return null;
       const ind = computeAll(c.c);
-      if (q?.c) ind.price = q.c;
       const sig = scoreIndicators(ind, settings.risk);
-      return { p, ind, sig, change: q?.dp ?? 0 };
-    }).filter(Boolean) as { p: typeof PRODUCTS[number]; ind: ReturnType<typeof computeAll>; sig: ReturnType<typeof scoreIndicators>; change: number }[];
-  }, [candleQs, quoteQs, settings.risk]);
+      const last = c.c.at(-1) ?? 0;
+      const prev = c.c.at(-2) ?? last;
+      const change = prev ? ((last - prev) / prev) * 100 : 0;
+      return { p, ind, sig, change };
+    }).filter(Boolean) as { p: { symbol: string; name: string }; ind: ReturnType<typeof computeAll>; sig: ReturnType<typeof scoreIndicators>; change: number }[];
+  }, [candleQs, scanSymbols, settings.risk]);
 
   const filtered = rows
     .filter((r) => side === "all" || r.sig.verdict === side)
@@ -64,7 +61,7 @@ function SignalsPage() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Trends & Signale</h1>
-        <p className="text-sm text-muted-foreground">Automatisch generiert aus allen statistischen Indikatoren. Mindestkonfidenz ≥ {settings.minConfidence}%.</p>
+        <p className="text-sm text-muted-foreground">API-schonend nur aus deiner Watchlist berechnet. Mindestkonfidenz ≥ {settings.minConfidence}%.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -92,8 +89,8 @@ function SignalsPage() {
           <div className="col-span-2 text-right">Tag Δ</div>
           <div className="col-span-3 text-right">Signal</div>
         </div>
-        {loading && <div className="p-6 text-center text-sm text-muted-foreground">Berechne Signale für {PRODUCTS.length} Produkte…</div>}
-        {!loading && filtered.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">Keine Signale erfüllen die Filter.</div>}
+        {loading && <div className="p-6 text-center text-sm text-muted-foreground">Berechne Signale für {scanSymbols.length} Watchlist-Werte…</div>}
+        {!loading && filtered.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">Keine Signale erfüllen die Filter. Füge im Produktkatalog weitere Ticker zur Watchlist hinzu.</div>}
         {filtered.map(({ p, ind, sig, change }) => (
           <Link key={p.symbol} to="/produkte/$symbol" params={{ symbol: p.symbol }} className="grid grid-cols-12 gap-2 border-b border-border px-4 py-2.5 hover:bg-accent/40 text-sm">
             <div className="col-span-3"><span className="font-semibold">{p.symbol}</span> <span className="text-xs text-muted-foreground">{p.name}</span></div>

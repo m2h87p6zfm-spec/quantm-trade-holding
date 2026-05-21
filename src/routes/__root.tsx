@@ -68,7 +68,7 @@ function RootComponent() {
               <SidebarTrigger />
               <div className="ml-2 flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-bull" />
-                <span>Live · Finnhub Echtzeit-Feed</span>
+                <span>API-schonend · Twelve Data Feed</span>
               </div>
             </header>
             <main className="flex-1 overflow-x-hidden">

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, Eye, EyeOff, ExternalLink } from "lucide-react";
+import { Check, Eye, EyeOff, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { getApiKey, setApiKey } from "@/lib/finnhub";
 
@@ -11,6 +11,7 @@ function SettingsPage() {
   const [key, setKey] = useState("");
   const [show, setShow] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [watchSymbol, setWatchSymbol] = useState("");
 
   useEffect(() => { setKey(getApiKey()); }, []);
 
@@ -18,6 +19,12 @@ function SettingsPage() {
     setApiKey(key);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+  const addWatch = () => {
+    const symbol = watchSymbol.trim().toUpperCase().replace(/\s+/g, "");
+    if (!symbol || settings.watchlist.includes(symbol)) return;
+    update({ watchlist: [...settings.watchlist, symbol] });
+    setWatchSymbol("");
   };
 
   return (
@@ -31,7 +38,7 @@ function SettingsPage() {
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Twelve Data API-Key</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Kostenlosen Key (800 Calls/Tag) auf <a href="https://twelvedata.com/register" target="_blank" rel="noreferrer" className="text-cyan-accent inline-flex items-center gap-0.5 hover:underline">twelvedata.com/register <ExternalLink className="h-3 w-3" /></a> erstellen. Liefert globale Aktien, Indizes &amp; ETFs inkl. Historie. Lokal im Browser gespeichert.
+            Kostenlosen Key (800 Calls/Tag) auf <a href="https://twelvedata.com/register" target="_blank" rel="noreferrer" className="text-cyan-accent inline-flex items-center gap-0.5 hover:underline">twelvedata.com/register <ExternalLink className="h-3 w-3" /></a> erstellen. Die App lädt jetzt API-schonend nur bei Bedarf und cached Tagesdaten für 12 Stunden.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             Hinweis: Finnhub Free liefert keine Kerzendaten mehr (Premium-only) — daher der Wechsel.
@@ -47,6 +54,26 @@ function SettingsPage() {
           <button onClick={save} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             {saved ? <><Check className="h-4 w-4" /> Gespeichert</> : "Speichern"}
           </button>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-5 space-y-4">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Watchlist & API-Verbrauch</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Jeder neue Analysewert verbraucht ungefähr 1 Kerzen-Call. Automatische Massenscans wurden abgeschaltet; „Trends & Signale“ scannt nur diese Watchlist.</p>
+        </div>
+        <div className="flex gap-2">
+          <input value={watchSymbol} onChange={(e) => setWatchSymbol(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addWatch(); }} placeholder="Ticker hinzufügen, z. B. AMD, SAP.DE, VTI" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
+          <button onClick={addWatch} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <Plus className="h-4 w-4" /> Hinzufügen
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {settings.watchlist.map((symbol) => (
+            <button key={symbol} onClick={() => update({ watchlist: settings.watchlist.filter((s) => s !== symbol) })} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs font-mono hover:bg-accent">
+              {symbol} <Trash2 className="h-3 w-3 text-muted-foreground" />
+            </button>
+          ))}
         </div>
       </section>
 
