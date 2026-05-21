@@ -16,6 +16,8 @@ import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
+import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
+import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
@@ -52,6 +54,16 @@ const ProdukteSymbolRoute = ProdukteSymbolRouteImport.update({
   path: '/produkte/$symbol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicQuoteRoute = ApiPublicQuoteRouteImport.update({
+  id: '/api/public/quote',
+  path: '/api/public/quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
+  id: '/api/public/candles',
+  path: '/api/public/candles',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +73,8 @@ export interface FileRoutesByFullPath {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +84,8 @@ export interface FileRoutesByTo {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
+  '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +96,8 @@ export interface FileRoutesById {
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
+  '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +109,8 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/candles'
+    | '/api/public/quote'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +120,8 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte'
+    | '/api/public/candles'
+    | '/api/public/quote'
   id:
     | '__root__'
     | '/'
@@ -109,6 +131,8 @@ export interface FileRouteTypes {
     | '/signale'
     | '/produkte/$symbol'
     | '/produkte/'
+    | '/api/public/candles'
+    | '/api/public/quote'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +143,8 @@ export interface RootRouteChildren {
   SignaleRoute: typeof SignaleRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
+  ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
+  ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +198,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdukteSymbolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/quote': {
+      id: '/api/public/quote'
+      path: '/api/public/quote'
+      fullPath: '/api/public/quote'
+      preLoaderRoute: typeof ApiPublicQuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/candles': {
+      id: '/api/public/candles'
+      path: '/api/public/candles'
+      fullPath: '/api/public/candles'
+      preLoaderRoute: typeof ApiPublicCandlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +223,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignaleRoute: SignaleRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
+  ApiPublicCandlesRoute: ApiPublicCandlesRoute,
+  ApiPublicQuoteRoute: ApiPublicQuoteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

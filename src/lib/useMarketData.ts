@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchCandles, fetchQuote, getApiKey } from "./finnhub";
+import { fetchCandles, fetchQuote } from "./finnhub";
 import { computeAll } from "./indicators";
 
 export function useQuote(symbol: string, refetchMs = 0) {
@@ -8,10 +8,10 @@ export function useQuote(symbol: string, refetchMs = 0) {
     queryFn: () => fetchQuote(symbol),
     refetchInterval: refetchMs || false,
     refetchOnWindowFocus: false,
-    enabled: !!symbol && !!getApiKey(),
-    staleTime: 10 * 60 * 1000,
-    gcTime: 2 * 60 * 60 * 1000,
-    retry: false,
+    enabled: !!symbol,
+    staleTime: 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
   });
 }
 
@@ -19,11 +19,11 @@ export function useCandles(symbol: string) {
   return useQuery({
     queryKey: ["candles", symbol],
     queryFn: () => fetchCandles(symbol, "D", 260),
-    enabled: !!symbol && !!getApiKey(),
-    staleTime: 12 * 60 * 60 * 1000,
+    enabled: !!symbol,
+    staleTime: 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: false,
+    retry: 1,
   });
 }
 
@@ -33,3 +33,4 @@ export function useAnalysis(symbol: string) {
   const indicators = ready ? computeAll(candles.data!.c) : null;
   return { candles, indicators };
 }
+
