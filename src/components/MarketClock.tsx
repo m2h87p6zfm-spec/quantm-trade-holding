@@ -3,7 +3,7 @@ import { Clock } from "lucide-react";
 import { allSessions, type SessionState } from "@/lib/marketHours";
 
 export function MarketClock() {
-  const [states, setStates] = useState<SessionState[]>(() => allSessions());
+  const [states, setStates] = useState<SessionState[] | null>(null);
 
   useEffect(() => {
     const tick = () => setStates(allSessions());
@@ -12,6 +12,7 @@ export function MarketClock() {
     return () => clearInterval(id);
   }, []);
 
+  if (!states) return <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground h-4" />;
   const anyOpen = states.some((s) => s.isOpen);
 
   return (
