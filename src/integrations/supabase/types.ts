@@ -14,6 +14,166 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_learning_events: {
+        Row: {
+          after_belief: string
+          before_belief: string
+          created_at: string
+          id: string
+          market_regime: string
+          pattern_detected: string
+          prior_accuracy: number | null
+          sample_size: number
+          scenario_tag: string
+          trigger_prediction_ids: string[]
+          weight_adjustment: Json
+        }
+        Insert: {
+          after_belief: string
+          before_belief: string
+          created_at?: string
+          id?: string
+          market_regime: string
+          pattern_detected: string
+          prior_accuracy?: number | null
+          sample_size?: number
+          scenario_tag: string
+          trigger_prediction_ids?: string[]
+          weight_adjustment?: Json
+        }
+        Update: {
+          after_belief?: string
+          before_belief?: string
+          created_at?: string
+          id?: string
+          market_regime?: string
+          pattern_detected?: string
+          prior_accuracy?: number | null
+          sample_size?: number
+          scenario_tag?: string
+          trigger_prediction_ids?: string[]
+          weight_adjustment?: Json
+        }
+        Relationships: []
+      }
+      ai_outcomes: {
+        Row: {
+          correct: boolean
+          error_magnitude: number
+          evaluated_at: string
+          id: string
+          notes: string | null
+          prediction_id: string
+          price_at_eval: number
+          realized_return: number
+        }
+        Insert: {
+          correct: boolean
+          error_magnitude?: number
+          evaluated_at?: string
+          id?: string
+          notes?: string | null
+          prediction_id: string
+          price_at_eval: number
+          realized_return: number
+        }
+        Update: {
+          correct?: boolean
+          error_magnitude?: number
+          evaluated_at?: string
+          id?: string
+          notes?: string | null
+          prediction_id?: string
+          price_at_eval?: number
+          realized_return?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_outcomes_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "ai_predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_predictions: {
+        Row: {
+          confidence: number
+          created_at: string
+          horizon_days: number
+          id: string
+          market_regime: string
+          model_version: string
+          price_at_prediction: number
+          reasoning: Json
+          scenario_tag: string
+          symbol: string
+          user_id: string | null
+          verdict: string
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          horizon_days?: number
+          id?: string
+          market_regime: string
+          model_version?: string
+          price_at_prediction: number
+          reasoning?: Json
+          scenario_tag: string
+          symbol: string
+          user_id?: string | null
+          verdict: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          horizon_days?: number
+          id?: string
+          market_regime?: string
+          model_version?: string
+          price_at_prediction?: number
+          reasoning?: Json
+          scenario_tag?: string
+          symbol?: string
+          user_id?: string | null
+          verdict?: string
+        }
+        Relationships: []
+      }
+      ai_user_interactions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          prediction_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          prediction_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          prediction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_user_interactions_prediction_id_fkey"
+            columns: ["prediction_id"]
+            isOneToOne: false
+            referencedRelation: "ai_predictions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
