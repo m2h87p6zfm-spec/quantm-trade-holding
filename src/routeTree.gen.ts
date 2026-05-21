@@ -11,9 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as SignaleRouteImport } from './routes/signale'
+import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as KontoRouteImport } from './routes/konto'
 import { Route as KalenderRouteImport } from './routes/kalender'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
@@ -24,10 +27,12 @@ import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
+import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const WarRoomRoute = WarRoomRouteImport.update({
   id: '/war-room',
@@ -37,6 +42,11 @@ const WarRoomRoute = WarRoomRouteImport.update({
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreiseRoute = PreiseRouteImport.update({
+  id: '/preise',
+  path: '/preise',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortfolioRoute = PortfolioRouteImport.update({
@@ -52,6 +62,16 @@ const NewsRoute = NewsRouteImport.update({
 const MaerkteRoute = MaerkteRouteImport.update({
   id: '/maerkte',
   path: '/maerkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KontoRoute = KontoRouteImport.update({
+  id: '/konto',
+  path: '/konto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KalenderRoute = KalenderRouteImport.update({
@@ -104,6 +124,11 @@ const ProdukteSymbolRoute = ProdukteSymbolRouteImport.update({
   path: '/produkte/$symbol',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
+  id: '/checkout/return',
+  path: '/checkout/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicQuoteRoute = ApiPublicQuoteRouteImport.update({
   id: '/api/public/quote',
   path: '/api/public/quote',
@@ -124,6 +149,12 @@ const ApiPublicAgentChatRoute = ApiPublicAgentChatRouteImport.update({
   path: '/api/public/agent-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -134,17 +165,22 @@ export interface FileRoutesByFullPath {
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
+  '/konto': typeof KontoRoute
+  '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
+  '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,17 +191,22 @@ export interface FileRoutesByTo {
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
+  '/konto': typeof KontoRoute
+  '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
+  '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,17 +218,22 @@ export interface FileRoutesById {
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
+  '/konto': typeof KontoRoute
+  '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
+  '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -200,17 +246,22 @@ export interface FileRouteTypes {
     | '/einstellungen'
     | '/heatmap'
     | '/kalender'
+    | '/konto'
+    | '/login'
     | '/maerkte'
     | '/news'
     | '/portfolio'
+    | '/preise'
     | '/signale'
     | '/war-room'
+    | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
+    | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -221,17 +272,22 @@ export interface FileRouteTypes {
     | '/einstellungen'
     | '/heatmap'
     | '/kalender'
+    | '/konto'
+    | '/login'
     | '/maerkte'
     | '/news'
     | '/portfolio'
+    | '/preise'
     | '/signale'
     | '/war-room'
+    | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte'
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
+    | '/api/public/payments/webhook'
   id:
     | '__root__'
     | '/'
@@ -242,17 +298,22 @@ export interface FileRouteTypes {
     | '/einstellungen'
     | '/heatmap'
     | '/kalender'
+    | '/konto'
+    | '/login'
     | '/maerkte'
     | '/news'
     | '/portfolio'
+    | '/preise'
     | '/signale'
     | '/war-room'
+    | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
+    | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -264,17 +325,22 @@ export interface RootRouteChildren {
   EinstellungenRoute: typeof EinstellungenRoute
   HeatmapRoute: typeof HeatmapRoute
   KalenderRoute: typeof KalenderRoute
+  KontoRoute: typeof KontoRoute
+  LoginRoute: typeof LoginRoute
   MaerkteRoute: typeof MaerkteRoute
   NewsRoute: typeof NewsRoute
   PortfolioRoute: typeof PortfolioRoute
+  PreiseRoute: typeof PreiseRoute
   SignaleRoute: typeof SignaleRoute
   WarRoomRoute: typeof WarRoomRoute
+  CheckoutReturnRoute: typeof CheckoutReturnRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
+  ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -291,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/signale'
       fullPath: '/signale'
       preLoaderRoute: typeof SignaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preise': {
+      id: '/preise'
+      path: '/preise'
+      fullPath: '/preise'
+      preLoaderRoute: typeof PreiseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portfolio': {
@@ -312,6 +385,20 @@ declare module '@tanstack/react-router' {
       path: '/maerkte'
       fullPath: '/maerkte'
       preLoaderRoute: typeof MaerkteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/konto': {
+      id: '/konto'
+      path: '/konto'
+      fullPath: '/konto'
+      preLoaderRoute: typeof KontoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kalender': {
@@ -384,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdukteSymbolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout/return': {
+      id: '/checkout/return'
+      path: '/checkout/return'
+      fullPath: '/checkout/return'
+      preLoaderRoute: typeof CheckoutReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/quote': {
       id: '/api/public/quote'
       path: '/api/public/quote'
@@ -412,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -424,28 +525,23 @@ const rootRouteChildren: RootRouteChildren = {
   EinstellungenRoute: EinstellungenRoute,
   HeatmapRoute: HeatmapRoute,
   KalenderRoute: KalenderRoute,
+  KontoRoute: KontoRoute,
+  LoginRoute: LoginRoute,
   MaerkteRoute: MaerkteRoute,
   NewsRoute: NewsRoute,
   PortfolioRoute: PortfolioRoute,
+  PreiseRoute: PreiseRoute,
   SignaleRoute: SignaleRoute,
   WarRoomRoute: WarRoomRoute,
+  CheckoutReturnRoute: CheckoutReturnRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
+  ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
