@@ -71,19 +71,16 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
 
-  if (candles.isLoading) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
-  if (candles.error) {
-    const msg = (candles.error as Error).message;
+  if (candles.isLoading && !candles.data) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
+  if (!candles.data) {
     return (
-      <div className="text-sm">
-        <div className="text-bear">Datenfeed-Fehler: {msg}</div>
-        <div className="mt-1 text-xs text-muted-foreground">Die App lädt nur bei Bedarf. Falls trotzdem ein Limit kommt: kurz warten oder den API-Tarif erhöhen.</div>
-        <FeedErrorDiagnose symbol={symbol} errorMessage={msg} context="Kerzendaten 1d für Analyse" />
+      <div className="text-sm text-muted-foreground flex items-center gap-2">
+        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
+        Live-Daten werden aktualisiert… Bitte einen Moment.
       </div>
     );
   }
-  if (!candles.data) return <div className="text-sm text-muted-foreground">Keine Kerzendaten für {symbol}. Symbol prüfen.</div>;
-  if (!indicators) return <div className="text-sm text-muted-foreground">Keine Daten verfügbar.</div>;
+  if (!indicators) return <div className="text-sm text-muted-foreground">Daten werden vorbereitet…</div>;
 
   const sig = scoreIndicators(indicators, settings.risk);
   const text = brokerNarrative(symbol, product?.name ?? symbol, indicators, sig);
