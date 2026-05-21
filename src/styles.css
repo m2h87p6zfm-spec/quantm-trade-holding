@@ -32,6 +32,9 @@
   --color-bear: var(--bear);
   --color-neutral-signal: var(--neutral-signal);
   --color-cyan-accent: var(--cyan-accent);
+  --color-gold: var(--gold);
+  --color-ticker: var(--ticker);
+  --color-violet-accent: var(--violet-accent);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
