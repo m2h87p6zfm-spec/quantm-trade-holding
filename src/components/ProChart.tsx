@@ -150,12 +150,12 @@ export function ProChart({
       >
         <defs>
           <linearGradient id="zoneSup" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--bull))" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="hsl(var(--bull))" stopOpacity="0.04" />
+            <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="var(--bull)" stopOpacity="0.04" />
           </linearGradient>
           <linearGradient id="zoneRes" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--bear))" stopOpacity="0.04" />
-            <stop offset="100%" stopColor="hsl(var(--bear))" stopOpacity="0.18" />
+            <stop offset="0%" stopColor="var(--bear)" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="var(--bear)" stopOpacity="0.18" />
           </linearGradient>
         </defs>
 
@@ -167,8 +167,8 @@ export function ProChart({
             const val = yMax - p * (yMax - yMin);
             return (
               <g key={i}>
-                <line x1={pad.l} x2={w - pad.r} y1={y} y2={y} stroke="hsl(var(--border))" strokeDasharray="2 4" opacity={0.5} />
-                <text x={w - pad.r + 4} y={y + 3} fontSize={10} fill="hsl(var(--muted-foreground))" fontFamily="ui-monospace, monospace">
+                <line x1={pad.l} x2={w - pad.r} y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 4" opacity={0.5} />
+                <text x={w - pad.r + 4} y={y + 3} fontSize={10} fill="var(--muted-foreground)" fontFamily="ui-monospace, monospace">
                   {val.toFixed(2)}
                 </text>
               </g>
@@ -179,7 +179,7 @@ export function ProChart({
           {zones.map((z, i) => {
             const y1 = yAt(z.high); const y2 = yAt(z.low);
             const fill = z.type === "support" ? "url(#zoneSup)" : "url(#zoneRes)";
-            const stroke = z.type === "support" ? "hsl(var(--bull))" : "hsl(var(--bear))";
+            const stroke = z.type === "support" ? "var(--bull)" : "var(--bear)";
             return (
               <g key={i} opacity={0.55 + z.strength * 0.4}>
                 <rect x={pad.l} y={Math.min(y1, y2)} width={innerW} height={Math.abs(y2 - y1) || 1} fill={fill} />
@@ -199,7 +199,7 @@ export function ProChart({
                     const i = ind.bb.length - 1 - j;
                     return b == null ? "" : `L${xAt(i)},${yAt(b.lower)}`;
                  }).join(" ") + "Z"}
-              fill="hsl(var(--primary))"
+              fill="var(--primary)"
               opacity={0.05}
             />
           )}
@@ -208,7 +208,7 @@ export function ProChart({
           {closes.map((c, i) => {
             const o = opens[i]; const h = highs[i]; const l = lows[i];
             const up = c >= o;
-            const color = up ? "hsl(var(--bull))" : "hsl(var(--bear))";
+            const color = up ? "var(--bull)" : "var(--bear)";
             const xC = xAt(i);
             const yO = yAt(o); const yC = yAt(c);
             const bodyTop = Math.min(yO, yC);
@@ -222,15 +222,15 @@ export function ProChart({
           })}
 
           {/* Overlays */}
-          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="hsl(var(--primary))" width={1.4} />}
-          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="hsl(var(--gold))" width={1.2} />}
-          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="hsl(var(--violet-accent))" width={1.2} dash="4 4" />}
+          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--primary)" width={1.4} />}
+          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--gold)" width={1.2} />}
+          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="var(--violet-accent)" width={1.2} dash="4 4" />}
 
           {/* Last-Marker */}
           <g>
-            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "hsl(var(--bull))" : "hsl(var(--bear))"} strokeDasharray="2 3" opacity={0.6} />
-            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "hsl(var(--bull))" : "hsl(var(--bear))"} />
-            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="hsl(var(--background))" fontWeight={700} fontFamily="ui-monospace, monospace">{last.toFixed(2)}</text>
+            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} strokeDasharray="2 3" opacity={0.6} />
+            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} />
+            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="var(--background)" fontWeight={700} fontFamily="ui-monospace, monospace">{last.toFixed(2)}</text>
           </g>
         </g>
 
@@ -240,8 +240,8 @@ export function ProChart({
           const innerH = subH - 12;
           return (
             <g key={sub} transform={`translate(0, ${yOff})`}>
-              <line x1={pad.l} x2={w - pad.r} y1={0} y2={0} stroke="hsl(var(--border))" />
-              <text x={pad.l + 4} y={11} fontSize={10} fill="hsl(var(--muted-foreground))" fontWeight={600} className="uppercase">
+              <line x1={pad.l} x2={w - pad.r} y1={0} y2={0} stroke="var(--border)" />
+              <text x={pad.l + 4} y={11} fontSize={10} fill="var(--muted-foreground)" fontWeight={600} className="uppercase">
                 {sub === "volume" ? "Volume" : sub === "rsi" ? "RSI (14)" : "MACD (12/26/9)"}
               </text>
               {sub === "volume" && vols.map((v, i) => {
@@ -249,19 +249,19 @@ export function ProChart({
                 const up = closes[i] >= opens[i];
                 return (
                   <rect key={i} x={xAt(i) - candleW / 2} y={innerH - h + 2} width={candleW} height={h}
-                        fill={up ? "hsl(var(--bull))" : "hsl(var(--bear))"} opacity={0.45} />
+                        fill={up ? "var(--bull)" : "var(--bear)"} opacity={0.45} />
                 );
               })}
               {sub === "rsi" && (() => {
                 const ys = (val: number) => 2 + (1 - (val) / 100) * (innerH - 4);
                 return (
                   <>
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="hsl(var(--bear))" strokeDasharray="3 3" opacity={0.4} />
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="hsl(var(--bull))" strokeDasharray="3 3" opacity={0.4} />
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(50)} y2={ys(50)} stroke="hsl(var(--border))" strokeDasharray="2 4" opacity={0.5} />
-                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="hsl(var(--primary))" width={1.2} />
-                    <text x={w - pad.r + 4} y={ys(70) + 3} fontSize={9} fill="hsl(var(--muted-foreground))">70</text>
-                    <text x={w - pad.r + 4} y={ys(30) + 3} fontSize={9} fill="hsl(var(--muted-foreground))">30</text>
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="var(--bear)" strokeDasharray="3 3" opacity={0.4} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="var(--bull)" strokeDasharray="3 3" opacity={0.4} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(50)} y2={ys(50)} stroke="var(--border)" strokeDasharray="2 4" opacity={0.5} />
+                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="var(--primary)" width={1.2} />
+                    <text x={w - pad.r + 4} y={ys(70) + 3} fontSize={9} fill="var(--muted-foreground)">70</text>
+                    <text x={w - pad.r + 4} y={ys(30) + 3} fontSize={9} fill="var(--muted-foreground)">30</text>
                   </>
                 );
               })()}
@@ -273,16 +273,16 @@ export function ProChart({
                 const zeroY = yv(0);
                 return (
                   <>
-                    <line x1={pad.l} x2={w - pad.r} y1={zeroY} y2={zeroY} stroke="hsl(var(--border))" />
+                    <line x1={pad.l} x2={w - pad.r} y1={zeroY} y2={zeroY} stroke="var(--border)" />
                     {macd.hist.map((v, i) => {
                       const y = yv(v); const h = Math.abs(y - zeroY);
                       return (
                         <rect key={i} x={xAt(i) - candleW / 2} y={Math.min(y, zeroY)} width={candleW} height={Math.max(1, h)}
-                              fill={v >= 0 ? "hsl(var(--bull))" : "hsl(var(--bear))"} opacity={0.55} />
+                              fill={v >= 0 ? "var(--bull)" : "var(--bear)"} opacity={0.55} />
                       );
                     })}
-                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="hsl(var(--primary))" width={1.2} />
-                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="hsl(var(--gold))" width={1} />
+                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="var(--primary)" width={1.2} />
+                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="var(--gold)" width={1} />
                   </>
                 );
               })()}
@@ -293,10 +293,10 @@ export function ProChart({
         {/* === GLOBAL CROSSHAIR === */}
         {cross && (
           <g pointerEvents="none">
-            <line x1={cross.x} x2={cross.x} y1={0} y2={totalH - 4} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 3" opacity={0.7} />
-            <line x1={pad.l} x2={w - pad.r} y1={yAt(closes[cross.idx])} y2={yAt(closes[cross.idx])} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 3" opacity={0.6} />
-            <rect x={cross.x - 30} y={mainH - 14} width={60} height={14} fill="hsl(var(--popover))" stroke="hsl(var(--border))" />
-            <text x={cross.x} y={mainH - 4} fontSize={10} textAnchor="middle" fill="hsl(var(--foreground))" fontFamily="ui-monospace, monospace">
+            <line x1={cross.x} x2={cross.x} y1={0} y2={totalH - 4} stroke="var(--muted-foreground)" strokeDasharray="2 3" opacity={0.7} />
+            <line x1={pad.l} x2={w - pad.r} y1={yAt(closes[cross.idx])} y2={yAt(closes[cross.idx])} stroke="var(--muted-foreground)" strokeDasharray="2 3" opacity={0.6} />
+            <rect x={cross.x - 30} y={mainH - 14} width={60} height={14} fill="var(--popover)" stroke="var(--border)" />
+            <text x={cross.x} y={mainH - 4} fontSize={10} textAnchor="middle" fill="var(--foreground)" fontFamily="ui-monospace, monospace">
               {new Date(data.t[cross.idx] * 1000).toLocaleDateString("de-DE", { month: "short", day: "2-digit" })}
             </text>
           </g>
@@ -305,12 +305,12 @@ export function ProChart({
 
       {/* Legende */}
       <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
-        {overlays.includes("ema20") && <Legend swatch="hsl(var(--primary))" label="EMA 20" />}
-        {overlays.includes("ema50") && <Legend swatch="hsl(var(--gold))" label="EMA 50" />}
-        {overlays.includes("sma200") && <Legend swatch="hsl(var(--violet-accent))" label="SMA 200" />}
-        {overlays.includes("bbands") && <Legend swatch="hsl(var(--primary))" label="Bollinger 20·2σ" />}
+        {overlays.includes("ema20") && <Legend swatch="var(--primary)" label="EMA 20" />}
+        {overlays.includes("ema50") && <Legend swatch="var(--gold)" label="EMA 50" />}
+        {overlays.includes("sma200") && <Legend swatch="var(--violet-accent)" label="SMA 200" />}
+        {overlays.includes("bbands") && <Legend swatch="var(--primary)" label="Bollinger 20·2σ" />}
         {showZones && zones.length > 0 && (
-          <Legend swatch="hsl(var(--bull))" label={`${zones.length} Smart-Zones`} />
+          <Legend swatch="var(--bull)" label={`${zones.length} Smart-Zones`} />
         )}
       </div>
     </div>
