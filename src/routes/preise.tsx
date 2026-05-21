@@ -14,7 +14,7 @@ export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
       { title: "Preise — Apex Trades" },
-      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Setup-Score, Backtest Lab, War Room, Realtime-Daten und AI-Analysen." },
+      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Quant-Signale, Analyse-Agent, AI Learning, Smart Alerts und Realtime-Daten." },
     ],
   }),
   component: PricingPage,
