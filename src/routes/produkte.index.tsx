@@ -10,6 +10,8 @@ function KatalogPage() {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState<string>("Alle");
   const { settings, toggleWatch } = useSettings();
+  const customSymbol = q.trim().toUpperCase().replace(/\s+/g, "");
+  const exactMatch = listHasExactSymbol(searchProducts(q), customSymbol);
 
   let list = searchProducts(q);
   if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
@@ -18,7 +20,7 @@ function KatalogPage() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Produktkatalog</h1>
-        <p className="text-sm text-muted-foreground">{PRODUCTS.length} handelbare Produkte. Aktien & Indizes.</p>
+          <p className="text-sm text-muted-foreground">{PRODUCTS.length}+ Vorlagen. Zusätzlich kannst du jeden vom Datenfeed unterstützten Ticker direkt eingeben.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -32,6 +34,23 @@ function KatalogPage() {
           <option>Index</option>
         </select>
       </div>
+
+      {customSymbol.length >= 1 && !exactMatch && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm">
+          <div>
+            <div className="font-semibold">Freien Ticker verwenden: {customSymbol}</div>
+            <div className="text-xs text-muted-foreground">Wenn Twelve Data das Symbol kennt, lädt die App Analyse und Chart trotzdem.</div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => toggleWatch(customSymbol)} className="rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent">
+              {settings.watchlist.includes(customSymbol) ? "Aus Watchlist entfernen" : "Zur Watchlist"}
+            </button>
+            <Link to="/produkte/$symbol" params={{ symbol: customSymbol }} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+              Analysieren
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((p) => {
@@ -54,4 +73,8 @@ function KatalogPage() {
       </div>
     </div>
   );
+}
+
+function listHasExactSymbol(list: ReturnType<typeof searchProducts>, symbol: string) {
+  return list.some((p) => p.symbol.toUpperCase() === symbol);
 }
