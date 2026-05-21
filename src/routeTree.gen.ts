@@ -23,6 +23,7 @@ import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as AlertsRouteImport } from './routes/alerts'
+import { Route as AiLearningRouteImport } from './routes/ai-learning'
 import { Route as AgentRouteImport } from './routes/agent'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
@@ -30,6 +31,7 @@ import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
+import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/cron-evaluate'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
@@ -104,6 +106,11 @@ const AlertsRoute = AlertsRouteImport.update({
   path: '/alerts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiLearningRoute = AiLearningRouteImport.update({
+  id: '/ai-learning',
+  path: '/ai-learning',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgentRoute = AgentRouteImport.update({
   id: '/agent',
   path: '/agent',
@@ -139,6 +146,11 @@ const ApiPublicNewsSentimentRoute = ApiPublicNewsSentimentRouteImport.update({
   path: '/api/public/news-sentiment',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronEvaluateRoute = ApiPublicCronEvaluateRouteImport.update({
+  id: '/api/public/cron-evaluate',
+  path: '/api/public/cron-evaluate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
   id: '/api/public/candles',
   path: '/api/public/candles',
@@ -159,6 +171,7 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -178,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -185,6 +199,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -204,6 +219,7 @@ export interface FileRoutesByTo {
   '/produkte': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -212,6 +228,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agent': typeof AgentRoute
+  '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
@@ -231,6 +248,7 @@ export interface FileRoutesById {
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -240,6 +258,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/agent'
+    | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -259,6 +278,7 @@ export interface FileRouteTypes {
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/cron-evaluate'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -266,6 +286,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/agent'
+    | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -285,6 +306,7 @@ export interface FileRouteTypes {
     | '/produkte'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/cron-evaluate'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -292,6 +314,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/agent'
+    | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
@@ -311,6 +334,7 @@ export interface FileRouteTypes {
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/cron-evaluate'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -319,6 +343,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentRoute: typeof AgentRoute
+  AiLearningRoute: typeof AiLearningRoute
   AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
   BacktestRoute: typeof BacktestRoute
@@ -338,6 +363,7 @@ export interface RootRouteChildren {
   ProdukteIndexRoute: typeof ProdukteIndexRoute
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
+  ApiPublicCronEvaluateRoute: typeof ApiPublicCronEvaluateRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -443,6 +469,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-learning': {
+      id: '/ai-learning'
+      path: '/ai-learning'
+      fullPath: '/ai-learning'
+      preLoaderRoute: typeof AiLearningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/agent': {
       id: '/agent'
       path: '/agent'
@@ -492,6 +525,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsSentimentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron-evaluate': {
+      id: '/api/public/cron-evaluate'
+      path: '/api/public/cron-evaluate'
+      fullPath: '/api/public/cron-evaluate'
+      preLoaderRoute: typeof ApiPublicCronEvaluateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/candles': {
       id: '/api/public/candles'
       path: '/api/public/candles'
@@ -519,6 +559,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentRoute: AgentRoute,
+  AiLearningRoute: AiLearningRoute,
   AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
   BacktestRoute: BacktestRoute,
@@ -538,6 +579,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProdukteIndexRoute: ProdukteIndexRoute,
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
+  ApiPublicCronEvaluateRoute: ApiPublicCronEvaluateRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
@@ -545,3 +587,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
