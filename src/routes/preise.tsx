@@ -126,7 +126,7 @@ function PricingPage() {
             Schärfe deine Edge.
           </h1>
           <p className="mt-4 text-muted-foreground text-lg">
-            Setup-Score, Backtest Lab, AI-Sentiment und Realtime-Daten — wähle, was zu dir passt.
+            Analyse-Agent, Quant-Signale, AI Learning und Smart Alerts — wähle, was zu dir passt.
           </p>
 
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border/60 bg-card/50 mt-8">
