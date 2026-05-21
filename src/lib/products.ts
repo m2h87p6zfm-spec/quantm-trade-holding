@@ -117,7 +117,7 @@ export const PRODUCTS: Product[] = [
   { symbol: "SU.PA", name: "Schneider Electric", sector: "Industrie", region: "EU" },
   { symbol: "TTE.PA", name: "TotalEnergies", sector: "Energie", region: "EU" },
   { symbol: "RMS.PA", name: "Hermès", sector: "Konsum", region: "EU" },
-  { symbol: "AIR.PA", name: "Air Liquide", sector: "Rohstoffe", region: "EU" },
+  { symbol: "AI.PA", name: "Air Liquide", sector: "Rohstoffe", region: "EU" },
   { symbol: "SHEL", name: "Shell", sector: "Energie", region: "EU" },
   { symbol: "AZN", name: "AstraZeneca", sector: "Gesundheit", region: "EU" },
   { symbol: "NVO", name: "Novo Nordisk", sector: "Gesundheit", region: "EU" },
