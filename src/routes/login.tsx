@@ -65,7 +65,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8 text-foreground/80 hover:text-foreground">
-          <LineChart className="h-6 w-6 text-primary" />
+          <ApexLogo className="h-7 w-7" />
           <span className="font-semibold tracking-tight">Apex Trades</span>
         </Link>
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
