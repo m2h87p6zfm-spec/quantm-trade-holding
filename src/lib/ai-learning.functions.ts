@@ -47,7 +47,7 @@ export const recordPrediction = createServerFn({ method: "POST" })
         confidence: data.confidence,
         horizon_days: data.horizonDays,
         price_at_prediction: data.priceAtPrediction,
-        reasoning: data.reasoning ?? {},
+        reasoning: (data.reasoning ?? {}) as never,
         model_version: data.modelVersion ?? "v1",
       })
       .select("id")
@@ -107,7 +107,7 @@ export const getLearningContext = createServerFn({ method: "POST" })
         pattern: e.pattern_detected,
         before: e.before_belief,
         after: e.after_belief,
-        weightAdjustment: e.weight_adjustment as Record<string, unknown>,
+        weightAdjustment: (e.weight_adjustment ?? {}) as Record<string, number>,
         sampleSize: e.sample_size,
         priorAccuracy: e.prior_accuracy != null ? Number(e.prior_accuracy) : null,
       })),
