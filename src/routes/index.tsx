@@ -12,12 +12,15 @@ export const Route = createFileRoute("/")({ component: Watchlist });
 
 function Row({ symbol }: { symbol: string }) {
   const product = findProduct(symbol);
-  const { indicators, candles, quote } = useAnalysis(symbol);
+  const { indicators, candles } = useAnalysis(symbol);
   const { toggleWatch, settings } = useSettings();
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
-  const change = quote.data?.dp ?? 0;
-  const abs = quote.data?.d ?? 0;
-  const price = quote.data?.c ?? indicators?.price ?? 0;
+  const closes = candles.data?.c ?? [];
+  const last = closes.at(-1) ?? indicators?.price ?? 0;
+  const prev = closes.at(-2) ?? last;
+  const abs = last - prev;
+  const change = prev ? (abs / prev) * 100 : 0;
+  const price = indicators?.price ?? last;
 
   return (
     <Link to="/produkte/$symbol" params={{ symbol }} className="grid grid-cols-12 items-center gap-2 border-b border-border px-4 py-3 hover:bg-accent/40 transition-colors">
@@ -27,7 +30,7 @@ function Row({ symbol }: { symbol: string }) {
         </button>
         <div>
           <div className="font-semibold text-sm">{symbol}</div>
-          <div className="text-[11px] text-muted-foreground">{product?.name}</div>
+          <div className="text-[11px] text-muted-foreground">{product?.name ?? "Freier Ticker"}</div>
         </div>
       </div>
       <div className="col-span-2 font-mono text-sm tabular-nums">{price ? price.toFixed(2) : "—"}</div>
