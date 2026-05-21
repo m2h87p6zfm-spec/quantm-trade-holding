@@ -1,12 +1,12 @@
 // Server-side in-memory cache + request coalescing für Yahoo-Finance-Proxy.
 // Ziel: Rate-Limit (HTTP 429) vermeiden, indem identische Anfragen gebündelt
 // und Antworten zwischengespeichert werden. Bei Yahoo-Fehler wird notfalls
-// abgelaufener (stale) Cache zurückgegeben.
+// abgelaufener (stale) Cache zurückgegeben — Endpunkte werfen niemals.
 
 type Entry = { value: any; expires: number; staleUntil: number };
 
 const STORE = new Map<string, Entry>();
-const INFLIGHT = new Map<string, Promise<any>>();
+const INFLIGHT = new Map<string, Promise<CachedChart>>();
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const HEADERS = {
@@ -45,91 +45,60 @@ function sparkToChart(j: any) {
   return { chart: { result: [response], error: null } };
 }
 
+export type CachedChart = { value: any | null; stale: boolean; lastUpdated: number };
+
 export async function fetchYahooChartCached(
   symbol: string,
   interval: string,
   range: string,
   ttlSec: number,
-): Promise<any> {
+): Promise<CachedChart> {
   const key = `${symbol}|${interval}|${range}`;
   const now = Date.now();
   const cached = STORE.get(key);
 
-  // Frische Daten? → zurück.
-  if (cached && cached.expires > now) return cached.value;
+  if (cached && cached.expires > now) {
+    return { value: cached.value, stale: false, lastUpdated: cached.expires - ttlSec * 1000 };
+  }
 
-  // Schon eine laufende Anfrage? → drauf warten (Coalescing).
   const inflight = INFLIGHT.get(key);
   if (inflight) return inflight;
 
-  const p = (async () => {
+  const p = (async (): Promise<CachedChart> => {
     const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
     const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
     const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
-    let lastErr = "";
-    for (const host of hosts) {
+
+    const attempts: Array<() => Promise<any>> = [];
+    for (const host of hosts) attempts.push(() => fetchJson(host + path));
+    for (const host of hosts) attempts.push(async () => sparkToChart(await fetchJson(host + sparkPath)));
+    for (const host of hosts) attempts.push(() => fetchJsonViaReader(host + path));
+    for (const host of hosts) attempts.push(async () => sparkToChart(await fetchJsonViaReader(host + sparkPath)));
+
+    for (const run of attempts) {
       try {
-        const j = await fetchJson(host + path);
+        const j = await run();
+        if (!j?.chart?.result?.[0]) continue;
         STORE.set(key, {
           value: j,
           expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 6, 3600) * 1000, // bis zu 6× TTL als Stale halten
+          staleUntil: now + Math.max(ttlSec * 24, 24 * 3600) * 1000,
         });
-        return j;
-      } catch (e: any) {
-        lastErr = e?.message || `${host}: fetch failed`;
+        return { value: j, stale: false, lastUpdated: now };
+      } catch {
+        // weiter
       }
     }
 
-    // Fallback: Yahoo Spark liefert denselben Timestamp/Close-Feed über einen
-    // anderen Endpoint und ist oft noch verfügbar, wenn Chart mit 429 limitiert.
-    for (const host of hosts) {
-      try {
-        const j = sparkToChart(await fetchJson(host + sparkPath));
-        STORE.set(key, {
-          value: j,
-          expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
-        });
-        return j;
-      } catch (e: any) {
-        lastErr = e?.message || `${host}: spark failed`;
-      }
+    // Yahoo blockt → wenn irgendetwas im Cache liegt, gib das stale zurück.
+    if (cached) {
+      return {
+        value: cached.value,
+        stale: true,
+        lastUpdated: cached.expires - ttlSec * 1000,
+      };
     }
-
-    // Zweiter Fallback: Yahoo über einen Read-Only-Reader abrufen. Das bleibt
-    // echte Yahoo-Marktdaten, umgeht aber serverseitige 429-Blocks der App-IP.
-    for (const host of hosts) {
-      try {
-        const j = await fetchJsonViaReader(host + path);
-        STORE.set(key, {
-          value: j,
-          expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
-        });
-        return j;
-      } catch (e: any) {
-        lastErr = e?.message || `${host}: reader chart failed`;
-      }
-    }
-
-    for (const host of hosts) {
-      try {
-        const j = sparkToChart(await fetchJsonViaReader(host + sparkPath));
-        STORE.set(key, {
-          value: j,
-          expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
-        });
-        return j;
-      } catch (e: any) {
-        lastErr = e?.message || `${host}: reader spark failed`;
-      }
-    }
-
-    // Yahoo blockt → wenn wir noch (stale) Daten haben, gib die zurück.
-    if (cached && cached.staleUntil > now) return cached.value;
-    throw new Error(`Yahoo nicht erreichbar (${lastErr})`);
+    return { value: null, stale: true, lastUpdated: 0 };
   })().finally(() => {
     INFLIGHT.delete(key);
   });
