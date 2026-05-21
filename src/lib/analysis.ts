@@ -108,11 +108,22 @@ Das bedeutet: pro 1 € Risiko stehen 2,5 € potenzieller Gewinn gegenüber.`;
     ? `\n**Für Einsteiger:** "${sig.verdict === "LONG" ? "Long" : "Short"}" heißt: man wettet auf ${sig.verdict === "LONG" ? "steigende" : "fallende"} Kurse. Niemals mehr riskieren als man verlieren kann — als Faustregel max. 1–2% deines Kapitals pro Trade.`
     : "";
 
+  const glossary = `### 📖 Was bedeuten die Indikatoren?
+• **RSI (Relative Strength Index, 0–100):** misst, wie stark gekauft wurde. **>70 überkauft** (Korrektur möglich), **<30 überverkauft** (Erholung möglich), ~50 neutral.
+• **MACD-Histogramm:** Differenz zwischen kurz- und langfristigem gleitendem Durchschnitt. **Positiv = Aufwärtsmomentum**, Vorzeichenwechsel deutet auf Trendwende.
+• **Bollinger-Bänder (SMA20 ± 2σ):** Volatilitäts-Korridor. Kurs am **oberen Band = teuer**, am **unteren Band = günstig** relativ zum 20-Tage-Schnitt.
+• **Z-Score:** wie weit der Kurs vom Mittelwert abweicht, in Standardabweichungen. **>+2** stark überkauft, **<−2** stark überverkauft.
+• **Volatilität (annualisiert):** erwartete jährliche Schwankungsbreite. Hoch = höheres Risiko **und** höhere Chance.
+• **Sharpe-Ratio:** Rendite pro Risikoeinheit. **>1 gut**, **>2 sehr gut**, <0 schlechter als ein Sparbuch.
+• **Beta:** Mitschwingen mit dem Gesamtmarkt. **1 = wie Markt**, **>1 stärker**, **<1 defensiver**.
+• **Momentum (10 Perioden):** Kursveränderung der letzten 10 Tage. Positiv = Trend nach oben.`;
+
   return [
     `## ${name} (${symbol}) — aktuell ${fmt(ind.price)} USD`,
     action,
     indicatorsBlock,
     macro,
     levels + beginnerNote,
+    glossary,
   ].join("\n\n");
 }
