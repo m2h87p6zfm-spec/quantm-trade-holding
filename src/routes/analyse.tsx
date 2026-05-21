@@ -96,25 +96,33 @@ function AgentResponse({ symbol }: { symbol: string }) {
         dangerouslySetInnerHTML={{ __html: renderMd(text) }}
       />
       <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 pt-2 border-t border-border">
-        <Stat label="Z-Score" v={indicators.zScore.toFixed(2)} />
-        <Stat label="RSI(14)" v={indicators.rsi.toFixed(1)} />
-        <Stat label="MACD-Hist" v={indicators.macd.histogram.toFixed(3)} />
-        <Stat label="Vola ann." v={(indicators.volatility * 100).toFixed(1) + "%"} />
-        <Stat label="Sharpe" v={indicators.sharpe.toFixed(2)} />
-        <Stat label="Beta" v={indicators.beta.toFixed(2)} />
-        <Stat label="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} />
-        <Stat label="Bollinger ±" v={indicators.bollinger.lower.toFixed(2) + " / " + indicators.bollinger.upper.toFixed(2)} />
+        <Stat label="Z-Score" v={indicators.zScore.toFixed(2)} hint="Abweichung vom Mittelwert in Standardabweichungen. >+2 = stark überkauft, <−2 = stark überverkauft." />
+        <Stat label="RSI(14)" v={indicators.rsi.toFixed(1)} hint="Relative Strength Index (0–100). >70 überkauft, <30 überverkauft, ~50 neutral." />
+        <Stat label="MACD-Hist" v={indicators.macd.histogram.toFixed(3)} hint="Differenz MACD-Linie minus Signallinie. Positiv = bullisches Momentum, Vorzeichenwechsel = Trendwende-Signal." />
+        <Stat label="Vola ann." v={(indicators.volatility * 100).toFixed(1) + "%"} hint="Annualisierte Volatilität: erwartete jährliche Schwankungsbreite. Höher = riskanter." />
+        <Stat label="Sharpe" v={indicators.sharpe.toFixed(2)} hint="Rendite pro Risikoeinheit. >1 gut, >2 sehr gut, <0 schlechter als risikofrei." />
+        <Stat label="Beta" v={indicators.beta.toFixed(2)} hint="Sensitivität zum Markt. 1 = wie Markt, >1 schwankt stärker, <1 defensiver." />
+        <Stat label="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} hint="Kursveränderung über die letzten 10 Perioden. Positiv = Aufwärtstrend." />
+        <Stat label="Bollinger ±" v={indicators.bollinger.lower.toFixed(2) + " / " + indicators.bollinger.upper.toFixed(2)} hint="Unteres / oberes Band (SMA20 ± 2σ). Kurs am oberen Band = überkauft, am unteren = überverkauft." />
       </div>
       <DisclaimerInline />
     </div>
   );
 }
 
-function Stat({ label, v }: { label: string; v: string }) {
+function Stat({ label, v, hint }: { label: string; v: string; hint?: string }) {
   return (
-    <div className="rounded-md border border-border bg-background/60 px-2 py-1.5">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    <div className="group relative rounded-md border border-border bg-background/60 px-2 py-1.5" title={hint}>
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span>{label}</span>
+        {hint && <span className="text-muted-foreground/60 cursor-help">ⓘ</span>}
+      </div>
       <div className="font-mono text-sm tabular-nums">{v}</div>
+      {hint && (
+        <div className="pointer-events-none absolute left-0 right-0 top-full z-20 mt-1 hidden rounded-md border border-border bg-popover p-2 text-[11px] font-normal normal-case tracking-normal leading-snug text-popover-foreground shadow-lg group-hover:block">
+          {hint}
+        </div>
+      )}
     </div>
   );
 }
