@@ -6,15 +6,33 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 } as const;
 
-const UA = "Mozilla/5.0 (compatible; LovableBot/1.0)";
+const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const HEADERS = {
+  "User-Agent": UA,
+  "Accept": "application/json,text/plain,*/*",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://finance.yahoo.com/",
+  "Origin": "https://finance.yahoo.com",
+} as const;
+
 const VALID_INTERVAL = new Set(["1d", "1h", "1wk", "1mo"]);
 const VALID_RANGE = new Set(["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"]);
 
 async function fetchYahooCandles(symbol: string, interval: string, range: string) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}`;
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
-  if (!res.ok) throw new Error(`Yahoo ${res.status}`);
-  const j: any = await res.json();
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
+  const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
+  let j: any = null;
+  let lastErr = "";
+  for (const host of hosts) {
+    try {
+      const res = await fetch(host + path, { headers: HEADERS });
+      if (res.ok) { j = await res.json(); break; }
+      lastErr = `${host.replace("https://", "")} → ${res.status}`;
+    } catch (e: any) {
+      lastErr = `${host}: ${e?.message || "fetch failed"}`;
+    }
+  }
+  if (!j) throw new Error(`Yahoo nicht erreichbar (${lastErr})`);
   const r = j?.chart?.result?.[0];
   if (!r) throw new Error("Kein Ergebnis");
   const ts: number[] = r.timestamp || [];
