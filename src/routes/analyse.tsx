@@ -88,6 +88,25 @@ function AgentResponse({ symbol }: { symbol: string }) {
 
   const sig = scoreIndicators(indicators, settings.risk);
   const text = brokerNarrative(symbol, product?.name ?? symbol, indicators, sig);
+  const regime = detectRegime(indicators);
+  const scenarioTag = deriveScenarioTag(indicators, regime);
+  const record = useServerFn(recordPrediction);
+
+  useEffect(() => {
+    record({
+      data: {
+        symbol,
+        scenarioTag,
+        marketRegime: regime,
+        verdict: sig.verdict,
+        confidence: Math.max(0, Math.min(1, sig.confidence)),
+        horizonDays: 5,
+        priceAtPrediction: indicators.price,
+        reasoning: { score: sig.score, zScore: indicators.zScore, rsi: indicators.rsi },
+      },
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, scenarioTag, regime, sig.verdict]);
 
   return (
     <div className="space-y-3">
@@ -98,6 +117,13 @@ function AgentResponse({ symbol }: { symbol: string }) {
       <div
         className="prose-sm max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ul]:space-y-1 [&_ul]:pl-1 [&_li]:list-none [&_strong]:text-foreground"
         dangerouslySetInnerHTML={{ __html: renderMd(text) }}
+      />
+      <LearningProgressBlock
+        symbol={symbol}
+        scenarioTag={scenarioTag}
+        marketRegime={regime}
+        currentVerdict={sig.verdict}
+        currentConfidence={sig.confidence}
       />
       <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 pt-2 border-t border-border">
         <Stat label="Z-Score" v={indicators.zScore.toFixed(2)} hint="Abweichung vom Mittelwert in Standardabweichungen. >+2 = stark überkauft, <−2 = stark überverkauft." />
