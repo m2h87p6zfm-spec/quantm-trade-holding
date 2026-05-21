@@ -7,24 +7,24 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 } as const;
 
-async function buildQuote(symbol: string) {
-  // 60s TTL für Quotes
-  const j: any = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+function buildQuote(j: any, symbol: string) {
   const r = j?.chart?.result?.[0];
-  if (!r) throw new Error("Kein Ergebnis");
+  if (!r) return null;
   const meta = r.meta || {};
   const c = Number(meta.regularMarketPrice);
   const pc = Number(meta.chartPreviousClose ?? meta.previousClose);
-  const closes: number[] = (r.indicators?.quote?.[0]?.close || []).filter((x: any) => x != null);
+  const closes: number[] = (r.indicators?.quote?.[0]?.close || []).filter((x: any) => x != null && Number.isFinite(Number(x)));
   const lastClose = closes.length ? Number(closes[closes.length - 1]) : c;
   const price = Number.isFinite(c) ? c : lastClose;
+  if (!Number.isFinite(price)) return null;
+  const safePc = Number.isFinite(pc) ? pc : price;
   return {
     c: price,
-    pc,
-    d: price - pc,
-    dp: pc ? ((price - pc) / pc) * 100 : 0,
-    h: Number(meta.regularMarketDayHigh ?? price),
-    l: Number(meta.regularMarketDayLow ?? price),
+    pc: safePc,
+    d: price - safePc,
+    dp: safePc ? ((price - safePc) / safePc) * 100 : 0,
+    h: Number.isFinite(Number(meta.regularMarketDayHigh)) ? Number(meta.regularMarketDayHigh) : price,
+    l: Number.isFinite(Number(meta.regularMarketDayLow)) ? Number(meta.regularMarketDayLow) : price,
     o: Number(r.indicators?.quote?.[0]?.open?.[0] ?? price),
     t: Math.floor(Date.now() / 1000),
     currency: meta.currency,
@@ -41,25 +41,34 @@ export const Route = createFileRoute("/api/public/quote")({
         const url = new URL(request.url);
         const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
         if (!symbol || symbol.length > 16 || !/^[A-Z0-9.\-^]+$/i.test(symbol)) {
-          return new Response(JSON.stringify({ error: "Ungültiges Symbol" }), {
-            status: 400, headers: { "Content-Type": "application/json", ...CORS },
+          return new Response(JSON.stringify({ status: "invalid", message: "Ungültiges Symbol" }), {
+            status: 200, headers: { "Content-Type": "application/json", ...CORS },
           });
         }
-        try {
-          const data = await buildQuote(symbol);
-          return new Response(JSON.stringify(data), {
-            status: 200,
-            headers: {
-              "Content-Type": "application/json",
-              "Cache-Control": "public, max-age=60, s-maxage=60",
-              ...CORS,
-            },
-          });
-        } catch (e: any) {
-          return new Response(JSON.stringify({ error: e?.message || "Fehler" }), {
-            status: 502, headers: { "Content-Type": "application/json", ...CORS },
+        const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+        const data = cached.value ? buildQuote(cached.value, symbol) : null;
+        if (!data) {
+          return new Response(JSON.stringify({
+            status: "reconnecting",
+            stale: true,
+            lastUpdated: 0,
+            message: "Live-Daten werden aktualisiert…",
+          }), {
+            status: 200, headers: { "Content-Type": "application/json", ...CORS },
           });
         }
+        return new Response(JSON.stringify({
+          ...data,
+          stale: cached.stale,
+          lastUpdated: cached.lastUpdated,
+        }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "public, max-age=60, s-maxage=60",
+            ...CORS,
+          },
+        });
       },
     },
   },
