@@ -17,10 +17,26 @@ const HEADERS = {
   "Origin": "https://finance.yahoo.com",
 } as const;
 
+function parseJsonFromText(text: string): any {
+  const marker = "Markdown Content:";
+  const marked = text.includes(marker) ? text.slice(text.indexOf(marker) + marker.length) : text;
+  const start = marked.search(/[\[{]/);
+  if (start < 0) throw new Error("Antwort enthält kein JSON");
+  return JSON.parse(marked.slice(start).trim());
+}
+
 async function fetchJson(url: string): Promise<any> {
   const res = await fetch(url, { headers: HEADERS });
   if (!res.ok) throw new Error(`${new URL(url).host} → ${res.status}`);
-  return res.json();
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) return res.json();
+  return parseJsonFromText(await res.text());
+}
+
+async function fetchJsonViaReader(url: string): Promise<any> {
+  const target = new URL(url);
+  const readerUrl = `https://r.jina.ai/http://${target.host}${target.pathname}${target.search}`;
+  return fetchJson(readerUrl);
 }
 
 function sparkToChart(j: any) {
@@ -78,6 +94,36 @@ export async function fetchYahooChartCached(
         return j;
       } catch (e: any) {
         lastErr = e?.message || `${host}: spark failed`;
+      }
+    }
+
+    // Zweiter Fallback: Yahoo über einen Read-Only-Reader abrufen. Das bleibt
+    // echte Yahoo-Marktdaten, umgeht aber serverseitige 429-Blocks der App-IP.
+    for (const host of hosts) {
+      try {
+        const j = await fetchJsonViaReader(host + path);
+        STORE.set(key, {
+          value: j,
+          expires: now + ttlSec * 1000,
+          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
+        });
+        return j;
+      } catch (e: any) {
+        lastErr = e?.message || `${host}: reader chart failed`;
+      }
+    }
+
+    for (const host of hosts) {
+      try {
+        const j = sparkToChart(await fetchJsonViaReader(host + sparkPath));
+        STORE.set(key, {
+          value: j,
+          expires: now + ttlSec * 1000,
+          staleUntil: now + Math.max(ttlSec * 12, 7200) * 1000,
+        });
+        return j;
+      } catch (e: any) {
+        lastErr = e?.message || `${host}: reader spark failed`;
       }
     }
 
