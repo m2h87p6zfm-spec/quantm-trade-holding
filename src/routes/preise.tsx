@@ -14,7 +14,7 @@ export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
       { title: "Preise — Apex Trades" },
-      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Setup-Score, Backtest Lab, War Room, Realtime-Daten und AI-Analysen." },
+      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Quant-Signale, Analyse-Agent, AI Learning, Smart Alerts und Realtime-Daten." },
     ],
   }),
   component: PricingPage,
@@ -63,13 +63,13 @@ const plans: Plan[] = [
     yearlyPriceId: "apex_pro_yearly",
     highlighted: true,
     features: [
-      "Unlimitierte Watchlist & Alerts",
-      "Setup-Score & alle Signale (LONG/SHORT/NEUTRAL)",
-      "Backtest Lab (Equity-Curve, Sharpe, Win-Rate)",
+      "Unlimitierte Watchlist & Smart Alerts",
+      "Analyse-Agent — strukturierte Broker Research Note pro Aktie",
+      "Quant-Signale (LONG/SHORT/NEUTRAL) mit Konfidenz",
+      "Indikator-Breakdown: RSI, MACD, Bollinger, Z-Score, Sharpe, Beta",
       "AI News-Sentiment (Gemini Flash)",
       "Sektor-Heatmap & alle Timeframes",
       "Economic Calendar",
-      "Analyse-Agent mit Trade-Plan",
       "Portfolio-Tracking",
     ],
   },
@@ -84,12 +84,10 @@ const plans: Plan[] = [
     yearlyPriceId: "apex_elite_yearly",
     features: [
       "Alles aus Pro",
-      "War Room — Multi-Chart TradingView-Style",
-      "Smart Zones — Auto Supply/Demand Detection",
+      "AI Learning — Transparenz, was die Engine aus Fehlern lernt",
+      "Institutional Decision Engine mit Smart-Money- & Regime-Filter",
       "Realtime-Streaming (kein 15-Min-Delay)",
       "Priority AI (Gemini Pro statt Flash)",
-      "Advanced Backtest (Walk-Forward, Monte-Carlo)",
-      "Quick-Trade Hotkeys & Pro-Keyboard-Layer",
       "Custom Alert-Webhooks (Discord/Telegram)",
       "Portfolio Risk-Analytics (VaR, Korrelation)",
       "Priority Support",
@@ -128,7 +126,7 @@ function PricingPage() {
             Schärfe deine Edge.
           </h1>
           <p className="mt-4 text-muted-foreground text-lg">
-            Setup-Score, Backtest Lab, AI-Sentiment und Realtime-Daten — wähle, was zu dir passt.
+            Analyse-Agent, Quant-Signale, AI Learning und Smart Alerts — wähle, was zu dir passt.
           </p>
 
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border/60 bg-card/50 mt-8">
