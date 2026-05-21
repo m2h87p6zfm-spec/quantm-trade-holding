@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -50,7 +51,6 @@ export const Route = createFileRoute("/api/public/candles")({
             });
           }
           const ttl = interval === "1d" || interval === "1wk" || interval === "1mo" ? 3600 : 300;
-          const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
           const cached = await fetchYahooChartCached(symbol, interval, range, ttl);
           const data = cached.value ? transform(cached.value) : null;
           if (!data) {
