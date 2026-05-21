@@ -7,7 +7,7 @@ import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
-import { FeedErrorDiagnose } from "@/components/FeedErrorDiagnose";
+
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
