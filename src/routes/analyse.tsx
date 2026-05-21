@@ -81,7 +81,7 @@ function Stat({ label, v }: { label: string; v: string }) {
 function AnalysePage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([
-    { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *„Analysiere NVDA"*, *„Wie steht der DAX?"* oder *„Soll ich Tesla kaufen?"*" },
+    { role: "agent", text: 'Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX?* oder *Soll ich Tesla kaufen?*' },
   ]);
 
   const submit = (e: React.FormEvent) => {
