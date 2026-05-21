@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Star, StarOff } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
-import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
+import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
-import { DisclaimerInline } from "@/components/Disclaimer";
+import { BrokerAssessment } from "@/components/BrokerAssessment";
 
 export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
 
@@ -18,7 +18,6 @@ function ProductDetail() {
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
-  const text = indicators && sig ? brokerNarrative(symbol, product?.name ?? symbol, indicators, sig) : null;
   const closes = candles.data?.c ?? [];
   const last = closes.at(-1) ?? indicators?.price ?? 0;
   const prev = closes.at(-2) ?? last;
@@ -74,27 +73,10 @@ function ProductDetail() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Broker-Einschätzung</div>
-              {text && <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') }} />}
-              <DisclaimerInline />
-            </div>
-
-            {sig.verdict !== "NEUTRAL" && (
-              <div className="rounded-lg border border-border bg-card p-4">
-                <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Trade-Setup</div>
-                <div className="space-y-2 text-sm">
-                  <Row k="Entry" v={sig.entry.toFixed(2)} />
-                  <Row k="Stop" v={sig.stop.toFixed(2)} klass="text-bear" />
-                  <Row k="Target" v={sig.target.toFixed(2)} klass="text-bull" />
-                  <Row k="Risk/Reward" v={`1 : ${sig.rr.toFixed(1)}`} />
-                  <Row k="Risiko abs." v={sig.risk.toFixed(2)} />
-                </div>
-              </div>
-            )}
+            <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
 
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Indikatoren</div>
+              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rohdaten — Indikatoren</div>
               <div className="space-y-1.5 text-sm">
                 <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} />
                 <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} />
