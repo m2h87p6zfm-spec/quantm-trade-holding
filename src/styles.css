@@ -206,3 +206,37 @@
 .tick-glow-bull { box-shadow: 0 0 12px color-mix(in oklab, var(--bull) 50%, transparent); }
 .tick-glow-bear { box-shadow: 0 0 12px color-mix(in oklab, var(--bear) 50%, transparent); }
 
+
+/* Trading-themed accents */
+.text-gold { color: var(--gold); }
+.text-ticker { color: var(--ticker); }
+.text-violet-accent { color: var(--violet-accent); }
+.text-gradient-gold {
+  background-image: linear-gradient(135deg, var(--gold) 0%, var(--ticker) 50%, color-mix(in oklab, var(--gold) 70%, white) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.text-gradient-bull {
+  background-image: linear-gradient(135deg, var(--bull) 0%, var(--cyan-accent) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Ticker tape scroll */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker { animation: ticker-scroll 60s linear infinite; }
+
+/* Heatmap cells */
+.heat-cell {
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+}
+.heat-cell:hover { transform: scale(1.04); z-index: 5; box-shadow: 0 8px 28px -8px rgb(0 0 0 / 0.6); }
+.heat-cell::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgb(255 255 255 / 0.08), transparent 60%);
+  pointer-events: none;
+}
