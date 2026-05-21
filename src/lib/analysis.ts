@@ -1,4 +1,4 @@
-// Agent-Logik: aus IndicatorSet → Urteil + Wall-Street-Text
+// Agent-Logik: aus IndicatorSet → Urteil + Wall-Street-Text (einsteigerfreundlich)
 import type { IndicatorSet } from "./indicators";
 
 export type Verdict = "LONG" | "SHORT" | "NEUTRAL";
@@ -6,14 +6,14 @@ export type RiskProfile = "konservativ" | "ausgewogen" | "spekulativ";
 
 export type Signal = {
   verdict: Verdict;
-  confidence: number; // 0..100
-  score: number; // -100..+100
-  rationale: string[];
+  confidence: number;
+  score: number;
+  rationale: string[]; // einsteigerfreundliche Erklärungen pro Indikator
   entry: number;
   stop: number;
   target: number;
   rr: number;
-  risk: number; // ATR-Proxy abs
+  risk: number;
 };
 
 const fmt = (n: number, d = 2) => n.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -22,86 +22,97 @@ export function scoreIndicators(ind: IndicatorSet, profile: RiskProfile = "ausge
   let score = 0;
   const r: string[] = [];
 
-  // Z-Score: extrem = Mean-Reversion-Signal
-  if (ind.zScore <= -2) { score += 25; r.push(`Z-Score von ${fmt(ind.zScore)} signalisiert eine klare Überverkauft-Situation — statistisch reif für Mean Reversion.`); }
-  else if (ind.zScore >= 2) { score -= 25; r.push(`Z-Score von +${fmt(ind.zScore)} signalisiert eine klare Überkauft-Situation. Der Markt ist überdehnt.`); }
-  else if (ind.zScore < -1) { score += 10; r.push(`Z-Score bei ${fmt(ind.zScore)} — Kurs handelt unter dem statistischen Mittel.`); }
-  else if (ind.zScore > 1) { score -= 10; r.push(`Z-Score bei +${fmt(ind.zScore)} — Kurs handelt über dem statistischen Mittel.`); }
+  // Z-Score — wie weit ist der Kurs vom Mittel entfernt?
+  if (ind.zScore <= -2) { score += 25; r.push(`**Z-Score ${fmt(ind.zScore)}** (misst Abweichung vom 20-Tage-Durchschnitt in Standardabweichungen): extrem unter dem Mittel. Übersetzt: der Kurs ist statistisch *zu billig*, eine Gegenbewegung nach oben ist überfällig. **Pro Long.**`); }
+  else if (ind.zScore >= 2) { score -= 25; r.push(`**Z-Score +${fmt(ind.zScore)}**: der Kurs ist statistisch *zu teuer* — solche Extreme korrigieren historisch nach unten. **Pro Short.**`); }
+  else if (ind.zScore < -1) { score += 10; r.push(`**Z-Score ${fmt(ind.zScore)}**: der Kurs liegt unter dem Durchschnitt, leichter Rückenwind für Käufer.`); }
+  else if (ind.zScore > 1) { score -= 10; r.push(`**Z-Score +${fmt(ind.zScore)}**: der Kurs liegt über dem Durchschnitt, das Aufwärts-Pulver wird langsam knapp.`); }
+  else { r.push(`**Z-Score ${fmt(ind.zScore)}**: Kurs nahe am 20-Tage-Mittel — neutraler Befund.`); }
 
-  // RSI
-  if (ind.rsi >= 75) { score -= 20; r.push(`RSI bei ${fmt(ind.rsi, 1)} bestätigt: überkauft, Momentum erschöpft.`); }
-  else if (ind.rsi <= 25) { score += 20; r.push(`RSI bei ${fmt(ind.rsi, 1)} — kapituliertes Sentiment, Rebound-Setup.`); }
-  else if (ind.rsi > 60) { score -= 5; r.push(`RSI bei ${fmt(ind.rsi, 1)} — konstruktives, aber gespanntes Momentum.`); }
-  else if (ind.rsi < 40) { score += 5; r.push(`RSI bei ${fmt(ind.rsi, 1)} — schwaches Momentum, Bodenbildung möglich.`); }
+  // RSI — Momentum-Thermometer von 0–100
+  if (ind.rsi >= 75) { score -= 20; r.push(`**RSI ${fmt(ind.rsi, 1)}** (Relative Strength Index, 0–100, ab 70 = überkauft): die Käufer haben sich verausgabt, ein Rücksetzer ist wahrscheinlich. **Verkaufssignal.**`); }
+  else if (ind.rsi <= 25) { score += 20; r.push(`**RSI ${fmt(ind.rsi, 1)}** (unter 30 = überverkauft): Panik-Verkäufe sind durch, technische Erholung steht meist bevor. **Kaufsignal.**`); }
+  else if (ind.rsi > 60) { score -= 5; r.push(`**RSI ${fmt(ind.rsi, 1)}**: starkes, aber gespanntes Aufwärts-Momentum — noch okay, aber Vorsicht.`); }
+  else if (ind.rsi < 40) { score += 5; r.push(`**RSI ${fmt(ind.rsi, 1)}**: schwaches Momentum, ein Boden könnte sich bilden.`); }
+  else { r.push(`**RSI ${fmt(ind.rsi, 1)}**: neutraler Bereich (40–60), kein Extremzustand.`); }
 
-  // MACD
-  if (ind.macd.histogram > 0 && ind.macd.macd > ind.macd.signal) { score += 15; r.push(`MACD-Histogramm positiv (${fmt(ind.macd.histogram, 3)}) — Bull-Cross intakt.`); }
-  else if (ind.macd.histogram < 0 && ind.macd.macd < ind.macd.signal) { score -= 15; r.push(`MACD bricht negativ durch die Signallinie (Histogramm ${fmt(ind.macd.histogram, 3)}).`); }
+  // MACD — Trendwechsel-Indikator
+  if (ind.macd.histogram > 0 && ind.macd.macd > ind.macd.signal) { score += 15; r.push(`**MACD-Histogramm +${fmt(ind.macd.histogram, 3)}** (zeigt Trendwechsel über zwei gleitende Durchschnitte): die kurzfristige Linie hat die langfristige nach oben gekreuzt — klassisches **Kaufsignal**, Aufwärtstrend frisch bestätigt.`); }
+  else if (ind.macd.histogram < 0 && ind.macd.macd < ind.macd.signal) { score -= 15; r.push(`**MACD-Histogramm ${fmt(ind.macd.histogram, 3)}**: kurzfristige Linie unter langfristiger — **Verkaufssignal**, der Trend dreht nach unten.`); }
+  else { r.push(`**MACD-Histogramm ${fmt(ind.macd.histogram, 3)}**: kein klarer Trendwechsel, der Markt ist unentschlossen.`); }
 
-  // Bollinger
-  if (ind.price >= ind.bollinger.upper) { score -= 10; r.push(`Kurs schließt am oberen Bollinger-Band (${fmt(ind.bollinger.upper)}) — statistisches Extrem.`); }
-  else if (ind.price <= ind.bollinger.lower) { score += 10; r.push(`Kurs am unteren Bollinger-Band (${fmt(ind.bollinger.lower)}) — Squeeze-Setup für Reversion.`); }
+  // Bollinger — Volatilitätsbänder
+  if (ind.price >= ind.bollinger.upper) { score -= 10; r.push(`Kurs am **oberen Bollinger-Band** (${fmt(ind.bollinger.upper)}) — die Bänder bilden den normalen Schwankungskorridor, der Kurs ist *außerhalb* der oberen Grenze. Statistisch überdehnt nach oben, Rücksetzer wahrscheinlich.`); }
+  else if (ind.price <= ind.bollinger.lower) { score += 10; r.push(`Kurs am **unteren Bollinger-Band** (${fmt(ind.bollinger.lower)}): unterhalb des normalen Korridors — Rebound-Setup, Käufer greifen hier oft zu.`); }
+  else { r.push(`Kurs **innerhalb der Bollinger-Bänder** (${fmt(ind.bollinger.lower)} bis ${fmt(ind.bollinger.upper)}): bewegt sich im normalen Schwankungsbereich.`); }
 
-  // Trend (SMA50/200)
+  // Trend (SMA50/200) — die zwei wichtigsten Durchschnitte am Markt
   if (!isNaN(ind.sma50) && !isNaN(ind.sma200)) {
-    if (ind.sma50 > ind.sma200 && ind.price > ind.sma50) { score += 10; r.push(`Golden-Cross-Struktur intakt, Kurs über SMA50 — primärer Aufwärtstrend bestätigt.`); }
-    else if (ind.sma50 < ind.sma200 && ind.price < ind.sma50) { score -= 10; r.push(`Death-Cross-Struktur, Kurs unter SMA50 — primärer Abwärtstrend.`); }
+    if (ind.sma50 > ind.sma200 && ind.price > ind.sma50) { score += 10; r.push(`**Golden Cross** intakt (50-Tage- über 200-Tage-Durchschnitt) und Kurs über beiden — der primäre Aufwärtstrend ist gesund. Gegen den Trend zu shorten ist hier kostspielig.`); }
+    else if (ind.sma50 < ind.sma200 && ind.price < ind.sma50) { score -= 10; r.push(`**Death Cross** aktiv (50-Tage- unter 200-Tage-Durchschnitt) — primärer Abwärtstrend. Käufe sind nur kurzfristige Wetten gegen den Trend.`); }
   }
 
   // Momentum
-  if (ind.momentum > 0.05) { score += 5; r.push(`10-Perioden-Momentum +${fmt(ind.momentum * 100, 1)}% — Käufer kontrollieren das Tape.`); }
-  else if (ind.momentum < -0.05) { score -= 5; r.push(`10-Perioden-Momentum ${fmt(ind.momentum * 100, 1)}% — Verkäufer dominieren.`); }
+  if (ind.momentum > 0.05) { score += 5; r.push(`**10-Tage-Momentum +${fmt(ind.momentum * 100, 1)}%**: deutlicher Schub nach oben, Käufer haben die Kontrolle.`); }
+  else if (ind.momentum < -0.05) { score -= 5; r.push(`**10-Tage-Momentum ${fmt(ind.momentum * 100, 1)}%**: deutlicher Druck nach unten, Verkäufer dominieren.`); }
 
-  // Sharpe-Kontext
-  if (ind.sharpe > 1.5) r.push(`Sharpe Ratio ${fmt(ind.sharpe, 2)} — risikoadjustierte Performance institutioneller Qualität.`);
-  else if (ind.sharpe < 0) r.push(`Sharpe Ratio ${fmt(ind.sharpe, 2)} — risikoadjustierte Underperformance, Vorsicht.`);
+  // Sharpe — Qualität der Rendite vs. Risiko
+  if (ind.sharpe > 1.5) r.push(`**Sharpe Ratio ${fmt(ind.sharpe, 2)}** (Rendite pro Risiko-Einheit, >1 = gut, >2 = exzellent): risikoadjustierte Performance auf institutionellem Niveau — fundamentale Qualität.`);
+  else if (ind.sharpe < 0) r.push(`**Sharpe Ratio ${fmt(ind.sharpe, 2)}**: das Papier hat zuletzt mehr Risiko als Rendite geliefert. Achtung.`);
 
-  // Vol-Kontext
-  if (ind.volatility > 0.5) r.push(`Annualisierte Vola ${fmt(ind.volatility * 100, 1)}% — Tail-Risk hoch, Positionsgröße reduzieren.`);
+  // Vola
+  if (ind.volatility > 0.5) r.push(`**Annualisierte Volatilität ${fmt(ind.volatility * 100, 1)}%** (typische Jahresschwankung): sehr hoch — Positionsgröße halbieren, Stops weiter setzen.`);
+  else if (ind.volatility < 0.2) r.push(`**Vola ${fmt(ind.volatility * 100, 1)}%**: ruhig, eher kleine Tagesbewegungen erwartbar.`);
 
-  // Risk-Profil moduliert Schwelle
   const threshold = profile === "konservativ" ? 25 : profile === "spekulativ" ? 12 : 18;
-
   let verdict: Verdict = "NEUTRAL";
   if (score >= threshold) verdict = "LONG";
   else if (score <= -threshold) verdict = "SHORT";
 
-  // Entry/Stop/Target auf Basis Vola
   const dailyVol = ind.volatility / Math.sqrt(252);
   const risk = ind.price * Math.max(dailyVol * 1.5, 0.01);
   const entry = ind.price;
   const stop = verdict === "LONG" ? entry - risk : verdict === "SHORT" ? entry + risk : entry;
   const target = verdict === "LONG" ? entry + risk * 2.5 : verdict === "SHORT" ? entry - risk * 2.5 : entry;
   const rr = verdict === "NEUTRAL" ? 0 : 2.5;
-
   const confidence = Math.min(95, Math.max(15, Math.abs(score) * 1.6 + 20));
 
   return { verdict, confidence, score, rationale: r, entry, stop, target, rr, risk };
 }
 
 export function brokerNarrative(symbol: string, name: string, ind: IndicatorSet, sig: Signal): string {
-  const verdictLine = sig.verdict === "LONG"
-    ? `Das Setup schreit **LONG**.`
+  // Klare Handlungsempfehlung an den Anfang
+  const action = sig.verdict === "LONG"
+    ? `### 🟢 Empfehlung: **KAUFEN** (Long)\nDie Mehrheit der statistischen Signale spricht dafür, dass der Kurs steigt. Konfidenz: **${sig.confidence.toFixed(0)}%**.`
     : sig.verdict === "SHORT"
-    ? `Das Setup schreit **SHORT**.`
-    : `Keine klare Edge. **NEUTRAL** — die Hände bleiben am Steuer, aber nicht am Abzug.`;
+    ? `### 🔴 Empfehlung: **VERKAUFEN** (Short)\nDie Mehrheit der Signale deutet auf fallende Kurse hin. Wer hält, sollte Gewinne sichern oder absichern. Konfidenz: **${sig.confidence.toFixed(0)}%**.`
+    : `### ⚪ Empfehlung: **HALTEN / NICHT TRADEN**\nDie Signale sind gemischt — keine klare Wahrscheinlichkeit für eine Richtung. Wer investiert ist, bleibt investiert. Wer draußen ist, wartet. Konfidenz: **${sig.confidence.toFixed(0)}%**.`;
 
-  const levels = sig.verdict === "NEUTRAL"
-    ? `Kein Trade. Geduld ist eine Position.`
-    : `Risk/Reward von 1:${sig.rr.toFixed(1)} spricht für einen Einstieg ${sig.verdict === "LONG" ? "über" : "unter"} ${fmt(sig.entry)} mit Stop bei ${fmt(sig.stop)} und Ziel ${fmt(sig.target)}.`;
+  const indicatorsBlock = `**Was die Indikatoren konkret sagen:**\n` + sig.rationale.map((x) => `• ${x}`).join("\n");
 
   const macro = ind.beta > 1.2
-    ? `Beta von ${fmt(ind.beta, 2)} — überproportional sensitiv gegenüber dem breiten Markt. Bei Risk-Off zuerst getroffen.`
+    ? `**Beta ${fmt(ind.beta, 2)}** (Marktsensitivität — 1 = wie der Markt, >1 = stärker): die Aktie schwingt überdurchschnittlich mit. Bei Crashes trifft es sie zuerst, bei Rallys profitiert sie überproportional.`
     : ind.beta < 0.8
-    ? `Beta von ${fmt(ind.beta, 2)} — defensiv, geringere Marktsensitivität.`
-    : `Beta von ${fmt(ind.beta, 2)} — bewegt sich im Gleichschritt mit dem Markt.`;
+    ? `**Beta ${fmt(ind.beta, 2)}**: defensiv — bewegt sich ruhiger als der Gesamtmarkt. Gut für nervöse Phasen.`
+    : `**Beta ${fmt(ind.beta, 2)}**: bewegt sich im Gleichschritt mit dem Markt.`;
+
+  const levels = sig.verdict === "NEUTRAL"
+    ? `**Kein Trade-Setup.** Geduld ist auch eine Position — auf bessere Konstellation warten.`
+    : `**Trade-Plan** (Risk/Reward 1:${sig.rr.toFixed(1)}):
+• Einstieg bei ca. **${fmt(sig.entry)} USD**
+• Stop-Loss bei **${fmt(sig.stop)} USD** (Notausgang, falls die These nicht aufgeht)
+• Kursziel bei **${fmt(sig.target)} USD** (Gewinnmitnahme)
+Das bedeutet: pro 1 € Risiko stehen 2,5 € potenzieller Gewinn gegenüber.`;
+
+  const beginnerNote = sig.verdict !== "NEUTRAL"
+    ? `\n**Für Einsteiger:** "${sig.verdict === "LONG" ? "Long" : "Short"}" heißt: man wettet auf ${sig.verdict === "LONG" ? "steigende" : "fallende"} Kurse. Niemals mehr riskieren als man verlieren kann — als Faustregel max. 1–2% deines Kapitals pro Trade.`
+    : "";
 
   return [
-    `**${name} (${symbol})** — Spot bei ${fmt(ind.price)} USD.`,
-    sig.rationale.join(" "),
+    `## ${name} (${symbol}) — aktuell ${fmt(ind.price)} USD`,
+    action,
+    indicatorsBlock,
     macro,
-    verdictLine,
-    levels,
-    `Konfidenz: **${sig.confidence.toFixed(0)}%**.`,
-  ].join(" ");
+    levels + beginnerNote,
+  ].join("\n\n");
 }

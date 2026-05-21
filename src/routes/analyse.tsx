@@ -10,6 +10,30 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
+function renderMd(md: string): string {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const lines = md.split("\n");
+  const out: string[] = [];
+  let inList = false;
+  const closeList = () => { if (inList) { out.push("</ul>"); inList = false; } };
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (!line.trim()) { closeList(); continue; }
+    if (line.startsWith("### ")) { closeList(); out.push(`<h3>${inline(esc(line.slice(4)))}</h3>`); continue; }
+    if (line.startsWith("## ")) { closeList(); out.push(`<h2>${inline(esc(line.slice(3)))}</h2>`); continue; }
+    if (line.startsWith("• ") || line.startsWith("- ")) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${inline(esc(line.slice(2)))}</li>`);
+      continue;
+    }
+    closeList();
+    out.push(`<p>${inline(esc(line))}</p>`);
+  }
+  closeList();
+  return out.join("");
+  function inline(s: string) { return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+}
+
 type Msg = { role: "user" | "agent"; text: string; symbol?: string };
 
 function extractSymbol(q: string): string | null {
@@ -54,8 +78,11 @@ function AgentResponse({ symbol }: { symbol: string }) {
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">Detailansicht →</Link>
       </div>
-      <div className="text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') }} />
-      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+      <div
+        className="prose-sm max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ul]:space-y-1 [&_ul]:pl-1 [&_li]:list-none [&_strong]:text-foreground"
+        dangerouslySetInnerHTML={{ __html: renderMd(text) }}
+      />
+      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 pt-2 border-t border-border">
         <Stat label="Z-Score" v={indicators.zScore.toFixed(2)} />
         <Stat label="RSI(14)" v={indicators.rsi.toFixed(1)} />
         <Stat label="MACD-Hist" v={indicators.macd.histogram.toFixed(3)} />
