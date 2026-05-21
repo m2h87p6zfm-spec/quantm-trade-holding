@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, BarChart3, Bell, Bot, Brain, Calendar, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, Swords, TrendingUp, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, Flame, LineChart, ListOrdered, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, Swords, TrendingUp, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 
 // Der "Quant Core" ist das Herzstück der App: statistische & mathematische

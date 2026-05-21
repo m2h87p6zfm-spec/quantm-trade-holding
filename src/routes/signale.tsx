@@ -60,7 +60,7 @@ function SignalsPage() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Trends & Signale</h1>
-        <p className="text-sm text-muted-foreground">API-schonend nur aus deiner Watchlist berechnet. Mindestkonfidenz ≥ {settings.minConfidence}%.</p>
+        <p className="text-sm text-muted-foreground">API-schonend nur aus deiner Watchlist berechnet. Filter & Sortierung optional.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
