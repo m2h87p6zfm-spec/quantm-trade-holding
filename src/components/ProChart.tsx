@@ -231,33 +231,49 @@ export function ProChart({
             />
           )}
 
-          {/* Candles */}
+          {/* Candles — Gradient-Bodies + Glow-Wicks, letzte 3 mit Glow */}
           {closes.map((c, i) => {
             const o = opens[i]; const h = highs[i]; const l = lows[i];
             const up = c >= o;
-            const color = up ? "var(--bull)" : "var(--bear)";
+            const bodyFill = up ? "url(#candleBull)" : "url(#candleBear)";
+            const wickStroke = up ? "#4ade80" : "#f87171";
             const xC = xAt(i);
             const yO = yAt(o); const yC = yAt(c);
             const bodyTop = Math.min(yO, yC);
-            const bodyH = Math.max(1, Math.abs(yO - yC));
+            const bodyH = Math.max(1.5, Math.abs(yO - yC));
+            const isRecent = i >= N - 3;
+            const glow = isRecent ? (up ? "url(#candleGlowBull)" : "url(#candleGlowBear)") : undefined;
             return (
-              <g key={i}>
-                <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={color} strokeWidth={1} />
-                <rect x={xC - candleW / 2} y={bodyTop} width={candleW} height={bodyH} fill={color} opacity={up ? 0.95 : 1} />
+              <g key={i} filter={glow}>
+                {/* Wick with subtle outer halo */}
+                <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={wickStroke} strokeWidth={2.5} opacity={0.18} strokeLinecap="round" />
+                <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={wickStroke} strokeWidth={1} strokeLinecap="round" />
+                {/* Body with gradient + crisp stroke */}
+                <rect
+                  x={xC - candleW / 2}
+                  y={bodyTop}
+                  width={candleW}
+                  height={bodyH}
+                  rx={0.8}
+                  fill={bodyFill}
+                  stroke={wickStroke}
+                  strokeWidth={0.6}
+                  opacity={0.98}
+                />
               </g>
             );
           })}
 
           {/* Overlays */}
-          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--primary)" width={1.4} />}
-          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--gold)" width={1.2} />}
-          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="var(--violet-accent)" width={1.2} dash="4 4" />}
+          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="#38bdf8" width={1.4} />}
+          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="#fbbf24" width={1.2} />}
+          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="#c084fc" width={1.2} dash="4 4" />}
 
           {/* Last-Marker */}
           <g>
-            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} strokeDasharray="2 3" opacity={0.6} />
-            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} />
-            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="var(--background)" fontWeight={700} fontFamily="ui-monospace, monospace">{last.toFixed(2)}</text>
+            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "#22c55e" : "#ef4444"} strokeDasharray="2 3" opacity={0.6} />
+            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "#22c55e" : "#ef4444"} rx={2} />
+            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="#ffffff" fontWeight={700} fontFamily="ui-monospace, monospace">{last.toFixed(2)}</text>
           </g>
         </g>
 
