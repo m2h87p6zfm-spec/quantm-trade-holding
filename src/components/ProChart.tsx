@@ -149,13 +149,40 @@ export function ProChart({
         className="cursor-crosshair"
       >
         <defs>
+          {/* Bull candle: lime → emerald gradient */}
+          <linearGradient id="candleBull" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="55%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
+          {/* Bear candle: rose → crimson gradient */}
+          <linearGradient id="candleBear" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fb7185" />
+            <stop offset="55%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+          {/* Soft glow for active candles */}
+          <filter id="candleGlowBull" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="candleGlowBear" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
           <linearGradient id="zoneSup" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--bull)" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="var(--bull)" stopOpacity="0.04" />
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.20" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.04" />
           </linearGradient>
           <linearGradient id="zoneRes" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--bear)" stopOpacity="0.04" />
-            <stop offset="100%" stopColor="var(--bear)" stopOpacity="0.18" />
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.20" />
           </linearGradient>
         </defs>
 
