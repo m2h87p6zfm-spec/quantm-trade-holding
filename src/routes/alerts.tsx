@@ -24,7 +24,7 @@ function AlertRow({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: str
   const analysis = useAnalysis(a.symbol);
   const { settings } = useSettings();
   const price = q.data?.c;
-  const score = analysis.indicators ? scoreIndicators(analysis.indicators, settings.profile).score : undefined;
+  const score = analysis.indicators ? scoreIndicators(analysis.indicators, settings.risk).score : undefined;
   const value = isPrice ? price : score;
 
   useEffect(() => {
