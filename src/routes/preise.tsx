@@ -78,8 +78,8 @@ const plans: Plan[] = [
     name: "Elite",
     tagline: "Für Power-User & Day-Trader",
     icon: Crown,
-    monthlyPrice: 29.99,
-    yearlyPrice: 287.88,
+    monthlyPrice: 19.99,
+    yearlyPrice: 191.88,
     monthlyPriceId: "apex_elite_monthly",
     yearlyPriceId: "apex_elite_yearly",
     features: [
