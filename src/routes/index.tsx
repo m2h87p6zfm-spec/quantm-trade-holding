@@ -115,8 +115,7 @@ function Cockpit() {
               <SkeletonCard label="Signal des Tages" />
             )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <MarketPulse long={longCount} short={shortCount} neutral={neutralCount} />
+          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
             {featured ? (
               <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
             ) : (
