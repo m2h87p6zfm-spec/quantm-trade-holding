@@ -7,13 +7,13 @@ import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/heatmap")({ component: HeatmapPage });
 
-// Kuratierte Top-Symbole pro Sektor für die Heatmap (begrenzt für API-Schonung)
+// Kuratierte Top-Symbole für die Heatmap. Bewusst klein gehalten, damit der
+// Yahoo-Proxy nicht in ein Rate-Limit (HTTP 429) läuft, wenn mehrere Nutzer
+// gleichzeitig die Seite öffnen.
 const HEATMAP_SYMBOLS = [
   "AAPL","MSFT","NVDA","GOOGL","META","AMZN","TSLA","AMD",
-  "JPM","BAC","GS","V","MA","BRK.B","BLK",
-  "XOM","CVX","JNJ","LLY","UNH","PFE",
-  "KO","WMT","COST","HD","MCD","NKE","DIS",
-  "BA","CAT","SAP","ASML","SPY","QQQ","DIA",
+  "JPM","V","XOM","LLY","UNH","KO","WMT","DIS",
+  "SPY","QQQ","DIA","SAP",
 ];
 
 type Cell = { p: Product; pct: number | null; price: number | null; loading: boolean; error: boolean };
