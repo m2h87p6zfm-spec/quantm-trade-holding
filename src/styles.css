@@ -119,3 +119,80 @@
 @keyframes flash-down { 0% { background-color: color-mix(in oklab, var(--bear) 35%, transparent); } 100% { background-color: transparent; } }
 .flash-up { animation: flash-up 700ms ease-out; }
 .flash-down { animation: flash-down 700ms ease-out; }
+
+/* === Visual upgrades === */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 35%, transparent); }
+  50%      { box-shadow: 0 0 0 6px color-mix(in oklab, var(--primary) 0%, transparent); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translate3d(0,0,0); }
+  50%      { transform: translate3d(0,-8px,0); }
+}
+.animate-fade-up { animation: fade-up 0.5s ease-out both; }
+.animate-pulse-glow { animation: pulse-glow 2.2s ease-in-out infinite; }
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+
+.text-gradient-primary {
+  background-image: linear-gradient(135deg, var(--primary) 0%, var(--cyan-accent) 60%, color-mix(in oklab, var(--primary) 60%, white) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-mesh {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 60% 40% at 20% 0%, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 90% 10%, color-mix(in oklab, var(--cyan-accent) 14%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, color-mix(in oklab, var(--bull) 8%, transparent) 0%, transparent 70%);
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--border) 50%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 50%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 75%);
+}
+
+.card-glow {
+  position: relative;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, transparent), var(--card));
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-glow::before {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 50%, transparent), transparent 40%, color-mix(in oklab, var(--cyan-accent) 35%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.card-glow:hover::before { opacity: 1; }
+.card-glow:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -12px color-mix(in oklab, var(--primary) 30%, transparent); }
+
+.shimmer-text {
+  background: linear-gradient(90deg, var(--muted-foreground) 20%, var(--foreground) 50%, var(--muted-foreground) 80%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2.5s linear infinite;
+}
+
+.tick-glow-bull { box-shadow: 0 0 12px color-mix(in oklab, var(--bull) 50%, transparent); }
+.tick-glow-bear { box-shadow: 0 0 12px color-mix(in oklab, var(--bear) 50%, transparent); }
+
