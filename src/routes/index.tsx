@@ -5,7 +5,7 @@ import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
 import { TickerBand } from "@/components/TickerBand";
-import { MarketPulse } from "@/components/MarketPulse";
+import { MarketPulseHeader } from "@/components/MarketPulseHeader";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
@@ -41,6 +41,8 @@ function Cockpit() {
       <TickerBand />
 
       <div className="mx-auto max-w-7xl space-y-6 px-6">
+        <MarketPulseHeader rows={rows} />
+
         {/* Kompakte Hero-Leiste */}
         <div className="pt-2 animate-fade-up">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -113,8 +115,7 @@ function Cockpit() {
               <SkeletonCard label="Signal des Tages" />
             )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <MarketPulse long={longCount} short={shortCount} neutral={neutralCount} />
+          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
             {featured ? (
               <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
             ) : (
