@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
+import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as IndexRouteImport } from './routes/index'
@@ -27,6 +28,11 @@ const SignaleRoute = SignaleRouteImport.update({
 const MaerkteRoute = MaerkteRouteImport.update({
   id: '/maerkte',
   path: '/maerkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeatmapRoute = HeatmapRouteImport.update({
+  id: '/heatmap',
+  path: '/heatmap',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EinstellungenRoute = EinstellungenRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analyse': typeof AnalyseRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/heatmap': typeof HeatmapRoute
   '/maerkte': typeof MaerkteRoute
   '/signale': typeof SignaleRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyse'
     | '/einstellungen'
+    | '/heatmap'
     | '/maerkte'
     | '/signale'
     | '/produkte/$symbol'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyse'
     | '/einstellungen'
+    | '/heatmap'
     | '/maerkte'
     | '/signale'
     | '/produkte/$symbol'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/analyse'
     | '/einstellungen'
+    | '/heatmap'
     | '/maerkte'
     | '/signale'
     | '/produkte/$symbol'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyseRoute: typeof AnalyseRoute
   EinstellungenRoute: typeof EinstellungenRoute
+  HeatmapRoute: typeof HeatmapRoute
   MaerkteRoute: typeof MaerkteRoute
   SignaleRoute: typeof SignaleRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/maerkte'
       fullPath: '/maerkte'
       preLoaderRoute: typeof MaerkteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heatmap': {
+      id: '/heatmap'
+      path: '/heatmap'
+      fullPath: '/heatmap'
+      preLoaderRoute: typeof HeatmapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/einstellungen': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyseRoute: AnalyseRoute,
   EinstellungenRoute: EinstellungenRoute,
+  HeatmapRoute: HeatmapRoute,
   MaerkteRoute: MaerkteRoute,
   SignaleRoute: SignaleRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,

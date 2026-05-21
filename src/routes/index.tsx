@@ -106,7 +106,7 @@ function Watchlist() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              <Zap className="h-3 w-3 text-primary" /> Helios Terminal
+              <Zap className="h-3 w-3 text-gold" /> Apex Markets
             </div>
             <h1 className="mt-3 text-4xl font-bold tracking-tight">
               Deine <span className="text-gradient-primary">Watchlist</span>.

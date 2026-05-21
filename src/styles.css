@@ -32,6 +32,9 @@
   --color-bear: var(--bear);
   --color-neutral-signal: var(--neutral-signal);
   --color-cyan-accent: var(--cyan-accent);
+  --color-gold: var(--gold);
+  --color-ticker: var(--ticker);
+  --color-violet-accent: var(--violet-accent);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -64,10 +67,13 @@
   --border: oklch(0.28 0.025 250);
   --input: oklch(0.26 0.025 250);
   --ring: oklch(0.75 0.16 215);
-  --bull: oklch(0.72 0.20 145);
-  --bear: oklch(0.65 0.24 22);
+  --bull: oklch(0.74 0.21 145);
+  --bear: oklch(0.66 0.25 22);
   --neutral-signal: oklch(0.70 0.02 245);
   --cyan-accent: oklch(0.80 0.15 200);
+  --gold: oklch(0.82 0.15 85);
+  --ticker: oklch(0.86 0.18 95);
+  --violet-accent: oklch(0.68 0.20 295);
   --sidebar: oklch(0.13 0.02 250);
   --sidebar-foreground: oklch(0.92 0.01 240);
   --sidebar-primary: oklch(0.75 0.16 215);
@@ -100,6 +106,9 @@
   --bear: oklch(0.55 0.22 25);
   --neutral-signal: oklch(0.55 0.02 245);
   --cyan-accent: oklch(0.60 0.15 200);
+  --gold: oklch(0.68 0.15 85);
+  --ticker: oklch(0.62 0.18 95);
+  --violet-accent: oklch(0.55 0.20 295);
   --sidebar: oklch(0.97 0.005 240);
   --sidebar-foreground: oklch(0.18 0.02 250);
   --sidebar-primary: oklch(0.55 0.18 240);
@@ -151,9 +160,10 @@
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 60% 40% at 20% 0%, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 35% at 90% 10%, color-mix(in oklab, var(--cyan-accent) 14%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 80% 50% at 50% 100%, color-mix(in oklab, var(--bull) 8%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 15% 0%, color-mix(in oklab, var(--primary) 20%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 35% at 85% 5%, color-mix(in oklab, var(--gold) 14%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 95% 60%, color-mix(in oklab, var(--violet-accent) 12%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 30% 100%, color-mix(in oklab, var(--bull) 10%, transparent) 0%, transparent 70%);
 }
 
 .bg-grid {
@@ -196,3 +206,37 @@
 .tick-glow-bull { box-shadow: 0 0 12px color-mix(in oklab, var(--bull) 50%, transparent); }
 .tick-glow-bear { box-shadow: 0 0 12px color-mix(in oklab, var(--bear) 50%, transparent); }
 
+
+/* Trading-themed accents */
+.text-gold { color: var(--gold); }
+.text-ticker { color: var(--ticker); }
+.text-violet-accent { color: var(--violet-accent); }
+.text-gradient-gold {
+  background-image: linear-gradient(135deg, var(--gold) 0%, var(--ticker) 50%, color-mix(in oklab, var(--gold) 70%, white) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.text-gradient-bull {
+  background-image: linear-gradient(135deg, var(--bull) 0%, var(--cyan-accent) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Ticker tape scroll */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-ticker { animation: ticker-scroll 60s linear infinite; }
+
+/* Heatmap cells */
+.heat-cell {
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  overflow: hidden;
+}
+.heat-cell:hover { transform: scale(1.04); z-index: 5; box-shadow: 0 8px 28px -8px rgb(0 0 0 / 0.6); }
+.heat-cell::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgb(255 255 255 / 0.08), transparent 60%);
+  pointer-events: none;
+}
