@@ -153,3 +153,182 @@ Das bedeutet: pro 1 € Risiko stehen 2,5 € potenzieller Gewinn gegenüber.`;
     glossary,
   ].join("\n\n");
 }
+
+// ============================================================
+//  INSTITUTIONAL DECISION ENGINE (BUY / SELL / HOLD)
+// ============================================================
+import type { MarketRegime } from "./ai-learning";
+
+export type Decision = "BUY" | "SELL" | "HOLD";
+export type RiskLevel = "Niedrig" | "Mittel" | "Hoch";
+
+export type DecisionReport = {
+  decision: Decision;
+  confidence: number;          // 0–100, regime-/smart-money-adjusted
+  rawConfidence: number;       // 0–100 vor Anpassung
+  reasoning: string;           // Ein institutioneller Absatz
+  supporting: {
+    macro: string;
+    sentiment: string;
+    institutional: string;
+    technical: string;
+  };
+  smartMoney: string;
+  counterArgument: string;
+  riskLevel: RiskLevel;
+  invalidation: string;
+  regime: MarketRegime;
+  adjustments: string[];       // Welche Filter haben Confidence verändert
+};
+
+function regimeLabelDe(r: MarketRegime): string {
+  switch (r) {
+    case "bull": return "Bullenmarkt";
+    case "bear": return "Bärenmarkt";
+    case "chop": return "Seitwärtsmarkt";
+    case "high_vol": return "Hochvolatiles Umfeld";
+    case "low_vol": return "Ruhiges Umfeld";
+  }
+}
+
+/**
+ * Wandelt Indikatoren + Roh-Signal in eine institutionelle BUY/SELL/HOLD-
+ * Entscheidung um. Smart-Money- und Regime-Filter passen die Confidence an;
+ * unter 60% wird konsequent zu HOLD downgegradet ("No False Precision").
+ */
+export function buildDecision(
+  symbol: string,
+  name: string,
+  ind: IndicatorSet,
+  sig: Signal,
+  regime: MarketRegime,
+): DecisionReport {
+  const adjustments: string[] = [];
+  let conf = sig.confidence;
+
+  // --- Smart Money Filter ----------------------------------------------------
+  // Momentum ohne Volumen/Volatilitäts-Bestätigung → Confidence dämpfen
+  const annVol = ind.volatility;
+  if (Math.abs(ind.momentum) > 0.08 && annVol < 0.18) {
+    conf -= 8;
+    adjustments.push("Starkes Momentum bei niedriger Volatilität — kein Volumen-Confirm → −8");
+  }
+  // Hohe Vola + extremes Verdict → Konfidenz senken (illiquide / News-getrieben)
+  if (annVol > 0.6 && sig.verdict !== "NEUTRAL") {
+    conf -= 10;
+    adjustments.push("Sehr hohe Volatilität — institutionelle Hände meiden solche Tape-Phasen → −10");
+  }
+  // Beta >1.4 + Bear-Regime → Long abwerten
+  if (sig.verdict === "LONG" && ind.beta > 1.4 && regime === "bear") {
+    conf -= 12;
+    adjustments.push("High-Beta-Long in Bärenmarkt — Smart Money meidet zyklisches Risiko → −12");
+  }
+  // Trend-Bestätigung: Verdict in Trendrichtung → Confidence anheben
+  if (!isNaN(ind.sma50) && !isNaN(ind.sma200)) {
+    const upTrend = ind.sma50 > ind.sma200 && ind.price > ind.sma50;
+    const downTrend = ind.sma50 < ind.sma200 && ind.price < ind.sma50;
+    if (sig.verdict === "LONG" && upTrend) { conf += 6; adjustments.push("Long in intaktem Aufwärtstrend (50>200) → +6"); }
+    if (sig.verdict === "SHORT" && downTrend) { conf += 6; adjustments.push("Short in Death-Cross-Struktur → +6"); }
+    if (sig.verdict === "LONG" && downTrend) { conf -= 10; adjustments.push("Long gegen Death-Cross — Counter-Trend, Smart Money skeptisch → −10"); }
+    if (sig.verdict === "SHORT" && upTrend) { conf -= 10; adjustments.push("Short gegen Golden-Cross — Trend-Fight, hohes Risiko → −10"); }
+  }
+  // Sharpe-Qualität: institutionelle Allocator schätzen risikoadjustierte Rendite
+  if (sig.verdict === "LONG" && ind.sharpe > 1.5) { conf += 4; adjustments.push("Sharpe >1.5 — institutionell allokierfähig → +4"); }
+  if (sig.verdict === "LONG" && ind.sharpe < 0) { conf -= 6; adjustments.push("Sharpe negativ — Allocator-No-Go → −6"); }
+
+  // --- Regime Awareness -----------------------------------------------------
+  if (regime === "high_vol") {
+    conf -= 5;
+    adjustments.push("Regime: Hochvolatil — HOLD-Bias steigt → −5");
+  }
+  if (regime === "chop") {
+    conf -= 4;
+    adjustments.push("Regime: Seitwärts — Trend-Setups historisch schwach → −4");
+  }
+  if (regime === "bull" && sig.verdict === "LONG") { conf += 3; adjustments.push("Bullenmarkt unterstützt Long-Setups → +3"); }
+  if (regime === "bear" && sig.verdict === "SHORT") { conf += 3; adjustments.push("Bärenmarkt unterstützt Short-Setups → +3"); }
+
+  conf = Math.max(5, Math.min(95, Math.round(conf)));
+
+  // --- Decision Mapping mit 60%-Schwelle ------------------------------------
+  let decision: Decision = "HOLD";
+  if (sig.verdict === "LONG" && conf >= 60) decision = "BUY";
+  else if (sig.verdict === "SHORT" && conf >= 60) decision = "SELL";
+  // sonst HOLD
+
+  // --- Risk Level -----------------------------------------------------------
+  let riskLevel: RiskLevel = "Mittel";
+  if (annVol > 0.5 || regime === "high_vol") riskLevel = "Hoch";
+  else if (annVol < 0.22 && Math.abs(ind.beta - 1) < 0.3) riskLevel = "Niedrig";
+
+  // --- Supporting Factors ---------------------------------------------------
+  const macro = regime === "bull"
+    ? "Risk-On-Umfeld: Aufwärtstrend in den breiten Indizes stützt zyklische Positionen."
+    : regime === "bear"
+    ? "Risk-Off-Umfeld: defensive Sektoren outperformen, Liquidität ist selektiv."
+    : regime === "high_vol"
+    ? "Vola-Spike — institutionelle Hände reduzieren Bruttoexposure, Optionsprämien teuer."
+    : regime === "low_vol"
+    ? "Niedrige Vola — Carry-Trades aktiv, Vol-Verkäufer dominieren das Tape."
+    : "Seitwärtsmarkt ohne klare Makro-Richtung — Rotation statt Trend.";
+
+  const sentiment = ind.rsi >= 70
+    ? `RSI ${ind.rsi.toFixed(0)} signalisiert euphorisches Retail-Sentiment — Contrarian-Warnung.`
+    : ind.rsi <= 30
+    ? `RSI ${ind.rsi.toFixed(0)} zeigt Kapitulation — Sentiment historisch günstig für Mean-Reversion.`
+    : `RSI ${ind.rsi.toFixed(0)} im neutralen Band — kein Sentiment-Extrem.`;
+
+  const institutional = ind.sharpe > 1
+    ? `Sharpe ${ind.sharpe.toFixed(2)} ist allocator-tauglich — institutionelle Mandate können die Position halten.`
+    : ind.sharpe < 0
+    ? `Sharpe ${ind.sharpe.toFixed(2)} negativ — institutionelle Bücher reduzieren Exposure.`
+    : `Sharpe ${ind.sharpe.toFixed(2)} im Mittelfeld — kein klares Allocator-Signal.`;
+
+  const technical = `Z ${ind.zScore.toFixed(2)} · MACD-Hist ${ind.macd.histogram.toFixed(3)} · ${
+    !isNaN(ind.sma50) && !isNaN(ind.sma200)
+      ? (ind.sma50 > ind.sma200 ? "Golden Cross intakt" : "Death Cross aktiv")
+      : "Trend unklar"
+  }.`;
+
+  // --- Smart Money View -----------------------------------------------------
+  const smartMoney = decision === "BUY"
+    ? `Hedge-Funds würden hier wahrscheinlich gestaffelt akkumulieren — kleine Tranchen, mit Schutz über Puts wenn ${riskLevel === "Hoch" ? "Vola hoch" : "Liquidität dünn"}.`
+    : decision === "SELL"
+    ? `Smart Money baut wahrscheinlich Short-Exposure auf bzw. hedged Long-Bücher mit Index-Puts. Eintritt selten "all-in", sondern in Etappen.`
+    : `Institutionelle würden hier nicht agieren — sie warten auf klareres Setup oder Volumen-Bestätigung. Kein Edge → kein Trade.`;
+
+  // --- Counter Argument -----------------------------------------------------
+  const counterArgument = decision === "BUY"
+    ? `Was das kippt: ${ind.zScore > 1 ? "Z-Score bereits stretched" : "ein RSI-Spike >75 ohne Volumen"}, oder ein Bruch unter ${(ind.price * 0.97).toFixed(2)} würde die These invalidieren.`
+    : decision === "SELL"
+    ? `Was das kippt: überraschend starke Earnings, ein Squeeze über ${(ind.price * 1.03).toFixed(2)}, oder ein RSI-Rebound aus Oversold-Territorium.`
+    : `Was zu BUY/SELL eskalieren würde: ein klares Volumen-Breakout über ${ind.bollinger.upper.toFixed(2)} oder unter ${ind.bollinger.lower.toFixed(2)} mit Trend-Bestätigung.`;
+
+  // --- Invalidation ---------------------------------------------------------
+  const invalidation = decision === "BUY"
+    ? `These ist tot bei Schlusskurs < ${sig.stop.toFixed(2)} oder wenn RSI über 80 ohne neuen Hochpunkt steigt (bearishe Divergenz).`
+    : decision === "SELL"
+    ? `These ist tot bei Schlusskurs > ${sig.stop.toFixed(2)} oder wenn das MACD-Histogramm zwei Tage in Folge ins Positive dreht.`
+    : `HOLD-Status endet, sobald Vola, Trend und Sentiment in dieselbe Richtung zeigen und Confidence ≥ 60 erreicht.`;
+
+  // --- Reasoning ------------------------------------------------------------
+  const verdictLabel = decision === "BUY" ? "Akkumulation" : decision === "SELL" ? "Distribution" : "Abwarten";
+  const reasoning = `${name} (${symbol}) im ${regimeLabelDe(regime)}: ${verdictLabel} bei ${conf}% Konfidenz. ` +
+    `Die Konstellation aus ${sentiment.toLowerCase()} und ${institutional.toLowerCase()} ` +
+    `wird ${decision === "HOLD" ? "durch das Regime gedämpft" : "vom Trend gestützt"}. ` +
+    `${technical}`;
+
+  return {
+    decision,
+    confidence: conf,
+    rawConfidence: Math.round(sig.confidence),
+    reasoning,
+    supporting: { macro, sentiment, institutional, technical },
+    smartMoney,
+    counterArgument,
+    riskLevel,
+    invalidation,
+    regime,
+    adjustments,
+  };
+}
