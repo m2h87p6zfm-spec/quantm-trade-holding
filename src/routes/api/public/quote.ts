@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -38,16 +37,40 @@ export const Route = createFileRoute("/api/public/quote")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async ({ request }) => {
-        const url = new URL(request.url);
-        const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
-        if (!symbol || symbol.length > 16 || !/^[A-Z0-9.\-^]+$/i.test(symbol)) {
-          return new Response(JSON.stringify({ status: "invalid", message: "Ungültiges Symbol" }), {
-            status: 200, headers: { "Content-Type": "application/json", ...CORS },
+        try {
+          const url = new URL(request.url);
+          const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();
+          if (!symbol || symbol.length > 16 || !/^[A-Z0-9.\-^]+$/i.test(symbol)) {
+            return new Response(JSON.stringify({ status: "invalid", message: "Ungültiges Symbol" }), {
+              status: 200, headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
+          const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+          const data = cached.value ? buildQuote(cached.value, symbol) : null;
+          if (!data) {
+            return new Response(JSON.stringify({
+              status: "reconnecting",
+              stale: true,
+              lastUpdated: 0,
+              message: "Live-Daten werden aktualisiert…",
+            }), {
+              status: 200, headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          return new Response(JSON.stringify({
+            ...data,
+            stale: cached.stale,
+            lastUpdated: cached.lastUpdated,
+          }), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "public, max-age=60, s-maxage=60",
+              ...CORS,
+            },
           });
-        }
-        const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
-        const data = cached.value ? buildQuote(cached.value, symbol) : null;
-        if (!data) {
+        } catch {
           return new Response(JSON.stringify({
             status: "reconnecting",
             stale: true,
@@ -57,18 +80,6 @@ export const Route = createFileRoute("/api/public/quote")({
             status: 200, headers: { "Content-Type": "application/json", ...CORS },
           });
         }
-        return new Response(JSON.stringify({
-          ...data,
-          stale: cached.stale,
-          lastUpdated: cached.lastUpdated,
-        }), {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "public, max-age=60, s-maxage=60",
-            ...CORS,
-          },
-        });
       },
     },
   },
