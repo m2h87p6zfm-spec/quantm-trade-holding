@@ -18,11 +18,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/20 text-primary">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-primary/30 via-gold/20 to-violet-accent/20 text-primary ring-1 ring-primary/30">
             <Activity className="h-4 w-4" />
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-bold tracking-tight">Helios Terminal</span>
+            <span className="text-sm font-bold tracking-tight">Apex <span className="text-gradient-gold">Markets</span></span>
             <span className="text-[10px] text-muted-foreground">Statistical Trading Agent</span>
           </div>
         </div>
