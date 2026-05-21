@@ -6,6 +6,7 @@ import { DisclaimerBanner } from "@/components/Disclaimer";
 import { Toaster } from "@/components/ui/sonner";
 import { MarketClock } from "@/components/MarketClock";
 import { CommandPalette } from "@/components/CommandPalette";
+import { QuickPanel } from "@/components/QuickPanel";
 
 import appCss from "../styles.css?url";
 
@@ -91,6 +92,7 @@ function RootComponent() {
           </div>
         </div>
         <Toaster />
+        <QuickPanel />
       </SidebarProvider>
     </QueryClientProvider>
   );

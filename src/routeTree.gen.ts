@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
+import { Route as KalenderRouteImport } from './routes/kalender'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as BacktestRouteImport } from './routes/backtest'
@@ -23,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
+import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 
@@ -41,9 +44,19 @@ const PortfolioRoute = PortfolioRouteImport.update({
   path: '/portfolio',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MaerkteRoute = MaerkteRouteImport.update({
   id: '/maerkte',
   path: '/maerkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KalenderRoute = KalenderRouteImport.update({
+  id: '/kalender',
+  path: '/kalender',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HeatmapRoute = HeatmapRouteImport.update({
@@ -96,6 +109,11 @@ const ApiPublicQuoteRoute = ApiPublicQuoteRouteImport.update({
   path: '/api/public/quote',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicNewsSentimentRoute = ApiPublicNewsSentimentRouteImport.update({
+  id: '/api/public/news-sentiment',
+  path: '/api/public/news-sentiment',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
   id: '/api/public/candles',
   path: '/api/public/candles',
@@ -115,7 +133,9 @@ export interface FileRoutesByFullPath {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
+  '/kalender': typeof KalenderRoute
   '/maerkte': typeof MaerkteRoute
+  '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
@@ -123,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesByTo {
@@ -133,7 +154,9 @@ export interface FileRoutesByTo {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
+  '/kalender': typeof KalenderRoute
   '/maerkte': typeof MaerkteRoute
+  '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
@@ -141,6 +164,7 @@ export interface FileRoutesByTo {
   '/produkte': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRoutesById {
@@ -152,7 +176,9 @@ export interface FileRoutesById {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/heatmap': typeof HeatmapRoute
+  '/kalender': typeof KalenderRoute
   '/maerkte': typeof MaerkteRoute
+  '/news': typeof NewsRoute
   '/portfolio': typeof PortfolioRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
@@ -160,6 +186,7 @@ export interface FileRoutesById {
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
+  '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
 }
 export interface FileRouteTypes {
@@ -172,7 +199,9 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/heatmap'
+    | '/kalender'
     | '/maerkte'
+    | '/news'
     | '/portfolio'
     | '/signale'
     | '/war-room'
@@ -180,6 +209,7 @@ export interface FileRouteTypes {
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/news-sentiment'
     | '/api/public/quote'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -190,7 +220,9 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/heatmap'
+    | '/kalender'
     | '/maerkte'
+    | '/news'
     | '/portfolio'
     | '/signale'
     | '/war-room'
@@ -198,6 +230,7 @@ export interface FileRouteTypes {
     | '/produkte'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/news-sentiment'
     | '/api/public/quote'
   id:
     | '__root__'
@@ -208,7 +241,9 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/heatmap'
+    | '/kalender'
     | '/maerkte'
+    | '/news'
     | '/portfolio'
     | '/signale'
     | '/war-room'
@@ -216,6 +251,7 @@ export interface FileRouteTypes {
     | '/produkte/'
     | '/api/public/agent-chat'
     | '/api/public/candles'
+    | '/api/public/news-sentiment'
     | '/api/public/quote'
   fileRoutesById: FileRoutesById
 }
@@ -227,7 +263,9 @@ export interface RootRouteChildren {
   BacktestRoute: typeof BacktestRoute
   EinstellungenRoute: typeof EinstellungenRoute
   HeatmapRoute: typeof HeatmapRoute
+  KalenderRoute: typeof KalenderRoute
   MaerkteRoute: typeof MaerkteRoute
+  NewsRoute: typeof NewsRoute
   PortfolioRoute: typeof PortfolioRoute
   SignaleRoute: typeof SignaleRoute
   WarRoomRoute: typeof WarRoomRoute
@@ -235,6 +273,7 @@ export interface RootRouteChildren {
   ProdukteIndexRoute: typeof ProdukteIndexRoute
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
+  ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
 }
 
@@ -261,11 +300,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortfolioRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/maerkte': {
       id: '/maerkte'
       path: '/maerkte'
       fullPath: '/maerkte'
       preLoaderRoute: typeof MaerkteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kalender': {
+      id: '/kalender'
+      path: '/kalender'
+      fullPath: '/kalender'
+      preLoaderRoute: typeof KalenderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/heatmap': {
@@ -338,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicQuoteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/news-sentiment': {
+      id: '/api/public/news-sentiment'
+      path: '/api/public/news-sentiment'
+      fullPath: '/api/public/news-sentiment'
+      preLoaderRoute: typeof ApiPublicNewsSentimentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/candles': {
       id: '/api/public/candles'
       path: '/api/public/candles'
@@ -363,7 +423,9 @@ const rootRouteChildren: RootRouteChildren = {
   BacktestRoute: BacktestRoute,
   EinstellungenRoute: EinstellungenRoute,
   HeatmapRoute: HeatmapRoute,
+  KalenderRoute: KalenderRoute,
   MaerkteRoute: MaerkteRoute,
+  NewsRoute: NewsRoute,
   PortfolioRoute: PortfolioRoute,
   SignaleRoute: SignaleRoute,
   WarRoomRoute: WarRoomRoute,
@@ -371,8 +433,19 @@ const rootRouteChildren: RootRouteChildren = {
   ProdukteIndexRoute: ProdukteIndexRoute,
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
+  ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

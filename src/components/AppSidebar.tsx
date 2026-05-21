@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Activity, BarChart3, Bell, Bot, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Settings as SettingsIcon, Sparkles, Swords, Wallet } from "lucide-react";
+import { Activity, BarChart3, Bell, Bot, Calendar, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Newspaper, Settings as SettingsIcon, Sparkles, Swords, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 
 const items = [
@@ -10,6 +10,8 @@ const items = [
   { title: "Portfolio", url: "/portfolio", icon: Wallet },
   { title: "Smart Alerts", url: "/alerts", icon: Bell },
   { title: "Backtest Lab", url: "/backtest", icon: FlaskConical },
+  { title: "News & Sentiment", url: "/news", icon: Newspaper },
+  { title: "Wirtschaftskalender", url: "/kalender", icon: Calendar },
   { title: "Märkte & Sektoren", url: "/maerkte", icon: BarChart3 },
   { title: "Heatmap", url: "/heatmap", icon: Flame },
   { title: "Trends & Signale", url: "/signale", icon: Sparkles },
