@@ -10,7 +10,7 @@ export const Route = createFileRoute("/ai-learning")({
   component: AiLearningPage,
   head: () => ({
     meta: [
-      { title: "AI Learning · Apex Markets" },
+      { title: "AI Learning · Apex Trades" },
       { name: "description", content: "Sieh, wie der statistische Analyst aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration, Self-Corrections und Performance pro Marktregime." },
     ],
   }),

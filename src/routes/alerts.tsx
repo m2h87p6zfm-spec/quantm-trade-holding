@@ -12,7 +12,7 @@ export const Route = createFileRoute("/alerts")({
   component: AlertsPage,
   head: () => ({
     meta: [
-      { title: "Smart Alerts — Apex Markets" },
+      { title: "Smart Alerts — Apex Trades" },
       { name: "description", content: "Schwellen-Alerts für Preis und Setup-Score mit Push-Benachrichtigungen." },
     ],
   }),

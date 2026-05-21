@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { LineChart, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { ApexLogo } from "@/components/ApexLogo";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Anmelden — Apex Markets" },
-      { name: "description", content: "Melde dich bei Apex Markets an, um Pro-Features und dein Abo zu verwalten." },
+      { title: "Anmelden — Apex Trades" },
+      { name: "description", content: "Melde dich bei Apex Trades an, um Pro-Features und dein Abo zu verwalten." },
     ],
   }),
   component: LoginPage,
@@ -65,8 +66,8 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8 text-foreground/80 hover:text-foreground">
-          <LineChart className="h-6 w-6 text-primary" />
-          <span className="font-semibold tracking-tight">Apex Markets</span>
+          <ApexLogo className="h-7 w-7" />
+          <span className="font-semibold tracking-tight">Apex Trades</span>
         </Link>
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           <Tabs defaultValue="signin">

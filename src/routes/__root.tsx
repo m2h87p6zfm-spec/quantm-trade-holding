@@ -42,7 +42,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Apex Markets — Statistischer Trading Agent" },
+      { title: "Apex Trades — Statistischer Trading Agent" },
       { name: "description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
     ],
     links: [{ rel: "stylesheet", href: appCss }],

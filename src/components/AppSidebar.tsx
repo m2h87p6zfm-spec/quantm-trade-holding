@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, Brain, Calendar, Flame, LineChart, ListOrdered, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { ApexLogo } from "@/components/ApexLogo";
 
 // Der "Quant Core" ist das Herzstück der App: statistische & mathematische
 // Aktienanalyse. Diese Gruppe wird oben, visuell hervorgehoben angezeigt.
@@ -37,13 +38,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/40 via-gold/20 to-violet-accent/30 text-primary ring-1 ring-primary/40 shadow-[0_0_18px_-4px_hsl(var(--primary)/0.5)]">
-            <Sigma className="h-4 w-4" />
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_18px_-4px_hsl(var(--primary)/0.45)]">
+            <ApexLogo className="h-6 w-6" />
             <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-bull animate-pulse ring-2 ring-sidebar" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-bold tracking-tight">Apex <span className="text-gradient-gold">Markets</span></span>
+              <span className="text-sm font-bold tracking-tight">Apex <span className="text-gradient-gold">Trades</span></span>
               <span className="text-[10px] text-muted-foreground">Statistical Trading Agent</span>
             </div>
           )}
