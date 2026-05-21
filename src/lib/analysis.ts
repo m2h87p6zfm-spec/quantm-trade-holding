@@ -80,6 +80,32 @@ export function scoreIndicators(ind: IndicatorSet, profile: RiskProfile = "ausge
   return { verdict, confidence, score, rationale: r, entry, stop, target, rr, risk };
 }
 
+// AlphaEdge Score 0–100 — proprietäre Gesamtkennzahl, gewichtete Aggregation
+// echter Indikatoren. >70 = sehr starkes Setup, 30–70 = neutral, <30 = riskant.
+export function alphaEdgeScore(ind: IndicatorSet): number {
+  let s = 50;
+  // Trend
+  if (!isNaN(ind.sma50) && !isNaN(ind.sma200)) {
+    if (ind.sma50 > ind.sma200 && ind.price > ind.sma50) s += 14;
+    else if (ind.sma50 < ind.sma200 && ind.price < ind.sma50) s -= 14;
+  }
+  // RSI Sweet-Spot
+  if (ind.rsi >= 40 && ind.rsi <= 60) s += 4;
+  else if (ind.rsi > 75 || ind.rsi < 25) s -= 8;
+  // MACD
+  if (ind.macd.histogram > 0) s += 8; else s -= 4;
+  // Momentum
+  s += Math.max(-10, Math.min(10, ind.momentum * 80));
+  // Sharpe
+  s += Math.max(-6, Math.min(10, ind.sharpe * 4));
+  // Vola-Penalty
+  if (ind.volatility > 0.6) s -= 8;
+  // Z-Score mean-reversion
+  if (ind.zScore < -1.5) s += 6;
+  else if (ind.zScore > 2) s -= 6;
+  return Math.max(0, Math.min(100, Math.round(s)));
+}
+
 export function brokerNarrative(symbol: string, name: string, ind: IndicatorSet, sig: Signal): string {
   // Klare Handlungsempfehlung an den Anfang
   const action = sig.verdict === "LONG"
