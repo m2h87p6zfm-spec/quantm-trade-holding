@@ -61,16 +61,16 @@ function extractSymbol(q: string): string | null {
 
 function AgentResponse({ symbol }: { symbol: string }) {
   const product = findProduct(symbol);
-  const { indicators, candles, quote } = useAnalysis(symbol);
+  const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
 
   if (candles.isLoading) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
   if (candles.error) return <div className="text-sm text-bear">Datenfeed-Fehler: {(candles.error as Error).message}<div className="mt-1 text-xs text-muted-foreground">Twelve Data Free erlaubt nur 8 Anfragen/Minute. Kurz warten und erneut senden, oder Watchlist verkleinern (Einstellungen).</div></div>;
   if (!candles.data) return <div className="text-sm text-muted-foreground">Keine Kerzendaten für {symbol}. Symbol prüfen.</div>;
-  if (!indicators || !product) return <div className="text-sm text-muted-foreground">Keine Daten verfügbar.</div>;
+  if (!indicators) return <div className="text-sm text-muted-foreground">Keine Daten verfügbar.</div>;
 
   const sig = scoreIndicators(indicators, settings.risk);
-  const text = brokerNarrative(symbol, product.name, indicators, sig);
+  const text = brokerNarrative(symbol, product?.name ?? symbol, indicators, sig);
 
   return (
     <div className="space-y-3">
