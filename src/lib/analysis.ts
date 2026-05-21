@@ -154,6 +154,34 @@ Das bedeutet: pro 1 € Risiko stehen 2,5 € potenzieller Gewinn gegenüber.`;
   ].join("\n\n");
 }
 
+// Ein-Satz-Trigger pro Setup — beantwortet die Frage "warum jetzt?".
+// Wählt den stärksten Auslöser deterministisch nach Hierarchie aus.
+export function whyNow(ind: IndicatorSet, sig: Signal): string {
+  const trendOk = !isNaN(ind.sma50) && !isNaN(ind.sma200);
+  const upTrend = trendOk && ind.sma50 > ind.sma200 && ind.price > ind.sma50;
+  const downTrend = trendOk && ind.sma50 < ind.sma200 && ind.price < ind.sma50;
+
+  if (sig.verdict === "LONG") {
+    if (ind.rsi <= 30 && ind.macd.histogram > 0) return "RSI aus überverkauft gedreht + MACD-Histogramm im Plus.";
+    if (ind.zScore <= -2 && upTrend) return "Z-Score −2 in intaktem Aufwärtstrend — klassisches Pullback-Setup.";
+    if (ind.price <= ind.bollinger.lower) return "Test des unteren Bollinger-Bands — statistisch überdehnt nach unten.";
+    if (ind.macd.histogram > 0 && upTrend) return "Frisches bullisches MACD-Kreuz im Aufwärtstrend.";
+    if (ind.momentum > 0.05 && ind.sharpe > 1) return "Momentum > 5% bei Sharpe > 1 — institutionell allokierbar.";
+    return "Mehrere Mean-Reversion-Faktoren sprechen für eine Gegenbewegung nach oben.";
+  }
+  if (sig.verdict === "SHORT") {
+    if (ind.rsi >= 75 && ind.macd.histogram < 0) return "RSI > 75 + MACD-Histogramm dreht negativ.";
+    if (ind.zScore >= 2 && downTrend) return "Z-Score +2 in Death-Cross-Struktur — Distribution wahrscheinlich.";
+    if (ind.price >= ind.bollinger.upper) return "Kurs am oberen Bollinger-Band — statistisch überkauft.";
+    if (ind.macd.histogram < 0 && downTrend) return "Bärisches MACD-Kreuz bestätigt den Abwärtstrend.";
+    if (ind.momentum < -0.05) return "Momentum < −5% — Verkäuferdruck dominiert das Tape.";
+    return "Mehrere Indikatoren signalisieren überdehntes Aufwärtsmomentum.";
+  }
+  if (ind.volatility > 0.5) return "Hohe Volatilität — kein klares Edge, Geduld zahlt sich aus.";
+  if (Math.abs(ind.zScore) < 1 && ind.rsi > 40 && ind.rsi < 60) return "Indikatoren im neutralen Band — kein Trigger.";
+  return "Signale widersprechen sich — auf bessere Konstellation warten.";
+}
+
 // ============================================================
 //  INSTITUTIONAL DECISION ENGINE (BUY / SELL / HOLD)
 // ============================================================
