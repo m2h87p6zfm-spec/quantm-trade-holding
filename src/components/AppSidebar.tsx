@@ -1,7 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, Flame, LineChart, ListOrdered, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, Wallet } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, LogIn, LogOut, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 
 // Der "Quant Core" ist das Herzstück der App: statistische & mathematische
 // Aktienanalyse. Diese Gruppe wird oben, visuell hervorgehoben angezeigt.
@@ -24,6 +26,7 @@ const trading = [
 ];
 
 const system = [
+  { title: "Preise & Pläne", url: "/preise", icon: CreditCard },
   { title: "Produktkatalog", url: "/produkte", icon: LineChart },
   { title: "Einstellungen", url: "/einstellungen", icon: SettingsIcon },
 ];
