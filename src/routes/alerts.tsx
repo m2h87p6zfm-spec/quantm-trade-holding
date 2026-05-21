@@ -13,7 +13,7 @@ export const Route = createFileRoute("/alerts")({
   head: () => ({
     meta: [
       { title: "Smart Alerts — Apex Markets" },
-      { name: "description", content: "Schwellen-Alerts für Preis und AlphaEdge-Score mit Push-Benachrichtigungen." },
+      { name: "description", content: "Schwellen-Alerts für Preis und Setup-Score mit Push-Benachrichtigungen." },
     ],
   }),
 });
@@ -126,8 +126,8 @@ function AlertsPage() {
           <select value={kind} onChange={(e) => setKind(e.target.value as AlertRule["kind"])} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
             <option value="price_above">Preis steigt auf ≥</option>
             <option value="price_below">Preis fällt auf ≤</option>
-            <option value="score_above">AlphaEdge-Score ≥</option>
-            <option value="score_below">AlphaEdge-Score ≤</option>
+            <option value="score_above">Setup-Score ≥</option>
+            <option value="score_below">Setup-Score ≤</option>
           </select>
         </div>
         <div>

@@ -4,7 +4,7 @@ import { Swords, Plus, X } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
-import { scoreIndicators, alphaEdgeScore } from "@/lib/analysis";
+import { scoreIndicators, setupScore } from "@/lib/analysis";
 import { ProChart } from "@/components/ProChart";
 import { SignalBadge } from "@/components/SignalBadge";
 import { useSettings } from "@/lib/settings";
@@ -107,7 +107,7 @@ function WarTile({
     if (!data?.c?.length) return null;
     const ind = computeAll(data.c);
     const sig = scoreIndicators(ind, "ausgewogen");
-    const alpha = alphaEdgeScore(ind);
+    const alpha = setupScore(ind);
     return { ind, sig, alpha };
   }, [data]);
 
@@ -144,7 +144,7 @@ function WarTile({
         ) : null}
         {stat && (
           <div className="mt-2 grid grid-cols-4 gap-2 text-[11px]">
-            <Mini k="AlphaEdge" v={stat.alpha.toFixed(0)} tone={stat.alpha > 0 ? "up" : stat.alpha < 0 ? "down" : "n"} />
+            <Mini k="Setup-Score" v={stat.alpha.toFixed(0)} tone={stat.alpha > 0 ? "up" : stat.alpha < 0 ? "down" : "n"} />
             <Mini k="RSI" v={stat.ind.rsi.toFixed(0)} tone={stat.ind.rsi > 70 ? "down" : stat.ind.rsi < 30 ? "up" : "n"} />
             <Mini k="Z-Score" v={stat.ind.zScore.toFixed(2)} tone={stat.ind.zScore > 1 ? "down" : stat.ind.zScore < -1 ? "up" : "n"} />
             <Mini k="Vola" v={(stat.ind.volatility * 100).toFixed(1) + "%"} tone="n" />

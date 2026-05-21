@@ -1,7 +1,7 @@
 import { Gauge } from "lucide-react";
 
-// AlphaEdge-Score-Tachometer (0–100). SVG-Halbkreis-Gauge.
-export function AlphaScoreGauge({ score, label = "AlphaEdge Score" }: { score: number; label?: string }) {
+// Setup-Score-Tachometer (0–100). SVG-Halbkreis-Gauge.
+export function AlphaScoreGauge({ score, label = "Setup-Score" }: { score: number; label?: string }) {
   const s = Math.max(0, Math.min(100, score));
   const angle = (s / 100) * 180 - 90; // -90° bis +90°
   const tone =

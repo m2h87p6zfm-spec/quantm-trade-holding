@@ -80,9 +80,9 @@ export function scoreIndicators(ind: IndicatorSet, profile: RiskProfile = "ausge
   return { verdict, confidence, score, rationale: r, entry, stop, target, rr, risk };
 }
 
-// AlphaEdge Score 0–100 — proprietäre Gesamtkennzahl, gewichtete Aggregation
+// Setup-Score 0–100 — proprietäre Gesamtkennzahl, gewichtete Aggregation
 // echter Indikatoren. >70 = sehr starkes Setup, 30–70 = neutral, <30 = riskant.
-export function alphaEdgeScore(ind: IndicatorSet): number {
+export function setupScore(ind: IndicatorSet): number {
   let s = 50;
   // Trend
   if (!isNaN(ind.sma50) && !isNaN(ind.sma200)) {

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "./finnhub";
 import { computeAll } from "./indicators";
-import { scoreIndicators, alphaEdgeScore } from "./analysis";
+import { scoreIndicators, setupScore } from "./analysis";
 
 export type CockpitRow = {
   symbol: string;
@@ -39,7 +39,7 @@ export function useCockpitData(symbols: string[]): CockpitRow[] {
       const change = prev ? ((last - prev) / prev) * 100 : 0;
       const ind = computeAll(closes);
       const sig = scoreIndicators(ind, "ausgewogen");
-      const alpha = alphaEdgeScore(ind);
+      const alpha = setupScore(ind);
       rows.push({ symbol: symbols[i], closes, last, prev, change, ind, sig, alpha });
     }
     return rows;
