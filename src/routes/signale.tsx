@@ -45,7 +45,6 @@ function SignalsPage() {
 
   const filtered = rows
     .filter((r) => side === "all" || r.sig.verdict === side)
-    .filter((r) => r.sig.confidence >= settings.minConfidence || side !== "all")
     .sort((a, b) => {
       switch (sortKey) {
         case "zscore": return Math.abs(b.ind.zScore) - Math.abs(a.ind.zScore);

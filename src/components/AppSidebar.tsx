@@ -8,12 +8,10 @@ const quantCore = [
   { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
   { title: "Quant-Signale", url: "/signale", icon: Sparkles, desc: "Live Setups" },
   { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend" },
-  { title: "Backtest Lab", url: "/backtest", icon: FlaskConical, desc: "Historik testen" },
 ];
 
 const markets = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
-  { title: "Märkte & Sektoren", url: "/maerkte", icon: BarChart3 },
   { title: "Heatmap", url: "/heatmap", icon: Flame },
   { title: "News & Sentiment", url: "/news", icon: Newspaper },
   { title: "Kalender", url: "/kalender", icon: Calendar },
@@ -23,7 +21,6 @@ const trading = [
   { title: "War Room", url: "/war-room", icon: Swords },
   { title: "Portfolio", url: "/portfolio", icon: Wallet },
   { title: "Smart Alerts", url: "/alerts", icon: Bell },
-  { title: "AI Analyst", url: "/agent", icon: Bot },
 ];
 
 const system = [
