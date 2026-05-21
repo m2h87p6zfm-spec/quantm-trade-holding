@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, Link } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DisclaimerBanner } from "@/components/Disclaimer";
@@ -7,6 +7,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { MarketClock } from "@/components/MarketClock";
 import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { Button } from "@/components/ui/button";
 
 import appCss from "../styles.css?url";
 
@@ -63,37 +66,61 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background text-foreground">
-          <AppSidebar />
-          <div className="flex flex-1 flex-col relative">
-            <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl">
-              <SidebarTrigger />
-              <div className="ml-2 flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-bull tick-glow-bull" />
-                </span>
-                <span className="font-medium hidden sm:inline">Yahoo Finance</span>
+      <AuthProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
+            <PaymentTestModeBanner />
+            <div className="flex flex-1 w-full">
+              <AppSidebar />
+              <div className="flex flex-1 flex-col relative">
+                <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl">
+                  <SidebarTrigger />
+                  <div className="ml-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-bull tick-glow-bull" />
+                    </span>
+                    <span className="font-medium hidden sm:inline">Yahoo Finance</span>
+                  </div>
+                  <div className="mx-4 hidden md:block h-5 w-px bg-border/60" />
+                  <MarketClock />
+                  <div className="ml-auto flex items-center gap-2">
+                    <CommandPalette />
+                    <AuthHeaderButton />
+                  </div>
+                </header>
+                <main className="flex-1 overflow-x-hidden bg-mesh relative">
+                  <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
+                  <div className="relative z-10">
+                    <Outlet />
+                  </div>
+                </main>
+                <DisclaimerBanner />
               </div>
-              <div className="mx-4 hidden md:block h-5 w-px bg-border/60" />
-              <MarketClock />
-              <div className="ml-auto flex items-center gap-2">
-                <CommandPalette />
-              </div>
-            </header>
-            <main className="flex-1 overflow-x-hidden bg-mesh relative">
-              <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
-              <div className="relative z-10">
-                <Outlet />
-              </div>
-            </main>
-            <DisclaimerBanner />
+            </div>
           </div>
-        </div>
-        <Toaster />
-        <QuickPanel />
-      </SidebarProvider>
+          <Toaster />
+          <QuickPanel />
+        </SidebarProvider>
+      </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function AuthHeaderButton() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (user) {
+    return (
+      <Button asChild size="sm" variant="ghost" className="text-xs">
+        <Link to="/konto">Konto</Link>
+      </Button>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1">
+      <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">Anmelden</Link></Button>
+      <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">Upgrade</Link></Button>
+    </div>
   );
 }
