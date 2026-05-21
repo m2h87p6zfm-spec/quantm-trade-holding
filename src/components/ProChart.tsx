@@ -292,17 +292,17 @@ export function ProChart({
                 const up = closes[i] >= opens[i];
                 return (
                   <rect key={i} x={xAt(i) - candleW / 2} y={innerH - h + 2} width={candleW} height={h}
-                        fill={up ? "var(--bull)" : "var(--bear)"} opacity={0.45} />
+                        fill={up ? "#22c55e" : "#ef4444"} opacity={0.55} />
                 );
               })}
               {sub === "rsi" && (() => {
                 const ys = (val: number) => 2 + (1 - (val) / 100) * (innerH - 4);
                 return (
                   <>
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="var(--bear)" strokeDasharray="3 3" opacity={0.4} />
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="var(--bull)" strokeDasharray="3 3" opacity={0.4} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="#22c55e" strokeDasharray="3 3" opacity={0.5} />
                     <line x1={pad.l} x2={w - pad.r} y1={ys(50)} y2={ys(50)} stroke="var(--border)" strokeDasharray="2 4" opacity={0.5} />
-                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="var(--primary)" width={1.2} />
+                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="#38bdf8" width={1.4} />
                     <text x={w - pad.r + 4} y={ys(70) + 3} fontSize={9} fill="var(--muted-foreground)">70</text>
                     <text x={w - pad.r + 4} y={ys(30) + 3} fontSize={9} fill="var(--muted-foreground)">30</text>
                   </>
@@ -321,11 +321,11 @@ export function ProChart({
                       const y = yv(v); const h = Math.abs(y - zeroY);
                       return (
                         <rect key={i} x={xAt(i) - candleW / 2} y={Math.min(y, zeroY)} width={candleW} height={Math.max(1, h)}
-                              fill={v >= 0 ? "var(--bull)" : "var(--bear)"} opacity={0.55} />
+                              fill={v >= 0 ? "#22c55e" : "#ef4444"} opacity={0.7} />
                       );
                     })}
-                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="var(--primary)" width={1.2} />
-                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="var(--gold)" width={1} />
+                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="#38bdf8" width={1.4} />
+                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="#fbbf24" width={1.2} />
                   </>
                 );
               })()}
