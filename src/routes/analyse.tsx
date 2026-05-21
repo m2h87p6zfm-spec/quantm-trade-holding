@@ -4,8 +4,9 @@ import { Send } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis } from "@/lib/useMarketData";
-import { brokerNarrative, scoreIndicators, buildDecision } from "@/lib/analysis";
+import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { DecisionCard } from "@/components/DecisionCard";
+import { IndicatorBreakdown } from "@/components/IndicatorBreakdown";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
@@ -88,7 +89,6 @@ function AgentResponse({ symbol }: { symbol: string }) {
   if (!indicators) return <div className="text-sm text-muted-foreground">Daten werden vorbereitet…</div>;
 
   const sig = scoreIndicators(indicators, settings.risk);
-  const text = brokerNarrative(symbol, product?.name ?? symbol, indicators, sig);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
   const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
@@ -111,16 +111,16 @@ function AgentResponse({ symbol }: { symbol: string }) {
   }, [symbol, scenarioTag, regime, sig.verdict]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <DecisionCard report={decision} symbol={symbol} />
       <div className="flex items-center gap-2 pt-1">
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">Detailansicht →</Link>
       </div>
-      <div
-        className="prose-sm max-w-none text-sm leading-relaxed [&_h2]:text-base [&_h2]:font-bold [&_h2]:mt-2 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-1 [&_ul]:my-1 [&_ul]:space-y-1 [&_ul]:pl-1 [&_li]:list-none [&_strong]:text-foreground"
-        dangerouslySetInnerHTML={{ __html: renderMd(text) }}
-      />
+      <div>
+        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Indikator-Analyse — was die Daten sagen</h3>
+        <IndicatorBreakdown ind={indicators} />
+      </div>
       <LearningProgressBlock
         symbol={symbol}
         scenarioTag={scenarioTag}
@@ -128,16 +128,6 @@ function AgentResponse({ symbol }: { symbol: string }) {
         currentVerdict={sig.verdict}
         currentConfidence={sig.confidence}
       />
-      <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 pt-2 border-t border-border">
-        <Stat label="Z-Score" v={indicators.zScore.toFixed(2)} hint="Abweichung vom Mittelwert in Standardabweichungen. >+2 = stark überkauft, <−2 = stark überverkauft." />
-        <Stat label="RSI(14)" v={indicators.rsi.toFixed(1)} hint="Relative Strength Index (0–100). >70 überkauft, <30 überverkauft, ~50 neutral." />
-        <Stat label="MACD-Hist" v={indicators.macd.histogram.toFixed(3)} hint="Differenz MACD-Linie minus Signallinie. Positiv = bullisches Momentum, Vorzeichenwechsel = Trendwende-Signal." />
-        <Stat label="Vola ann." v={(indicators.volatility * 100).toFixed(1) + "%"} hint="Annualisierte Volatilität: erwartete jährliche Schwankungsbreite. Höher = riskanter." />
-        <Stat label="Sharpe" v={indicators.sharpe.toFixed(2)} hint="Rendite pro Risikoeinheit. >1 gut, >2 sehr gut, <0 schlechter als risikofrei." />
-        <Stat label="Beta" v={indicators.beta.toFixed(2)} hint="Sensitivität zum Markt. 1 = wie Markt, >1 schwankt stärker, <1 defensiver." />
-        <Stat label="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} hint="Kursveränderung über die letzten 10 Perioden. Positiv = Aufwärtstrend." />
-        <Stat label="Bollinger ±" v={indicators.bollinger.lower.toFixed(2) + " / " + indicators.bollinger.upper.toFixed(2)} hint="Unteres / oberes Band (SMA20 ± 2σ). Kurs am oberen Band = überkauft, am unteren = überverkauft." />
-      </div>
       <DisclaimerInline />
     </div>
   );
