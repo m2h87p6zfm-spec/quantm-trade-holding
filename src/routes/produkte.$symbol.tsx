@@ -5,7 +5,7 @@ import { useAnalysis } from "@/lib/useMarketData";
 import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { SignalBadge } from "@/components/SignalBadge";
-import { MacdChart, PriceChart, RsiChart } from "@/components/PriceChart";
+import { ProChart } from "@/components/ProChart";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
 export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
