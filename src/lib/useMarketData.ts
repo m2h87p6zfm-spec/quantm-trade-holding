@@ -1,6 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchCandles, fetchQuote } from "./finnhub";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { fetchCandles, fetchQuote, MarketDataReconnectingError } from "./finnhub";
 import { computeAll } from "./indicators";
+
+// Bei Reconnect-Signalen niemals retrien — der Server liefert dann sowieso
+// nur „reconnecting" zurück, bis Yahoo wieder antwortet. Andere Fehler bis
+// zu 3× mit exponentiellem Backoff.
+function retryPolicy(failureCount: number, error: unknown) {
+  if (error instanceof MarketDataReconnectingError) return false;
+  return failureCount < 3;
+}
+const retryDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
 
 export function useQuote(symbol: string, refetchMs = 0) {
   return useQuery({
@@ -11,7 +20,10 @@ export function useQuote(symbol: string, refetchMs = 0) {
     enabled: !!symbol,
     staleTime: 60 * 1000,
     gcTime: 60 * 60 * 1000,
-    retry: 1,
+    retry: retryPolicy,
+    retryDelay,
+    // Charts/Karten dürfen während Refetch NIE leer werden.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -23,7 +35,9 @@ export function useCandles(symbol: string) {
     staleTime: 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: retryPolicy,
+    retryDelay,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -33,4 +47,3 @@ export function useAnalysis(symbol: string) {
   const indicators = ready ? computeAll(candles.data!.c) : null;
   return { candles, indicators };
 }
-
