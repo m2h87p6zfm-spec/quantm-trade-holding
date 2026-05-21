@@ -2,11 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Star, StarOff } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
-import { brokerNarrative, scoreIndicators } from "@/lib/analysis";
+import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
-import { DisclaimerInline } from "@/components/Disclaimer";
+import { BrokerAssessment } from "@/components/BrokerAssessment";
 
 export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
 
