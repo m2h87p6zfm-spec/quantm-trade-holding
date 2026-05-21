@@ -69,7 +69,7 @@ function Row({ symbol, idx }: { symbol: string; idx: number }) {
       </div>
       <div className="col-span-3 flex justify-end">
         {sig ? <SignalBadge verdict={sig.verdict} confidence={sig.confidence} /> : (
-          <span className="text-xs text-muted-foreground">{candles.isLoading ? "lädt…" : candles.error ? "Fehler" : "—"}</span>
+          <span className="text-xs text-muted-foreground">{candles.data ? "—" : "aktualisiert…"}</span>
         )}
       </div>
     </Link>
