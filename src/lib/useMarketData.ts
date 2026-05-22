@@ -6,12 +6,12 @@ import { computeAll } from "./indicators";
 // bis zu ~8×), damit Nutzer:innen nicht selbst „Erneut laden" klicken müssen.
 // Andere Fehler maximal 3× mit exponentiellem Backoff.
 function retryPolicy(failureCount: number, error: unknown) {
-  if (error instanceof MarketDataReconnectingError) return failureCount < 8;
+  if (error instanceof MarketDataReconnectingError) return failureCount < 6;
   return failureCount < 3;
 }
 const retryDelay = (attempt: number, error: unknown) => {
-  if (error instanceof MarketDataReconnectingError) return 2500;
-  return Math.min(1000 * 2 ** attempt, 8000);
+  if (error instanceof MarketDataReconnectingError) return 1000;
+  return Math.min(500 * 2 ** attempt, 4000);
 };
 
 export function useQuote(symbol: string, refetchMs = 0) {
