@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Star, X, TrendingUp, TrendingDown, Activity, Zap, Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { Star, X, TrendingUp, TrendingDown, Activity, Zap, Plus, Search, ListPlus } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
@@ -13,7 +14,9 @@ import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { SymbolSearch } from "@/components/SymbolSearch";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
+import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { formatCompact } from "@/lib/format";
+
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
@@ -22,7 +25,9 @@ const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "J
 
 function Cockpit() {
   const { settings, addSymbols, removeSymbol } = useSettings();
+  const [manageOpen, setManageOpen] = useState(false);
   const usingDefault = settings.watchlist.length === 0;
+
   const cockpitSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
   const rows = useCockpitData(cockpitSymbols);
   const rowMap = new Map(rows.map((r) => [r.symbol, r]));
@@ -71,11 +76,18 @@ function Cockpit() {
             </div>
             <div className="flex items-center gap-2">
               <WatchlistSwitcher />
+              <button
+                onClick={() => setManageOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors"
+              >
+                <ListPlus className="h-3.5 w-3.5" /> Verwalten
+              </button>
               <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
                 <Search className="h-3.5 w-3.5" /> Katalog
               </Link>
             </div>
           </div>
+
 
           {/* Global search — any Yahoo Finance ticker */}
           <div className="animate-fade-up" style={{ animationDelay: "20ms" }}>
@@ -171,9 +183,11 @@ function Cockpit() {
           </div>
         </div>
       </div>
+      <ManageWatchlistDialog open={manageOpen} onOpenChange={setManageOpen} />
     </div>
   );
 }
+
 
 
 function RowItem({ symbol, idx, showRemove, row, onRemove }: { symbol: string; idx: number; showRemove: boolean; row?: CockpitRow; onRemove: () => void }) {

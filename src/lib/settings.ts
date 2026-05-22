@@ -2,33 +2,43 @@ import { useEffect, useState, useCallback } from "react";
 import type { RiskProfile } from "./analysis";
 
 export type Watchlist = { id: string; name: string; symbols: string[] };
+export type ExperienceLevel = "beginner" | "intermediate" | "pro";
+export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF";
+
+/** Tier-1 news publishers. Keys MUST stay stable — used as storage keys. */
+export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft"] as const;
+export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
   risk: RiskProfile;
   theme: "dark" | "light";
   minConfidence: number;
-  // Internal multi-watchlist storage
   watchlists: Watchlist[];
   activeWatchlistId: string;
-  // Deprecated single-list field, kept only for migration
-  watchlist?: string[];
+  watchlist?: string[]; // legacy
   lastSelected?: string;
-  currency: "USD" | "EUR" | "CHF";
+  currency: BaseCurrency;
   density: "comfortable" | "compact";
   soundOnAlert: boolean;
   defaultTakeProfit: number;
   defaultStopLoss: number;
   language: "de" | "en" | "fr" | "es" | "ar";
   hideLowConfidence: boolean;
+  experienceLevel: ExperienceLevel;
+  notifBreakingNews: boolean;
+  newsSources: Record<NewsSource, boolean>;
 };
 
-// What components see — `watchlist` is a computed view of the active list
 export type Settings = Omit<StoredSettings, "watchlist"> & { watchlist: string[] };
 
 const DEFAULT_LIST: Watchlist = {
   id: "default",
   name: "Hauptliste",
   symbols: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"],
+};
+
+const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
+  reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
 };
 
 const DEFAULT: StoredSettings = {
@@ -45,11 +55,13 @@ const DEFAULT: StoredSettings = {
   defaultStopLoss: 4,
   language: "de",
   hideLowConfidence: true,
+  experienceLevel: "intermediate",
+  notifBreakingNews: true,
+  newsSources: { ...DEFAULT_SOURCES },
 };
 
 function migrate(raw: any): StoredSettings {
   const merged: StoredSettings = { ...DEFAULT, ...raw };
-  // Migrate legacy single watchlist into the multi-watchlist structure
   if (!Array.isArray(merged.watchlists) || merged.watchlists.length === 0) {
     const legacy = Array.isArray(raw?.watchlist) ? raw.watchlist : DEFAULT_LIST.symbols;
     merged.watchlists = [{ id: "default", name: "Hauptliste", symbols: legacy }];
@@ -58,6 +70,7 @@ function migrate(raw: any): StoredSettings {
   if (!merged.watchlists.find((w) => w.id === merged.activeWatchlistId)) {
     merged.activeWatchlistId = merged.watchlists[0].id;
   }
+  merged.newsSources = { ...DEFAULT_SOURCES, ...(merged.newsSources || {}) };
   delete (merged as any).watchlist;
   return merged;
 }
@@ -102,7 +115,6 @@ export function useSettings() {
 
   const update = useCallback((patch: Partial<Settings>) => {
     setStored((prev) => {
-      // Reject `watchlist` direct writes — must go through list-aware helpers
       const { watchlist: _ignore, ...rest } = patch as any;
       const next: StoredSettings = { ...prev, ...rest };
       write(next);
@@ -140,6 +152,12 @@ export function useSettings() {
     mutateActive((syms) => syms.filter((x) => x !== SYM));
   }, [mutateActive]);
 
+  /** Replace the active watchlist's full ordered symbol list (used by drag-and-drop). */
+  const reorderActive = useCallback((orderedSymbols: string[]) => {
+    const clean = Array.from(new Set(orderedSymbols.map((x) => x.trim().toUpperCase()).filter(Boolean)));
+    mutateActive(() => clean);
+  }, [mutateActive]);
+
   const createWatchlist = useCallback((name: string): string => {
     const id = uid();
     setStored((prev) => {
@@ -167,7 +185,7 @@ export function useSettings() {
 
   const deleteWatchlist = useCallback((id: string) => {
     setStored((prev) => {
-      if (prev.watchlists.length <= 1) return prev; // never delete the last one
+      if (prev.watchlists.length <= 1) return prev;
       const remaining = prev.watchlists.filter((w) => w.id !== id);
       const nextActive = prev.activeWatchlistId === id ? remaining[0].id : prev.activeWatchlistId;
       const next: StoredSettings = { ...prev, watchlists: remaining, activeWatchlistId: nextActive };
@@ -191,6 +209,7 @@ export function useSettings() {
     toggleWatch,
     addSymbols,
     removeSymbol,
+    reorderActive,
     createWatchlist,
     renameWatchlist,
     deleteWatchlist,

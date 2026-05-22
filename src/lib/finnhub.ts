@@ -1,12 +1,7 @@
 // Market Data Client — geht über serverseitigen Yahoo-Finance-Proxy (/api/public/*).
-// Endpunkte werfen NIE 5xx — sie liefern entweder Daten (ggf. stale) oder
-// einen `status: "reconnecting"`-Marker. Der Client wirft in dem Fall einen
-// typisierten Fehler, damit React Query mit `placeholderData` die letzten
-// validen Daten weiter anzeigt.
-
 export type Quote = {
   c: number; d: number; dp: number; h: number; l: number; o: number; pc: number; t: number;
-  v?: number; h52?: number; l52?: number;
+  v?: number; h52?: number; l52?: number; marketCap?: number;
   currency?: string; exchange?: string; name?: string;
   stale?: boolean; lastUpdated?: number;
 };
@@ -15,7 +10,6 @@ export type Candles = {
   stale?: boolean; lastUpdated?: number;
 };
 
-// Backwards-compat
 export function getApiKey(): string { return "yahoo"; }
 export function setApiKey(_k: string) {}
 
@@ -64,4 +58,3 @@ export async function searchSymbols(q: string): Promise<SymbolSearchHit[]> {
 }
 
 export { FinnhubError };
-

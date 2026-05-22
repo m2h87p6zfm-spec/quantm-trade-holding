@@ -37,6 +37,19 @@ function buildQuote(j: any, symbol: string) {
   };
 }
 
+// Best-effort marketCap via Yahoo v7 quote endpoint. Fails silently.
+async function fetchMarketCap(symbol: string): Promise<number | undefined> {
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}&fields=marketCap`,
+      { headers: { "User-Agent": "Mozilla/5.0 ApexMarkets" } }
+    );
+    if (!res.ok) return undefined;
+    const j: any = await res.json();
+    const mc = j?.quoteResponse?.result?.[0]?.marketCap;
+    return Number.isFinite(Number(mc)) ? Number(mc) : undefined;
+  } catch { return undefined; }
+}
 
 export const Route = createFileRoute("/api/public/quote")({
   server: {
@@ -51,7 +64,10 @@ export const Route = createFileRoute("/api/public/quote")({
               status: 200, headers: { "Content-Type": "application/json", ...CORS },
             });
           }
-          const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+          const [cached, marketCap] = await Promise.all([
+            fetchYahooChartCached(symbol, "1d", "5d", 60),
+            fetchMarketCap(symbol),
+          ]);
           const data = cached.value ? buildQuote(cached.value, symbol) : null;
           if (!data) {
             return new Response(JSON.stringify({
@@ -65,6 +81,7 @@ export const Route = createFileRoute("/api/public/quote")({
           }
           return new Response(JSON.stringify({
             ...data,
+            marketCap,
             stale: cached.stale,
             lastUpdated: cached.lastUpdated,
           }), {

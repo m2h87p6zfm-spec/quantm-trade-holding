@@ -24,6 +24,8 @@ import {
 import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
+import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
+
 
 import appCss from "../styles.css?url";
 
@@ -94,6 +96,8 @@ function RootComponent() {
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
             <DunningBanner />
+            <BreakingNewsTicker />
+
             <div className="flex flex-1 w-full min-w-0">
               <AppSidebar />
               <div className="flex flex-1 flex-col relative min-w-0">
