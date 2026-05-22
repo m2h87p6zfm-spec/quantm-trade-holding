@@ -85,7 +85,7 @@ function AccountPage() {
             {subLoading ? (
               <p className="text-xs text-muted-foreground">Lade…</p>
             ) : tier === "free" ? (
-              <p className="text-sm text-muted-foreground">Schalte alle Signale, Backtest Lab und War Room frei.</p>
+              <p className="text-sm text-muted-foreground">Schalte alle Premium-Signale und Features frei.</p>
             ) : (
               <div className="text-xs text-muted-foreground space-y-0.5">
                 <div>Status: <span className="text-foreground">{status}</span></div>
