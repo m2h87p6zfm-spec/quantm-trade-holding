@@ -104,7 +104,7 @@ export async function trackPendingOutcomes(): Promise<{ scanned: number; updated
     if (Object.keys(patch).length === 0) continue;
     const { error: upErr } = await supabaseAdmin
       .from("apex_outcomes")
-      .update(patch)
+      .update(patch as never)
       .eq("analysis_id", a.id as string);
     if (!upErr) updated++;
   }
