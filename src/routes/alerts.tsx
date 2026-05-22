@@ -7,6 +7,9 @@ import { useQuote, useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { PRODUCTS } from "@/lib/products";
+import { useAlertsLimit } from "@/lib/featureGate";
+import { Link } from "@tanstack/react-router";
+import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/alerts")({
   component: AlertsPage,
@@ -78,7 +81,8 @@ function label(k: AlertRule["kind"]): string {
 }
 
 function AlertsPage() {
-  const { alerts, add, remove, markTriggered } = useAlerts();
+  const { alerts, remove, markTriggered } = useAlerts();
+  const { guardedAdd, tier, max, count, atLimit } = useAlertsLimit();
   const [symbol, setSymbol] = useState("AAPL");
   const [kind, setKind] = useState<AlertRule["kind"]>("price_above");
   const [threshold, setThreshold] = useState(200);
@@ -96,7 +100,11 @@ function AlertsPage() {
   function onAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!symbol || !Number.isFinite(threshold)) return;
-    add({ symbol: symbol.toUpperCase(), kind, threshold });
+    if (atLimit) {
+      toast.error(`Alert-Limit erreicht (${max})`, { description: "Upgrade auf Pro für unlimitierte Smart Alerts." });
+      return;
+    }
+    guardedAdd({ symbol: symbol.toUpperCase(), kind, threshold });
     toast.success(`Alert für ${symbol.toUpperCase()} erstellt.`);
   }
 
