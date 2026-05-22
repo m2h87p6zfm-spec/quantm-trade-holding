@@ -9,18 +9,10 @@ import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
-import { FeatureGate } from "@/lib/featureGate";
+import { usePortfolioLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/portfolio")({
-  component: () => (
-    <FeatureGate
-      feature="portfolio"
-      title="Portfolio-Tracking ist Pro"
-      description="Live-P&L, Allokation, Risiko und Quant-Signal-Konflikte deiner Positionen auf einen Blick."
-    >
-      <PortfolioPage />
-    </FeatureGate>
-  ),
+  component: PortfolioPage,
   head: () => ({
     meta: [
       { title: "Portfolio Tracker — Apex Trades" },
@@ -28,6 +20,7 @@ export const Route = createFileRoute("/portfolio")({
     ],
   }),
 });
+
 
 type SignalState = {
   kind: "aligned" | "conflict" | "neutral" | "loading";
