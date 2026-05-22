@@ -48,6 +48,22 @@ function extractFeatures(text: string): string[] {
   if (/\b(Swing|Momentum|Trend|kurzfristig)\b/i.test(text)) feats.push("style:active");
   if (/\b(spekulat|Hebel|Optionen|aggress)/i.test(text)) feats.push("style:aggressive");
 
+  // Risk language — wie explizit Risiken adressiert werden
+  const riskHedges = (text.match(/\b(Risiko|Drawdown|VaR|Stop|Volatilität|Margin of Safety|Worst.?Case)\b/gi) ?? []).length;
+  const hedgeWords = (text.match(/\b(könnte|möglich(erweise)?|tendenziell|ungefähr|ca\.?|circa|schätzungsweise|~)/gi) ?? []).length;
+  const decisiveWords = (text.match(/\b(klar|eindeutig|definitiv|sicher|stark)/gi) ?? []).length;
+  if (riskHedges >= 3) feats.push("risk:explicit");
+  else if (riskHedges === 0) feats.push("risk:minimal");
+  else feats.push("risk:moderate");
+  if (hedgeWords > decisiveWords + 2) feats.push("risk:cautious");
+  else if (decisiveWords > hedgeWords + 2) feats.push("risk:assertive");
+
+  // Tonalität
+  if (/\b(Sehr geehrte|institutionell|gemäß|§|gemäss)\b/i.test(text)) feats.push("tone:formal");
+  if (/\b(salopp|easy|kurz und knapp|tldr|TL;DR)\b/i.test(text)) feats.push("tone:casual");
+  if (/!\s|🚀|💡|✅|⚡/.test(text)) feats.push("tone:energetic");
+  else feats.push("tone:professional");
+
   // Complexity
   const avgSentence = text.split(/[.!?]\s/).reduce((s, x) => s + x.length, 0) / Math.max(1, text.split(/[.!?]\s/).length);
   if (avgSentence > 140) feats.push("complexity:high");
@@ -148,6 +164,43 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
                 preferences: prof?.preferences ?? {},
                 updated_at: new Date().toISOString(),
               });
+
+            // Verdichte aktualisiertes Profil in einen Memory-Eintrag,
+            // damit jede künftige Antwort die Präferenzen direkt aus ai_memory liest.
+            const dom = (cat: string, src: Record<string, number>): string | null => {
+              const e = Object.entries(src).filter(([k]) => k.startsWith(`${cat}:`));
+              if (!e.length) return null;
+              e.sort((a, b) => b[1] - a[1]);
+              return e[0][0].split(":")[1];
+            };
+            const depthPref = dom("depth", pos);
+            const riskPref = dom("risk", pos);
+            const tonePref = dom("tone", pos);
+            const lengthPref = dom("length", pos);
+            const complexityPref = dom("complexity", pos);
+            const avoidFails = Object.entries(neg)
+              .filter(([k]) => k.startsWith("fail:"))
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 3)
+              .map(([k]) => k.replace("fail:", ""));
+
+            const noteParts: string[] = [];
+            if (depthPref) noteParts.push(`Begründungstiefe: ${depthPref}`);
+            if (riskPref) noteParts.push(`Risiko-Sprache: ${riskPref}`);
+            if (tonePref) noteParts.push(`Tonalität: ${tonePref}`);
+            if (lengthPref) noteParts.push(`Länge: ${lengthPref}`);
+            if (complexityPref) noteParts.push(`Komplexität: ${complexityPref}`);
+            if (avoidFails.length) noteParts.push(`vermeiden: ${avoidFails.join(", ")}`);
+
+            if (noteParts.length) {
+              const note = `[ARIA-PRÄFERENZEN aus Feedback] ${noteParts.join(" · ")}. Wende diese Präferenzen in jeder folgenden Antwort an.`;
+              await supabaseAdmin.from("ai_memory").insert({
+                user_id,
+                session_id: body.session_id ?? null,
+                role: "assistant",
+                content: note,
+              });
+            }
           }
 
 

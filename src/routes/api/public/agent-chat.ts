@@ -62,6 +62,8 @@ async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
   const preferredDepth = dominant(pos, "depth");
   const preferredStyle = dominant(pos, "style");
   const preferredComplexity = dominant(pos, "complexity");
+  const preferredRisk = dominant(pos, "risk");
+  const preferredTone = dominant(pos, "tone");
 
   // Top negative patterns (avoid)
   const negTop = topKeys(neg, 5);
@@ -75,10 +77,12 @@ async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
   lines.push("### Bestätigte Präferenzen (verstärken):");
   if (preferredLength) lines.push(`- **Länge**: ${preferredLength === "short" ? "kurz (<600 Zeichen)" : preferredLength === "medium" ? "mittel (600–1800 Zeichen)" : "ausführlich (>1800 Zeichen)"}`);
   if (preferredStructure) lines.push(`- **Struktur**: ${preferredStructure === "tables" ? "Tabellen für Vergleiche" : preferredStructure === "bullets" ? "Bullet-Listen" : preferredStructure === "headings" ? "klare Überschriften" : preferredStructure === "numbered" ? "nummerierte Schritte" : "fließender Text"}`);
-  if (preferredDepth) lines.push(`- **Analyse-Tiefe**: ${preferredDepth === "quantitative" ? "stark quantitativ, viele Zahlen" : preferredDepth === "valuation" ? "Bewertungs-fokussiert (DCF, P/E, Multiples)" : preferredDepth === "technical" ? "technische Analyse (RSI, MACD, Trend)" : preferredDepth === "macro" ? "Makro-Kontext (Zinsen, Inflation)" : "quellen-gestützt mit Zitaten"}`);
+  if (preferredDepth) lines.push(`- **Begründungstiefe**: ${preferredDepth === "quantitative" ? "stark quantitativ, viele Zahlen und Formeln explizit ausrechnen" : preferredDepth === "valuation" ? "Bewertungs-fokussiert (DCF, P/E, Multiples) mit Herleitung" : preferredDepth === "technical" ? "technische Analyse mit RSI/MACD/Trend-Begründung" : preferredDepth === "macro" ? "Makro-Kontext (Zinsen, Inflation, Liquidität) integrieren" : "quellen-gestützt mit Zitaten und expliziter Herleitung"}`);
   if (preferredStyle) lines.push(`- **Investment-Stil**: ${preferredStyle === "long_term" ? "langfristig / Value / Buy-and-Hold" : preferredStyle === "active" ? "aktiv / Swing / Momentum" : "aggressiv / spekulativ"}`);
   if (preferredComplexity) lines.push(`- **Komplexität**: ${preferredComplexity === "high" ? "anspruchsvoll, fachlich dicht" : preferredComplexity === "low" ? "einfach erklärt, kurze Sätze" : "ausgewogen"}`);
-  if (!preferredLength && !preferredStructure && !preferredDepth && !preferredStyle && !preferredComplexity) {
+  if (preferredRisk) lines.push(`- **Risiko-Sprache**: ${preferredRisk === "explicit" ? "Risiken explizit benennen (Drawdown, VaR, Stop, Worst-Case) — mindestens 3 konkrete Risikofaktoren pro Analyse" : preferredRisk === "cautious" ? "vorsichtig formulieren, Hedge-Wörter (möglicherweise, tendenziell, ~) bevorzugen, keine absoluten Aussagen" : preferredRisk === "assertive" ? "klare Aussagen mit konkreter Richtung, Hedging nur wenn statistisch zwingend" : preferredRisk === "moderate" ? "Risiken benennen, aber knapp halten" : "Risiken minimal erwähnen — nur Pflicht-Disclaimer"}`);
+  if (preferredTone) lines.push(`- **Tonalität**: ${preferredTone === "formal" ? "institutionell-formal, Fachvokabular, keine Emojis" : preferredTone === "casual" ? "lockerer Ton, kurze Sätze, alltagsnah" : preferredTone === "energetic" ? "dynamisch, mit Akzent-Markern (✅, ⚡, !)" : "sachlich-professionell ohne Schmuckelemente"}`);
+  if (!preferredLength && !preferredStructure && !preferredDepth && !preferredStyle && !preferredComplexity && !preferredRisk && !preferredTone) {
     lines.push("- Noch keine dominanten Positiv-Muster — neutral antworten.");
   }
 
