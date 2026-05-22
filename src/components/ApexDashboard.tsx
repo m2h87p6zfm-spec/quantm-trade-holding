@@ -88,13 +88,14 @@ function atr(candles: Candle[] | undefined, period = 14): number {
 }
 
 function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgVol: number, lastVol: number) {
-  const rows: Array<{ label: string; value: string; sub?: string; signal: Signal }> = [];
+  const rows: Array<{ label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }> = [];
   // RSI
   rows.push({
     label: "RSI (14)",
     value: fmt(ind.rsi, 1),
     sub: ind.rsi >= 70 ? "überkauft" : ind.rsi <= 30 ? "überverkauft" : "neutral",
     signal: ind.rsi <= 30 ? "pos" : ind.rsi >= 70 ? "neg" : "neu",
+    infoKey: "rsi", rawValue: ind.rsi,
   });
   // Stoch RSI
   rows.push({
@@ -102,6 +103,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(stoch, 1),
     sub: stoch >= 80 ? "überkauft" : stoch <= 20 ? "überverkauft" : "neutral",
     signal: stoch <= 20 ? "pos" : stoch >= 80 ? "neg" : "neu",
+    infoKey: "stochRsi", rawValue: stoch,
   });
   // MACD
   const macdSig: Signal = ind.macd.histogram > 0 && ind.macd.macd > ind.macd.signal ? "pos"
@@ -111,6 +113,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(ind.macd.histogram, 3),
     sub: `Signal ${fmt(ind.macd.signal, 3)}`,
     signal: macdSig,
+    infoKey: "macd", rawValue: ind.macd,
   });
   // Bollinger
   const boll: Signal = ind.price <= ind.bollinger.lower ? "pos" : ind.price >= ind.bollinger.upper ? "neg" : "neu";
@@ -119,6 +122,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: ind.price <= ind.bollinger.lower ? "unteres Band" : ind.price >= ind.bollinger.upper ? "oberes Band" : "im Korridor",
     sub: `${fmt(ind.bollinger.lower)} – ${fmt(ind.bollinger.upper)}`,
     signal: boll,
+    infoKey: "bollinger", rawValue: { price: ind.price, lower: ind.bollinger.lower, upper: ind.bollinger.upper },
   });
   // Z-Score
   const zSig: Signal = ind.zScore <= -1 ? "pos" : ind.zScore >= 1 ? "neg" : "neu";
@@ -127,33 +131,35 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(ind.zScore, 2),
     sub: Math.abs(ind.zScore) >= 2 ? "extrem" : Math.abs(ind.zScore) >= 1 ? "auffällig" : "neutral",
     signal: zSig,
+    infoKey: "zScore", rawValue: ind.zScore,
   });
   // SMA 20
   const sma20Sig: Signal = ind.price > ind.sma20 ? "pos" : ind.price < ind.sma20 ? "neg" : "neu";
-  rows.push({ label: "SMA 20", value: fmt(ind.sma20), sub: ind.price > ind.sma20 ? "Kurs darüber" : "Kurs darunter", signal: sma20Sig });
+  rows.push({ label: "SMA 20", value: fmt(ind.sma20), sub: ind.price > ind.sma20 ? "Kurs darüber" : "Kurs darunter", signal: sma20Sig, infoKey: "sma20", rawValue: { price: ind.price, sma: ind.sma20 } });
   // SMA 50
   if (!isNaN(ind.sma50)) {
     const sig: Signal = ind.price > ind.sma50 ? "pos" : "neg";
-    rows.push({ label: "SMA 50", value: fmt(ind.sma50), sub: ind.price > ind.sma50 ? "Kurs darüber" : "Kurs darunter", signal: sig });
+    rows.push({ label: "SMA 50", value: fmt(ind.sma50), sub: ind.price > ind.sma50 ? "Kurs darüber" : "Kurs darunter", signal: sig, infoKey: "sma50", rawValue: { price: ind.price, sma: ind.sma50 } });
   }
   // SMA 200
   if (!isNaN(ind.sma200)) {
     const sig: Signal = ind.price > ind.sma200 ? "pos" : "neg";
-    rows.push({ label: "SMA 200", value: fmt(ind.sma200), sub: ind.sma50 > ind.sma200 ? "Golden Cross" : "Death Cross", signal: sig });
+    rows.push({ label: "SMA 200", value: fmt(ind.sma200), sub: ind.sma50 > ind.sma200 ? "Golden Cross" : "Death Cross", signal: sig, infoKey: "sma200", rawValue: { price: ind.price, sma200: ind.sma200, sma50: ind.sma50 } });
   }
   // Momentum
   const momSig: Signal = ind.momentum > 0.02 ? "pos" : ind.momentum < -0.02 ? "neg" : "neu";
-  rows.push({ label: "Momentum (10 T.)", value: fmtPct(ind.momentum * 100), signal: momSig });
+  rows.push({ label: "Momentum (10 T.)", value: fmtPct(ind.momentum * 100), signal: momSig, infoKey: "momentum", rawValue: ind.momentum });
   // ATR
   rows.push({
     label: "ATR (14)",
     value: fmt(atrVal),
     sub: `${fmt((atrVal / ind.price) * 100, 2)}% v. Kurs`,
     signal: "neu",
+    infoKey: "atr", rawValue: { atr: atrVal, price: ind.price },
   });
   // Volatilität
   const volSig: Signal = ind.volatility > 0.5 ? "neg" : ind.volatility < 0.2 ? "pos" : "neu";
-  rows.push({ label: "Volatilität (annual.)", value: fmtPct(ind.volatility * 100, 1), signal: volSig });
+  rows.push({ label: "Volatilität (annual.)", value: fmtPct(ind.volatility * 100, 1), signal: volSig, infoKey: "volatility", rawValue: ind.volatility });
   // Volumen
   const volRatio = avgVol > 0 ? lastVol / avgVol : 1;
   const vSig: Signal = volRatio >= 1.5 ? "pos" : volRatio <= 0.6 ? "neg" : "neu";
@@ -162,13 +168,14 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: `${fmt(volRatio, 2)}×`,
     sub: `${fmtBig(lastVol)} heute`,
     signal: vSig,
+    infoKey: "volume", rawValue: { ratio: volRatio },
   });
   // Sharpe
   const shSig: Signal = ind.sharpe > 1 ? "pos" : ind.sharpe < 0 ? "neg" : "neu";
-  rows.push({ label: "Sharpe Ratio", value: fmt(ind.sharpe, 2), signal: shSig });
+  rows.push({ label: "Sharpe Ratio", value: fmt(ind.sharpe, 2), signal: shSig, infoKey: "sharpe", rawValue: ind.sharpe });
   // Beta
   const bSig: Signal = ind.beta > 1.2 ? "neg" : ind.beta < 0.8 ? "pos" : "neu";
-  rows.push({ label: "Beta", value: fmt(ind.beta, 2), sub: ind.beta > 1.2 ? "aggressiv" : ind.beta < 0.8 ? "defensiv" : "marktnah", signal: bSig });
+  rows.push({ label: "Beta", value: fmt(ind.beta, 2), sub: ind.beta > 1.2 ? "aggressiv" : ind.beta < 0.8 ? "defensiv" : "marktnah", signal: bSig, infoKey: "beta", rawValue: ind.beta });
 
   return rows;
 }
