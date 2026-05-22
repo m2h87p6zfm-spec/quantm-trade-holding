@@ -212,10 +212,9 @@
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 55% 40% at 15% 0%, color-mix(in oklab, var(--primary) 20%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 35% at 85% 5%, color-mix(in oklab, var(--gold) 14%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 35% at 95% 60%, color-mix(in oklab, var(--violet-accent) 12%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 80% 50% at 30% 100%, color-mix(in oklab, var(--bull) 10%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 60% 45% at 12% 0%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 40% at 88% 8%, color-mix(in oklab, var(--cyan-accent) 7%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% 100%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 70%);
 }
 
 .bg-grid {
