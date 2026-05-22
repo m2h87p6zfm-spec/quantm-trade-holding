@@ -3,10 +3,10 @@ import type { RiskProfile } from "./analysis";
 
 export type Watchlist = { id: string; name: string; symbols: string[] };
 export type ExperienceLevel = "beginner" | "intermediate" | "pro";
-export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF";
+export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF" | "AUD" | "CAD" | "JPY";
 
 /** Tier-1 news publishers. Keys MUST stay stable — used as storage keys. */
-export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft"] as const;
+export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft", "marketwatch", "investing", "wsj"] as const;
 export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
@@ -45,6 +45,7 @@ const DEFAULT_LIST: Watchlist = {
 
 const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
   reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
+  marketwatch: false, investing: false, wsj: false,
 };
 
 /** Market Watch defaults — appended below the user's portfolio. */
@@ -187,6 +188,23 @@ export function useSettings() {
     return id;
   }, []);
 
+  /** Create a new watchlist pre-populated with symbols. Used by onboarding starter packs. */
+  const createWatchlistWithSymbols = useCallback((name: string, symbols: string[]): string => {
+    const id = uid();
+    const clean = Array.from(new Set(symbols.map((x) => x.trim().toUpperCase()).filter(Boolean)));
+    setStored((prev) => {
+      const next: StoredSettings = {
+        ...prev,
+        watchlists: [...prev.watchlists, { id, name: name.trim() || "Neue Liste", symbols: clean }],
+        activeWatchlistId: id,
+      };
+      write(next);
+      return next;
+    });
+    return id;
+  }, []);
+
+
   const renameWatchlist = useCallback((id: string, name: string) => {
     setStored((prev) => {
       const next: StoredSettings = {
@@ -278,6 +296,7 @@ export function useSettings() {
     removeSymbol,
     reorderActive,
     createWatchlist,
+    createWatchlistWithSymbols,
     renameWatchlist,
     deleteWatchlist,
     setActiveWatchlist,

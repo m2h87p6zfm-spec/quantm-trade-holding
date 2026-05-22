@@ -1,12 +1,15 @@
 import type { NewsSource } from "@/lib/settings";
 
 const META: Record<NewsSource | "other", { label: string; bg: string; fg: string; mark: string }> = {
-  reuters:   { label: "Reuters",          bg: "bg-orange-500/15", fg: "text-orange-400",  mark: "R" },
-  bloomberg: { label: "Bloomberg",        bg: "bg-amber-500/15",  fg: "text-amber-400",   mark: "B" },
-  ft:        { label: "Financial Times",  bg: "bg-pink-500/15",   fg: "text-pink-400",    mark: "FT" },
-  cnbc:      { label: "CNBC",             bg: "bg-sky-500/15",    fg: "text-sky-400",     mark: "C" },
-  yahoo:     { label: "Yahoo Finance",    bg: "bg-violet-500/15", fg: "text-violet-400",  mark: "Y!" },
-  other:     { label: "Other",            bg: "bg-muted",         fg: "text-muted-foreground", mark: "·" },
+  reuters:     { label: "Reuters",          bg: "bg-orange-500/15", fg: "text-orange-400",  mark: "R" },
+  bloomberg:   { label: "Bloomberg",        bg: "bg-amber-500/15",  fg: "text-amber-400",   mark: "B" },
+  ft:          { label: "Financial Times",  bg: "bg-pink-500/15",   fg: "text-pink-400",    mark: "FT" },
+  cnbc:        { label: "CNBC",             bg: "bg-sky-500/15",    fg: "text-sky-400",     mark: "C" },
+  yahoo:       { label: "Yahoo Finance",    bg: "bg-violet-500/15", fg: "text-violet-400",  mark: "Y!" },
+  marketwatch: { label: "MarketWatch",      bg: "bg-emerald-500/15",fg: "text-emerald-400", mark: "MW" },
+  investing:   { label: "Investing.com",    bg: "bg-yellow-500/15", fg: "text-yellow-400",  mark: "iC" },
+  wsj:         { label: "Wall Street Journal", bg: "bg-slate-500/20", fg: "text-slate-200", mark: "WSJ" },
+  other:       { label: "Other",            bg: "bg-muted",         fg: "text-muted-foreground", mark: "·" },
 };
 
 export function AgencyLogo({ source, size = "sm" }: { source: NewsSource | "other" | string; size?: "sm" | "xs" }) {
