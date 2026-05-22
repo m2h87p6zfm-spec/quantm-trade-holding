@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WarRoomRouteImport } from './routes/war-room'
+import { Route as TrackRecordRouteImport } from './routes/track-record'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
@@ -54,6 +55,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const WarRoomRoute = WarRoomRouteImport.update({
   id: '/war-room',
   path: '/war-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRecordRoute = TrackRecordRouteImport.update({
+  id: '/track-record',
+  path: '/track-record',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignaleRoute = SignaleRouteImport.update({
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -405,6 +415,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -443,6 +454,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   PreiseRoute: typeof PreiseRoute
   SignaleRoute: typeof SignaleRoute
+  TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -514,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/war-room'
       fullPath: '/war-room'
       preLoaderRoute: typeof WarRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track-record': {
+      id: '/track-record'
+      path: '/track-record'
+      fullPath: '/track-record'
+      preLoaderRoute: typeof TrackRecordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signale': {
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   PreiseRoute: PreiseRoute,
   SignaleRoute: SignaleRoute,
+  TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
