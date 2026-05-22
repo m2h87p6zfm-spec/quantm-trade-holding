@@ -1,5 +1,5 @@
 // Dynamischer Prompt-Builder: priorisiert Indikator-Befunde nach Stärke/Extremheit,
-// damit ARIA pro Frage einen indikatorspezifischen Fokus erhält statt generisch zu antworten.
+// damit APEX pro Frage einen indikatorspezifischen Fokus erhält statt generisch zu antworten.
 import type { IndicatorSet } from "./indicators";
 import type { MarketRegime } from "./ai-learning";
 import { regimeLabel } from "./ai-learning";

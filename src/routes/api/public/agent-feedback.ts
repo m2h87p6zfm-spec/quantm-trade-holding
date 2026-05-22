@@ -193,7 +193,7 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
             if (avoidFails.length) noteParts.push(`vermeiden: ${avoidFails.join(", ")}`);
 
             if (noteParts.length) {
-              const note = `[ARIA-PRÄFERENZEN aus Feedback] ${noteParts.join(" · ")}. Wende diese Präferenzen in jeder folgenden Antwort an.`;
+              const note = `[APEX-PRÄFERENZEN aus Feedback] ${noteParts.join(" · ")}. Wende diese Präferenzen in jeder folgenden Antwort an.`;
               await supabaseAdmin.from("ai_memory").insert({
                 user_id,
                 session_id: body.session_id ?? null,

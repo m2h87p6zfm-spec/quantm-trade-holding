@@ -137,7 +137,7 @@ async function buildMemoryAddendum(userId: string | null, limit = 10): Promise<s
   if (!data || data.length === 0) return "";
   const ordered = [...data].reverse();
   const lines = ordered.map((m) => {
-    const who = m.role === "assistant" ? "ARIA" : m.role === "user" ? "USER" : "SYS";
+    const who = m.role === "assistant" ? "APEX" : m.role === "user" ? "USER" : "SYS";
     const stamp = new Date(m.created_at as string).toISOString().slice(0, 16).replace("T", " ");
     const text = (m.content as string).slice(0, 600);
     return `[${stamp}] ${who}: ${text}`;
@@ -189,7 +189,7 @@ async function persistMemory(userId: string, role: "user" | "assistant", content
 
 
 
-const SYSTEM = `Du bist ARIA (Advanced Reasoning & Investment Analytics), eine hochspezialisierte KI für mathematisch-quantitative Finanz- und Investmentanalyse.
+const SYSTEM = `Du bist APEX (Apex Predictive EXpert), eine hochspezialisierte KI für mathematisch-quantitative Finanz- und Investmentanalyse.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SPRACHE & KOMMUNIKATION

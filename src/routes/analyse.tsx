@@ -5,12 +5,9 @@ import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Bra
 
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
-import { useAnalysis } from "@/lib/useMarketData";
+import { useAnalysis, useQuote } from "@/lib/useMarketData";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
-import { DecisionCard } from "@/components/DecisionCard";
-import { IndicatorBreakdown } from "@/components/IndicatorBreakdown";
 import { findProduct, PRODUCTS } from "@/lib/products";
-import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
@@ -22,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { FeedbackButtons } from "@/components/FeedbackButtons";
 import { supabase } from "@/integrations/supabase/client";
 import { buildIndicatorPrompt } from "@/lib/indicator-prompt";
+import { ApexDashboard, ApexLoading } from "@/components/ApexDashboard";
 import type { IndicatorSet } from "@/lib/indicators";
 import type { MarketRegime } from "@/lib/ai-learning";
 
@@ -29,6 +27,7 @@ import type { MarketRegime } from "@/lib/ai-learning";
 
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
+
 
 
 
@@ -122,18 +121,19 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 p-3 text-xs text-muted-foreground">
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-        ARIA denkt nach …
+        APEX denkt nach …
       </div>
     );
   }
   return (
     <div className="rounded-lg border border-primary/20 bg-primary/[0.04] p-3 text-sm leading-relaxed whitespace-pre-wrap">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">ARIA · KI-Einschätzung</div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">APEX · KI-Einschätzung</div>
       {text}
       {!done && <span className="ml-0.5 inline-block h-3 w-1 animate-pulse bg-primary align-middle" />}
     </div>
   );
 }
+
 
 const NAME_STOPWORDS = new Set([
   "inc", "inc.", "corp", "corp.", "corporation", "company", "co", "co.", "ag", "se", "sa", "nv", "plc",
@@ -206,6 +206,7 @@ type CreditState =
 function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: string }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
+  const quoteQ = useQuote(symbol);
   const { settings } = useSettings();
   const { user } = useAuth();
   const consume = useServerFn(consumeAnalysisCredit);
@@ -235,6 +236,8 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, user?.id]);
+
+  const productName = product?.name ?? symbol;
 
   if (credit.phase === "anon") {
     return (
@@ -280,30 +283,24 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
     );
   }
 
-  if (candles.isLoading && !candles.data) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
-  if (!candles.data) {
-    return (
-      <div className="text-sm text-muted-foreground flex items-center gap-2">
-        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        Live-Daten werden aktualisiert… Bitte einen Moment.
-      </div>
-    );
+  if ((candles.isLoading && !candles.data) || !candles.data || !indicators) {
+    return <ApexLoading name={productName} />;
   }
-  if (!indicators) return <div className="text-sm text-muted-foreground">Daten werden vorbereitet…</div>;
 
   const sig = scoreIndicators(indicators, settings.risk);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
-  const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
+  const decision = buildDecision(symbol, productName, indicators, sig, regime);
 
-  // KI-Tracking läuft weiterhin nur für eingeloggte Nutzer
-  // (siehe useEffect unten)
   return (
     <AgentAnalysisView
       symbol={symbol}
+      name={productName}
       decision={decision}
       sig={sig}
       indicators={indicators}
+      candles={candles.data}
+      quote={quoteQ.data}
       regime={regime}
       scenarioTag={scenarioTag}
       user={user}
@@ -315,9 +312,12 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
 
 function AgentAnalysisView({
   symbol,
+  name,
   decision,
   sig,
   indicators,
+  candles,
+  quote,
   regime,
   scenarioTag,
   user,
@@ -325,9 +325,12 @@ function AgentAnalysisView({
   userQuery,
 }: {
   symbol: string;
+  name: string;
   decision: ReturnType<typeof buildDecision>;
   sig: ReturnType<typeof scoreIndicators>;
   indicators: NonNullable<ReturnType<typeof useAnalysis>["indicators"]>;
+  candles: NonNullable<ReturnType<typeof useAnalysis>["candles"]["data"]>;
+  quote: ReturnType<typeof useQuote>["data"];
   regime: ReturnType<typeof detectRegime>;
   scenarioTag: string;
   user: ReturnType<typeof useAuth>["user"];
@@ -353,15 +356,20 @@ function AgentAnalysisView({
 
   return (
     <div className="space-y-4">
+      <ApexDashboard
+        symbol={symbol}
+        name={name}
+        decision={decision}
+        indicators={indicators}
+        candles={candles}
+        quote={quote}
+        regime={regime}
+      />
       <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
-      <DecisionCard report={decision} symbol={symbol} />
-      <div className="flex items-center gap-2 pt-1">
-        <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
-        <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">Detailansicht →</Link>
-      </div>
-      <div>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Indikator-Analyse — was die Daten sagen</h3>
-        <IndicatorBreakdown ind={indicators} />
+      <div className="pt-1">
+        <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">
+          Vollständige Detailansicht →
+        </Link>
       </div>
       <LearningProgressBlock
         symbol={symbol}
@@ -374,6 +382,7 @@ function AgentAnalysisView({
     </div>
   );
 }
+
 
 
 
@@ -421,7 +430,7 @@ function AnalysePage() {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight">Analyse-Agent</h1>
+            <h1 className="text-2xl font-bold tracking-tight">APEX <span className="text-muted-foreground font-normal text-base">· by Apex Trades</span></h1>
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
               LIVE
@@ -429,7 +438,8 @@ function AnalysePage() {
             <AnalysisCreditBadge />
           </div>
 
-          <p className="text-sm text-muted-foreground">Dein statistischer Wall-Street-Broker. Klare Urteile, datengetrieben.</p>
+          <p className="text-sm text-muted-foreground">Dein statistischer Analyse-Agent. Klare Urteile, datengetrieben.</p>
+
         </div>
       </div>
 
