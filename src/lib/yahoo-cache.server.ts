@@ -82,8 +82,19 @@ export async function fetchYahooChartCached(
     return { value: cached.value, stale: false, lastUpdated: cached.expires - ttlSec * 1000 };
   }
 
+  // Stale-while-revalidate: Wenn wir noch verwertbare (aber abgelaufene) Daten
+  // haben, liefere sie SOFORT aus und triggere im Hintergrund einen Refresh.
+  // Massen-Scans (Apex Picks) bleiben dadurch dauerhaft schnell, statt bei
+  // jedem Symbol auf den langsamen Yahoo-Roundtrip zu warten.
+  if (cached && cached.staleUntil > now && !INFLIGHT.has(key)) {
+    // Refresh asynchron anstoßen (Promise wird in INFLIGHT registriert)
+    void refreshChart(symbol, interval, range, ttlSec).catch(() => {});
+    return { value: cached.value, stale: true, lastUpdated: cached.expires - ttlSec * 1000 };
+  }
+
   const inflight = INFLIGHT.get(key);
   if (inflight) return inflight;
+
 
   const p = (async (): Promise<CachedChart> => {
     const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
