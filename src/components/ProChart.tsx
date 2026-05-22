@@ -196,9 +196,9 @@ export function ProChart({
             const val = yMax - p * (yMax - yMin);
             return (
               <g key={i}>
-                <line x1={pad.l} x2={w - pad.r} y1={y} y2={y} stroke="var(--border)" strokeDasharray="2 4" opacity={0.5} />
-                <text x={w - pad.r + 4} y={y + 3} fontSize={10} fill="var(--muted-foreground)" fontFamily="ui-monospace, monospace">
-                  {val.toFixed(2)}
+                <line x1={pad.l} x2={w - pad.r} y1={y} y2={y} stroke="var(--chart-grid)" strokeDasharray="2 4" />
+                <text x={w - pad.r + 4} y={y + 3} fontSize={10} fill="var(--chart-axis)" fontFamily="ui-monospace, monospace">
+                  {formatNumber(val, axisDecimals(val))}
                 </text>
               </g>
             );
@@ -214,7 +214,7 @@ export function ProChart({
                 <rect x={pad.l} y={Math.min(y1, y2)} width={innerW} height={Math.abs(y2 - y1) || 1} fill={fill} />
                 <line x1={pad.l} x2={w - pad.r} y1={(y1 + y2) / 2} y2={(y1 + y2) / 2} stroke={stroke} strokeDasharray="3 3" strokeWidth={0.8} opacity={0.7} />
                 <text x={w - pad.r - 4} y={(y1 + y2) / 2 - 2} fontSize={9} textAnchor="end" fill={stroke} fontFamily="ui-monospace, monospace">
-                  {z.type === "support" ? "S" : "R"} · {z.touches}× · {(((z.low + z.high) / 2)).toFixed(2)}
+                  {z.type === "support" ? "S" : "R"} · {z.touches}× · {formatNumber((z.low + z.high) / 2, axisDecimals(z.high))}
                 </text>
               </g>
             );
@@ -228,17 +228,17 @@ export function ProChart({
                     const i = ind.bb.length - 1 - j;
                     return b == null ? "" : `L${xAt(i)},${yAt(b.lower)}`;
                  }).join(" ") + "Z"}
-              fill="var(--primary)"
-              opacity={0.05}
+              fill="var(--chart-4)"
+              opacity={0.07}
             />
           )}
 
-          {/* Candles — Gradient-Bodies + Glow-Wicks, letzte 3 mit Glow */}
+          {/* Candles — Gradient bodies + token-driven wicks */}
           {closes.map((c, i) => {
             const o = opens[i]; const h = highs[i]; const l = lows[i];
             const up = c >= o;
             const bodyFill = up ? "url(#candleBull)" : "url(#candleBear)";
-            const wickStroke = up ? "#4ade80" : "#f87171";
+            const wickStroke = up ? "var(--bull)" : "var(--bear)";
             const xC = xAt(i);
             const yO = yAt(o); const yC = yAt(c);
             const bodyTop = Math.min(yO, yC);
@@ -247,10 +247,8 @@ export function ProChart({
             const glow = isRecent ? (up ? "url(#candleGlowBull)" : "url(#candleGlowBear)") : undefined;
             return (
               <g key={i} filter={glow}>
-                {/* Wick with subtle outer halo */}
-                <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={wickStroke} strokeWidth={2.5} opacity={0.18} strokeLinecap="round" />
+                <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={wickStroke} strokeWidth={2.5} opacity={0.16} strokeLinecap="round" />
                 <line x1={xC} x2={xC} y1={yAt(h)} y2={yAt(l)} stroke={wickStroke} strokeWidth={1} strokeLinecap="round" />
-                {/* Body with gradient + crisp stroke */}
                 <rect
                   x={xC - candleW / 2}
                   y={bodyTop}
@@ -267,15 +265,15 @@ export function ProChart({
           })}
 
           {/* Overlays */}
-          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="#38bdf8" width={1.4} />}
-          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="#fbbf24" width={1.2} />}
-          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="#c084fc" width={1.2} dash="4 4" />}
+          {overlays.includes("ema20") && <Linepath points={ind.ema20.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--chart-1)" width={1.4} />}
+          {overlays.includes("ema50") && <Linepath points={ind.ema50.map((v, i) => [xAt(i), yAt(v)])} stroke="var(--chart-2)" width={1.2} />}
+          {overlays.includes("sma200") && <Linepath points={ind.sma200.map((v, i) => isNaN(v) ? null : [xAt(i), yAt(v)])} stroke="var(--chart-3)" width={1.2} dash="4 4" />}
 
-          {/* Last-Marker */}
+          {/* Last-price marker */}
           <g>
-            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "#22c55e" : "#ef4444"} strokeDasharray="2 3" opacity={0.6} />
-            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "#22c55e" : "#ef4444"} rx={2} />
-            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="#ffffff" fontWeight={700} fontFamily="ui-monospace, monospace">{last.toFixed(2)}</text>
+            <line x1={pad.l} x2={w - pad.r} y1={yAt(last)} y2={yAt(last)} stroke={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} strokeDasharray="2 3" opacity={0.6} />
+            <rect x={w - pad.r} y={yAt(last) - 8} width={pad.r - 2} height={16} fill={lastChange >= 0 ? "var(--bull)" : "var(--bear)"} rx={3} />
+            <text x={w - pad.r + 4} y={yAt(last) + 3} fontSize={10} fill="white" fontWeight={700} fontFamily="ui-monospace, monospace">{formatNumber(last, axisDecimals(last))}</text>
           </g>
         </g>
 
