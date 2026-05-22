@@ -86,7 +86,8 @@ Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
      a) "Stück" / "Anteile" / "Shares" / "Qty" / "Nominal" direkt sichtbar → übernehmen (dezimal erlaubt).
      b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
      c) sonst invested UND entry sichtbar → qty = invested / entry.
-     d) sonst → Position WEGLASSEN (keine qty raten, NIEMALS qty=1 setzen).
+     d) sonst current_value sichtbar, aber kein Stückkurs → qty/entry leer lassen und current_value + Performance ausgeben; der Server ergänzt das mit Marktkursen.
+     e) sonst → Position WEGLASSEN (keine qty raten, NIEMALS qty=1 setzen).
   2. entry (Einstandskurs PRO STÜCK) — bevorzuge € vor %, weil % gerundet ist:
      a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
      b) sonst invested UND qty bekannt → entry = invested / qty.
@@ -96,7 +97,7 @@ Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
       f) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
       g) sonst → Position WEGLASSEN.
   3. Werte > 0 prüfen.
-  4. Plausibilitäts-Check vor Ausgabe: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → Position weglassen, du hast eine Zahl falsch zugeordnet.
+  4. Plausibilitäts-Check vor Ausgabe nur wenn entry UND current_price existieren: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → entry/qty leer lassen und nur Broker-Wert/Performance ausgeben.
   5. KEINE harte Rundung — gib entry mit voller Präzision aus.
 
 WÄHRUNG
