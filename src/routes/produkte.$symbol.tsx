@@ -66,8 +66,11 @@ function ProductDetail() {
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Technische Analyse · Candles & Indikatoren
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Technische Analyse · Candles & Indikatoren
+                </div>
+                <ExplainAiButton topic="Advanced Chart mit Indikatoren" context={`Chart für ${symbol} mit EMA20, EMA50, SMA200, Bollinger Bands, Volumen, RSI und MACD.`} />
               </div>
               {candles.data && (
                 <ProChart
@@ -79,26 +82,31 @@ function ProductDetail() {
                 />
               )}
             </div>
+
+            <MarketConsensus symbol={symbol} indicators={indicators} />
           </div>
 
           <div className="space-y-4">
             <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
 
             <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rohdaten — Indikatoren</div>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rohdaten — Indikatoren</div>
+                <ExplainAiButton topic="Technische Indikatoren Übersicht" context={`RSI ${indicators.rsi.toFixed(1)}, MACD ${indicators.macd.macd.toFixed(2)}, Vola ${(indicators.volatility*100).toFixed(1)}%`} />
+              </div>
               <div className="space-y-1.5 text-sm">
-                <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} />
-                <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} />
-                <Row k="MACD" v={indicators.macd.macd.toFixed(3)} />
+                <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} explain="Z-Score" ctx={`Aktuell ${indicators.zScore.toFixed(2)} für ${symbol}.`} />
+                <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} explain="RSI (Relative Strength Index)" ctx={`RSI aktuell ${indicators.rsi.toFixed(1)} für ${symbol}.`} />
+                <Row k="MACD" v={indicators.macd.macd.toFixed(3)} explain="MACD" ctx={`MACD-Linie ${indicators.macd.macd.toFixed(3)}, Signal ${indicators.macd.signal.toFixed(3)}.`} />
                 <Row k="MACD Signal" v={indicators.macd.signal.toFixed(3)} />
                 <Row k="MACD Histogramm" v={indicators.macd.histogram.toFixed(3)} />
-                <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} />
+                <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} explain="Bollinger Bands" ctx={`Upper ${indicators.bollinger.upper.toFixed(2)}, Lower ${indicators.bollinger.lower.toFixed(2)}, Preis ${last.toFixed(2)}.`} />
                 <Row k="Bollinger Lower" v={indicators.bollinger.lower.toFixed(2)} />
-                <Row k="Vola annualisiert" v={(indicators.volatility * 100).toFixed(1) + "%"} />
-                <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} />
-                <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} />
-                <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} />
-                <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} />
+                <Row k="Vola annualisiert" v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität (Volatility Score)" ctx={`Annualisierte Vola ${(indicators.volatility*100).toFixed(1)}% für ${symbol}.`} />
+                <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum*100).toFixed(2)}%.`} />
+                <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} explain="Sharpe Ratio" ctx={`Sharpe Ratio ${indicators.sharpe.toFixed(2)}.`} />
+                <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
+                <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${indicators.sma20.toFixed(1)}, SMA50 ${indicators.sma50.toFixed(1)}, SMA200 ${indicators.sma200.toFixed(1)}.`} />
               </div>
             </div>
           </div>
@@ -108,10 +116,13 @@ function ProductDetail() {
   );
 }
 
-function Row({ k, v, klass }: { k: string; v: string; klass?: string }) {
+function Row({ k, v, klass, explain, ctx }: { k: string; v: string; klass?: string; explain?: string; ctx?: string }) {
   return (
-    <div className="flex justify-between border-b border-border/50 pb-1 last:border-0">
-      <span className="text-muted-foreground">{k}</span>
+    <div className="flex items-center justify-between border-b border-border/50 pb-1 last:border-0">
+      <span className="flex items-center gap-1.5 text-muted-foreground">
+        {k}
+        {explain && <ExplainAiButton topic={explain} context={ctx} variant="icon" />}
+      </span>
       <span className={`font-mono tabular-nums ${klass ?? ""}`}>{v}</span>
     </div>
   );
