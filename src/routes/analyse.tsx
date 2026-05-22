@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock } from "lucide-react";
 
@@ -20,6 +20,7 @@ import { creditLabel } from "@/lib/credits";
 import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { FeedbackButtons } from "@/components/FeedbackButtons";
+import { supabase } from "@/integrations/supabase/client";
 
 
 
@@ -28,7 +29,104 @@ export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
 
 
-type Msg = { role: "user" | "agent"; text: string; symbol?: string };
+type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string };
+
+function AiCommentary({ query, symbol }: { query: string; symbol?: string }) {
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!query) return;
+    const controller = new AbortController();
+    abortRef.current?.abort();
+    abortRef.current = controller;
+    setText("");
+    setError(null);
+    setDone(false);
+
+    (async () => {
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const sys = symbol
+          ? `Der Nutzer fragt nach ${symbol}. Liefere eine kompakte, frische Einschätzung (max. 8 Sätze) — variiere Einstieg, beziehe Memory & Feedback ein, keine Wiederholung früherer Antworten.`
+          : "Beantworte die Nutzerfrage kompakt und variantenreich.";
+        const res = await fetch("/api/public/agent-chat", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            messages: [
+              { role: "system", content: sys },
+              { role: "user", content: query },
+            ],
+            sessionId: `analyse-${symbol ?? "free"}-${Date.now()}`,
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok || !res.body) {
+          const j = await res.json().catch(() => ({}));
+          throw new Error(j.error || `Fehler ${res.status}`);
+        }
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        let acc = "";
+        let finished = false;
+        while (!finished) {
+          const { value, done: d } = await reader.read();
+          if (d) break;
+          buf += dec.decode(value, { stream: true });
+          let nl: number;
+          while ((nl = buf.indexOf("\n")) !== -1) {
+            let line = buf.slice(0, nl);
+            buf = buf.slice(nl + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (!line || line.startsWith(":") || !line.startsWith("data: ")) continue;
+            const json = line.slice(6).trim();
+            if (json === "[DONE]") { finished = true; break; }
+            try {
+              const p = JSON.parse(json);
+              const c = p.choices?.[0]?.delta?.content as string | undefined;
+              if (c) { acc += c; setText(acc); }
+            } catch {
+              buf = line + "\n" + buf;
+              break;
+            }
+          }
+        }
+        setDone(true);
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        setError((e as Error).message);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [query, symbol]);
+
+  if (error) {
+    return <div className="rounded-lg border border-bear/30 bg-bear/5 p-3 text-xs text-bear">KI-Kommentar fehlgeschlagen: {error}</div>;
+  }
+  if (!text && !done) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 p-3 text-xs text-muted-foreground">
+        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
+        ARIA denkt nach …
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-primary/20 bg-primary/[0.04] p-3 text-sm leading-relaxed whitespace-pre-wrap">
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">ARIA · KI-Einschätzung</div>
+      {text}
+      {!done && <span className="ml-0.5 inline-block h-3 w-1 animate-pulse bg-primary align-middle" />}
+    </div>
+  );
+}
 
 const NAME_STOPWORDS = new Set([
   "inc", "inc.", "corp", "corp.", "corporation", "company", "co", "co.", "ag", "se", "sa", "nv", "plc",
@@ -98,7 +196,7 @@ type CreditState =
   | { phase: "blocked"; tier: string; limit: number; used: number }
   | { phase: "ok" };
 
-function AgentResponse({ symbol }: { symbol: string }) {
+function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: string }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
@@ -203,6 +301,7 @@ function AgentResponse({ symbol }: { symbol: string }) {
       scenarioTag={scenarioTag}
       user={user}
       record={record}
+      userQuery={userQuery}
     />
   );
 }
@@ -216,6 +315,7 @@ function AgentAnalysisView({
   scenarioTag,
   user,
   record,
+  userQuery,
 }: {
   symbol: string;
   decision: ReturnType<typeof buildDecision>;
@@ -225,6 +325,7 @@ function AgentAnalysisView({
   scenarioTag: string;
   user: ReturnType<typeof useAuth>["user"];
   record: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  userQuery: string;
 }) {
   useEffect(() => {
     if (!user) return;
@@ -245,6 +346,7 @@ function AgentAnalysisView({
 
   return (
     <div className="space-y-4">
+      <AiCommentary query={userQuery} symbol={symbol} />
       <DecisionCard report={decision} symbol={symbol} />
       <div className="flex items-center gap-2 pt-1">
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
@@ -280,9 +382,7 @@ function AnalysePage() {
   const sendQuery = (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
-    const reply: Msg = sym
-      ? { role: "agent", text: "", symbol: sym }
-      : { role: "agent", text: "Kein bekanntes Symbol erkannt. Versuch's mit einem Ticker (AAPL, NVDA, SAP) oder einem Namen (Apple, Siemens, DAX)." };
+    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
     setMessages((m) => [...m, userMsg, reply]);
     setInput("");
   };
@@ -347,7 +447,9 @@ function AnalysePage() {
                 }`}
               >
                 {m.symbol ? (
-                  <AgentResponse symbol={m.symbol} />
+                  <AgentResponse symbol={m.symbol} userQuery={m.query ?? ""} />
+                ) : m.query ? (
+                  <AiCommentary query={m.query} />
                 ) : (
                   <div
                     className="text-sm leading-relaxed"
