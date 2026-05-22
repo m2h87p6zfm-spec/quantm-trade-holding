@@ -14,6 +14,8 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
+import { useAuth } from "@/hooks/use-auth";
+
 
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
