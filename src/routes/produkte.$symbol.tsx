@@ -37,7 +37,7 @@ function ProductDetail() {
           </div>
           <p className="text-sm text-muted-foreground">{product?.name ?? "Freies Symbol aus dem Datenfeed"}</p>
         </div>
-        <button onClick={() => toggleWatch(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent">
+        <button onClick={() => guardedAdd(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent">
           {watched ? <><Star className="h-4 w-4 fill-current text-primary" /> In Watchlist</> : <><StarOff className="h-4 w-4" /> Watchlist hinzufügen</>}
         </button>
       </div>
