@@ -911,10 +911,13 @@ export type Database = {
       }
       user_trading_profile: {
         Row: {
+          age_range: string | null
           ai_style: string | null
           ai_tone: string | null
+          ai_transparency_ack: boolean
           confidence_threshold: number
           created_at: string
+          experience_level: string | null
           explanation_depth: string | null
           markets: Json
           notif_breakout: boolean
@@ -923,21 +926,28 @@ export type Database = {
           notif_silent: boolean
           notif_weekly: boolean
           onboarding_completed: boolean
+          preferred_currency: string | null
           region: string | null
           risk_level: string | null
           show_reasoning: boolean
           signal_frequency: string | null
+          starter_watchlists: Json
           strategy_mode: string | null
+          trader_type: string | null
           trading_goal: string | null
+          trusted_sources: Json
           updated_at: string
           usage_frequency: string | null
           user_id: string
         }
         Insert: {
+          age_range?: string | null
           ai_style?: string | null
           ai_tone?: string | null
+          ai_transparency_ack?: boolean
           confidence_threshold?: number
           created_at?: string
+          experience_level?: string | null
           explanation_depth?: string | null
           markets?: Json
           notif_breakout?: boolean
@@ -946,21 +956,28 @@ export type Database = {
           notif_silent?: boolean
           notif_weekly?: boolean
           onboarding_completed?: boolean
+          preferred_currency?: string | null
           region?: string | null
           risk_level?: string | null
           show_reasoning?: boolean
           signal_frequency?: string | null
+          starter_watchlists?: Json
           strategy_mode?: string | null
+          trader_type?: string | null
           trading_goal?: string | null
+          trusted_sources?: Json
           updated_at?: string
           usage_frequency?: string | null
           user_id: string
         }
         Update: {
+          age_range?: string | null
           ai_style?: string | null
           ai_tone?: string | null
+          ai_transparency_ack?: boolean
           confidence_threshold?: number
           created_at?: string
+          experience_level?: string | null
           explanation_depth?: string | null
           markets?: Json
           notif_breakout?: boolean
@@ -969,12 +986,16 @@ export type Database = {
           notif_silent?: boolean
           notif_weekly?: boolean
           onboarding_completed?: boolean
+          preferred_currency?: string | null
           region?: string | null
           risk_level?: string | null
           show_reasoning?: boolean
           signal_frequency?: string | null
+          starter_watchlists?: Json
           strategy_mode?: string | null
+          trader_type?: string | null
           trading_goal?: string | null
+          trusted_sources?: Json
           updated_at?: string
           usage_frequency?: string | null
           user_id?: string
