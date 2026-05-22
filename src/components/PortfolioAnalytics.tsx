@@ -4,6 +4,7 @@ import type { Position } from "@/lib/portfolio";
 import { pnl } from "@/lib/portfolio";
 import type { CockpitRow } from "@/lib/cockpit";
 import { findProduct } from "@/lib/products";
+import { ExplainAiButton } from "@/components/ExplainAiButton";
 
 type Metrics = {
   totalValue: number;
@@ -152,8 +153,9 @@ function RiskScoreCard({ m }: { m: Metrics }) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
-        <Shield className="h-3.5 w-3.5" /> Portfolio Risk Score
+      <div className="flex items-center justify-between gap-2 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <span className="flex items-center gap-2"><Shield className="h-3.5 w-3.5" /> Portfolio Risk Score</span>
+        <ExplainAiButton topic="Portfolio Risk Score" context={`Score ${m.riskScore}/100 (${m.riskBand}). Vola ${m.weightedVol.toFixed(1)}%, HHI ${(m.hhi*100).toFixed(0)}.`} variant="icon" />
       </div>
       <div className="mt-3 flex items-center gap-5">
         <div className="relative h-28 w-28 shrink-0">
