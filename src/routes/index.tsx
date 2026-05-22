@@ -10,6 +10,7 @@ import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
+import { MarketAiInsight } from "@/components/MarketAiInsight";
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
@@ -104,6 +105,11 @@ function Cockpit() {
           {cockpitSymbols.map((s, i) => (
             <RowItem key={s} symbol={s} idx={i} showRemove={!usingDefault} row={rowMap.get(s)} onRemove={() => toggleWatch(s)} />
           ))}
+        </div>
+
+        {/* AI Market Insight */}
+        <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+          <MarketAiInsight rows={rows} />
         </div>
 
         {/* Sekundärer Block: Signal des Tages + Pulse + Gauge */}
