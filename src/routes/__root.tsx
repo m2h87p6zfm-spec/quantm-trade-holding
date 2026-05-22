@@ -94,6 +94,7 @@ function RootComponent() {
       <AuthProvider>
         <SubscriptionProvider>
         <SidebarProvider>
+          <LangSync />
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
             <div className="flex flex-1 w-full min-w-0">
