@@ -70,15 +70,18 @@ function Cockpit() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/produkte" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
+              <WatchlistSwitcher />
+              <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
                 <Search className="h-3.5 w-3.5" /> Katalog
-              </Link>
-              <Link to="/produkte" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold hover:bg-primary/90 transition-colors">
-                <Plus className="h-3.5 w-3.5" />
-                Werte hinzufügen
               </Link>
             </div>
           </div>
+
+          {/* Global search — any Yahoo Finance ticker */}
+          <div className="animate-fade-up" style={{ animationDelay: "20ms" }}>
+            <SymbolSearch existing={settings.watchlist} onAdd={(syms) => addSymbols(syms)} />
+          </div>
+
 
           {/* KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
