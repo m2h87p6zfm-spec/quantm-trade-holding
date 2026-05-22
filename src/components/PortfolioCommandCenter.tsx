@@ -782,64 +782,122 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
 
 function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<DraftRow>) => void }) {
   const lowConf = row.confidence < 0.6;
+  const curSym = row.currency === "USD" ? "$" : row.currency === "GBP" ? "£" : "€";
+
+  // Derive missing live values from what the broker showed
+  const livePrice =
+    row.current_price ??
+    (row.current_value && row.qty > 0 ? row.current_value / row.qty : undefined);
+  const liveValue =
+    row.current_value ?? (livePrice && row.qty > 0 ? livePrice * row.qty : undefined);
+  const invested = row.invested ?? row.entry * row.qty;
+  const pnlAbs =
+    row.pnl_abs ?? (liveValue !== undefined ? liveValue - invested : undefined);
+  const pnlPct =
+    row.pnl_pct ??
+    (pnlAbs !== undefined && invested > 0 ? (pnlAbs / invested) * 100 : undefined);
+  const hasLive = livePrice !== undefined || pnlAbs !== undefined;
+  const pnlPositive = (pnlAbs ?? 0) >= 0;
+
+  const fmt = (n: number, d = 2) =>
+    n.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+
   return (
-    <div className={`flex flex-wrap items-center gap-2 px-3 py-2.5 text-xs ${row.enabled ? "" : "opacity-40"}`}>
-      <input
-        type="checkbox"
-        checked={row.enabled}
-        onChange={(e) => onPatch({ enabled: e.target.checked })}
-        className="h-4 w-4 accent-primary"
-      />
-      <input
-        value={row.symbol}
-        onChange={(e) => onPatch({ symbol: e.target.value.toUpperCase() })}
-        className="w-20 rounded border border-input bg-background px-2 py-1 font-semibold tabular-nums focus:border-primary/60 focus:outline-none"
-      />
-      <input
-        type="number" step="any" min={0} value={row.qty}
-        onChange={(e) => onPatch({ qty: parseFloat(e.target.value) || 0 })}
-        className="w-16 rounded border border-input bg-background px-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
-        placeholder="Menge"
-      />
-      <span className="text-muted-foreground">×</span>
-      <div className="relative">
-        <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+    <div className={`px-3 py-2.5 text-xs ${row.enabled ? "" : "opacity-40"}`}>
+      <div className="flex flex-wrap items-center gap-2">
         <input
-          type="number" step="any" min={0} value={row.entry}
-          onChange={(e) => onPatch({ entry: parseFloat(e.target.value) || 0 })}
-          className="w-24 rounded border border-input bg-background pl-5 pr-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
+          type="checkbox"
+          checked={row.enabled}
+          onChange={(e) => onPatch({ enabled: e.target.checked })}
+          className="h-4 w-4 accent-primary"
         />
-      </div>
-      <div className="grid grid-cols-2 overflow-hidden rounded border border-input text-[10px] font-semibold">
-        {(["LONG", "SHORT"] as const).map((s) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => onPatch({ side: s })}
-            className={`px-2 py-1 transition-colors ${
-              row.side === s
-                ? s === "LONG" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
-                : "bg-background text-muted-foreground hover:text-foreground"
+        <input
+          value={row.symbol}
+          onChange={(e) => onPatch({ symbol: e.target.value.toUpperCase() })}
+          className="w-20 rounded border border-input bg-background px-2 py-1 font-semibold tabular-nums focus:border-primary/60 focus:outline-none"
+        />
+        <input
+          type="number" step="any" min={0} value={row.qty}
+          onChange={(e) => onPatch({ qty: parseFloat(e.target.value) || 0 })}
+          className="w-16 rounded border border-input bg-background px-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
+          placeholder="Menge"
+        />
+        <span className="text-muted-foreground">×</span>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">{curSym}</span>
+          <input
+            type="number" step="any" min={0} value={row.entry}
+            onChange={(e) => onPatch({ entry: parseFloat(e.target.value) || 0 })}
+            className="w-24 rounded border border-input bg-background pl-5 pr-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
+            title="Einstandskurs pro Stück"
+          />
+        </div>
+        <div className="grid grid-cols-2 overflow-hidden rounded border border-input text-[10px] font-semibold">
+          {(["LONG", "SHORT"] as const).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onPatch({ side: s })}
+              className={`px-2 py-1 transition-colors ${
+                row.side === s
+                  ? s === "LONG" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                  : "bg-background text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {row.name && <span className="hidden sm:inline max-w-[140px] truncate text-[10px] text-muted-foreground">{row.name}</span>}
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+              lowConf
+                ? "bg-amber-500/15 text-amber-400"
+                : "bg-emerald-500/15 text-emerald-400"
             }`}
+            title={`Confidence ${(row.confidence * 100).toFixed(0)}%`}
           >
-            {s}
-          </button>
-        ))}
+            {lowConf && <AlertTriangle className="h-3 w-3" />}
+            {(row.confidence * 100).toFixed(0)}%
+          </span>
+        </div>
       </div>
-      <div className="ml-auto flex items-center gap-2">
-        {row.name && <span className="hidden sm:inline max-w-[140px] truncate text-[10px] text-muted-foreground">{row.name}</span>}
-        <span
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-            lowConf
-              ? "bg-amber-500/15 text-amber-400"
-              : "bg-emerald-500/15 text-emerald-400"
-          }`}
-          title={`Confidence ${(row.confidence * 100).toFixed(0)}%`}
-        >
-          {lowConf && <AlertTriangle className="h-3 w-3" />}
-          {(row.confidence * 100).toFixed(0)}%
-        </span>
-      </div>
+
+      {hasLive && (
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-[10.5px] text-muted-foreground">
+          {livePrice !== undefined && (
+            <span>
+              Kurs lt. Broker:{" "}
+              <span className="font-semibold tabular-nums text-foreground">
+                {curSym}{fmt(livePrice, livePrice < 10 ? 4 : 2)}
+              </span>
+            </span>
+          )}
+          {liveValue !== undefined && (
+            <span>
+              Wert:{" "}
+              <span className="font-semibold tabular-nums text-foreground">
+                {curSym}{fmt(liveValue)}
+              </span>
+            </span>
+          )}
+          {pnlAbs !== undefined && (
+            <span
+              className={`font-semibold tabular-nums ${
+                pnlPositive ? "text-emerald-400" : "text-rose-400"
+              }`}
+            >
+              {pnlPositive ? "+" : ""}{curSym}{fmt(pnlAbs)}
+              {pnlPct !== undefined && (
+                <span className="ml-1 opacity-80">
+                  ({pnlPositive ? "+" : ""}{fmt(pnlPct)} %)
+                </span>
+              )}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
