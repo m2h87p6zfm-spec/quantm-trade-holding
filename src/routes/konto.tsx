@@ -39,12 +39,32 @@ function AccountPage() {
   const [portalBusy, setPortalBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
   const openPortal = useServerFn(createPortalSession);
   const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setDisplayName((data?.display_name as string) ?? "");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   if (loading || !user) {
     return (
@@ -53,6 +73,32 @@ function AccountPage() {
       </div>
     );
   }
+
+  const saveName = async () => {
+    const trimmed = nameDraft.trim();
+    if (!trimmed) {
+      toast.error("Name darf nicht leer sein");
+      return;
+    }
+    if (trimmed.length > 60) {
+      toast.error("Max. 60 Zeichen");
+      return;
+    }
+    setNameBusy(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: trimmed })
+      .eq("id", user.id);
+    setNameBusy(false);
+    if (error) {
+      toast.error("Speichern fehlgeschlagen");
+      return;
+    }
+    setDisplayName(trimmed);
+    setEditingName(false);
+    toast.success("Name aktualisiert");
+  };
+
 
   const onPortal = async () => {
     setPortalBusy(true);
