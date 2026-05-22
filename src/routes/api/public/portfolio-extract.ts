@@ -58,34 +58,36 @@ Broker-Apps zeigen meist:
   · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust, deutlich präziser als %)
   · "Eingesetzt" / "Invested" / "Einstand"   = invested       (qty × Einstandskurs)
 
-Regeln zur Ableitung — STRIKT in dieser Reihenfolge (höchste Genauigkeit zuerst):
+Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen (höchste Genauigkeit zuerst). WICHTIG: Lieber eine Position mit niedriger Confidence zurückgeben als gar nichts.
   1. qty:
-     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal, alle Nachkommastellen).
+     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal).
      b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
      c) sonst invested UND entry sichtbar → qty = invested / entry.
+     d) sonst NUR current_value sichtbar (kein Kurs/Stück) → qty = 1 setzen, entry = current_value, notes = "qty unbekannt, als Platzhalter 1 Stück".
   2. entry (Einstandskurs pro Stück) — bevorzuge € vor %, weil % gerundet ist:
      a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
-     b) sonst invested UND qty bekannt → entry = invested / qty.   (sehr genau)
-     c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.   (genau)
-     d) NUR als letzter Ausweg, wenn nichts in € verfügbar ist: current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann max. 0.6.
-  3. Werte > 0 prüfen. Bei Division durch 0 → Position auslassen.
-  4. KEINE harte Rundung — gib entry mit voller Präzision aus (mind. so viele Nachkommastellen wie das Original).
-  5. Konsistenz-Check: Wenn entry, qty und current_value bekannt sind, prüfe |qty·entry − invested| / invested < 0.02. Falls Abweichung > 2 %, hast du eine Zahl falsch gelesen — neu ablesen.
+     b) sonst invested UND qty bekannt → entry = invested / qty.
+     c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
+     d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann ≤ 0.6.
+     e) sonst (nur aktueller Kurs/Wert sichtbar) → entry = current_price ODER current_value/qty als Näherung, Confidence ≤ 0.4, notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
+  3. Werte > 0 prüfen. Bei Division durch 0 oder unmöglichen Werten → die jeweilige Näherung d/e verwenden.
+  4. KEINE harte Rundung — gib entry mit voller Präzision aus.
 
 WÄHRUNG
-- Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen, einfach den angezeigten Zahlenwert nehmen.
+- Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen.
 
-CONFIDENCE
+CONFIDENCE (gib IMMER einen Wert, niemals weglassen)
 - direkt sichtbarer Einstandskurs: 0.9–1.0
 - entry aus invested/qty oder (current_value−pnl_abs)/qty: 0.75–0.9
-- entry aus current_price und pnl_pct (gerundet): 0.45–0.6
-- unscharfe / verdeckte Zahlen: < 0.4
+- entry aus current_price und pnl_pct: 0.45–0.6
+- entry = aktueller Kurs als Näherung: 0.2–0.4
+- unscharfe / verdeckte Zahlen: < 0.3
 
 WICHTIG
 - Side ist immer "LONG", außer das Bild zeigt explizit "Short" / "Leerverkauf".
-- Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist (kein "Heute"-Datum erfinden).
-- Niemals halluzinieren. Wenn weder Stück noch ableitbarer Wert sichtbar sind → Position weglassen.
-- Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance % — ungenau").`;
+- Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist.
+- Erkenne IMMER mindestens jede Position, deren Ticker/Logo/Name eindeutig sichtbar ist. Lieber Platzhalter-Zahlen mit niedriger Confidence, damit der Nutzer korrigieren kann.
+- Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance %", "kein Einstand sichtbar").`;
 
 const EXTRACT_TOOL = {
   type: "function" as const,
@@ -218,12 +220,21 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
                 tool_calls?: Array<{ function?: { name?: string; arguments?: string } }>;
                 content?: string;
               };
+              finish_reason?: string;
             }>;
           };
 
-          const call = data.choices?.[0]?.message?.tool_calls?.[0];
+          const choice = data.choices?.[0];
+          const call = choice?.message?.tool_calls?.[0];
+          const rawContent = choice?.message?.content?.slice(0, 400);
+          console.log("portfolio-extract: finish=", choice?.finish_reason, "tool=", !!call, "content=", rawContent);
+
           if (!call?.function?.arguments) {
-            return json({ positions: [] satisfies Extracted[] });
+            return json({
+              positions: [] satisfies Extracted[],
+              hint:
+                "Die KI konnte im Bild keine Wertpapier-Positionen erkennen. Bitte einen Screenshot der Depot-Übersicht (Tabellen-/Listenansicht mit Tickern und Werten) verwenden — nicht das Sparplan- oder Chart-Fenster.",
+            });
           }
 
           let parsed: { positions?: unknown } = {};
@@ -231,43 +242,57 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             parsed = JSON.parse(call.function.arguments);
           } catch (e) {
             console.error("portfolio-extract: invalid tool args", e);
-            return json({ positions: [] satisfies Extracted[] });
+            return json({ positions: [] satisfies Extracted[], hint: "KI-Antwort war unvollständig. Bitte erneut versuchen." });
           }
 
+          const rawArr = Array.isArray(parsed.positions) ? parsed.positions : [];
           const out: Extracted[] = [];
-          if (Array.isArray(parsed.positions)) {
-            for (const p of parsed.positions) {
-              if (!p || typeof p !== "object") continue;
-              const o = p as Record<string, unknown>;
-              const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
-              const qty = Number(o.qty);
-              const entry = Number(o.entry);
-              const side = o.side === "SHORT" ? "SHORT" : "LONG";
-              const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
-              if (!symbol || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(entry) || entry <= 0) continue;
-              const optNum = (k: string): number | undefined => {
-                const v = Number(o[k]);
-                return Number.isFinite(v) && v > 0 ? v : undefined;
-              };
-              const pnlPct = Number(o.pnl_pct);
-              const pnlAbs = Number(o.pnl_abs);
-              out.push({
-                symbol,
-                name: typeof o.name === "string" ? o.name : undefined,
-                qty,
-                entry,
-                side,
-                date: typeof o.date === "string" ? o.date : undefined,
-                currency: typeof o.currency === "string" ? o.currency : undefined,
-                confidence,
-                notes: typeof o.notes === "string" ? o.notes : undefined,
-                current_price: optNum("current_price"),
-                current_value: optNum("current_value"),
-                invested: optNum("invested"),
-                pnl_abs: Number.isFinite(pnlAbs) ? pnlAbs : undefined,
-                pnl_pct: Number.isFinite(pnlPct) ? pnlPct : undefined,
-              });
+          let dropped = 0;
+          for (const p of rawArr) {
+            if (!p || typeof p !== "object") { dropped++; continue; }
+            const o = p as Record<string, unknown>;
+            const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
+            const qty = Number(o.qty);
+            const entry = Number(o.entry);
+            const side = o.side === "SHORT" ? "SHORT" : "LONG";
+            const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
+            if (!symbol || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(entry) || entry <= 0) {
+              console.warn("portfolio-extract: dropped position", { symbol, qty, entry });
+              dropped++;
+              continue;
             }
+            const optNum = (k: string): number | undefined => {
+              const v = Number(o[k]);
+              return Number.isFinite(v) && v > 0 ? v : undefined;
+            };
+            const pnlPct = Number(o.pnl_pct);
+            const pnlAbs = Number(o.pnl_abs);
+            out.push({
+              symbol,
+              name: typeof o.name === "string" ? o.name : undefined,
+              qty,
+              entry,
+              side,
+              date: typeof o.date === "string" ? o.date : undefined,
+              currency: typeof o.currency === "string" ? o.currency : undefined,
+              confidence,
+              notes: typeof o.notes === "string" ? o.notes : undefined,
+              current_price: optNum("current_price"),
+              current_value: optNum("current_value"),
+              invested: optNum("invested"),
+              pnl_abs: Number.isFinite(pnlAbs) ? pnlAbs : undefined,
+              pnl_pct: Number.isFinite(pnlPct) ? pnlPct : undefined,
+            });
+          }
+
+          console.log("portfolio-extract: raw=", rawArr.length, "kept=", out.length, "dropped=", dropped);
+
+          if (out.length === 0) {
+            const hint =
+              rawArr.length > 0
+                ? `Die KI hat ${rawArr.length} Position(en) erkannt, aber Stückzahl oder Einstandskurs waren nicht lesbar/ableitbar. Bitte einen schärferen Screenshot oder eine Ansicht mit Stück, Wert und Performance verwenden.`
+                : "Im Bild war keine Wertpapier-Position erkennbar. Bitte einen Screenshot der Depot-Übersicht mit Tickern, Stück und Wert hochladen.";
+            return json({ positions: [], hint });
           }
 
           return json({ positions: out });
