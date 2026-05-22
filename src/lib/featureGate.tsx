@@ -59,7 +59,9 @@ export function useFeature(feature: Feature) {
 export const LIMITS = {
   watchlist: { free: 5, pro: Infinity, elite: Infinity },
   alerts: { free: 1, pro: Infinity, elite: Infinity },
+  portfolio: { free: 10, pro: Infinity, elite: Infinity },
 } as const;
+
 
 export function useWatchlistLimit() {
   const { tier } = useSubscription();
@@ -98,6 +100,24 @@ export function useAlertsLimit() {
   };
   return { tier, max, count: active, atLimit: active >= max, guardedAdd };
 }
+
+export function usePortfolioLimit(count: number) {
+  const { tier } = useSubscription();
+  const max = LIMITS.portfolio[tier];
+  const atLimit = count >= max;
+  const guard = () => {
+    if (atLimit) {
+      toast.error(`Portfolio-Limit erreicht (${max})`, {
+        description: "Upgrade auf Pro für unlimitierte Positionen.",
+        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      });
+      return false;
+    }
+    return true;
+  };
+  return { tier, max, count, atLimit, guard };
+}
+
 
 // ---------------------------------------------------------------------------
 // FeatureGate Wrapper

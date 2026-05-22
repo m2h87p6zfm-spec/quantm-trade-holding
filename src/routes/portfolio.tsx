@@ -9,18 +9,10 @@ import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
-import { FeatureGate } from "@/lib/featureGate";
+import { usePortfolioLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/portfolio")({
-  component: () => (
-    <FeatureGate
-      feature="portfolio"
-      title="Portfolio-Tracking ist Pro"
-      description="Live-P&L, Allokation, Risiko und Quant-Signal-Konflikte deiner Positionen auf einen Blick."
-    >
-      <PortfolioPage />
-    </FeatureGate>
-  ),
+  component: PortfolioPage,
   head: () => ({
     meta: [
       { title: "Portfolio Tracker — Apex Trades" },
@@ -28,6 +20,7 @@ export const Route = createFileRoute("/portfolio")({
     ],
   }),
 });
+
 
 type SignalState = {
   kind: "aligned" | "conflict" | "neutral" | "loading";
@@ -107,6 +100,7 @@ function PositionRow({ pos, row, onRemove }: { pos: Position; row?: CockpitRow; 
 
 function PortfolioPage() {
   const { positions, add, remove } = usePortfolio();
+  const { max, atLimit, guard, tier } = usePortfolioLimit(positions.length);
   const [symbol, setSymbol] = useState("AAPL");
   const [qty, setQty] = useState(10);
   const [entry, setEntry] = useState(0);
@@ -133,10 +127,12 @@ function PortfolioPage() {
       toast.error("Bitte Symbol, Menge und Einstandskurs angeben.");
       return;
     }
+    if (!guard()) return;
     add({ symbol: symbol.toUpperCase(), qty, entry, side });
     toast.success(`${side} ${qty} × ${symbol.toUpperCase()} @ ${entry.toFixed(2)} hinzugefügt`);
     setEntry(0);
   }
+
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
@@ -183,10 +179,23 @@ function PortfolioPage() {
             <option value="SHORT">SHORT</option>
           </select>
         </div>
-        <button type="submit" className="self-end inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <button type="submit" disabled={atLimit} className="self-end inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
           <Plus className="h-4 w-4" /> Hinzufügen
         </button>
       </form>
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground -mt-2">
+        <span>
+          {positions.length} / {max === Infinity ? "∞" : max} Positionen
+          {tier === "free" && " (Free Plan)"}
+        </span>
+        {atLimit && tier === "free" && (
+          <a href="/preise" className="text-primary hover:underline font-medium">
+            Upgrade auf Pro für unlimitierte Positionen →
+          </a>
+        )}
+      </div>
+
 
       <Summary positions={positions} />
 
