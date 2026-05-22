@@ -32,7 +32,8 @@ export type TrackRecordPayload = {
     verdict: "KAUF" | "HALTEN" | "VERKAUFEN";
     confidence_score: number;
     price_at_analysis: number;
-    indicators: Record<string, unknown>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    indicators: any;
     outcome: {
       price_after_30d: number | null;
       price_after_60d: number | null;
