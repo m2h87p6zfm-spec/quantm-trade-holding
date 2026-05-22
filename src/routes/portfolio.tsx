@@ -196,7 +196,7 @@ function PortfolioPage() {
         </div>
       </div>
 
-      <PortfolioChat />
+      
 
       <DisclaimerInline />
     </div>
