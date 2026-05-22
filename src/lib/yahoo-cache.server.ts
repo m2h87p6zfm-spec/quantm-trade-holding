@@ -68,6 +68,36 @@ function sparkToChart(j: any) {
 
 export type CachedChart = { value: any | null; stale: boolean; lastUpdated: number };
 
+async function doFetch(symbol: string, interval: string, range: string, ttlSec: number, prevCached: Entry | undefined): Promise<CachedChart> {
+  const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
+  const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
+  const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
+
+  const waves: Array<Array<() => Promise<any>>> = [
+    [...hosts.map((h) => () => fetchJson(h + path)), ...hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart))],
+    [() => fetchJsonViaReader(hosts[0] + sparkPath).then(sparkToChart)],
+  ];
+
+  const now = Date.now();
+  for (const wave of waves) {
+    try {
+      const j = await firstSuccess(wave);
+      if (!j?.chart?.result?.[0]) continue;
+      STORE.set(`${symbol}|${interval}|${range}`, {
+        value: j,
+        expires: now + ttlSec * 1000,
+        staleUntil: now + Math.max(ttlSec * 168, 7 * 24 * 3600) * 1000,
+      });
+      return { value: j, stale: false, lastUpdated: now };
+    } catch { /* nächste Welle */ }
+  }
+
+  if (prevCached) {
+    return { value: prevCached.value, stale: true, lastUpdated: prevCached.expires - ttlSec * 1000 };
+  }
+  return { value: null, stale: true, lastUpdated: 0 };
+}
+
 export async function fetchYahooChartCached(
   symbol: string,
   interval: string,
@@ -82,61 +112,19 @@ export async function fetchYahooChartCached(
     return { value: cached.value, stale: false, lastUpdated: cached.expires - ttlSec * 1000 };
   }
 
-  // Stale-while-revalidate: Wenn wir noch verwertbare (aber abgelaufene) Daten
-  // haben, liefere sie SOFORT aus und triggere im Hintergrund einen Refresh.
-  // Massen-Scans (Apex Picks) bleiben dadurch dauerhaft schnell, statt bei
-  // jedem Symbol auf den langsamen Yahoo-Roundtrip zu warten.
+  // Stale-while-revalidate: noch verwertbare (aber abgelaufene) Daten sofort
+  // ausliefern und im Hintergrund refreshen — Bulk-Scans bleiben schnell.
   if (cached && cached.staleUntil > now && !INFLIGHT.has(key)) {
-    // Refresh asynchron anstoßen (Promise wird in INFLIGHT registriert)
-    void refreshChart(symbol, interval, range, ttlSec).catch(() => {});
+    const refresh = doFetch(symbol, interval, range, ttlSec, cached).finally(() => INFLIGHT.delete(key));
+    INFLIGHT.set(key, refresh);
     return { value: cached.value, stale: true, lastUpdated: cached.expires - ttlSec * 1000 };
   }
 
   const inflight = INFLIGHT.get(key);
   if (inflight) return inflight;
 
-
-  const p = (async (): Promise<CachedChart> => {
-    const path = `/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
-    const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
-    const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
-
-    // Wellenweise: erst Direct-Chart (beide Hosts parallel), dann Spark-Variante
-    // parallel über beide Hosts. Reader-Fallback nur 1× kurz — er ist langsam
-    // und blockiert sonst den ganzen Bulk-Scan.
-    const waves: Array<Array<() => Promise<any>>> = [
-      [...hosts.map((h) => () => fetchJson(h + path)), ...hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart))],
-      [() => fetchJsonViaReader(hosts[0] + sparkPath).then(sparkToChart)],
-    ];
-
-    for (const wave of waves) {
-      try {
-        const j = await firstSuccess(wave);
-        if (!j?.chart?.result?.[0]) continue;
-        STORE.set(key, {
-          value: j,
-          expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 168, 7 * 24 * 3600) * 1000, // 7 Tage stale-OK
-        });
-        return { value: j, stale: false, lastUpdated: now };
-      } catch {
-        // nächste Welle
-      }
-    }
-
-    // Yahoo blockt → wenn irgendetwas im Cache liegt, gib das stale zurück.
-    if (cached) {
-      return {
-        value: cached.value,
-        stale: true,
-        lastUpdated: cached.expires - ttlSec * 1000,
-      };
-    }
-    return { value: null, stale: true, lastUpdated: 0 };
-  })().finally(() => {
-    INFLIGHT.delete(key);
-  });
-
+  const p = doFetch(symbol, interval, range, ttlSec, cached).finally(() => INFLIGHT.delete(key));
   INFLIGHT.set(key, p);
   return p;
 }
+
