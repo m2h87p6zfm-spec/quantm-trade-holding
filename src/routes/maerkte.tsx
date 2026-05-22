@@ -17,7 +17,7 @@ const SECTOR_META: Record<string, { icon: any; gradient: string; ring: string; t
 };
 
 const REGION_FLAG: Record<string, string> = {
-  US: "🇺🇸", DE: "🇩🇪", EU: "🇪🇺", JP: "🇯🇵",
+  US: "🇺🇸", DE: "🇩🇪", EU: "🇪🇺", UK: "🇬🇧", JP: "🇯🇵",
 };
 
 function SectorCard({ sector }: { sector: string }) {
