@@ -142,6 +142,9 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
+          const userId = await resolveUserId(request);
+          const addendum = await buildAdaptiveAddendum(userId);
+
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -151,7 +154,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               stream: true,
-              messages: [{ role: "system", content: SYSTEM }, ...messages],
+              messages: [{ role: "system", content: SYSTEM + addendum }, ...messages],
             }),
           });
 
