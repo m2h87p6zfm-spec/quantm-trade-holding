@@ -100,6 +100,7 @@ function PositionRow({ pos, row, onRemove }: { pos: Position; row?: CockpitRow; 
 
 function PortfolioPage() {
   const { positions, add, remove } = usePortfolio();
+  const { max, atLimit, guard, tier } = usePortfolioLimit(positions.length);
   const [symbol, setSymbol] = useState("AAPL");
   const [qty, setQty] = useState(10);
   const [entry, setEntry] = useState(0);
@@ -126,10 +127,12 @@ function PortfolioPage() {
       toast.error("Bitte Symbol, Menge und Einstandskurs angeben.");
       return;
     }
+    if (!guard()) return;
     add({ symbol: symbol.toUpperCase(), qty, entry, side });
     toast.success(`${side} ${qty} × ${symbol.toUpperCase()} @ ${entry.toFixed(2)} hinzugefügt`);
     setEntry(0);
   }
+
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
