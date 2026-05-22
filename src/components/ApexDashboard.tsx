@@ -32,13 +32,14 @@ function SignalDot({ s }: { s: Signal }) {
   return <span className={`inline-block h-2 w-2 rounded-full ${cls}`} />;
 }
 
-function Row({ label, value, sub, signal }: { label: string; value: string; sub?: string; signal: Signal }) {
+function Row({ label, value, sub, signal, infoKey, rawValue }: { label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }) {
   const textColor = signal === "pos" ? "text-emerald-400" : signal === "neg" ? "text-rose-400" : "text-amber-300";
   return (
     <div className="flex items-center justify-between border-b border-border/40 px-3 py-2 last:border-b-0">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <SignalDot s={signal} />
         <span>{label}</span>
+        {infoKey && <IndicatorInfoButton infoKey={infoKey} rawValue={rawValue} />}
       </div>
       <div className="text-right">
         <div className={`font-mono text-base font-semibold ${textColor}`}>{value}</div>
