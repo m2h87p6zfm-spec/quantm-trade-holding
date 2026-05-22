@@ -43,14 +43,19 @@ function LoginPage() {
 
   const signUp = async () => {
     setBusy(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: window.location.origin + "/konto" },
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Account erstellt — bitte E-Mail bestätigen.");
+    if (data.session) {
+      toast.success("Willkommen bei Apex Trades");
+      navigate({ to: "/konto" });
+    } else {
+      toast.success("Account erstellt — du kannst dich jetzt anmelden.");
+    }
   };
 
   const signInGoogle = async () => {
@@ -111,7 +116,7 @@ function LoginPage() {
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Account erstellen"}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
-                Bestätigungs-E-Mail wird gesendet.
+                Du wirst direkt eingeloggt — keine E-Mail-Bestätigung nötig.
               </p>
             </TabsContent>
           </Tabs>
