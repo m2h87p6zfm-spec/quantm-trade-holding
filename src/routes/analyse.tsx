@@ -113,7 +113,7 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
     })();
 
     return () => controller.abort();
-  }, [query, symbol]);
+  }, [query, symbol, indicators, regime]);
 
   if (error) {
     return <div className="rounded-lg border border-bear/30 bg-bear/5 p-3 text-xs text-bear">KI-Kommentar fehlgeschlagen: {error}</div>;
