@@ -25,12 +25,33 @@ function parseJsonFromText(text: string): any {
   return JSON.parse(marked.slice(start).trim());
 }
 
-async function fetchJson(url: string): Promise<any> {
-  const res = await fetch(url, { headers: HEADERS });
-  if (!res.ok) throw new Error(`${new URL(url).host} → ${res.status}`);
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return res.json();
-  return parseJsonFromText(await res.text());
+async function fetchJson(url: string, timeoutMs = 3500): Promise<any> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { headers: HEADERS, signal: ctrl.signal });
+    if (!res.ok) throw new Error(`${new URL(url).host} → ${res.status}`);
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) return res.json();
+    return parseJsonFromText(await res.text());
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Resolve mit erstem erfolgreichen Ergebnis, sonst reject nachdem alle scheitern.
+async function firstSuccess<T>(tasks: Array<() => Promise<T>>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let pending = tasks.length;
+    let lastErr: unknown;
+    if (pending === 0) return reject(new Error("no tasks"));
+    tasks.forEach((run) => {
+      run().then(resolve).catch((e) => {
+        lastErr = e;
+        if (--pending === 0) reject(lastErr);
+      });
+    });
+  });
 }
 
 async function fetchJsonViaReader(url: string): Promise<any> {
