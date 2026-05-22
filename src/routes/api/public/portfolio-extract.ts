@@ -58,34 +58,36 @@ Broker-Apps zeigen meist:
   · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust, deutlich präziser als %)
   · "Eingesetzt" / "Invested" / "Einstand"   = invested       (qty × Einstandskurs)
 
-Regeln zur Ableitung — STRIKT in dieser Reihenfolge (höchste Genauigkeit zuerst):
+Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen (höchste Genauigkeit zuerst). WICHTIG: Lieber eine Position mit niedriger Confidence zurückgeben als gar nichts.
   1. qty:
-     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal, alle Nachkommastellen).
+     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal).
      b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
      c) sonst invested UND entry sichtbar → qty = invested / entry.
+     d) sonst NUR current_value sichtbar (kein Kurs/Stück) → qty = 1 setzen, entry = current_value, notes = "qty unbekannt, als Platzhalter 1 Stück".
   2. entry (Einstandskurs pro Stück) — bevorzuge € vor %, weil % gerundet ist:
      a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
-     b) sonst invested UND qty bekannt → entry = invested / qty.   (sehr genau)
-     c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.   (genau)
-     d) NUR als letzter Ausweg, wenn nichts in € verfügbar ist: current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann max. 0.6.
-  3. Werte > 0 prüfen. Bei Division durch 0 → Position auslassen.
-  4. KEINE harte Rundung — gib entry mit voller Präzision aus (mind. so viele Nachkommastellen wie das Original).
-  5. Konsistenz-Check: Wenn entry, qty und current_value bekannt sind, prüfe |qty·entry − invested| / invested < 0.02. Falls Abweichung > 2 %, hast du eine Zahl falsch gelesen — neu ablesen.
+     b) sonst invested UND qty bekannt → entry = invested / qty.
+     c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
+     d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann ≤ 0.6.
+     e) sonst (nur aktueller Kurs/Wert sichtbar) → entry = current_price ODER current_value/qty als Näherung, Confidence ≤ 0.4, notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
+  3. Werte > 0 prüfen. Bei Division durch 0 oder unmöglichen Werten → die jeweilige Näherung d/e verwenden.
+  4. KEINE harte Rundung — gib entry mit voller Präzision aus.
 
 WÄHRUNG
-- Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen, einfach den angezeigten Zahlenwert nehmen.
+- Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen.
 
-CONFIDENCE
+CONFIDENCE (gib IMMER einen Wert, niemals weglassen)
 - direkt sichtbarer Einstandskurs: 0.9–1.0
 - entry aus invested/qty oder (current_value−pnl_abs)/qty: 0.75–0.9
-- entry aus current_price und pnl_pct (gerundet): 0.45–0.6
-- unscharfe / verdeckte Zahlen: < 0.4
+- entry aus current_price und pnl_pct: 0.45–0.6
+- entry = aktueller Kurs als Näherung: 0.2–0.4
+- unscharfe / verdeckte Zahlen: < 0.3
 
 WICHTIG
 - Side ist immer "LONG", außer das Bild zeigt explizit "Short" / "Leerverkauf".
-- Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist (kein "Heute"-Datum erfinden).
-- Niemals halluzinieren. Wenn weder Stück noch ableitbarer Wert sichtbar sind → Position weglassen.
-- Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance % — ungenau").`;
+- Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist.
+- Erkenne IMMER mindestens jede Position, deren Ticker/Logo/Name eindeutig sichtbar ist. Lieber Platzhalter-Zahlen mit niedriger Confidence, damit der Nutzer korrigieren kann.
+- Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance %", "kein Einstand sichtbar").`;
 
 const EXTRACT_TOOL = {
   type: "function" as const,
