@@ -92,48 +92,13 @@ function PositionRow({ pos, row, onRemove }: { pos: Position; row?: CockpitRow; 
 }
 
 function PortfolioPage() {
-  const { positions, add, remove } = usePortfolio();
-  const { max, atLimit, guard, tier } = usePortfolioLimit(positions.length);
-  const [symbolInput, setSymbolInput] = useState("");
-  const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
-  const [qty, setQty] = useState(10);
-  const [entry, setEntry] = useState(0);
-  const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
-  const [showPicker, setShowPicker] = useState(false);
+  const { positions, remove } = usePortfolio();
+  const { max, tier } = usePortfolioLimit(positions.length);
 
   const allSymbols = useMemo(() => Array.from(new Set(positions.map((p) => p.symbol))), [positions]);
   const rows = useCockpitData(allSymbols);
   const rowMap = useMemo(() => new Map(rows.map((r) => [r.symbol, r])), [rows]);
 
-  const selectedProduct = findProduct(selectedSymbol);
-  const selectedQuote = useQuote(selectedSymbol, 30_000);
-
-  const searchResults = useMemo(() => {
-    const q = symbolInput.trim().toLowerCase();
-    if (!q) return PRODUCTS.slice(0, 12);
-    return PRODUCTS.filter(
-      (p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
-    ).slice(0, 12);
-  }, [symbolInput]);
-
-  function selectSymbol(sym: string) {
-    setSelectedSymbol(sym);
-    setSymbolInput("");
-    setShowPicker(false);
-  }
-
-  function onAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const finalEntry = entry > 0 ? entry : (selectedQuote.data?.c ?? 0);
-    if (!selectedSymbol || qty <= 0 || finalEntry <= 0) {
-      toast.error("Bitte Symbol, Menge und Einstandskurs angeben.");
-      return;
-    }
-    if (!guard()) return;
-    add({ symbol: selectedSymbol.toUpperCase(), qty, entry: finalEntry, side });
-    toast.success(`${side} ${qty} × ${selectedSymbol.toUpperCase()} @ ${finalEntry.toFixed(2)} hinzugefügt`);
-    setEntry(0);
-  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
