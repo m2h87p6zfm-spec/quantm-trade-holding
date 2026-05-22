@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, Plus, X, Loader2, Check } from "lucide-react";
+import { Search, Plus, X, Loader2, Check, Lock } from "lucide-react";
 import { searchSymbols, type SymbolSearchHit } from "@/lib/finnhub";
 import { Link } from "@tanstack/react-router";
+import { promptUpgrade } from "@/lib/portfolio-limits";
+import { useSubscription } from "@/hooks/useSubscription";
 
 type Props = {
   /** Symbols already in the active list — shown as "added" state. */
@@ -14,6 +16,10 @@ type Props = {
   autoFocus?: boolean;
   /** When set, the typeahead row links to /produkte/$symbol on click (catalog mode). */
   linkOnSelect?: boolean;
+  /** Optional hard cap. When reached, triggers the Upgrade modal instead of adding. */
+  limit?: number;
+  /** Current count for limit comparison (defaults to existing.length). */
+  currentCount?: number;
 };
 
 export function SymbolSearch({
@@ -23,7 +29,10 @@ export function SymbolSearch({
   placeholder = "Suche Ticker oder Firma — z. B. AAPL, Siemens, BMW.DE",
   autoFocus = false,
   linkOnSelect = false,
+  limit,
+  currentCount,
 }: Props) {
+  const { tier } = useSubscription();
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<SymbolSearchHit[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,9 +63,24 @@ export function SymbolSearch({
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+  function reachedLimit(extra = 0): boolean {
+    if (limit == null || !Number.isFinite(limit)) return false;
+    const count = (currentCount ?? existing.length) + staged.length + extra;
+    return count >= limit;
+  }
+
   function stage(sym: string) {
     const SYM = sym.toUpperCase();
     if (exists.has(SYM)) return;
+    if (reachedLimit(1)) {
+      promptUpgrade({
+        reason: "portfolio_limit",
+        currentTier: tier,
+        currentCount: (currentCount ?? existing.length) + staged.length,
+        limit,
+      });
+      return;
+    }
     if (compact) {
       onAdd?.([SYM]);
       setQ("");

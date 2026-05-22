@@ -27,6 +27,12 @@ type StoredSettings = {
   experienceLevel: ExperienceLevel;
   notifBreakingNews: boolean;
   newsSources: Record<NewsSource, boolean>;
+  /** User's actual holdings (set during onboarding). Shown at top of watchlist. */
+  portfolioSymbols: string[];
+  /** Optional cost basis per symbol (USD) — placeholder until full trade tracking. */
+  costBasis: Record<string, number>;
+  /** Flipped to true once user completes the portfolio step. */
+  portfolioOnboarded: boolean;
 };
 
 export type Settings = Omit<StoredSettings, "watchlist"> & { watchlist: string[] };
@@ -40,6 +46,9 @@ const DEFAULT_LIST: Watchlist = {
 const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
   reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
 };
+
+/** Market Watch defaults — appended below the user's portfolio. */
+export const MARKET_WATCH_DEFAULTS = ["SPY", "QQQ", "DIA", "IWM"] as const;
 
 const DEFAULT: StoredSettings = {
   risk: "ausgewogen",
@@ -58,6 +67,9 @@ const DEFAULT: StoredSettings = {
   experienceLevel: "intermediate",
   notifBreakingNews: true,
   newsSources: { ...DEFAULT_SOURCES },
+  portfolioSymbols: [],
+  costBasis: {},
+  portfolioOnboarded: false,
 };
 
 function migrate(raw: any): StoredSettings {
@@ -71,6 +83,9 @@ function migrate(raw: any): StoredSettings {
     merged.activeWatchlistId = merged.watchlists[0].id;
   }
   merged.newsSources = { ...DEFAULT_SOURCES, ...(merged.newsSources || {}) };
+  if (!Array.isArray(merged.portfolioSymbols)) merged.portfolioSymbols = [];
+  if (!merged.costBasis || typeof merged.costBasis !== "object") merged.costBasis = {};
+  if (typeof merged.portfolioOnboarded !== "boolean") merged.portfolioOnboarded = false;
   delete (merged as any).watchlist;
   return merged;
 }
@@ -203,6 +218,58 @@ export function useSettings() {
     });
   }, []);
 
+  const setPortfolio = useCallback((syms: string[]) => {
+    const clean = Array.from(new Set(syms.map((x) => x.trim().toUpperCase()).filter(Boolean)));
+    setStored((prev) => {
+      const next: StoredSettings = { ...prev, portfolioSymbols: clean, portfolioOnboarded: true };
+      write(next);
+      return next;
+    });
+  }, []);
+
+  const reorderPortfolio = useCallback((syms: string[]) => {
+    const clean = Array.from(new Set(syms.map((x) => x.trim().toUpperCase()).filter(Boolean)));
+    setStored((prev) => {
+      const next: StoredSettings = { ...prev, portfolioSymbols: clean };
+      write(next);
+      return next;
+    });
+  }, []);
+
+  const addToPortfolio = useCallback((sym: string) => {
+    const SYM = sym.trim().toUpperCase();
+    if (!SYM) return;
+    setStored((prev) => {
+      if (prev.portfolioSymbols.includes(SYM)) return prev;
+      const next: StoredSettings = { ...prev, portfolioSymbols: [...prev.portfolioSymbols, SYM] };
+      write(next);
+      return next;
+    });
+  }, []);
+
+  const removeFromPortfolio = useCallback((sym: string) => {
+    const SYM = sym.trim().toUpperCase();
+    setStored((prev) => {
+      const next: StoredSettings = {
+        ...prev,
+        portfolioSymbols: prev.portfolioSymbols.filter((x) => x !== SYM),
+      };
+      write(next);
+      return next;
+    });
+  }, []);
+
+  const setCostBasis = useCallback((sym: string, value: number | undefined) => {
+    const SYM = sym.trim().toUpperCase();
+    setStored((prev) => {
+      const next: StoredSettings = { ...prev, costBasis: { ...prev.costBasis } };
+      if (value == null || !Number.isFinite(value) || value <= 0) delete next.costBasis[SYM];
+      else next.costBasis[SYM] = value;
+      write(next);
+      return next;
+    });
+  }, []);
+
   return {
     settings: s,
     update,
@@ -214,5 +281,10 @@ export function useSettings() {
     renameWatchlist,
     deleteWatchlist,
     setActiveWatchlist,
+    setPortfolio,
+    reorderPortfolio,
+    addToPortfolio,
+    removeFromPortfolio,
+    setCostBasis,
   };
 }

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Star, X, TrendingUp, TrendingDown, Activity, Zap, Plus, Search, ListPlus } from "lucide-react";
-import { useSettings } from "@/lib/settings";
+import { useMemo, useState } from "react";
+import { Star, X, TrendingUp, TrendingDown, Activity, Zap, Plus, Search, ListPlus, Briefcase, Sparkles } from "lucide-react";
+import { useSettings, MARKET_WATCH_DEFAULTS } from "@/lib/settings";
 import { SignalBadge } from "@/components/SignalBadge";
 import { Sparkline } from "@/components/Sparkline";
 import { findProduct } from "@/lib/products";
@@ -15,22 +15,37 @@ import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { SymbolSearch } from "@/components/SymbolSearch";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
+import { EditPortfolioDialog } from "@/components/EditPortfolioDialog";
+import { useSubscription } from "@/hooks/useSubscription";
+import { getPortfolioLimit, limitLabel } from "@/lib/portfolio-limits";
 import { formatCompact } from "@/lib/format";
 
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
-// Default-Set wenn Watchlist leer ist — damit das Cockpit nie tot wirkt.
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
 function Cockpit() {
   const { settings, addSymbols, removeSymbol } = useSettings();
+  const { tier } = useSubscription();
   const [manageOpen, setManageOpen] = useState(false);
-  const usingDefault = settings.watchlist.length === 0;
+  const [editPortfolioOpen, setEditPortfolioOpen] = useState(false);
+  const usingDefault = settings.watchlist.length === 0 && settings.portfolioSymbols.length === 0;
 
-  const cockpitSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
+  const portfolioSymbols = settings.portfolioSymbols;
+  const portfolioSet = useMemo(() => new Set(portfolioSymbols), [portfolioSymbols]);
+  const marketWatchSymbols = useMemo(() => {
+    const others = settings.watchlist.filter((s) => !portfolioSet.has(s));
+    const defaults = MARKET_WATCH_DEFAULTS.filter((s) => !portfolioSet.has(s) && !others.includes(s));
+    return [...others, ...defaults];
+  }, [settings.watchlist, portfolioSet]);
+
+  const cockpitSymbols = usingDefault
+    ? DEFAULT_SET
+    : Array.from(new Set([...portfolioSymbols, ...marketWatchSymbols]));
   const rows = useCockpitData(cockpitSymbols);
   const rowMap = new Map(rows.map((r) => [r.symbol, r]));
+  const portfolioLimit = getPortfolioLimit(tier);
 
   const longCount = rows.filter((r) => r.sig.verdict === "LONG").length;
   const shortCount = rows.filter((r) => r.sig.verdict === "SHORT").length;
