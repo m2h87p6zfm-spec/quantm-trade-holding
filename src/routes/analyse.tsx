@@ -12,6 +12,7 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
+import { recordApexAnalysis } from "@/lib/track-record.functions";
 import { consumeAnalysisCredit } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
 import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
