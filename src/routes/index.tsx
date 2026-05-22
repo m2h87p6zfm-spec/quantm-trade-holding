@@ -11,6 +11,9 @@ import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { MarketAiInsight } from "@/components/MarketAiInsight";
+import { SymbolSearch } from "@/components/SymbolSearch";
+import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
+import { formatCompact } from "@/lib/format";
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
