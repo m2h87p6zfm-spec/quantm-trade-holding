@@ -48,6 +48,22 @@ function extractFeatures(text: string): string[] {
   if (/\b(Swing|Momentum|Trend|kurzfristig)\b/i.test(text)) feats.push("style:active");
   if (/\b(spekulat|Hebel|Optionen|aggress)/i.test(text)) feats.push("style:aggressive");
 
+  // Risk language — wie explizit Risiken adressiert werden
+  const riskHedges = (text.match(/\b(Risiko|Drawdown|VaR|Stop|Volatilität|Margin of Safety|Worst.?Case)\b/gi) ?? []).length;
+  const hedgeWords = (text.match(/\b(könnte|möglich(erweise)?|tendenziell|ungefähr|ca\.?|circa|schätzungsweise|~)/gi) ?? []).length;
+  const decisiveWords = (text.match(/\b(klar|eindeutig|definitiv|sicher|stark)/gi) ?? []).length;
+  if (riskHedges >= 3) feats.push("risk:explicit");
+  else if (riskHedges === 0) feats.push("risk:minimal");
+  else feats.push("risk:moderate");
+  if (hedgeWords > decisiveWords + 2) feats.push("risk:cautious");
+  else if (decisiveWords > hedgeWords + 2) feats.push("risk:assertive");
+
+  // Tonalität
+  if (/\b(Sehr geehrte|institutionell|gemäß|§|gemäss)\b/i.test(text)) feats.push("tone:formal");
+  if (/\b(salopp|easy|kurz und knapp|tldr|TL;DR)\b/i.test(text)) feats.push("tone:casual");
+  if (/!\s|🚀|💡|✅|⚡/.test(text)) feats.push("tone:energetic");
+  else feats.push("tone:professional");
+
   // Complexity
   const avgSentence = text.split(/[.!?]\s/).reduce((s, x) => s + x.length, 0) / Math.max(1, text.split(/[.!?]\s/).length);
   if (avgSentence > 140) feats.push("complexity:high");
