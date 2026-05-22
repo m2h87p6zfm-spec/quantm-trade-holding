@@ -12,6 +12,7 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
+import { recordApexAnalysis } from "@/lib/track-record.functions";
 import { consumeAnalysisCredit } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
 import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
@@ -337,6 +338,7 @@ function AgentAnalysisView({
   record: (args: { data: Record<string, unknown> }) => Promise<unknown>;
   userQuery: string;
 }) {
+  const recordTrack = useServerFn(recordApexAnalysis);
   useEffect(() => {
     if (!user) return;
     record({
@@ -351,6 +353,36 @@ function AgentAnalysisView({
         reasoning: { score: sig.score, zScore: indicators.zScore, rsi: indicators.rsi },
       },
     }).catch(() => {});
+
+    // APEX Track Record speichern (anonym, öffentlich abrufbar)
+    const product = findProduct(symbol);
+    const verdictMap: Record<string, "KAUF" | "HALTEN" | "VERKAUFEN"> = {
+      LONG: "KAUF",
+      SHORT: "VERKAUFEN",
+      NEUTRAL: "HALTEN",
+    };
+    const tVerdict = verdictMap[sig.verdict] ?? "HALTEN";
+    const confidence100 = Math.round(Math.max(0, Math.min(1, sig.confidence)) * 100);
+    if (Number.isFinite(indicators.price) && indicators.price > 0) {
+      recordTrack({
+        data: {
+          ticker: symbol,
+          name,
+          sector: product?.sector ?? null,
+          asset_type: "Aktie",
+          verdict: tVerdict,
+          confidence_score: confidence100,
+          price_at_analysis: indicators.price,
+          indicators: {
+            score: sig.score,
+            zScore: indicators.zScore,
+            rsi: indicators.rsi,
+            regime,
+            scenarioTag,
+          },
+        },
+      }).catch(() => {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, scenarioTag, regime, sig.verdict, user?.id]);
 

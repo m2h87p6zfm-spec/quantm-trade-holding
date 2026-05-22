@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,6 +12,7 @@ type NavItem = { title: string; url: string; icon: typeof Bell; desc?: string; f
 const quantCore: NavItem[] = [
   { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
   { title: "Quant-Signale", url: "/signale", icon: Sparkles, desc: "Live Setups" },
+  { title: "APEX Track Record", url: "/track-record", icon: ShieldCheck, desc: "Live-Trefferquote" },
   { title: "Explain My Trade", url: "/explain-trade", icon: Microscope, desc: "Reverse-Backtest", feature: "risk_analytics" },
   { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend", feature: "ai_learning" },
 ];
