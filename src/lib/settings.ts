@@ -67,6 +67,9 @@ const DEFAULT: StoredSettings = {
   experienceLevel: "intermediate",
   notifBreakingNews: true,
   newsSources: { ...DEFAULT_SOURCES },
+  portfolioSymbols: [],
+  costBasis: {},
+  portfolioOnboarded: false,
 };
 
 function migrate(raw: any): StoredSettings {
