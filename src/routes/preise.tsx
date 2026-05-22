@@ -85,7 +85,7 @@ const plans: Plan[] = [
     monthlyPriceId: "apex_elite_monthly",
     yearlyPriceId: "apex_elite_yearly",
     features: [
-      "270 Analyse-Agent Credits / Monat",
+      "200 Analyse-Agent Credits / Monat",
       "Alles aus Pro",
       "AI Learning — Transparenz, was die Engine aus Fehlern lernt",
       "Institutional Decision Engine mit Smart-Money- & Regime-Filter",
