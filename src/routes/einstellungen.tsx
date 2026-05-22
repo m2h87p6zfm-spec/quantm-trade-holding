@@ -162,15 +162,24 @@ function SettingsPage() {
             />
           </Row>
 
-          <Row label="Sprache" icon={<Languages className="h-3.5 w-3.5" />} hint="Englische Übersetzung in Kürze verfügbar.">
-            <Segmented
-              value={settings.language}
-              onChange={(v) => update({ language: v as "de" | "en" })}
-              options={[
-                { value: "de", label: "Deutsch" },
-                { value: "en", label: "English" },
-              ]}
-            />
+          <Row label="Sprache" icon={<Languages className="h-3.5 w-3.5" />} hint="Aktuell nur Deutsch — Englisch folgt mit dem nächsten Release.">
+            <div className="inline-flex items-center gap-2">
+              <div className="inline-flex rounded-lg border border-border bg-background/40 p-0.5">
+                <button className="rounded-md bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/20">
+                  Deutsch
+                </button>
+                <button
+                  disabled
+                  className="cursor-not-allowed rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground/60"
+                  title="Englisch ist noch nicht verfügbar"
+                >
+                  English
+                </button>
+              </div>
+              <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold ring-1 ring-gold/30">
+                Bald
+              </span>
+            </div>
           </Row>
         </div>
       </Card>
