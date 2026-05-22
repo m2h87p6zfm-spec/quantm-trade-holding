@@ -136,7 +136,7 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
         new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } }),
       POST: async ({ request }) => {
         try {
-          const body = (await request.json()) as { symbols?: string[]; tier1Only?: boolean; sources?: string[] };
+          const body = (await request.json()) as { symbols?: string[]; tier1Only?: boolean; sources?: string[]; withSummary?: boolean; portfolio?: string[] };
           const symbols = (body.symbols ?? []).filter((s) => typeof s === "string" && /^[A-Z0-9.\-^]{1,12}$/.test(s)).slice(0, 12);
           if (symbols.length === 0) {
             return new Response(JSON.stringify({ items: [] }), { headers: { "Content-Type": "application/json" } });
@@ -144,23 +144,25 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
           const batches = await Promise.all(symbols.map(fetchYahooNews));
           let flat = batches.flat();
 
-          // Tier-1 filter (default ON)
           const tier1Only = body.tier1Only !== false;
           if (tier1Only) flat = flat.filter((i) => i.source !== "other");
 
-          // Source whitelist filter
           if (Array.isArray(body.sources) && body.sources.length > 0) {
             const allow = new Set(body.sources);
             flat = flat.filter((i) => allow.has(i.source));
           }
 
-          // Dedupe by uuid; sort newest first
           const seen = new Set<string>();
           flat = flat.filter((i) => (seen.has(i.uuid) ? false : (seen.add(i.uuid), true)));
           flat.sort((a, b) => b.publishedAt - a.publishedAt);
           flat = flat.slice(0, 40);
 
-          const enriched = await classifySentiments(flat);
+          let enriched = await classifySentiments(flat);
+          if (body.withSummary) {
+            const portfolio = Array.isArray(body.portfolio) && body.portfolio.length > 0 ? body.portfolio : symbols;
+            enriched = await generateSummaries(enriched, portfolio);
+          }
+
           return new Response(JSON.stringify({ items: enriched }), {
             headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=120", "Access-Control-Allow-Origin": "*" },
           });
