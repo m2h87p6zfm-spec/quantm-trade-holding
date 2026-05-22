@@ -180,6 +180,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "sharpe", rawValue: s,
     });
   }
 
