@@ -6,6 +6,7 @@
 
 export type Quote = {
   c: number; d: number; dp: number; h: number; l: number; o: number; pc: number; t: number;
+  v?: number; h52?: number; l52?: number;
   currency?: string; exchange?: string; name?: string;
   stale?: boolean; lastUpdated?: number;
 };
