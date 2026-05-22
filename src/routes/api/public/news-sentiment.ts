@@ -86,7 +86,9 @@ async function classifySentiments(items: NewsItem[]): Promise<NewsItem[]> {
     });
   } catch {
     return items;
+  }
 }
+
 
 async function generateSummaries(items: NewsItem[], portfolio: string[]): Promise<NewsItem[]> {
   const apiKey = process.env.LOVABLE_API_KEY;
