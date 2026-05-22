@@ -10,6 +10,54 @@ type Body = {
   reason?: string;
 };
 
+// Map UI reason strings to canonical failure categories (used as negative signal keys)
+const REASON_CATEGORY: Record<string, string> = {
+  "Zu unklar": "fail:unclear",
+  "Falsche Annahme": "fail:wrong_assumption",
+  "Zu wenig Tiefe": "fail:too_shallow",
+  "Schlechte Struktur": "fail:bad_structure",
+  "Zu lang": "fail:too_long",
+  "Nicht relevant": "fail:irrelevant",
+  "Zu generisch": "fail:generic",
+};
+
+// Extract signal features from an assistant message
+function extractFeatures(text: string): string[] {
+  const feats: string[] = [];
+  const len = text.length;
+  const lenBucket = len < 600 ? "short" : len < 1800 ? "medium" : "long";
+  feats.push(`length:${lenBucket}`);
+
+  // Structure
+  if (/^#{1,3}\s/m.test(text)) feats.push("structure:headings");
+  if (/^[-*]\s/m.test(text)) feats.push("structure:bullets");
+  if (/\|.+\|/.test(text)) feats.push("structure:tables");
+  if (/^\d+\.\s/m.test(text)) feats.push("structure:numbered");
+  if (text.split(/\n\n+/).length <= 3 && !/^[-*#]/m.test(text)) feats.push("structure:prose");
+
+  // Depth signals
+  const numericDensity = (text.match(/\d+([.,]\d+)?\s*%?/g) ?? []).length / Math.max(1, len / 200);
+  if (numericDensity > 2) feats.push("depth:quantitative");
+  if (/\b(DCF|P\/E|EBITDA|FCF|ROIC|Multiple|Margin of Safety|Graham)\b/i.test(text)) feats.push("depth:valuation");
+  if (/\b(RSI|MACD|EMA|SMA|Support|Resistance|Breakout)\b/i.test(text)) feats.push("depth:technical");
+  if (/\b(Fed|EZB|Zinsen|Inflation|Makro|Geopolitik|Liquidität)\b/i.test(text)) feats.push("depth:macro");
+  if (/\b(Quelle|Source|laut|gemäß)\b/i.test(text) || /\[\d+\]/.test(text)) feats.push("depth:sourced");
+
+  // Style cues — pulled from user prompt would be better, but assistant tone reflects what worked
+  if (/\b(langfristig|Buy.?and.?Hold|Dividende|Value)\b/i.test(text)) feats.push("style:long_term");
+  if (/\b(Swing|Momentum|Trend|kurzfristig)\b/i.test(text)) feats.push("style:active");
+  if (/\b(spekulat|Hebel|Optionen|aggress)/i.test(text)) feats.push("style:aggressive");
+
+  // Complexity
+  const avgSentence = text.split(/[.!?]\s/).reduce((s, x) => s + x.length, 0) / Math.max(1, text.split(/[.!?]\s/).length);
+  if (avgSentence > 140) feats.push("complexity:high");
+  else if (avgSentence < 70) feats.push("complexity:low");
+  else feats.push("complexity:medium");
+
+  return feats;
+}
+
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
