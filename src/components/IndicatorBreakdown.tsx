@@ -276,7 +276,10 @@ export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
               <div className="pl-2 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{r.name}</div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span>{r.name}</span>
+                      {r.infoKey && <IndicatorInfoButton infoKey={r.infoKey} rawValue={r.rawValue} />}
+                    </div>
                     <div className="font-mono text-lg font-bold tabular-nums leading-tight">{r.value}</div>
                   </div>
                   <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${s.badge}`}>
