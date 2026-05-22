@@ -12,6 +12,7 @@ type NewsItem = {
   sentiment?: "bullish" | "bearish" | "neutral";
   score?: number;
   breaking?: boolean;
+  aiSummary?: string;
 };
 
 const PUBLISHER_MAP: Array<{ test: RegExp; key: NewsItem["source"] }> = [
