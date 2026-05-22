@@ -335,12 +335,27 @@ export function buildDecision(
     ? `These ist tot bei Schlusskurs > ${sig.stop.toFixed(2)} oder wenn das MACD-Histogramm zwei Tage in Folge ins Positive dreht.`
     : `HOLD-Status endet, sobald Vola, Trend und Sentiment in dieselbe Richtung zeigen und Confidence ≥ 60 erreicht.`;
 
-  // --- Reasoning ------------------------------------------------------------
-  const verdictLabel = decision === "BUY" ? "Akkumulation" : decision === "SELL" ? "Distribution" : "Abwarten";
-  const reasoning = `${name} (${symbol}) im ${regimeLabelDe(regime)}: ${verdictLabel} bei ${conf}% Konfidenz. ` +
-    `Die Konstellation aus ${sentiment.toLowerCase()} und ${institutional.toLowerCase()} ` +
-    `wird ${decision === "HOLD" ? "durch das Regime gedämpft" : "vom Trend gestützt"}. ` +
-    `${technical}`;
+  // --- Reasoning (Variantenpool für Abwechslung) ----------------------------
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const verdictLabel =
+    decision === "BUY"
+      ? pick(["Akkumulation", "Aufbau einer Long-Position", "schrittweiser Einstieg", "Long-Bias"])
+      : decision === "SELL"
+      ? pick(["Distribution", "Reduktion / Short-Bias", "Gewinnmitnahme bzw. Short", "Verkaufsdruck"])
+      : pick(["Beobachten", "Stillhalten", "Kein klares Edge", "Geduld geboten"]);
+  const linker = pick(["weil", "denn", "begründet durch", "getragen von", "gestützt auf"]);
+  const opener = pick([
+    `${name} (${symbol}) zeigt im ${regimeLabelDe(regime)}: ${verdictLabel} bei ${conf}% Konfidenz.`,
+    `Für ${name} (${symbol}) im ${regimeLabelDe(regime)} ergibt sich: ${verdictLabel} (${conf}% Konfidenz).`,
+    `${symbol} (${name}) — Marktphase ${regimeLabelDe(regime)}, Empfehlung: ${verdictLabel}, Konfidenz ${conf}%.`,
+    `Aktuelle Lage in ${name} (${symbol}): ${verdictLabel} mit ${conf}% Konfidenz im ${regimeLabelDe(regime)}.`,
+  ]);
+  const closer =
+    decision === "HOLD"
+      ? pick(["Setup noch nicht überzeugend.", "Kein eindeutiger Trigger.", "Risiko/Chance nicht klar genug."])
+      : pick(["Trend stützt die These.", "Setup ist gut aufgestellt.", "Risiko-Profil sauber.", "Edge ist messbar."]);
+  const reasoning = `${opener} ${linker} ${sentiment.toLowerCase()} und ${institutional.toLowerCase()} ${technical} ${closer}`;
+
 
   return {
     decision,
