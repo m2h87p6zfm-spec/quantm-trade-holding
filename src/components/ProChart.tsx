@@ -3,6 +3,7 @@ import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
+import { formatNumber, formatPercent, axisDecimals } from "@/lib/format";
 
 type CandlesIn = { c: number[]; o?: number[]; h?: number[]; l?: number[]; v?: number[]; t: number[] };
 
