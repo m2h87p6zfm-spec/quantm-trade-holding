@@ -121,6 +121,68 @@ REGELN:
 6. Show Reasoning "nein" → kein Chain-of-Thought offenlegen, nur Ergebnis + Begründung. "ja" → strukturierter Reasoning-Block sichtbar.`;
 }
 
+// Loads last N (default 10) user/assistant entries → formatted context block
+async function buildMemoryAddendum(userId: string | null, limit = 10): Promise<string> {
+  if (!userId) return "";
+  const { data } = await supabaseAdmin
+    .from("ai_memory")
+    .select("role, content, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!data || data.length === 0) return "";
+  const ordered = [...data].reverse();
+  const lines = ordered.map((m) => {
+    const who = m.role === "assistant" ? "ARIA" : m.role === "user" ? "USER" : "SYS";
+    const stamp = new Date(m.created_at as string).toISOString().slice(0, 16).replace("T", " ");
+    const text = (m.content as string).slice(0, 600);
+    return `[${stamp}] ${who}: ${text}`;
+  });
+  return `\n\n## MEMORY (letzte ${ordered.length} Einträge aus ai_memory)
+Nutze diesen Verlauf als Kontext. Wiederhole nichts wörtlich. Knüpfe an offene Punkte an, falls relevant.
+
+${lines.join("\n")}`;
+}
+
+// Loads recent low-rated feedback so the model knows what NOT to repeat
+async function buildFeedbackAddendum(userId: string | null, limit = 5): Promise<string> {
+  if (!userId) return "";
+  const { data } = await supabaseAdmin
+    .from("ai_chat_feedback")
+    .select("rating, reason, user_prompt, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!data || data.length === 0) return "";
+  const lines = data.map((f) => {
+    const stamp = new Date(f.created_at as string).toISOString().slice(0, 10);
+    const rating = (f.rating ?? 0) > 0 ? "👍" : "👎";
+    const reason = f.reason ? ` · ${f.reason}` : "";
+    const prompt = (f.user_prompt as string ?? "").slice(0, 120);
+    return `- [${stamp}] ${rating}${reason} — Frage: "${prompt}"`;
+  });
+  return `\n\n## FEEDBACK HISTORY (letzte ${data.length} Bewertungen)
+Lerne daraus: 👎-Muster vermeiden, 👍-Muster verstärken.
+
+${lines.join("\n")}`;
+}
+
+// Persists a single message to ai_memory. Errors are logged but never block the response.
+async function persistMemory(userId: string, role: "user" | "assistant", content: string, sessionId?: string | null) {
+  if (!userId || !content?.trim()) return;
+  try {
+    const { error } = await supabaseAdmin.from("ai_memory").insert({
+      user_id: userId,
+      role,
+      content: content.slice(0, 12000),
+      session_id: sessionId ?? null,
+    });
+    if (error) console.warn("ai_memory insert failed", error.message);
+  } catch (e) {
+    console.warn("ai_memory insert exception", e);
+  }
+}
+
 
 
 const SYSTEM = `Du bist ARIA (Advanced Reasoning & Investment Analytics), eine hochspezialisierte KI für mathematisch-quantitative Finanz- und Investmentanalyse.
@@ -222,16 +284,19 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               headers: { "Content-Type": "application/json" },
             });
           }
-          const body = (await request.json()) as { messages?: Msg[] };
+          const body = (await request.json()) as { messages?: Msg[]; sessionId?: string };
           const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
+          const sessionId = body.sessionId ?? null;
           if (messages.length === 0) {
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
           const userId = await resolveUserId(request);
-          const [addendum, profileAddendum] = await Promise.all([
+          const [addendum, profileAddendum, memoryAddendum, feedbackAddendum] = await Promise.all([
             buildAdaptiveAddendum(userId),
             buildTradingProfileAddendum(userId),
+            buildMemoryAddendum(userId, 10),
+            buildFeedbackAddendum(userId, 5),
           ]);
 
           // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
@@ -288,7 +353,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               stream: true,
               reasoning: { effort: "medium" },
               messages: [
-                { role: "system", content: SYSTEM + addendum + profileAddendum },
+                { role: "system", content: SYSTEM + addendum + profileAddendum + memoryAddendum + feedbackAddendum },
                 { role: "system", content: webContext },
                 ...messages,
               ],
@@ -308,7 +373,48 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             return new Response(JSON.stringify({ error: "AI-Dienst nicht erreichbar." }), { status: 502, headers: { "Content-Type": "application/json" } });
           }
 
-          return new Response(upstream.body, {
+          // Persist the latest user message immediately (fire-and-forget).
+          if (userId && lastUser) {
+            void persistMemory(userId, "user", lastUser.content, sessionId);
+          }
+
+          // Tee the SSE stream: forward verbatim to the client AND accumulate
+          // the assistant content so we can persist it once the stream ends.
+          if (!upstream.body) {
+            return new Response(JSON.stringify({ error: "Leerer AI-Stream." }), { status: 502, headers: { "Content-Type": "application/json" } });
+          }
+
+          let assistantText = "";
+          const decoder = new TextDecoder();
+          let lineBuffer = "";
+
+          const teeStream = new TransformStream<Uint8Array, Uint8Array>({
+            transform(chunk, controller) {
+              controller.enqueue(chunk);
+              lineBuffer += decoder.decode(chunk, { stream: true });
+              let nl: number;
+              while ((nl = lineBuffer.indexOf("\n")) !== -1) {
+                let line = lineBuffer.slice(0, nl);
+                lineBuffer = lineBuffer.slice(nl + 1);
+                if (line.endsWith("\r")) line = line.slice(0, -1);
+                if (!line.startsWith("data: ")) continue;
+                const payload = line.slice(6).trim();
+                if (!payload || payload === "[DONE]") continue;
+                try {
+                  const json = JSON.parse(payload);
+                  const delta = json?.choices?.[0]?.delta?.content;
+                  if (typeof delta === "string") assistantText += delta;
+                } catch { /* partial JSON — ignore */ }
+              }
+            },
+            flush() {
+              if (userId && assistantText.trim()) {
+                void persistMemory(userId, "assistant", assistantText, sessionId);
+              }
+            },
+          });
+
+          return new Response(upstream.body.pipeThrough(teeStream), {
             headers: {
               "Content-Type": "text/event-stream",
               "Cache-Control": "no-cache",
