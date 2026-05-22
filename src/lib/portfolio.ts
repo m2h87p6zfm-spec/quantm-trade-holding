@@ -67,6 +67,9 @@ export function pnl(pos: Position, price: number) {
     const pct = pos.brokerPnlPct ?? (basis > 0 ? (abs / basis) * 100 : 0);
     return { abs, pct, value };
   }
+  if (pos.qty === 1 && pos.entry > 500 && price > 0 && pos.entry / price > 5) {
+    return { abs: 0, pct: 0, value: pos.entry };
+  }
   const diff = pos.side === "LONG" ? price - pos.entry : pos.entry - price;
   const abs = diff * pos.qty;
   const pct = (diff / pos.entry) * 100;
