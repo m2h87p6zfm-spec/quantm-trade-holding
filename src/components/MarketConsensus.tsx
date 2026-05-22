@@ -240,9 +240,9 @@ function Gauge({ value }: { value: number }) {
       <svg viewBox="0 0 140 80" className="w-full">
         <defs>
           <linearGradient id="gaugeGrad" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="hsl(var(--bear, 0 72% 51%))" />
-            <stop offset="50%" stopColor="hsl(var(--muted-foreground, 220 9% 46%))" />
-            <stop offset="100%" stopColor="hsl(var(--bull, 142 71% 45%))" />
+            <stop offset="0%" stopColor="var(--bear)" />
+            <stop offset="50%" stopColor="var(--muted-foreground)" />
+            <stop offset="100%" stopColor="var(--bull)" />
           </linearGradient>
         </defs>
         <path
