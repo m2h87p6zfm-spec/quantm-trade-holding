@@ -63,9 +63,24 @@ export function SymbolSearch({
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
+  function reachedLimit(extra = 0): boolean {
+    if (limit == null || !Number.isFinite(limit)) return false;
+    const count = (currentCount ?? existing.length) + staged.length + extra;
+    return count >= limit;
+  }
+
   function stage(sym: string) {
     const SYM = sym.toUpperCase();
     if (exists.has(SYM)) return;
+    if (reachedLimit(1)) {
+      promptUpgrade({
+        reason: "portfolio_limit",
+        currentTier: tier,
+        currentCount: (currentCount ?? existing.length) + staged.length,
+        limit,
+      });
+      return;
+    }
     if (compact) {
       onAdd?.([SYM]);
       setQ("");
