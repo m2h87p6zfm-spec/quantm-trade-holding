@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Search } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo } from "react";
+import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check } from "lucide-react";
 import { usePortfolio, pnl, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
-import { PRODUCTS, findProduct } from "@/lib/products";
+import { findProduct } from "@/lib/products";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
 import { DisclaimerInline } from "@/components/Disclaimer";
