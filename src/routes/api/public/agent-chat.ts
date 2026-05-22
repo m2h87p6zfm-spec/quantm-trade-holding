@@ -63,6 +63,9 @@ REGELN:
 4. AI Tone "simplified" → Fachjargon minimieren, klare Alltagssprache. "professional" → institutionell-präzise.
 5. Explanation Depth "brief" → 3–6 Zeilen pro Antwortsektion. "detailed" → vollständige analytische Tiefe.
 6. Show Reasoning "nein" → kein Chain-of-Thought offenlegen, nur Ergebnis + Begründung. "ja" → strukturierter Reasoning-Block sichtbar.`;
+}
+
+
 
 const SYSTEM = `# QUANTUM ANALYST — Elite Institutional Financial Intelligence & Adaptive Reasoning System
 
