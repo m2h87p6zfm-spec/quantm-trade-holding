@@ -353,7 +353,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               stream: true,
               reasoning: { effort: "medium" },
               messages: [
-                { role: "system", content: SYSTEM + addendum + profileAddendum },
+                { role: "system", content: SYSTEM + addendum + profileAddendum + memoryAddendum + feedbackAddendum },
                 { role: "system", content: webContext },
                 ...messages,
               ],
@@ -373,7 +373,48 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             return new Response(JSON.stringify({ error: "AI-Dienst nicht erreichbar." }), { status: 502, headers: { "Content-Type": "application/json" } });
           }
 
-          return new Response(upstream.body, {
+          // Persist the latest user message immediately (fire-and-forget).
+          if (userId && lastUser) {
+            void persistMemory(userId, "user", lastUser.content, sessionId);
+          }
+
+          // Tee the SSE stream: forward verbatim to the client AND accumulate
+          // the assistant content so we can persist it once the stream ends.
+          if (!upstream.body) {
+            return new Response(JSON.stringify({ error: "Leerer AI-Stream." }), { status: 502, headers: { "Content-Type": "application/json" } });
+          }
+
+          let assistantText = "";
+          const decoder = new TextDecoder();
+          let lineBuffer = "";
+
+          const teeStream = new TransformStream<Uint8Array, Uint8Array>({
+            transform(chunk, controller) {
+              controller.enqueue(chunk);
+              lineBuffer += decoder.decode(chunk, { stream: true });
+              let nl: number;
+              while ((nl = lineBuffer.indexOf("\n")) !== -1) {
+                let line = lineBuffer.slice(0, nl);
+                lineBuffer = lineBuffer.slice(nl + 1);
+                if (line.endsWith("\r")) line = line.slice(0, -1);
+                if (!line.startsWith("data: ")) continue;
+                const payload = line.slice(6).trim();
+                if (!payload || payload === "[DONE]") continue;
+                try {
+                  const json = JSON.parse(payload);
+                  const delta = json?.choices?.[0]?.delta?.content;
+                  if (typeof delta === "string") assistantText += delta;
+                } catch { /* partial JSON — ignore */ }
+              }
+            },
+            flush() {
+              if (userId && assistantText.trim()) {
+                void persistMemory(userId, "assistant", assistantText, sessionId);
+              }
+            },
+          });
+
+          return new Response(upstream.body.pipeThrough(teeStream), {
             headers: {
               "Content-Type": "text/event-stream",
               "Cache-Control": "no-cache",
