@@ -80,6 +80,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "macd", rawValue: ind.macd,
     });
   }
 
