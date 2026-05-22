@@ -19,6 +19,7 @@ import { EditPortfolioDialog } from "@/components/EditPortfolioDialog";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getPortfolioLimit, limitLabel } from "@/lib/portfolio-limits";
 import { formatCompact } from "@/lib/format";
+import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
 
 
 export const Route = createFileRoute("/")({ component: Cockpit });
