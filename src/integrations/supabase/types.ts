@@ -521,6 +521,48 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_scores: {
+        Row: {
+          asset: string | null
+          created_at: string | null
+          id: number
+          momentum_score: number | null
+          reasoning: string | null
+          recommendation: string | null
+          risk_score: number | null
+          sentiment_score: number | null
+          technical_score: number | null
+          total_score: number | null
+          volatility_score: number | null
+        }
+        Insert: {
+          asset?: string | null
+          created_at?: string | null
+          id?: number
+          momentum_score?: number | null
+          reasoning?: string | null
+          recommendation?: string | null
+          risk_score?: number | null
+          sentiment_score?: number | null
+          technical_score?: number | null
+          total_score?: number | null
+          volatility_score?: number | null
+        }
+        Update: {
+          asset?: string | null
+          created_at?: string | null
+          id?: number
+          momentum_score?: number | null
+          reasoning?: string | null
+          recommendation?: string | null
+          risk_score?: number | null
+          sentiment_score?: number | null
+          technical_score?: number | null
+          total_score?: number | null
+          volatility_score?: number | null
+        }
+        Relationships: []
+      }
       apex_analyses: {
         Row: {
           analyzed_at: string
