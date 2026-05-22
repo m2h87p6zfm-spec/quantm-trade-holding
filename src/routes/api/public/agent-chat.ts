@@ -242,7 +242,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               stream: true,
               reasoning: { effort: "medium" },
               messages: [
-                { role: "system", content: SYSTEM + addendum },
+                { role: "system", content: SYSTEM + addendum + profileAddendum },
                 { role: "system", content: webContext },
                 ...messages,
               ],
