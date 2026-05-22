@@ -548,7 +548,10 @@ function loadImageElement(file: File): Promise<HTMLImageElement> {
 }
 
 async function optimizeImageFile(file: File): Promise<string> {
-  const source = await createImageBitmap(file).catch(() => loadImageElement(file));
+  const source = await (typeof createImageBitmap === "function"
+    ? createImageBitmap(file)
+    : Promise.reject(new Error("createImageBitmap unavailable"))
+  ).catch(() => loadImageElement(file));
   const settings = [
     { maxEdge: 2200, quality: 0.82 },
     { maxEdge: 1800, quality: 0.76 },
