@@ -44,6 +44,7 @@ import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candle
 import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/agent-feedback'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -221,6 +222,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTrackOutcomesRoute =
+  ApiPublicHooksTrackOutcomesRouteImport.update({
+    id: '/api/public/hooks/track-outcomes',
+    path: '/api/public/hooks/track-outcomes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -294,6 +302,7 @@ export interface FileRoutesByTo {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -332,6 +341,7 @@ export interface FileRoutesById {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -445,6 +457,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -483,6 +496,7 @@ export interface RootRouteChildren {
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
+  ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -733,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/track-outcomes': {
+      id: '/api/public/hooks/track-outcomes'
+      path: '/api/public/hooks/track-outcomes'
+      fullPath: '/api/public/hooks/track-outcomes'
+      preLoaderRoute: typeof ApiPublicHooksTrackOutcomesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -771,6 +792,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
+  ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
