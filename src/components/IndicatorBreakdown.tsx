@@ -61,6 +61,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "zScore", rawValue: v,
     });
   }
 
