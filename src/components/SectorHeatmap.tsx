@@ -47,6 +47,7 @@ export function SectorHeatmap({ cells }: { cells: Cell[] }) {
           <span className="px-2 py-0.5 rounded font-mono" style={{ background: colorFor(-3), color: "var(--bear-foreground, white)" }}>−3%</span>
           <span className="px-2 py-0.5 rounded font-mono bg-muted text-muted-foreground">0%</span>
           <span className="px-2 py-0.5 rounded font-mono" style={{ background: colorFor(3), color: "white" }}>+3%</span>
+          <ExplainAiButton topic="Sektor-Heatmap" context="Farbiges Grid: grün = positive Tagesveränderung, rot = negative." variant="icon" />
         </div>
       </div>
       {cells.length === 0 ? (
