@@ -90,15 +90,17 @@ export async function fetchYahooChartCached(
     const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
     const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
 
-    const attempts: Array<() => Promise<any>> = [];
-    for (const host of hosts) attempts.push(() => fetchJson(host + path));
-    for (const host of hosts) attempts.push(async () => sparkToChart(await fetchJson(host + sparkPath)));
-    for (const host of hosts) attempts.push(() => fetchJsonViaReader(host + path));
-    for (const host of hosts) attempts.push(async () => sparkToChart(await fetchJsonViaReader(host + sparkPath)));
+    // Wellenweise: erst Direct-Chart parallel, dann Spark parallel, dann Reader-Fallback.
+    const waves: Array<Array<() => Promise<any>>> = [
+      hosts.map((h) => () => fetchJson(h + path)),
+      hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart)),
+      hosts.map((h) => () => fetchJsonViaReader(h + path)),
+      hosts.map((h) => () => fetchJsonViaReader(h + sparkPath).then(sparkToChart)),
+    ];
 
-    for (const run of attempts) {
+    for (const wave of waves) {
       try {
-        const j = await run();
+        const j = await firstSuccess(wave);
         if (!j?.chart?.result?.[0]) continue;
         STORE.set(key, {
           value: j,
@@ -107,7 +109,7 @@ export async function fetchYahooChartCached(
         });
         return { value: j, stale: false, lastUpdated: now };
       } catch {
-        // weiter
+        // nächste Welle
       }
     }
 
