@@ -206,6 +206,7 @@ type CreditState =
 function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: string }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
+  const quoteQ = useQuote(symbol);
   const { settings } = useSettings();
   const { user } = useAuth();
   const consume = useServerFn(consumeAnalysisCredit);
@@ -235,6 +236,8 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, user?.id]);
+
+  const productName = product?.name ?? symbol;
 
   if (credit.phase === "anon") {
     return (
@@ -280,30 +283,24 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
     );
   }
 
-  if (candles.isLoading && !candles.data) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
-  if (!candles.data) {
-    return (
-      <div className="text-sm text-muted-foreground flex items-center gap-2">
-        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-        Live-Daten werden aktualisiert… Bitte einen Moment.
-      </div>
-    );
+  if ((candles.isLoading && !candles.data) || !candles.data || !indicators) {
+    return <ApexLoading name={productName} />;
   }
-  if (!indicators) return <div className="text-sm text-muted-foreground">Daten werden vorbereitet…</div>;
 
   const sig = scoreIndicators(indicators, settings.risk);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
-  const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
+  const decision = buildDecision(symbol, productName, indicators, sig, regime);
 
-  // KI-Tracking läuft weiterhin nur für eingeloggte Nutzer
-  // (siehe useEffect unten)
   return (
     <AgentAnalysisView
       symbol={symbol}
+      name={productName}
       decision={decision}
       sig={sig}
       indicators={indicators}
+      candles={candles.data}
+      quote={quoteQ.data}
       regime={regime}
       scenarioTag={scenarioTag}
       user={user}
@@ -315,9 +312,12 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
 
 function AgentAnalysisView({
   symbol,
+  name,
   decision,
   sig,
   indicators,
+  candles,
+  quote,
   regime,
   scenarioTag,
   user,
@@ -325,9 +325,12 @@ function AgentAnalysisView({
   userQuery,
 }: {
   symbol: string;
+  name: string;
   decision: ReturnType<typeof buildDecision>;
   sig: ReturnType<typeof scoreIndicators>;
   indicators: NonNullable<ReturnType<typeof useAnalysis>["indicators"]>;
+  candles: NonNullable<ReturnType<typeof useAnalysis>["candles"]["data"]>;
+  quote: ReturnType<typeof useQuote>["data"];
   regime: ReturnType<typeof detectRegime>;
   scenarioTag: string;
   user: ReturnType<typeof useAuth>["user"];
@@ -353,15 +356,20 @@ function AgentAnalysisView({
 
   return (
     <div className="space-y-4">
+      <ApexDashboard
+        symbol={symbol}
+        name={name}
+        decision={decision}
+        indicators={indicators}
+        candles={candles}
+        quote={quote}
+        regime={regime}
+      />
       <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
-      <DecisionCard report={decision} symbol={symbol} />
-      <div className="flex items-center gap-2 pt-1">
-        <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
-        <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">Detailansicht →</Link>
-      </div>
-      <div>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-muted-foreground">Indikator-Analyse — was die Daten sagen</h3>
-        <IndicatorBreakdown ind={indicators} />
+      <div className="pt-1">
+        <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">
+          Vollständige Detailansicht →
+        </Link>
       </div>
       <LearningProgressBlock
         symbol={symbol}
@@ -374,6 +382,7 @@ function AgentAnalysisView({
     </div>
   );
 }
+
 
 
 
