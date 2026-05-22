@@ -106,19 +106,47 @@ const plans: Plan[] = [
 function PricingPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const [checkoutPrice, setCheckoutPrice] = useState<string | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
   const { user } = useAuth();
   const { tier: currentTier } = useSubscription();
   const navigate = useNavigate();
+  const openPortal = useServerFn(createPortalSession);
 
   const yearlySavingsPct = useMemo(() => 20, []);
 
-  const onChoose = (plan: Plan) => {
-    if (plan.id === "free") {
-      navigate({ to: "/" });
-      return;
+  const goToPortal = async () => {
+    setPortalBusy(true);
+    try {
+      const url = await openPortal({
+        data: { environment: getStripeEnvironment(), returnUrl: window.location.href },
+      });
+      window.open(url, "_blank");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Portal konnte nicht geöffnet werden");
+    } finally {
+      setPortalBusy(false);
     }
+  };
+
+  const onChoose = (plan: Plan) => {
     if (!user) {
       navigate({ to: "/login" });
+      return;
+    }
+    // Bestehende zahlende Kunden -> Stripe Billing Portal (verhindert Doppel-Sub)
+    if (currentTier !== "free") {
+      if (plan.id === currentTier) {
+        // gleicher Plan -> Portal zum Verwalten
+        void goToPortal();
+        return;
+      }
+      // Plan-Wechsel (Upgrade/Downgrade/Free) -> Portal
+      void goToPortal();
+      return;
+    }
+    // Neukunde / Free
+    if (plan.id === "free") {
+      navigate({ to: "/" });
       return;
     }
     const priceId = cycle === "monthly" ? plan.monthlyPriceId! : plan.yearlyPriceId!;
