@@ -64,7 +64,7 @@ const plans: Plan[] = [
     yearlyPriceId: "apex_pro_yearly",
     highlighted: true,
     features: [
-      "70 Analyse-Agent Credits / Monat",
+      "200 Analyse-Agent Credits / Monat",
       "Unlimitierte Watchlist & Smart Alerts",
       "Analyse-Agent — strukturierte Broker Research Note pro Aktie",
       "Quant-Signale (LONG/SHORT/NEUTRAL) mit Konfidenz",
