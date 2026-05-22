@@ -515,7 +515,7 @@ type DraftRow = Extracted & { id: string; enabled: boolean };
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 12 * 1024 * 1024; // original file limit before optimization
 const TARGET_UPLOAD_BYTES = 1.8 * 1024 * 1024;
-const EXTRACT_TIMEOUT_MS = 24_000;
+const EXTRACT_TIMEOUT_MS = 26_000;
 
 function dataUrlBytes(dataUrl: string): number {
   const comma = dataUrl.indexOf(",");
