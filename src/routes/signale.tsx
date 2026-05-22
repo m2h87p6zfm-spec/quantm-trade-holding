@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { findProduct } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
-import { scoreIndicators, buildDecision, whyNow, type Decision } from "@/lib/analysis";
+import { scoreIndicators, buildDecision, stabilizeDecision, type Decision } from "@/lib/analysis";
 import { detectRegime, regimeLabel, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { SignalChat } from "@/components/SignalChat";
