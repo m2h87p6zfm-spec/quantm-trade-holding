@@ -54,52 +54,55 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Dark first — professionelles Finanz-Terminal */
+/* Dark first — Monolith Institutional Grid · Slate & Steel
+   Palette: #0f1318 bg · #1c2128 card · #3b4754 border · #7aa2c8 primary */
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.20 0.022 250);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.20 0.022 250);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.75 0.16 215);
-  --primary-foreground: oklch(0.15 0.02 250);
-  --secondary: oklch(0.26 0.025 250);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.24 0.02 250);
-  --muted-foreground: oklch(0.70 0.015 245);
-  --accent: oklch(0.28 0.04 215);
-  --accent-foreground: oklch(0.96 0.005 240);
-  --destructive: oklch(0.62 0.22 25);
+  --radius: 0.6rem;
+  --background: oklch(0.18 0.012 245);
+  --foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.235 0.014 245);
+  --card-foreground: oklch(0.97 0.005 240);
+  --popover: oklch(0.235 0.014 245);
+  --popover-foreground: oklch(0.97 0.005 240);
+  --primary: oklch(0.72 0.065 245);
+  --primary-foreground: oklch(0.16 0.012 245);
+  --secondary: oklch(0.27 0.015 245);
+  --secondary-foreground: oklch(0.97 0.005 240);
+  --muted: oklch(0.245 0.013 245);
+  --muted-foreground: oklch(0.68 0.025 245);
+  --accent: oklch(0.30 0.035 245);
+  --accent-foreground: oklch(0.97 0.005 240);
+  --destructive: oklch(0.65 0.22 16);
   --destructive-foreground: oklch(0.98 0.01 240);
-  --border: oklch(0.28 0.025 250);
-  --input: oklch(0.26 0.025 250);
-  --ring: oklch(0.75 0.16 215);
-  --bull: oklch(0.72 0.16 152);
-  --bear: oklch(0.64 0.20 28);
-  --neutral-signal: oklch(0.70 0.015 245);
-  --cyan-accent: oklch(0.78 0.12 210);
+  --border: oklch(0.38 0.018 245);
+  --input: oklch(0.27 0.015 245);
+  --ring: oklch(0.72 0.065 245);
+  --bull: oklch(0.72 0.16 162);
+  --bear: oklch(0.65 0.22 16);
+  --neutral-signal: oklch(0.70 0.025 245);
+  --cyan-accent: oklch(0.78 0.09 230);
   --gold: oklch(0.80 0.13 85);
   --ticker: oklch(0.84 0.16 95);
-  --violet-accent: oklch(0.68 0.17 295);
-  /* Chart-specific tokens — institutional terminal */
-  --chart-grid: color-mix(in oklab, var(--border) 65%, transparent);
-  --chart-axis: color-mix(in oklab, var(--muted-foreground) 85%, transparent);
+  --violet-accent: oklch(0.70 0.14 295);
+  --chart-grid: color-mix(in oklab, var(--border) 55%, transparent);
+  --chart-axis: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 96%, transparent);
-  --chart-1: oklch(0.78 0.13 210); /* cyan — EMA fast */
-  --chart-2: oklch(0.80 0.13 85);  /* amber — EMA slow */
-  --chart-3: oklch(0.70 0.17 295); /* violet — long MA */
-  --chart-4: oklch(0.74 0.13 200); /* teal — bbands fill */
-  --chart-5: oklch(0.65 0.12 250); /* muted blue — secondary */
-  --sidebar: oklch(0.13 0.02 250);
-  --sidebar-foreground: oklch(0.92 0.01 240);
-  --sidebar-primary: oklch(0.75 0.16 215);
-  --sidebar-primary-foreground: oklch(0.15 0.02 250);
-  --sidebar-accent: oklch(0.22 0.025 250);
-  --sidebar-accent-foreground: oklch(0.96 0.005 240);
-  --sidebar-border: oklch(0.24 0.025 250);
-  --sidebar-ring: oklch(0.75 0.16 215);
+  --chart-1: oklch(0.74 0.08 235);
+  --chart-2: oklch(0.80 0.13 85);
+  --chart-3: oklch(0.70 0.14 295);
+  --chart-4: oklch(0.72 0.10 200);
+  --chart-5: oklch(0.62 0.06 245);
+  --sidebar: oklch(0.155 0.011 245);
+  --sidebar-foreground: oklch(0.92 0.008 240);
+  --sidebar-primary: oklch(0.72 0.065 245);
+  --sidebar-primary-foreground: oklch(0.16 0.012 245);
+  --sidebar-accent: oklch(0.235 0.014 245);
+  --sidebar-accent-foreground: oklch(0.97 0.005 240);
+  --sidebar-border: oklch(0.28 0.015 245);
+  --sidebar-ring: oklch(0.72 0.065 245);
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 .light {
