@@ -35,6 +35,7 @@ import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
+import { Route as ApiPublicExplainConceptRouteImport } from './routes/api/public/explain-concept'
 import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/cron-evaluate'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
@@ -170,6 +171,11 @@ const ApiPublicNewsSentimentRoute = ApiPublicNewsSentimentRouteImport.update({
   path: '/api/public/news-sentiment',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicExplainConceptRoute = ApiPublicExplainConceptRouteImport.update({
+  id: '/api/public/explain-concept',
+  path: '/api/public/explain-concept',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronEvaluateRoute = ApiPublicCronEvaluateRouteImport.update({
   id: '/api/public/cron-evaluate',
   path: '/api/public/cron-evaluate',
@@ -220,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
+  '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -252,6 +259,7 @@ export interface FileRoutesByTo {
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
+  '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -285,6 +293,7 @@ export interface FileRoutesById {
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
+  '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
+    | '/api/public/explain-concept'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
+    | '/api/public/explain-concept'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -383,6 +394,7 @@ export interface FileRouteTypes {
     | '/api/public/agent-chat'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
+    | '/api/public/explain-concept'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/payments/webhook'
@@ -416,6 +428,7 @@ export interface RootRouteChildren {
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicCronEvaluateRoute: typeof ApiPublicCronEvaluateRoute
+  ApiPublicExplainConceptRoute: typeof ApiPublicExplainConceptRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -605,6 +618,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsSentimentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/explain-concept': {
+      id: '/api/public/explain-concept'
+      path: '/api/public/explain-concept'
+      fullPath: '/api/public/explain-concept'
+      preLoaderRoute: typeof ApiPublicExplainConceptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron-evaluate': {
       id: '/api/public/cron-evaluate'
       path: '/api/public/cron-evaluate'
@@ -664,6 +684,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicCronEvaluateRoute: ApiPublicCronEvaluateRoute,
+  ApiPublicExplainConceptRoute: ApiPublicExplainConceptRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
