@@ -20,19 +20,53 @@ type Extracted = {
   notes?: string;
 };
 
-const SYSTEM = `Du bist ein Vision-Extraktor für Aktien-Portfolios.
-Aus jedem hochgeladenen Bild (Broker-App-Screenshot, Depotauszug, Excel, handschriftliche Notiz, etc.)
-extrahierst du alle erkennbaren Wertpapier-Positionen.
+const SYSTEM = `Du bist ein Vision-Extraktor für Aktien-Portfolios aus Broker-Apps (Trade Republic, Scalable, Comdirect, Trading 212, eToro, Robinhood, Revolut …), Depotauszügen, Excel-Listen oder handschriftlichen Notizen.
 
-Regeln:
-- Ticker IMMER in Großbuchstaben, ohne Suffix (z. B. "AAPL", "NVDA", "SAP", "ASML"). Wenn nur ein Firmenname zu sehen ist, leite den gängigen Ticker ab (Apple → AAPL, Tesla → TSLA, SAP SE → SAP).
-- Menge (qty) als Zahl in Stück.
-- Einstandskurs (entry) als Zahl pro Stück. Wenn nur ein Gesamtwert sichtbar ist, teile durch die Menge.
-- Side ist "LONG" für gekaufte Aktien, "SHORT" nur wenn das Bild explizit Short-Position / Leerverkauf zeigt.
-- Datum (date) im Format dd.mm.yyyy, nur wenn klar erkennbar.
-- confidence zwischen 0 und 1 – wie sicher bist du dir? Bei unsicheren Werten lieber < 0.6 setzen.
-- Wenn das Bild KEINE Positionen enthält (z. B. Foto einer Katze), gib eine leere Liste zurück.
-- Niemals halluzinieren. Im Zweifel weglassen.`;
+ZIEL
+Aus dem Bild jede einzelne Wertpapier-Position rekonstruieren — auch wenn die Broker-App nur "aktueller Wert" + "Performance %" anzeigt und Stück / Einstand nicht direkt sichtbar sind.
+
+TICKER
+- Ticker IMMER in Großbuchstaben ohne Suffix (Apple → AAPL, Tesla → TSLA, SAP SE → SAP, Microsoft → MSFT, NVIDIA → NVDA, ASML Holding → ASML, Allianz → ALV, Siemens → SIE).
+- Erkennst du nur ein Logo (z. B. angebissener Apfel), leite den Ticker daraus ab.
+
+FRAKTIONALE STÜCK
+- qty darf eine Dezimalzahl sein (Trade Republic, Scalable, Revolut und Trading 212 erlauben Bruchstücke wie 0.5234 oder 12.781). Niemals runden.
+
+ABLEITUNG (zwingend nutzen, wenn Felder fehlen)
+Broker-Apps zeigen meist:
+  · "Wert" / "Kurswert" / "Position Value"   = current_value  (qty × aktueller Kurs)
+  · "Kurs" / "Letzter Kurs" / "Price"        = current_price  (Kurs pro Stück, aktuell)
+  · "Performance" / "Rendite" / "G/V %"      = pnl_pct        (% seit Einstand)
+  · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust)
+  · "Eingesetzt" / "Invested" / "Einstand"   = invested       (qty × Einstandskurs)
+
+Regeln zur Ableitung — IMMER nach diesem Wasserfall:
+  1. qty:
+     · falls "Stück" / "Anteile" / "Shares" / "Qty" sichtbar → übernehmen (auch dezimal).
+     · sonst falls current_value UND current_price sichtbar → qty = current_value / current_price.
+     · sonst falls invested UND entry sichtbar → qty = invested / entry.
+  2. entry (Einstandskurs pro Stück):
+     · falls direkt sichtbar ("Ø-Kurs", "Einstand", "Cost basis") → übernehmen.
+     · sonst falls invested UND qty bekannt → entry = invested / qty.
+     · sonst falls current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100).
+     · sonst falls current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
+  3. Werte > 0 prüfen. Bei Division durch 0 → Position auslassen.
+  4. Rundung: qty bis zu 6 Nachkommastellen, entry auf 4 Nachkommastellen.
+
+WÄHRUNG
+- Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen, einfach den angezeigten Zahlenwert nehmen.
+
+CONFIDENCE
+- direkt sichtbare Stück + Einstand: 0.85–1.0
+- ein Wert direkt sichtbar, einer abgeleitet: 0.65–0.85
+- beide Werte abgeleitet aus current_value + pnl_pct: 0.45–0.7
+- unscharfe / verdeckte Zahlen: < 0.5
+
+WICHTIG
+- Side ist immer "LONG", außer das Bild zeigt explizit "Short" / "Leerverkauf".
+- Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist (kein "Heute"-Datum erfinden).
+- Niemals halluzinieren. Wenn weder Stück noch ableitbarer Wert sichtbar sind → Position weglassen.
+- Notes: kurz festhalten, woher entry/qty stammen (z. B. "qty aus Wert/Kurs", "entry aus Performance %").`;
 
 const EXTRACT_TOOL = {
   type: "function" as const,
@@ -50,13 +84,16 @@ const EXTRACT_TOOL = {
             properties: {
               symbol: { type: "string", description: "Ticker-Symbol in Großbuchstaben" },
               name: { type: "string", description: "Optionaler Firmenname" },
-              qty: { type: "number", description: "Anzahl Stücke" },
-              entry: { type: "number", description: "Einstandskurs pro Stück" },
+              qty: { type: "number", description: "Anzahl Stücke (darf dezimal sein, z. B. 0.5234)" },
+              entry: { type: "number", description: "Einstandskurs pro Stück (ggf. aus Wert/Kurs/Performance abgeleitet)" },
+              current_value: { type: "number", description: "Falls im Bild sichtbar: aktueller Positionswert (qty × Kurs)" },
+              current_price: { type: "number", description: "Falls im Bild sichtbar: aktueller Kurs pro Stück" },
+              pnl_pct: { type: "number", description: "Falls sichtbar: Performance in % seit Einstand" },
               side: { type: "string", enum: ["LONG", "SHORT"] },
-              date: { type: "string", description: "Kaufdatum dd.mm.yyyy" },
+              date: { type: "string", description: "Kaufdatum dd.mm.yyyy nur wenn klar erkennbar" },
               currency: { type: "string", description: "Währung, z. B. EUR / USD" },
               confidence: { type: "number", description: "0..1" },
-              notes: { type: "string" },
+              notes: { type: "string", description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')" },
             },
             required: ["symbol", "qty", "entry", "side", "confidence"],
             additionalProperties: false,
@@ -68,6 +105,7 @@ const EXTRACT_TOOL = {
     },
   },
 };
+
 
 const MAX_IMAGES = 5;
 const MAX_BYTES_PER_IMAGE = 6 * 1024 * 1024; // 6 MB after base64 decoding
