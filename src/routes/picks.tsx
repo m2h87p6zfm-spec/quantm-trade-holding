@@ -37,14 +37,15 @@ function PicksPage() {
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
-  const [universe, setUniverse] = useState<"top" | "all">("top");
+  const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
     if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
     if (region !== "Alle") list = list.filter((p) => p.region === region);
-    // "top" = erste 80 (liquideste, häufig zitierte Werte stehen vorne in PRODUCTS)
+    // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
+    else if (universe === "extended") list = list.slice(0, 250);
     return list;
   }, [sector, region, universe]);
 
@@ -60,10 +61,17 @@ function PicksPage() {
     })),
   });
 
-  const loaded = candleQs.filter((q) => q.data).length;
+  // CRITICAL FIX: ein gescheiterter Request (z. B. Symbol vom Yahoo-Proxy nicht
+  // gefunden, Rate-Limit, Timeout) hat den Scan-Zähler bei "loaded/total"
+  // einfrieren lassen, weil nur `data` gezählt wurde. Jetzt zählen wir auch
+  // erledigte Fehler als "fertig", damit der Fortschritt immer 100 % erreicht.
+  const settled = candleQs.filter((q) => q.data || q.isError || (!q.isLoading && !q.isFetching)).length;
+  const succeeded = candleQs.filter((q) => q.data).length;
+  const failed = candleQs.filter((q) => q.isError).length;
   const total = filtered.length;
-  const loading = loaded < total;
-  const progress = total > 0 ? Math.round((loaded / total) * 100) : 0;
+  const loading = settled < total;
+  const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
+
 
   const picks = useMemo(() => {
     type Row = {
