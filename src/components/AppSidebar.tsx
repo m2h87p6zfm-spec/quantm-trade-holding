@@ -213,7 +213,7 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
         <div className="rounded-lg border border-gold/30 bg-gradient-to-br from-gold/10 via-primary/[0.04] to-transparent p-3">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-gold">Pro freischalten</div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            Voller Zugriff auf Quant-Signale, AI Learning & Smart Alerts.
+            Voller Zugriff auf Apex Picks, Watchlist-Signale, AI Learning & Smart Alerts.
           </p>
           <Button asChild size="sm" className="mt-2 h-8 w-full text-xs">
             <Link to="/preise"><CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pläne ansehen</Link>
