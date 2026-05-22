@@ -200,6 +200,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "beta", rawValue: b,
     });
   }
 
