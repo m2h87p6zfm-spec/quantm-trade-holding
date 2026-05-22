@@ -1,75 +1,66 @@
-# Overhaul: Onboarding, Subscription Gating, News Engine
+# APEX Track Record — Plan
 
-A focused plan across 5 areas. Reuses existing infrastructure (`useSubscription`, `useSettings`, `SymbolSearch`, `ManageWatchlistDialog`, `news-sentiment`, `AgencyLogo`, `BreakingNewsTicker`) — no DB migrations, all preferences extend the existing `ta_settings` localStorage shape.
+Öffentliche, datengetriebene Vertrauensseite unter `/track-record`. Alle Zahlen werden live aus zwei neuen Tabellen berechnet, die automatisch befüllt und nachverfolgt werden.
 
-## 1. Subscription Tier Limits
+## 1. Datenbank (Migration)
 
-Add a single helper `getPortfolioLimit()` in `src/lib/portfolio.ts`:
-- Free: 10 symbols
-- Pro (`pro_*`): 20 symbols
-- Elite/Ultimate (`elite_*`, `ultimate_*`): `Infinity`
+**`apex_analyses`** (öffentlich lesbar, anonym):
+- `id uuid pk`, `ticker text`, `name text`, `sector text`, `asset_type text` (`Aktie`/`ETF`)
+- `analyzed_at timestamptz`, `verdict text` (`KAUF`/`HALTEN`/`VERKAUFEN`)
+- `confidence_score numeric`, `price_at_analysis numeric`
+- `indicators jsonb` (RSI, MACD, Z-Score, Bollinger, SMA, Vola, Momentum …)
+- **keine `user_id`** — vollständig anonym
 
-Reads from existing `useSubscription` hook. Used by onboarding, `SymbolSearch`, and the Edit Portfolio dialog.
+**`apex_outcomes`**:
+- `id uuid pk`, `analysis_id uuid fk → apex_analyses(id)` unique
+- `price_after_30d/60d/90d numeric null`
+- `return_30d/60d/90d numeric null`
+- `is_correct boolean null` (basiert auf 30d-Richtung vs. Verdict)
+- `updated_at timestamptz`
 
-## 2. Tiered Onboarding (`src/routes/welcome.tsx`)
+**RLS**: SELECT für `anon` + `authenticated` auf beide Tabellen. INSERT/UPDATE nur über Server-Funktionen mit Service-Role (kein Client-Write).
 
-Extend the existing welcome flow with two new steps inserted before final submit:
-- **Step: Build Your Portfolio** — embedded `SymbolSearch` + chip list. Live counter `X / LIMIT`. Blocks "Next" if zero. Tickers validated via existing `/api/public/search` + `/api/public/quote` round-trip (already wired in `SymbolSearch`).
-- **Step: Source Selection** — 5 toggle cards (Reuters/Bloomberg/CNBC/FT/Yahoo) writing to `settings.newsSources`.
+## 2. Automatisches Speichern
 
-On finish, seed `watchlists[0].symbols` with the picked portfolio (replaces default seed) and mark `portfolioOnboarded: true` in settings so we know which symbols are "Holdings" vs Market Watch.
+In `src/routes/analyse.tsx` nach erfolgreicher APEX-Analyse: neue ServerFn `recordApexAnalysis` aufrufen (fire-and-forget), die anonymisiert in `apex_analyses` schreibt und einen leeren `apex_outcomes`-Eintrag anlegt.
 
-## 3. Portfolio-vs-Watch Split + Edit Portfolio
+## 3. Cron-Job für 30/60/90-Tage-Tracking
 
-Extend `src/lib/settings.ts`:
-- Add `portfolioSymbols: string[]` (the user's holdings from onboarding) — separate from the general watchlist.
-- Add `costBasis: Record<string, number>` (placeholder, optional per-symbol).
-- New helpers: `setPortfolio(syms)`, `reorderPortfolio(syms)`, `addToPortfolio(sym)`, `removeFromPortfolio(sym)`.
+- Neue Public-Route `src/routes/api/public/hooks/track-outcomes.ts`
+- Lädt alle Analysen, deren 30/60/90-Tage-Fenster fällig und Spalte noch null
+- Holt aktuelle Kurse via Finnhub, berechnet Rendite, setzt `is_correct` nach 30 Tagen:
+  - KAUF korrekt wenn `return_30d > 0`
+  - VERKAUFEN korrekt wenn `return_30d < 0`
+  - HALTEN korrekt wenn `|return_30d| < 5 %`
+- pg_cron läuft täglich um 02:00 UTC (via `supabase--insert`)
 
-`src/routes/index.tsx` watchlist section becomes two stacked tables:
-- **My Portfolio** (top) — rows show `HOLDING` badge, Cost Basis col, Total G/L col (computed from current quote vs cost basis, placeholder $0 if not set). Drag-and-drop via existing `@dnd-kit` setup.
-- **Market Watch** (below) — remaining `watchlist` symbols not in portfolio, plus defaults (SPY, QQQ, DIA, IWM) if missing.
+## 4. Seite `/track-record` (öffentlich)
 
-New `EditPortfolioDialog` (clone of `ManageWatchlistDialog`, operates on `portfolioSymbols`) wired to a prominent "Portfolio bearbeiten" button at the top of the My Portfolio table. Enforces tier limit; surfaces Upgrade modal on overflow.
+Neue Route `src/routes/track-record.tsx` (außerhalb `_authenticated`), dunkles Bloomberg-Terminal-Design.
 
-## 4. AI "Alpha" News Summaries
+**Sektionen** (alle live aus DB berechnet, mit Filter-State `useState`):
+1. **Hero**: „APEX hat X von Y Analysen korrekt vorhergesagt" + 3 KPI-Karten (Gesamtgenauigkeit mit Donut, Anzahl, Ø Rendite KAUF 90d)
+2. **Filter-Leiste**: Zeitraum / Urteil / Sektor / Asset-Typ / Ergebnis
+3. **Indikator-Genauigkeit**: pro Indikator wird simuliert, ob sein Einzelsignal stimmig zum Outcome war → Trefferquote als farbige Karten
+4. **Performance-Chart**: kumulierte Genauigkeit über Zeit (3 Linien KAUF/HALTEN/VERKAUFEN) — Recharts LineChart mit Tooltip
+5. **APEX vs. Markt**: Tabelle mit Ø Rendite KAUF (90d/1y) vs. SPY, URTH, ^GDAXI (live via Finnhub Candles)
+6. **Analyse-Tabelle**: sortierbar, suchbar, paginiert (20/Seite), responsive
+7. **Sektor-Heatmap**: Rechtecke pro Sektor, Größe = Anzahl, Farbe = Genauigkeit; Klick filtert Tabelle
+8. **Beste / Schlechteste Vorhersagen**: Top-5 / Bottom-5 nach `return_30d` (Verdict-konform)
+9. **Methodologie-Accordion**: 4 FAQ-Einträge
+10. **CTA-Block** mit zwei Buttons → `/login` und `/analyse`
 
-Server: extend `src/routes/api/public/news-sentiment.ts` to optionally call Lovable AI (`google/gemini-3-flash-preview`) with the headline + ticker, returning a 1-sentence `aiSummary` per item. Gated by request flag `withSummary: true` and capped to top 20 items to control cost. Failures fall back to no summary (non-blocking).
+**Datenladung**: eine ServerFn `getTrackRecord()` mit allen Aggregaten + Liste der Analysen+Outcomes, gecached via TanStack Query. Filter werden client-seitig auf dem geladenen Datensatz angewendet (instant, kein Refetch).
 
-Client (`src/routes/news.tsx`):
-- New "Personalisiert" (For You) tab uses portfolio symbols only and requests `withSummary: true`.
-- News card renders the summary line below the headline in a subtle accent box: *"Warum das für deine TSLA-Position zählt: …"*.
+**Auth-frei**: Route liegt direkt unter `src/routes/`, kein `_authenticated`-Layout. Sidebar wird auf dieser Seite nicht gezeigt (eigenes Public-Layout mit Header + Logo).
 
-## 5. Breaking-News Toasts for Holdings
+## 5. Navigation
 
-`src/components/BreakingNewsTicker.tsx` already polls and toasts. Tighten the filter: only toast if at least one ticker in the item overlaps `portfolioSymbols` AND item is `breaking`. Use `sonner` `toast.error`/`toast.success` based on `sentiment`, with the agency logo and a "Chart öffnen" action linking to `/produkte/$symbol`.
+Link „Track Record" in `AppSidebar` für eingeloggte Nutzer + Footer-Link.
 
-## 6. Upsell Modal
-
-New `src/components/UpgradeModal.tsx` (shadcn Dialog):
-- Triggered when adding an 11th symbol on Free / 21st on Pro.
-- Headline: "Erweitere dein Portfolio", list of benefits (more symbols, more sources, alpha summaries), CTA → `/preise`.
-
-Exposed via a tiny context/hook `useUpgradePrompt()` so `SymbolSearch`, onboarding, and `EditPortfolioDialog` can all call `promptUpgrade("portfolio_limit")`.
-
-## Technical Details
-
-**Files created:**
-- `src/components/EditPortfolioDialog.tsx`
-- `src/components/UpgradeModal.tsx`
-- `src/hooks/use-upgrade-prompt.tsx`
-
-**Files edited:**
-- `src/lib/settings.ts` — add `portfolioSymbols`, `costBasis`, `portfolioOnboarded`; new mutators.
-- `src/lib/portfolio.ts` — `getPortfolioLimit(tier)` + tier resolver.
-- `src/routes/welcome.tsx` — add 2 new steps, seed portfolio on finish.
-- `src/routes/index.tsx` — split watchlist into Portfolio (drag-reorder, Cost Basis, G/L) + Market Watch; "Portfolio bearbeiten" button.
-- `src/components/SymbolSearch.tsx` — accept `limit`/`current` props; call upgrade prompt on overflow.
-- `src/routes/news.tsx` — Personalisiert tab, AI summary rendering.
-- `src/routes/api/public/news-sentiment.ts` — optional `withSummary` via Lovable AI Gateway.
-- `src/components/BreakingNewsTicker.tsx` — portfolio overlap filter + sentiment-colored toasts.
-- `src/routes/__root.tsx` — mount `<UpgradeModal />` provider.
-
-**No DB migrations.** All portfolio/cost-basis state lives in `ta_settings` localStorage to keep this scope tight; we can promote to Supabase in a follow-up.
-
-**No new dependencies.** Reuses `@dnd-kit/*`, `sonner`, shadcn Dialog, Lovable AI Gateway (existing `LOVABLE_API_KEY`).
+## Technische Details
+- ServerFns: `src/lib/track-record.functions.ts` (`recordApexAnalysis`, `getTrackRecord`)
+- Cron-Endpoint nutzt `supabaseAdmin` + `process.env.FINNHUB_API_KEY` (bereits vorhanden via `finnhub.ts`)
+- Indikator-Genauigkeit-Heuristik: pro Analyse wird je Indikator geprüft ob sein Signal (z. B. RSI < 30 = bullish) zum tatsächlichen 30-Tage-Outcome passt
+- Charts: Recharts (bereits installiert)
+- Dunkles Theme: bestehende `--background`/`--card`-Tokens reichen, aktuelles Theme der App ist bereits dunkel
