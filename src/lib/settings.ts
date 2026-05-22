@@ -188,6 +188,23 @@ export function useSettings() {
     return id;
   }, []);
 
+  /** Create a new watchlist pre-populated with symbols. Used by onboarding starter packs. */
+  const createWatchlistWithSymbols = useCallback((name: string, symbols: string[]): string => {
+    const id = uid();
+    const clean = Array.from(new Set(symbols.map((x) => x.trim().toUpperCase()).filter(Boolean)));
+    setStored((prev) => {
+      const next: StoredSettings = {
+        ...prev,
+        watchlists: [...prev.watchlists, { id, name: name.trim() || "Neue Liste", symbols: clean }],
+        activeWatchlistId: id,
+      };
+      write(next);
+      return next;
+    });
+    return id;
+  }, []);
+
+
   const renameWatchlist = useCallback((id: string, name: string) => {
     setStored((prev) => {
       const next: StoredSettings = {
