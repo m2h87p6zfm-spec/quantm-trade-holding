@@ -69,7 +69,7 @@ export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
 
       {/* Spark am Apex — der getroffene Punkt */}
       <circle cx="16" cy="14" r="4" fill="url(#apex-spark)" />
-      <circle cx="16" cy="14" r="1.6" fill="oklch(0.98 0.14 95)" />
+      <circle cx="16" cy="14" r="1.6" fill="oklch(0.98 0 0)" />
     </svg>
   );
 }
