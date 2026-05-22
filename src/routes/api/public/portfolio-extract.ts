@@ -248,7 +248,7 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           return json({ positions: out });
         } catch (e) {
           console.error("portfolio-extract error", e);
-          if (e instanceof DOMException && e.name === "AbortError") {
+          if (e instanceof Error && e.name === "AbortError") {
             return json({ error: "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen." }, 504);
           }
           return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
