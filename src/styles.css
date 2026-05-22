@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -53,52 +54,55 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Dark first — professionelles Finanz-Terminal */
+/* Dark first — Monolith Institutional Grid · Slate & Steel
+   Palette: #0f1318 bg · #1c2128 card · #3b4754 border · #7aa2c8 primary */
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.20 0.022 250);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.20 0.022 250);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.75 0.16 215);
-  --primary-foreground: oklch(0.15 0.02 250);
-  --secondary: oklch(0.26 0.025 250);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.24 0.02 250);
-  --muted-foreground: oklch(0.70 0.015 245);
-  --accent: oklch(0.28 0.04 215);
-  --accent-foreground: oklch(0.96 0.005 240);
-  --destructive: oklch(0.62 0.22 25);
+  --radius: 0.6rem;
+  --background: oklch(0.18 0.012 245);
+  --foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.235 0.014 245);
+  --card-foreground: oklch(0.97 0.005 240);
+  --popover: oklch(0.235 0.014 245);
+  --popover-foreground: oklch(0.97 0.005 240);
+  --primary: oklch(0.72 0.065 245);
+  --primary-foreground: oklch(0.16 0.012 245);
+  --secondary: oklch(0.27 0.015 245);
+  --secondary-foreground: oklch(0.97 0.005 240);
+  --muted: oklch(0.245 0.013 245);
+  --muted-foreground: oklch(0.68 0.025 245);
+  --accent: oklch(0.30 0.035 245);
+  --accent-foreground: oklch(0.97 0.005 240);
+  --destructive: oklch(0.65 0.22 16);
   --destructive-foreground: oklch(0.98 0.01 240);
-  --border: oklch(0.28 0.025 250);
-  --input: oklch(0.26 0.025 250);
-  --ring: oklch(0.75 0.16 215);
-  --bull: oklch(0.72 0.16 152);
-  --bear: oklch(0.64 0.20 28);
-  --neutral-signal: oklch(0.70 0.015 245);
-  --cyan-accent: oklch(0.78 0.12 210);
+  --border: oklch(0.38 0.018 245);
+  --input: oklch(0.27 0.015 245);
+  --ring: oklch(0.72 0.065 245);
+  --bull: oklch(0.72 0.16 162);
+  --bear: oklch(0.65 0.22 16);
+  --neutral-signal: oklch(0.70 0.025 245);
+  --cyan-accent: oklch(0.78 0.09 230);
   --gold: oklch(0.80 0.13 85);
   --ticker: oklch(0.84 0.16 95);
-  --violet-accent: oklch(0.68 0.17 295);
-  /* Chart-specific tokens — institutional terminal */
-  --chart-grid: color-mix(in oklab, var(--border) 65%, transparent);
-  --chart-axis: color-mix(in oklab, var(--muted-foreground) 85%, transparent);
+  --violet-accent: oklch(0.70 0.14 295);
+  --chart-grid: color-mix(in oklab, var(--border) 55%, transparent);
+  --chart-axis: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 96%, transparent);
-  --chart-1: oklch(0.78 0.13 210); /* cyan — EMA fast */
-  --chart-2: oklch(0.80 0.13 85);  /* amber — EMA slow */
-  --chart-3: oklch(0.70 0.17 295); /* violet — long MA */
-  --chart-4: oklch(0.74 0.13 200); /* teal — bbands fill */
-  --chart-5: oklch(0.65 0.12 250); /* muted blue — secondary */
-  --sidebar: oklch(0.13 0.02 250);
-  --sidebar-foreground: oklch(0.92 0.01 240);
-  --sidebar-primary: oklch(0.75 0.16 215);
-  --sidebar-primary-foreground: oklch(0.15 0.02 250);
-  --sidebar-accent: oklch(0.22 0.025 250);
-  --sidebar-accent-foreground: oklch(0.96 0.005 240);
-  --sidebar-border: oklch(0.24 0.025 250);
-  --sidebar-ring: oklch(0.75 0.16 215);
+  --chart-1: oklch(0.74 0.08 235);
+  --chart-2: oklch(0.80 0.13 85);
+  --chart-3: oklch(0.70 0.14 295);
+  --chart-4: oklch(0.72 0.10 200);
+  --chart-5: oklch(0.62 0.06 245);
+  --sidebar: oklch(0.155 0.011 245);
+  --sidebar-foreground: oklch(0.92 0.008 240);
+  --sidebar-primary: oklch(0.72 0.065 245);
+  --sidebar-primary-foreground: oklch(0.16 0.012 245);
+  --sidebar-accent: oklch(0.235 0.014 245);
+  --sidebar-accent-foreground: oklch(0.97 0.005 240);
+  --sidebar-border: oklch(0.28 0.015 245);
+  --sidebar-ring: oklch(0.72 0.065 245);
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 .light {
@@ -145,8 +149,31 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
-  body { font-feature-settings: "tnum" 1, "cv11" 1; }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  .font-mono, code, kbd, pre, samp, [data-numeric] {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1, "zero" 1, "ss02" 1;
+  }
+  /* Calmer section labels */
+  .label-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--muted-foreground) 90%, transparent);
+  }
 }
 
 @keyframes flash-up { 0% { background-color: color-mix(in oklab, var(--bull) 35%, transparent); } 100% { background-color: transparent; } }
@@ -185,10 +212,9 @@
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 55% 40% at 15% 0%, color-mix(in oklab, var(--primary) 20%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 35% at 85% 5%, color-mix(in oklab, var(--gold) 14%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 35% at 95% 60%, color-mix(in oklab, var(--violet-accent) 12%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 80% 50% at 30% 100%, color-mix(in oklab, var(--bull) 10%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 60% 45% at 12% 0%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 40% at 88% 8%, color-mix(in oklab, var(--cyan-accent) 7%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% 100%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 70%);
 }
 
 .bg-grid {
@@ -210,14 +236,14 @@
   position: absolute; inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 50%, transparent), transparent 40%, color-mix(in oklab, var(--cyan-accent) 35%, transparent));
+  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 35%, transparent), transparent 60%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
   opacity: 0; transition: opacity 0.25s ease;
   pointer-events: none;
 }
 .card-glow:hover::before { opacity: 1; }
-.card-glow:hover { transform: translateY(-2px); box-shadow: 0 12px 40px -12px color-mix(in oklab, var(--primary) 30%, transparent); }
+.card-glow:hover { transform: translateY(-1px); box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 22%, transparent); border-color: color-mix(in oklab, var(--primary) 35%, var(--border)); }
 
 .shimmer-text {
   background: linear-gradient(90deg, var(--muted-foreground) 20%, var(--foreground) 50%, var(--muted-foreground) 80%);
