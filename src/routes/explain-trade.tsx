@@ -1,20 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Microscope, Calendar, TrendingUp, TrendingDown, Sparkles, AlertTriangle, CheckCircle2, XCircle, HelpCircle, Loader2 } from "lucide-react";
-import { fetchCandles } from "@/lib/finnhub";
-import { computeAll, type IndicatorSet } from "@/lib/indicators";
-import { scoreIndicators, type Signal } from "@/lib/analysis";
-import { PRODUCTS, findProduct } from "@/lib/products";
+import { useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import {
+  Microscope, Sparkles, CalendarIcon, ChevronRight, ChevronLeft, Search,
+  Loader2, TrendingUp, TrendingDown, BookOpen, Newspaper, LineChart, Scale,
+  Compass, RotateCcw, CheckCircle2, AlertTriangle,
+} from "lucide-react";
+import { PRODUCTS, searchProducts, findProduct, type Product } from "@/lib/products";
 import { FeatureGate } from "@/lib/featureGate";
 import { DisclaimerInline } from "@/components/Disclaimer";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/explain-trade")({
   component: () => (
     <FeatureGate
       feature="risk_analytics"
       title="Explain-My-Trade ist Elite-exklusiv"
-      description="Reverse-Backtest deiner echten Trades — die App rekonstruiert, welche Signale zum Entry aktiv waren und ob dein Trade systematisch oder zufällig war."
+      description="Verstehe deinen Trade in Sekunden — die App holt sich Kaufpreis, aktuellen Kurs und Benchmark-Vergleich automatisch und erklärt dir, was passiert ist."
     >
       <ExplainTradePage />
     </FeatureGate>
@@ -22,98 +29,76 @@ export const Route = createFileRoute("/explain-trade")({
   head: () => ({ meta: [{ title: "Explain My Trade — Apex Trades" }] }),
 });
 
-type Side = "long" | "short";
-
-type TradeInput = {
+type AnalysisResult = {
   symbol: string;
-  side: Side;
-  entryDate: string;
-  entryPrice: number;
-  exitDate: string;
-  exitPrice: number;
-};
-
-type Reconstruction = {
-  entryIdx: number;
-  exitIdx: number;
+  name: string;
+  requestedDate: string;
+  resolvedDate: string;
+  adjusted: boolean;
+  shares: number;
   entryClose: number;
-  exitClose: number;
-  indicatorsAtEntry: IndicatorSet;
-  signalAtEntry: Signal;
+  currentClose: number;
+  totalCost: number;
+  currentValue: number;
+  pnlAbs: number;
   pnlPct: number;
-  alignment: "aligned" | "opposed" | "neutral";
-  verdict: TradeVerdict;
-  signalDirection: "LONG" | "SHORT" | "NEUTRAL";
+  heldDays: number;
+  heldMonths: number;
+  heldYears: number;
+  benchmarks: { sp500: number | null; dax: number | null; msciWorld: number | null };
+  analysis: string;
+  aiError?: string | null;
 };
 
-type TradeVerdict =
-  | "systematic_win"
-  | "lucky_win"
-  | "systematic_loss"
-  | "discipline_warning"
-  | "neutral_outcome";
-
-function reconstruct(closes: number[], times: number[], input: TradeInput): Reconstruction | { error: string } {
-  const entryTs = Date.parse(input.entryDate) / 1000;
-  const exitTs = Date.parse(input.exitDate) / 1000;
-  if (!Number.isFinite(entryTs) || !Number.isFinite(exitTs)) return { error: "Ungültiges Datum." };
-  if (exitTs <= entryTs) return { error: "Exit-Datum muss nach dem Entry liegen." };
-
-  // Closest trading day (must be ≤ entryTs, otherwise we'd see the future)
-  let entryIdx = -1;
-  for (let i = 0; i < times.length; i++) {
-    if (times[i] <= entryTs) entryIdx = i;
-    else break;
-  }
-  let exitIdx = -1;
-  for (let i = 0; i < times.length; i++) {
-    if (times[i] <= exitTs) exitIdx = i;
-    else break;
-  }
-  if (entryIdx < 50) return { error: "Nicht genug Historie vor dem Entry — wähle ein späteres Datum oder ein liquideres Symbol." };
-  if (exitIdx <= entryIdx) return { error: "Exit-Datum liegt vor verfügbaren Daten." };
-
-  const slice = closes.slice(0, entryIdx + 1);
-  const indicatorsAtEntry = computeAll(slice);
-  const signalAtEntry = scoreIndicators(indicatorsAtEntry, "ausgewogen");
-
-  const entryClose = closes[entryIdx];
-  const exitClose = closes[exitIdx];
-  const rawPnl = (exitClose - entryClose) / entryClose;
-  const pnlPct = input.side === "long" ? rawPnl : -rawPnl;
-
-  const signalDirection = signalAtEntry.verdict;
-  const userDirection: "LONG" | "SHORT" = input.side === "long" ? "LONG" : "SHORT";
-
-  let alignment: Reconstruction["alignment"];
-  if (signalDirection === "NEUTRAL") alignment = "neutral";
-  else if (signalDirection === userDirection) alignment = "aligned";
-  else alignment = "opposed";
-
-  let verdict: TradeVerdict;
-  if (Math.abs(pnlPct) < 0.005) verdict = "neutral_outcome";
-  else if (pnlPct > 0 && alignment === "aligned") verdict = "systematic_win";
-  else if (pnlPct > 0 && alignment !== "aligned") verdict = "lucky_win";
-  else if (pnlPct < 0 && alignment === "aligned") verdict = "systematic_loss";
-  else verdict = "discipline_warning";
-
-  return { entryIdx, exitIdx, entryClose, exitClose, indicatorsAtEntry, signalAtEntry, pnlPct, alignment, verdict, signalDirection };
-}
+type Step = 1 | 2 | 3;
 
 function ExplainTradePage() {
-  const today = new Date().toISOString().slice(0, 10);
-  const monthAgo = new Date(Date.now() - 30 * 86400 * 1000).toISOString().slice(0, 10);
+  const [step, setStep] = useState<Step>(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [customSymbol, setCustomSymbol] = useState<string>("");
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [sharesStr, setSharesStr] = useState<string>("");
 
-  const [symbol, setSymbol] = useState("NVDA");
-  const [side, setSide] = useState<Side>("long");
-  const [entryDate, setEntryDate] = useState(monthAgo);
-  const [entryPrice, setEntryPrice] = useState("");
-  const [exitDate, setExitDate] = useState(today);
-  const [exitPrice, setExitPrice] = useState("");
-  const [submitted, setSubmitted] = useState<TradeInput | null>(null);
+  const mutation = useMutation({
+    mutationFn: async (input: { symbol: string; name: string; buyDate: string; shares: number }) => {
+      const r = await fetch("/api/public/explain-trade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      const j = (await r.json()) as AnalysisResult | { error: string };
+      if (!r.ok || "error" in j) throw new Error("error" in j ? j.error : "Fehler bei der Analyse");
+      return j as AnalysisResult;
+    },
+  });
+
+  const result = mutation.data;
+  const shares = Number(sharesStr.replace(",", "."));
+  const sharesValid = Number.isFinite(shares) && shares > 0;
+  const selectedSymbol = product?.symbol || customSymbol.trim().toUpperCase();
+  const selectedName = product?.name || selectedSymbol;
+
+  function reset() {
+    mutation.reset();
+    setStep(1);
+    setProduct(null);
+    setCustomSymbol("");
+    setDate(undefined);
+    setSharesStr("");
+  }
+
+  function submit() {
+    if (!selectedSymbol || !date || !sharesValid) return;
+    mutation.mutate({
+      symbol: selectedSymbol,
+      name: selectedName,
+      buyDate: format(date, "yyyy-MM-dd"),
+      shares,
+    });
+  }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6">
+    <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
       <header className="flex items-start gap-3">
         <div className="relative">
           <div className="absolute inset-0 rounded-xl bg-primary/30 blur-xl" aria-hidden />
@@ -124,322 +109,525 @@ function ExplainTradePage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">Explain My Trade</h1>
-            <span className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-medium text-gold">
-              <Sparkles className="h-3 w-3" /> Reverse-Backtest
+            <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              <Sparkles className="h-3 w-3" /> Auto-Analyse
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Trag einen echten Trade ein — wir rekonstruieren, welche statistischen Signale am Entry-Tag aktiv waren und sagen dir, ob dein Trade <em>systematisch</em> oder <em>zufällig</em> war.
+            Wähle deine Aktie, dein Kaufdatum und die Stückzahl — wir holen Kaufpreis, aktuellen Kurs und Benchmarks automatisch.
           </p>
         </div>
       </header>
 
-      <section className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
-        <form
-          className="grid gap-4 sm:grid-cols-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const ep = parseFloat(entryPrice.replace(",", "."));
-            const xp = parseFloat(exitPrice.replace(",", "."));
-            if (!symbol || !ep || !xp) return;
-            setSubmitted({ symbol: symbol.toUpperCase(), side, entryDate, entryPrice: ep, exitDate, exitPrice: xp });
-          }}
-        >
-          <Field label="Symbol">
-            <input
-              list="explain-symbols"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              required
-            />
-            <datalist id="explain-symbols">
-              {PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}
-            </datalist>
-          </Field>
-          <Field label="Richtung">
-            <div className="flex gap-2">
-              <SideButton active={side === "long"} onClick={() => setSide("long")} kind="long" />
-              <SideButton active={side === "short"} onClick={() => setSide("short")} kind="short" />
-            </div>
-          </Field>
-          <Field label="Entry-Datum"><DateInput value={entryDate} onChange={setEntryDate} /></Field>
-          <Field label="Entry-Preis"><PriceInput value={entryPrice} onChange={setEntryPrice} placeholder="z. B. 425.10" /></Field>
-          <Field label="Exit-Datum"><DateInput value={exitDate} onChange={setExitDate} /></Field>
-          <Field label="Exit-Preis"><PriceInput value={exitPrice} onChange={setExitPrice} placeholder="z. B. 461.00" /></Field>
-          <div className="sm:col-span-2">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              <Microscope className="h-4 w-4" /> Trade analysieren
-            </button>
-          </div>
-        </form>
-      </section>
+      {!result && !mutation.isPending && (
+        <>
+          <Stepper current={step} />
+          <section className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
+            {step === 1 && (
+              <StepSymbol
+                product={product}
+                setProduct={setProduct}
+                customSymbol={customSymbol}
+                setCustomSymbol={setCustomSymbol}
+                onNext={() => selectedSymbol && setStep(2)}
+              />
+            )}
+            {step === 2 && (
+              <StepDate
+                date={date}
+                setDate={setDate}
+                onBack={() => setStep(1)}
+                onNext={() => date && setStep(3)}
+              />
+            )}
+            {step === 3 && (
+              <StepShares
+                shares={sharesStr}
+                setShares={setSharesStr}
+                onBack={() => setStep(2)}
+                onSubmit={submit}
+                summary={{ name: selectedName, symbol: selectedSymbol, date: date ? format(date, "dd.MM.yyyy", { locale: de }) : "" }}
+              />
+            )}
+          </section>
+        </>
+      )}
 
-      {submitted && <Result input={submitted} />}
+      {mutation.isPending && (
+        <div className="rounded-2xl border border-border bg-card/60 p-8 shadow-sm">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-base font-medium">Analyse wird erstellt…</div>
+            <div className="text-sm text-muted-foreground">Wir holen historische Kurse, aktuellen Preis und Benchmark-Daten und übergeben sie an unseren Analyst-Agenten.</div>
+          </div>
+        </div>
+      )}
+
+      {mutation.isError && (
+        <div className="rounded-2xl border border-bear/40 bg-bear/5 p-5 text-sm">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-bear" />
+            <div>
+              <div className="font-medium">Analyse fehlgeschlagen</div>
+              <div className="text-muted-foreground">{(mutation.error as Error).message}</div>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => mutation.reset()}>Erneut versuchen</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {result && <ResultView result={result} onReset={reset} />}
+
       <DisclaimerInline />
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+/* ---------------- Stepper ---------------- */
+
+function Stepper({ current }: { current: Step }) {
+  const steps = [
+    { n: 1, label: "Aktie / ETF" },
+    { n: 2, label: "Kaufdatum" },
+    { n: 3, label: "Anzahl" },
+  ] as const;
   return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
-      {children}
-    </label>
+    <ol className="flex items-center gap-2 text-xs">
+      {steps.map((s, i) => {
+        const active = s.n === current;
+        const done = s.n < current;
+        return (
+          <li key={s.n} className="flex items-center gap-2">
+            <div className={cn(
+              "flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold transition",
+              active && "border-primary bg-primary text-primary-foreground",
+              done && "border-bull/60 bg-bull/15 text-bull",
+              !active && !done && "border-border bg-card text-muted-foreground",
+            )}>
+              {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : s.n}
+            </div>
+            <span className={cn("font-medium", active ? "text-foreground" : "text-muted-foreground")}>{s.label}</span>
+            {i < steps.length - 1 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
-function DateInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="relative">
-      <Calendar className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-input bg-background py-2 pl-8 pr-3 text-sm"
-        required
-      />
-    </div>
-  );
-}
+/* ---------------- Step 1: Symbol ---------------- */
 
-function PriceInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return (
-    <input
-      inputMode="decimal"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-      required
-    />
-  );
-}
-
-function SideButton({ active, onClick, kind }: { active: boolean; onClick: () => void; kind: Side }) {
-  const isLong = kind === "long";
-  const Icon = isLong ? TrendingUp : TrendingDown;
-  const activeCls = isLong
-    ? "border-bull/60 bg-bull/15 text-bull"
-    : "border-bear/60 bg-bear/15 text-bear";
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition ${active ? activeCls : "border-input bg-background text-muted-foreground hover:text-foreground"}`}
-    >
-      <Icon className="h-4 w-4" /> {isLong ? "Long" : "Short"}
-    </button>
-  );
-}
-
-function Result({ input }: { input: TradeInput }) {
-  const range = compute3yRange(input.entryDate);
-  const q = useQuery({
-    queryKey: ["explain-candles", input.symbol, range],
-    queryFn: () => fetchCandles(input.symbol, "D", range),
-    retry: 1,
-  });
-
-  if (q.isLoading) {
-    return (
-      <div className="rounded-2xl border border-border bg-card/60 p-6 text-sm text-muted-foreground flex items-center gap-2">
-        <Loader2 className="h-4 w-4 animate-spin" /> Historische Kerzen für {input.symbol} laden…
-      </div>
-    );
-  }
-  if (q.isError || !q.data) {
-    return (
-      <div className="rounded-2xl border border-bear/40 bg-bear/5 p-5 text-sm">
-        Konnte Marktdaten für {input.symbol} nicht laden. Symbol prüfen oder später erneut versuchen.
-      </div>
-    );
-  }
-
-  const rec = reconstruct(q.data.c, q.data.t, input);
-  if ("error" in rec) {
-    return <div className="rounded-2xl border border-amber-400/40 bg-amber-400/5 p-5 text-sm">{rec.error}</div>;
-  }
-
-  const product = findProduct(input.symbol);
-  return <ResultCard input={input} rec={rec} name={product?.name ?? input.symbol} />;
-}
-
-function compute3yRange(entryDate: string): number {
-  // Pull enough history to cover entry + 200-day window before it.
-  const daysSince = Math.max(30, Math.round((Date.now() - Date.parse(entryDate)) / 86400000));
-  return Math.min(1825, daysSince + 365);
-}
-
-function ResultCard({ input, rec, name }: { input: TradeInput; rec: Reconstruction; name: string }) {
-  const v = VERDICT_META[rec.verdict];
-  const ind = rec.indicatorsAtEntry;
-  const sig = rec.signalAtEntry;
-  const pnlSign = rec.pnlPct >= 0 ? "+" : "";
-  const heldDays = Math.round((Date.parse(input.exitDate) - Date.parse(input.entryDate)) / 86400000);
+function StepSymbol({
+  product, setProduct, customSymbol, setCustomSymbol, onNext,
+}: {
+  product: Product | null;
+  setProduct: (p: Product | null) => void;
+  customSymbol: string;
+  setCustomSymbol: (s: string) => void;
+  onNext: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const results = useMemo(() => {
+    if (!q.trim()) return PRODUCTS.slice(0, 12);
+    return searchProducts(q).slice(0, 25);
+  }, [q]);
+  const customSym = q.trim().toUpperCase().replace(/\s+/g, "");
+  const noMatchYet = q.trim().length >= 1 && !results.some((p) => p.symbol.toUpperCase() === customSym);
+  const selected = product?.symbol || customSymbol;
 
   return (
     <div className="space-y-4">
-      <div className={`rounded-2xl border ${v.ring} ${v.bg} p-5 shadow-sm`}>
+      <StepHeader n={1} title="Welche Aktie oder ETF hast du gekauft?" subtitle="Suche nach Name oder Ticker-Symbol." />
+
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          autoFocus
+          value={q}
+          onChange={(e) => { setQ(e.target.value); setProduct(null); setCustomSymbol(""); }}
+          placeholder="z. B. NVIDIA oder NVDA"
+          className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+      </div>
+
+      <div className="max-h-64 overflow-auto rounded-lg border border-border bg-background/40">
+        {results.map((p) => {
+          const active = product?.symbol === p.symbol;
+          return (
+            <button
+              key={p.symbol}
+              type="button"
+              onClick={() => { setProduct(p); setCustomSymbol(""); }}
+              className={cn(
+                "flex w-full items-center justify-between gap-3 border-b border-border/60 px-3 py-2 text-left text-sm transition hover:bg-accent last:border-0",
+                active && "bg-primary/10",
+              )}
+            >
+              <div>
+                <div className="font-semibold">{p.name}</div>
+                <div className="text-xs text-muted-foreground">{p.symbol} · {p.sector}</div>
+              </div>
+              {active && <CheckCircle2 className="h-4 w-4 text-primary" />}
+            </button>
+          );
+        })}
+        {results.length === 0 && (
+          <div className="px-3 py-6 text-center text-xs text-muted-foreground">Keine Treffer in der Liste</div>
+        )}
+      </div>
+
+      {noMatchYet && customSym.length >= 1 && !product && (
+        <button
+          type="button"
+          onClick={() => setCustomSymbol(customSym)}
+          className={cn(
+            "w-full rounded-lg border px-3 py-2.5 text-left text-sm transition",
+            customSymbol === customSym
+              ? "border-primary bg-primary/10"
+              : "border-dashed border-primary/40 hover:bg-primary/5",
+          )}
+        >
+          <div className="font-semibold">Symbol direkt verwenden: {customSym}</div>
+          <div className="text-xs text-muted-foreground">Wenn Yahoo Finance den Ticker kennt, laden wir die Daten trotzdem.</div>
+        </button>
+      )}
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="text-xs text-muted-foreground">
+          {selected ? <>Auswahl: <span className="font-semibold text-foreground">{selected}</span></> : "Noch nichts ausgewählt"}
+        </div>
+        <Button onClick={onNext} disabled={!selected}>
+          Weiter <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Step 2: Date ---------------- */
+
+function StepDate({
+  date, setDate, onBack, onNext,
+}: {
+  date: Date | undefined;
+  setDate: (d: Date | undefined) => void;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-4">
+      <StepHeader n={2} title="Wann hast du gekauft?" subtitle="Wir holen automatisch den Schlusskurs dieses Tages. Wochenende oder Feiertag? Dann nehmen wir den nächsten Handelstag." />
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start text-left font-normal h-11",
+              !date && "text-muted-foreground",
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {date ? format(date, "EEEE, dd. MMMM yyyy", { locale: de }) : "Kaufdatum wählen"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(d) => { setDate(d); setOpen(false); }}
+            disabled={(d) => d > new Date() || d < new Date("1980-01-01")}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
+          />
+        </PopoverContent>
+      </Popover>
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <Button variant="ghost" onClick={onBack}>
+          <ChevronLeft className="mr-1 h-4 w-4" /> Zurück
+        </Button>
+        <Button onClick={onNext} disabled={!date}>
+          Weiter <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Step 3: Shares ---------------- */
+
+function StepShares({
+  shares, setShares, onBack, onSubmit, summary,
+}: {
+  shares: string;
+  setShares: (s: string) => void;
+  onBack: () => void;
+  onSubmit: () => void;
+  summary: { name: string; symbol: string; date: string };
+}) {
+  const valid = Number.isFinite(Number(shares.replace(",", "."))) && Number(shares.replace(",", ".")) > 0;
+  return (
+    <div className="space-y-4">
+      <StepHeader n={3} title="Wie viele Anteile hast du gekauft?" subtitle="Bruchstücke sind erlaubt (z. B. 2.5)." />
+
+      <input
+        autoFocus
+        inputMode="decimal"
+        value={shares}
+        onChange={(e) => setShares(e.target.value)}
+        placeholder="z. B. 10"
+        className="w-full rounded-md border border-input bg-background px-3 py-3 text-lg font-medium tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+      />
+
+      <div className="rounded-lg border border-border bg-background/40 p-3 text-xs space-y-1">
+        <div className="text-muted-foreground">Zusammenfassung deines Trades:</div>
+        <div><span className="text-muted-foreground">Wertpapier:</span> <span className="font-medium">{summary.name} ({summary.symbol})</span></div>
+        <div><span className="text-muted-foreground">Kaufdatum:</span> <span className="font-medium">{summary.date}</span></div>
+        {valid && <div><span className="text-muted-foreground">Anzahl:</span> <span className="font-medium">{shares}</span></div>}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <Button variant="ghost" onClick={onBack}>
+          <ChevronLeft className="mr-1 h-4 w-4" /> Zurück
+        </Button>
+        <Button onClick={onSubmit} disabled={!valid} size="lg">
+          <Microscope className="mr-2 h-4 w-4" /> Trade analysieren
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StepHeader({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
+  return (
+    <div>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Schritt {n} von 3</div>
+      <h2 className="mt-0.5 text-xl font-bold">{title}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+/* ---------------- Result ---------------- */
+
+function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () => void }) {
+  const positive = result.pnlAbs >= 0;
+  const sign = result.pnlAbs >= 0 ? "+" : "";
+  const heldLabel = result.heldYears > 0
+    ? `${result.heldYears} J. ${result.heldMonths - result.heldYears * 12} M.`
+    : result.heldMonths > 0
+      ? `${result.heldMonths} M. ${result.heldDays - result.heldMonths * 30} T.`
+      : `${result.heldDays} T.`;
+
+  return (
+    <div className="space-y-4">
+      {result.adjusted && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-500" />
+          <div>
+            <span className="font-medium">Hinweis:</span> Dein angefragtes Datum ({fmtDate(result.requestedDate)}) war ein Wochenende oder Feiertag. Wir haben den nächsten Handelstag verwendet: <span className="font-semibold">{fmtDate(result.resolvedDate)}</span>.
+          </div>
+        </div>
+      )}
+
+      {/* Hero P&L card */}
+      <div className={cn(
+        "rounded-2xl border p-5 shadow-sm",
+        positive ? "border-bull/40 bg-gradient-to-br from-bull/15 via-transparent to-transparent" : "border-bear/40 bg-gradient-to-br from-bear/15 via-transparent to-transparent",
+      )}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest opacity-80">
-              <v.Icon className="h-4 w-4" /> {v.tag}
-            </div>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight">{v.title}</h2>
-            <p className="mt-2 max-w-xl text-sm opacity-90">{v.body(rec, input.side === "long" ? "Long" : "Short")}</p>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{result.name} · {result.symbol}</div>
+            <div className="mt-1 text-sm text-muted-foreground">Gekauft am {fmtDate(result.resolvedDate)} · {result.shares} Anteile</div>
           </div>
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-widest opacity-70">P&amp;L</div>
-            <div className={`text-3xl font-bold tabular-nums ${rec.pnlPct >= 0 ? "text-bull" : "text-bear"}`}>
-              {pnlSign}{(rec.pnlPct * 100).toFixed(2)}%
+          {positive ? <TrendingUp className="h-8 w-8 text-bull" /> : <TrendingDown className="h-8 w-8 text-bear" />}
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Gewinn / Verlust</div>
+            <div className={cn("text-4xl font-bold tabular-nums", positive ? "text-bull" : "text-bear")}>
+              {sign}{formatMoney(result.pnlAbs)}
             </div>
-            <div className="mt-0.5 text-[10px] opacity-60">{heldDays} Tage gehalten</div>
+            <div className={cn("text-base font-semibold tabular-nums", positive ? "text-bull" : "text-bear")}>
+              {sign}{(result.pnlPct * 100).toFixed(2)}%
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Aktueller Gesamtwert</div>
+            <div className="text-4xl font-bold tabular-nums">{formatMoney(result.currentValue)}</div>
+            <div className="text-xs text-muted-foreground">Kaufwert: {formatMoney(result.totalCost)}</div>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FactCard label="Dein Trade">
-          <Row k={`${name} (${input.symbol})`} v={input.side === "long" ? "Long" : "Short"} />
-          <Row k="Entry" v={`${input.entryPrice.toFixed(2)} am ${fmtDate(input.entryDate)}`} />
-          <Row k="Exit" v={`${input.exitPrice.toFixed(2)} am ${fmtDate(input.exitDate)}`} />
-          <Row k="Markt-Close Entry" v={rec.entryClose.toFixed(2)} />
-          <Row k="Markt-Close Exit" v={rec.exitClose.toFixed(2)} />
-        </FactCard>
-
-        <FactCard label="Signal-Lage am Entry-Tag">
-          <Row k="Signal-Richtung" v={<VerdictChip v={rec.signalDirection} />} />
-          <Row k="Konfidenz" v={`${sig.confidence.toFixed(0)}%`} />
-          <Row k="Alignment" v={<AlignmentChip a={rec.alignment} />} />
-          <Row k="Score" v={`${sig.score > 0 ? "+" : ""}${sig.score}`} />
-        </FactCard>
+      {/* Numbers grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Stat label="Kaufpreis" value={formatPrice(result.entryClose)} />
+        <Stat label="Aktueller Kurs" value={formatPrice(result.currentClose)} />
+        <Stat label="Anzahl Anteile" value={String(result.shares)} />
+        <Stat label="Haltedauer" value={heldLabel} hint={`${result.heldDays} Tage`} />
       </div>
 
-      <FactCard label="Indikatoren — exakt rekonstruiert wie sie am Entry-Tag aussahen">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Stat label="Z-Score" value={ind.zScore.toFixed(2)} hint={Math.abs(ind.zScore) > 2 ? "extrem" : "normal"} />
-          <Stat label="RSI(14)" value={ind.rsi.toFixed(1)} hint={ind.rsi >= 70 ? "überkauft" : ind.rsi <= 30 ? "überverkauft" : "neutral"} />
-          <Stat label="MACD-Hist" value={ind.macd.histogram.toFixed(3)} hint={ind.macd.histogram > 0 ? "bullisch" : "bärisch"} />
-          <Stat label="Momentum 10T" value={`${(ind.momentum * 100).toFixed(1)}%`} hint={ind.momentum > 0 ? "aufwärts" : "abwärts"} />
-          <Stat label="SMA50" value={isNaN(ind.sma50) ? "—" : ind.sma50.toFixed(2)} hint="Trend mittel" />
-          <Stat label="SMA200" value={isNaN(ind.sma200) ? "—" : ind.sma200.toFixed(2)} hint="Trend lang" />
-          <Stat label="Vola (ann.)" value={`${(ind.volatility * 100).toFixed(0)}%`} hint={ind.volatility > 0.5 ? "hoch" : "normal"} />
-          <Stat label="Sharpe" value={ind.sharpe.toFixed(2)} hint={ind.sharpe > 1 ? "gut" : ind.sharpe < 0 ? "schwach" : "ok"} />
+      {/* Benchmark comparison */}
+      <Card icon={Scale} title="Performance-Vergleich seit Kauf">
+        <div className="space-y-2">
+          <BenchRow label={result.name} pct={result.pnlPct} highlight />
+          <BenchRow label="S&P 500" pct={result.benchmarks.sp500} />
+          <BenchRow label="DAX" pct={result.benchmarks.dax} />
+          <BenchRow label="MSCI World" pct={result.benchmarks.msciWorld} />
         </div>
-      </FactCard>
+      </Card>
 
-      <FactCard label="Was der Agent zum Entry-Zeitpunkt gesagt hätte">
-        <ul className="space-y-1.5 text-sm leading-relaxed">
-          {sig.rationale.slice(0, 6).map((r, i) => (
-            <li key={i} className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: "• " + r.replace(/\*\*(.+?)\*\*/g, "<strong class='text-foreground'>$1</strong>") }} />
-          ))}
-        </ul>
-      </FactCard>
+      {/* AI sections */}
+      {result.aiError ? (
+        <Card icon={AlertTriangle} title="Analyse nicht verfügbar">
+          <p className="text-sm text-muted-foreground">{result.aiError}</p>
+        </Card>
+      ) : (
+        <AiSections markdown={result.analysis} />
+      )}
+
+      <div className="flex items-center justify-center pt-2">
+        <Button onClick={onReset} variant="outline" size="lg">
+          <RotateCcw className="mr-2 h-4 w-4" /> Neue Analyse starten
+        </Button>
+      </div>
     </div>
   );
 }
 
-function FactCard({ label, children }: { label: string; children: React.ReactNode }) {
+function AiSections({ markdown }: { markdown: string }) {
+  const sections = parseSections(markdown);
+  const icons = {
+    "Zusammenfassung des Trades": BookOpen,
+    "Was damals passierte": Newspaper,
+    "Warum sich der Kurs seitdem so entwickelt hat": LineChart,
+    "Bewertung des Trades": Scale,
+    "Ausblick": Compass,
+  } as const;
+  const order = [
+    "Zusammenfassung des Trades",
+    "Was damals passierte",
+    "Warum sich der Kurs seitdem so entwickelt hat",
+    "Bewertung des Trades",
+    "Ausblick",
+  ];
+  const remaining = sections.filter((s) => !order.includes(s.title));
+  const ordered = [
+    ...order.map((t) => sections.find((s) => s.title === t)).filter(Boolean) as { title: string; body: string }[],
+    ...remaining,
+  ];
+  if (ordered.length === 0) {
+    return (
+      <Card icon={BookOpen} title="Analyse">
+        <p className="whitespace-pre-wrap text-sm text-foreground/90">{markdown}</p>
+      </Card>
+    );
+  }
+  return (
+    <div className="space-y-3">
+      {ordered.map((s) => {
+        const Icon = (icons as Record<string, typeof BookOpen>)[s.title] ?? BookOpen;
+        return (
+          <Card key={s.title} icon={Icon} title={s.title}>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{s.body.trim()}</p>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function parseSections(md: string): { title: string; body: string }[] {
+  if (!md) return [];
+  const lines = md.split("\n");
+  const out: { title: string; body: string }[] = [];
+  let curTitle: string | null = null;
+  let curBody: string[] = [];
+  for (const ln of lines) {
+    const m = ln.match(/^##\s+(.+)$/);
+    if (m) {
+      if (curTitle) out.push({ title: curTitle, body: curBody.join("\n") });
+      curTitle = m[1].trim();
+      curBody = [];
+    } else if (curTitle) {
+      curBody.push(ln);
+    }
+  }
+  if (curTitle) out.push({ title: curTitle, body: curBody.join("\n") });
+  return out;
+}
+
+function Card({ icon: Icon, title, children }: { icon: typeof BookOpen; title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
-      <div className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="space-y-1">{children}</div>
-    </div>
-  );
-}
-
-function Row({ k, v }: { k: React.ReactNode; v: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{k}</span>
-      <span className="font-medium text-foreground">{v}</span>
+      <div className="mb-2 flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+      <div>{children}</div>
     </div>
   );
 }
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-border bg-background/60 p-2.5">
+    <div className="rounded-xl border border-border bg-card/60 p-3">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-base font-bold tabular-nums">{value}</div>
+      <div className="text-xl font-bold tabular-nums">{value}</div>
       {hint && <div className="text-[10px] text-muted-foreground">{hint}</div>}
     </div>
   );
 }
 
-function VerdictChip({ v }: { v: "LONG" | "SHORT" | "NEUTRAL" }) {
-  if (v === "LONG") return <span className="rounded-md bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">LONG</span>;
-  if (v === "SHORT") return <span className="rounded-md bg-bear/15 px-2 py-0.5 text-xs font-semibold text-bear">SHORT</span>;
-  return <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">NEUTRAL</span>;
+function BenchRow({ label, pct, highlight }: { label: string; pct: number | null; highlight?: boolean }) {
+  if (pct == null) {
+    return (
+      <div className="flex items-center justify-between text-sm">
+        <span className={cn(highlight ? "font-semibold text-foreground" : "text-muted-foreground")}>{label}</span>
+        <span className="text-muted-foreground">n/a</span>
+      </div>
+    );
+  }
+  const pos = pct >= 0;
+  const pctNum = pct * 100;
+  const barWidth = Math.min(100, Math.abs(pctNum) * 2);
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm">
+        <span className={cn(highlight ? "font-semibold text-foreground" : "text-muted-foreground")}>{label}</span>
+        <span className={cn("font-semibold tabular-nums", pos ? "text-bull" : "text-bear")}>
+          {pos ? "+" : ""}{pctNum.toFixed(2)}%
+        </span>
+      </div>
+      <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full rounded-full", pos ? "bg-bull" : "bg-bear")}
+          style={{ width: `${barWidth}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
-function AlignmentChip({ a }: { a: "aligned" | "opposed" | "neutral" }) {
-  if (a === "aligned") return <span className="rounded-md bg-bull/15 px-2 py-0.5 text-xs font-semibold text-bull">übereinstimmend</span>;
-  if (a === "opposed") return <span className="rounded-md bg-bear/15 px-2 py-0.5 text-xs font-semibold text-bear">entgegengesetzt</span>;
-  return <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">kein klares Signal</span>;
-}
+/* ---------------- Helpers ---------------- */
 
 function fmtDate(s: string) {
   const d = new Date(s);
   return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-const VERDICT_META: Record<TradeVerdict, {
-  tag: string;
-  title: string;
-  Icon: typeof CheckCircle2;
-  ring: string;
-  bg: string;
-  body: (r: Reconstruction, side: string) => string;
-}> = {
-  systematic_win: {
-    tag: "Systematischer Treffer",
-    title: "Dieser Trade war kein Zufall.",
-    Icon: CheckCircle2,
-    ring: "border-bull/50",
-    bg: "bg-gradient-to-br from-bull/15 via-transparent to-transparent text-foreground",
-    body: (r, s) =>
-      `Am Entry-Tag deutete die Statistik mit ${r.signalAtEntry.confidence.toFixed(0)}% Konfidenz in Richtung ${s}. Dein Ergebnis ist die logische Folge mehrerer übereinstimmender Signale (Z-Score, RSI, MACD, Trend). Reproduzierbar — genau diese Konstellation darfst du wieder traden.`,
-  },
-  lucky_win: {
-    tag: "Glücktreffer",
-    title: "Gewonnen — aber gegen die Statistik.",
-    Icon: HelpCircle,
-    ring: "border-amber-400/50",
-    bg: "bg-gradient-to-br from-amber-400/15 via-transparent to-transparent text-foreground",
-    body: (r, s) =>
-      `Am Entry-Tag sprach die Signallage ${r.signalDirection === "NEUTRAL" ? "für gar nichts (kein klares Setup)" : `tendenziell gegen einen ${s}-Trade`}. Du hast trotzdem Geld verdient — Glück oder ein Faktor, den unser Modell nicht sieht (News, Insider, Story). Solche Trades systematisch zu wiederholen ist riskant.`,
-  },
-  systematic_loss: {
-    tag: "Faires Verlieren",
-    title: "Das Setup war gut — die Wahrscheinlichkeit hat verloren.",
-    Icon: XCircle,
-    ring: "border-bear/50",
-    bg: "bg-gradient-to-br from-bear/10 via-transparent to-transparent text-foreground",
-    body: (r, s) =>
-      `Die Signallage stützte deinen ${s}-Trade (Konfidenz ${r.signalAtEntry.confidence.toFixed(0)}%) — aber Märkte sind Wahrscheinlichkeiten, nicht Garantien. Ein Setup darf verlieren, ohne dass deine Methode falsch ist. Nicht überanpassen.`,
-  },
-  discipline_warning: {
-    tag: "Disziplin-Warnung",
-    title: "Gegen die Statistik getradet — und verloren.",
-    Icon: AlertTriangle,
-    ring: "border-bear/60",
-    bg: "bg-gradient-to-br from-bear/20 via-transparent to-transparent text-foreground",
-    body: (r, s) =>
-      `Am Entry-Tag warnte die Signallage ${r.signalDirection === "NEUTRAL" ? "vor unklaren Verhältnissen" : `explizit vor einem ${s}-Trade (Signal stand auf ${r.signalDirection})`}. Du bist gegen die Wahrscheinlichkeit gegangen — und das Ergebnis bestätigt das. Solche Trades sind die teuersten Gewohnheiten.`,
-  },
-  neutral_outcome: {
-    tag: "Wash",
-    title: "Im Rauschen verloren.",
-    Icon: HelpCircle,
-    ring: "border-border",
-    bg: "bg-card/60 text-foreground",
-    body: () => `Bewegung zu klein, um sie statistisch zu bewerten. Kein Erkenntnisgewinn — Gebühren wahrscheinlich die einzige reale Größe.`,
-  },
-};
+function formatMoney(x: number): string {
+  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(x);
+}
+
+function formatPrice(x: number): string {
+  return new Intl.NumberFormat("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
+}
+
+// touch unused imports to keep tree-shaking happy
+void findProduct;

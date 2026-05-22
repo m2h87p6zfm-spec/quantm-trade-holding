@@ -37,6 +37,7 @@ import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
+import { Route as ApiPublicExplainTradeRouteImport } from './routes/api/public/explain-trade'
 import { Route as ApiPublicExplainConceptRouteImport } from './routes/api/public/explain-concept'
 import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/cron-evaluate'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
@@ -184,6 +185,11 @@ const ApiPublicNewsSentimentRoute = ApiPublicNewsSentimentRouteImport.update({
   path: '/api/public/news-sentiment',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicExplainTradeRoute = ApiPublicExplainTradeRouteImport.update({
+  id: '/api/public/explain-trade',
+  path: '/api/public/explain-trade',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicExplainConceptRoute = ApiPublicExplainConceptRouteImport.update({
   id: '/api/public/explain-concept',
   path: '/api/public/explain-concept',
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
+  '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
+  '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
+  '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
+    | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
+    | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
+    | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
@@ -467,6 +479,7 @@ export interface RootRouteChildren {
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicCronEvaluateRoute: typeof ApiPublicCronEvaluateRoute
   ApiPublicExplainConceptRoute: typeof ApiPublicExplainConceptRoute
+  ApiPublicExplainTradeRoute: typeof ApiPublicExplainTradeRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
@@ -671,6 +684,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsSentimentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/explain-trade': {
+      id: '/api/public/explain-trade'
+      path: '/api/public/explain-trade'
+      fullPath: '/api/public/explain-trade'
+      preLoaderRoute: typeof ApiPublicExplainTradeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/explain-concept': {
       id: '/api/public/explain-concept'
       path: '/api/public/explain-concept'
@@ -747,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicCronEvaluateRoute: ApiPublicCronEvaluateRoute,
   ApiPublicExplainConceptRoute: ApiPublicExplainConceptRoute,
+  ApiPublicExplainTradeRoute: ApiPublicExplainTradeRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
