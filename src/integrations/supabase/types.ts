@@ -53,6 +53,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string | null
+          rating: string | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          rating?: string | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          rating?: string | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_learning_events: {
         Row: {
           after_belief: string
@@ -95,6 +122,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_market_news: {
+        Row: {
+          created_at: string
+          headline: string | null
+          id: string
+          impact_score: number | null
+          published_at: string | null
+          source: string | null
+          summary: string | null
+          symbol: string | null
+        }
+        Insert: {
+          created_at?: string
+          headline?: string | null
+          id?: string
+          impact_score?: number | null
+          published_at?: string | null
+          source?: string | null
+          summary?: string | null
+          symbol?: string | null
+        }
+        Update: {
+          created_at?: string
+          headline?: string | null
+          id?: string
+          impact_score?: number | null
+          published_at?: string | null
+          source?: string | null
+          summary?: string | null
+          symbol?: string | null
+        }
+        Relationships: []
+      }
       ai_memory: {
         Row: {
           content: string
@@ -102,6 +162,9 @@ export type Database = {
           id: string
           role: string
           session_id: string | null
+          summary: string | null
+          symbols: string[]
+          topics: string[]
           user_id: string
         }
         Insert: {
@@ -110,6 +173,9 @@ export type Database = {
           id?: string
           role: string
           session_id?: string | null
+          summary?: string | null
+          symbols?: string[]
+          topics?: string[]
           user_id: string
         }
         Update: {
@@ -118,6 +184,9 @@ export type Database = {
           id?: string
           role?: string
           session_id?: string | null
+          summary?: string | null
+          symbols?: string[]
+          topics?: string[]
           user_id?: string
         }
         Relationships: []
@@ -208,6 +277,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_quant_metrics: {
+        Row: {
+          created_at: string
+          ev_ebitda: number | null
+          id: string
+          intrinsic_value: number | null
+          margin_of_safety: number | null
+          pe_ratio: number | null
+          risk_score: number | null
+          symbol: string
+        }
+        Insert: {
+          created_at?: string
+          ev_ebitda?: number | null
+          id?: string
+          intrinsic_value?: number | null
+          margin_of_safety?: number | null
+          pe_ratio?: number | null
+          risk_score?: number | null
+          symbol: string
+        }
+        Update: {
+          created_at?: string
+          ev_ebitda?: number | null
+          id?: string
+          intrinsic_value?: number | null
+          margin_of_safety?: number | null
+          pe_ratio?: number | null
+          risk_score?: number | null
+          symbol?: string
+        }
+        Relationships: []
+      }
       ai_user_interactions: {
         Row: {
           action: string
@@ -262,6 +364,33 @@ export type Database = {
           negative_signals?: Json
           positive_signals?: Json
           preferences?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_user_profile: {
+        Row: {
+          complexity_level: string
+          investment_style: string
+          preferred_response_style: string
+          risk_level: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          complexity_level?: string
+          investment_style?: string
+          preferred_response_style?: string
+          risk_level?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          complexity_level?: string
+          investment_style?: string
+          preferred_response_style?: string
+          risk_level?: string
           updated_at?: string
           user_id?: string
         }
