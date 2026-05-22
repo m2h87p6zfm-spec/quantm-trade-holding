@@ -315,6 +315,7 @@ function AgentAnalysisView({
   scenarioTag,
   user,
   record,
+  userQuery,
 }: {
   symbol: string;
   decision: ReturnType<typeof buildDecision>;
@@ -324,6 +325,7 @@ function AgentAnalysisView({
   scenarioTag: string;
   user: ReturnType<typeof useAuth>["user"];
   record: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  userQuery: string;
 }) {
   useEffect(() => {
     if (!user) return;
