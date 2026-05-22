@@ -7,22 +7,54 @@ import { useWatchlistLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/produkte/")({ component: KatalogPage });
 
+type AssetKind = "all" | "stocks" | "etfs";
+
 function KatalogPage() {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState<string>("Alle");
+  const [kind, setKind] = useState<AssetKind>("all");
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
   const customSymbol = q.trim().toUpperCase().replace(/\s+/g, "");
   const exactMatch = listHasExactSymbol(searchProducts(q), customSymbol);
 
   let list = searchProducts(q);
+  if (kind === "stocks") list = list.filter((p) => p.sector !== "Index");
+  else if (kind === "etfs") list = list.filter((p) => p.sector === "Index");
   if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
+
+  const kindOptions: { v: AssetKind; label: string }[] = [
+    { v: "all", label: "Alle" },
+    { v: "stocks", label: "Aktien" },
+    { v: "etfs", label: "ETFs" },
+  ];
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Produktkatalog</h1>
           <p className="text-sm text-muted-foreground">{PRODUCTS.length}+ Vorlagen. Zusätzlich kannst du jeden vom Datenfeed unterstützten Ticker direkt eingeben.</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Finanzart">
+        {kindOptions.map((k) => {
+          const active = kind === k.v;
+          return (
+            <button
+              key={k.v}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setKind(k.v)}
+              className={`rounded-md border px-3 py-1.5 text-sm font-medium transition ${
+                active
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {k.label}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
