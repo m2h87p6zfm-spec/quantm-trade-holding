@@ -123,18 +123,18 @@ export function ProChart({
       {/* Header (Last + ΔTag + Hover-OHLC) */}
       <div className="flex flex-wrap items-end justify-between gap-2 pb-2 text-xs">
         <div className="flex items-baseline gap-3">
-          <div className="font-mono text-2xl font-bold tabular-nums">{last.toFixed(2)}</div>
-          <div className={`font-mono ${lastChange >= 0 ? "text-bull" : "text-bear"}`}>
-            {lastChange >= 0 ? "+" : ""}{lastChange.toFixed(2)} %
+          <div className="font-mono text-2xl font-bold tabular-nums">{formatNumber(last, axisDecimals(last))}</div>
+          <div className={`font-mono tabular-nums ${lastChange >= 0 ? "text-bull" : "text-bear"}`}>
+            {formatPercent(lastChange)}
           </div>
         </div>
         <div className="font-mono text-[11px] text-muted-foreground tabular-nums">
           {ohlc ? (
             <>
-              <span>O <b className="text-foreground">{ohlc.o.toFixed(2)}</b></span>
-              <span className="ml-2">H <b className="text-foreground">{ohlc.h.toFixed(2)}</b></span>
-              <span className="ml-2">L <b className="text-foreground">{ohlc.l.toFixed(2)}</b></span>
-              <span className="ml-2">C <b className="text-foreground">{ohlc.c.toFixed(2)}</b></span>
+              <span>O <b className="text-foreground">{formatNumber(ohlc.o, axisDecimals(ohlc.o))}</b></span>
+              <span className="ml-2">H <b className="text-foreground">{formatNumber(ohlc.h, axisDecimals(ohlc.h))}</b></span>
+              <span className="ml-2">L <b className="text-foreground">{formatNumber(ohlc.l, axisDecimals(ohlc.l))}</b></span>
+              <span className="ml-2">C <b className="text-foreground">{formatNumber(ohlc.c, axisDecimals(ohlc.c))}</b></span>
               <span className="ml-3 opacity-60">{new Date(ohlc.t * 1000).toLocaleDateString("de-DE")}</span>
             </>
           ) : (
