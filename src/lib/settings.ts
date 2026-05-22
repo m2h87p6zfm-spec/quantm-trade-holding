@@ -27,6 +27,12 @@ type StoredSettings = {
   experienceLevel: ExperienceLevel;
   notifBreakingNews: boolean;
   newsSources: Record<NewsSource, boolean>;
+  /** User's actual holdings (set during onboarding). Shown at top of watchlist. */
+  portfolioSymbols: string[];
+  /** Optional cost basis per symbol (USD) — placeholder until full trade tracking. */
+  costBasis: Record<string, number>;
+  /** Flipped to true once user completes the portfolio step. */
+  portfolioOnboarded: boolean;
 };
 
 export type Settings = Omit<StoredSettings, "watchlist"> & { watchlist: string[] };
@@ -40,6 +46,9 @@ const DEFAULT_LIST: Watchlist = {
 const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
   reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
 };
+
+/** Market Watch defaults — appended below the user's portfolio. */
+export const MARKET_WATCH_DEFAULTS = ["SPY", "QQQ", "DIA", "IWM"] as const;
 
 const DEFAULT: StoredSettings = {
   risk: "ausgewogen",
