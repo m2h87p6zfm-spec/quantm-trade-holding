@@ -94,18 +94,20 @@ function RootComponent() {
             <div className="flex flex-1 w-full min-w-0">
               <AppSidebar />
               <div className="flex flex-1 flex-col relative min-w-0">
-                <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl">
-                  <SidebarTrigger />
-                  <div className="ml-2 flex items-center gap-2 text-xs text-muted-foreground">
+                <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
+                  <SidebarTrigger className="shrink-0" />
+                  <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-bull tick-glow-bull" />
                     </span>
-                    <span className="font-medium hidden sm:inline">Yahoo Finance</span>
+                    <span className="font-medium hidden md:inline">Yahoo Finance</span>
                   </div>
-                  <div className="mx-4 hidden md:block h-5 w-px bg-border/60" />
-                  <MarketClock />
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="mx-4 hidden xl:block h-5 w-px bg-border/60 shrink-0" />
+                  <div className="hidden xl:flex min-w-0 flex-1 overflow-hidden">
+                    <MarketClock />
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 shrink-0">
                     <CommandPalette />
                     <AuthHeaderButton />
                   </div>
