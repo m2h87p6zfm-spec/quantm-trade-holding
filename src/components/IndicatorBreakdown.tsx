@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { IndicatorSet } from "@/lib/indicators";
 
 type Tone = "bull" | "bear" | "neutral";
