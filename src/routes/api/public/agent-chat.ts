@@ -421,6 +421,8 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               stream: true,
+              temperature: 0.9,
+              top_p: 0.95,
               reasoning: { effort: "medium" },
               messages: [
                 { role: "system", content: SYSTEM + addendum + profileAddendum + memoryAddendum + feedbackAddendum },
