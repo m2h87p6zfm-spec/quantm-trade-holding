@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Search } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo } from "react";
+import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check } from "lucide-react";
 import { usePortfolio, pnl, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
-import { PRODUCTS, findProduct } from "@/lib/products";
+import { findProduct } from "@/lib/products";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
 import { DisclaimerInline } from "@/components/Disclaimer";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
-import { PortfolioChat } from "@/components/PortfolioChat";
+import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/portfolio")({
@@ -92,48 +91,13 @@ function PositionRow({ pos, row, onRemove }: { pos: Position; row?: CockpitRow; 
 }
 
 function PortfolioPage() {
-  const { positions, add, remove } = usePortfolio();
-  const { max, atLimit, guard, tier } = usePortfolioLimit(positions.length);
-  const [symbolInput, setSymbolInput] = useState("");
-  const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
-  const [qty, setQty] = useState(10);
-  const [entry, setEntry] = useState(0);
-  const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
-  const [showPicker, setShowPicker] = useState(false);
+  const { positions, remove } = usePortfolio();
+  const { max, tier } = usePortfolioLimit(positions.length);
 
   const allSymbols = useMemo(() => Array.from(new Set(positions.map((p) => p.symbol))), [positions]);
   const rows = useCockpitData(allSymbols);
   const rowMap = useMemo(() => new Map(rows.map((r) => [r.symbol, r])), [rows]);
 
-  const selectedProduct = findProduct(selectedSymbol);
-  const selectedQuote = useQuote(selectedSymbol, 30_000);
-
-  const searchResults = useMemo(() => {
-    const q = symbolInput.trim().toLowerCase();
-    if (!q) return PRODUCTS.slice(0, 12);
-    return PRODUCTS.filter(
-      (p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
-    ).slice(0, 12);
-  }, [symbolInput]);
-
-  function selectSymbol(sym: string) {
-    setSelectedSymbol(sym);
-    setSymbolInput("");
-    setShowPicker(false);
-  }
-
-  function onAdd(e: React.FormEvent) {
-    e.preventDefault();
-    const finalEntry = entry > 0 ? entry : (selectedQuote.data?.c ?? 0);
-    if (!selectedSymbol || qty <= 0 || finalEntry <= 0) {
-      toast.error("Bitte Symbol, Menge und Einstandskurs angeben.");
-      return;
-    }
-    if (!guard()) return;
-    add({ symbol: selectedSymbol.toUpperCase(), qty, entry: finalEntry, side });
-    toast.success(`${side} ${qty} × ${selectedSymbol.toUpperCase()} @ ${finalEntry.toFixed(2)} hinzugefügt`);
-    setEntry(0);
-  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
@@ -153,101 +117,8 @@ function PortfolioPage() {
         </div>
       </div>
 
-      {/* Add Position Card */}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <div className="text-sm font-semibold">Neue Position hinzufügen</div>
-            <div className="text-[11px] text-muted-foreground">Suche nach Tickersymbol oder Firmenname</div>
-          </div>
-          {atLimit && tier === "free" && (
-            <a href="/preise" className="text-xs text-primary hover:underline font-medium">
-              Upgrade auf Pro →
-            </a>
-          )}
-        </div>
-
-        <form onSubmit={onAdd} className="grid gap-3 md:grid-cols-[2fr,90px,120px,120px,auto]">
-          {/* Symbol Picker */}
-          <div className="relative">
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Symbol / Firma</label>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                value={symbolInput || (showPicker ? "" : `${selectedSymbol} · ${selectedProduct?.name ?? ""}`)}
-                onChange={(e) => { setSymbolInput(e.target.value); setShowPicker(true); }}
-                onFocus={() => { setShowPicker(true); setSymbolInput(""); }}
-                onBlur={() => setTimeout(() => setShowPicker(false), 150)}
-                placeholder="z.B. AAPL, Apple, Vertiv…"
-                className="w-full rounded-md border border-input bg-background pl-8 pr-3 py-2 text-sm"
-              />
-            </div>
-            {showPicker && searchResults.length > 0 && (
-              <div className="absolute z-20 mt-1 w-full max-h-72 overflow-y-auto rounded-md border border-border bg-popover shadow-xl">
-                {searchResults.map((p) => (
-                  <button
-                    key={p.symbol}
-                    type="button"
-                    onMouseDown={(e) => { e.preventDefault(); selectSymbol(p.symbol); }}
-                    className="w-full flex items-center justify-between px-3 py-2 text-left text-xs hover:bg-accent/50"
-                  >
-                    <div className="min-w-0">
-                      <div className="font-semibold">{p.symbol}</div>
-                      <div className="text-[10px] text-muted-foreground truncate">{p.name}</div>
-                    </div>
-                    <span className="text-[9px] uppercase tracking-wider text-muted-foreground shrink-0">
-                      {p.sector} · {p.region}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Menge</label>
-            <input
-              type="number" min={0} step="any" value={qty}
-              onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              Einstand {selectedQuote.data?.c && entry === 0 && (
-                <span className="text-primary/80">(aktuell {selectedQuote.data.c.toFixed(2)})</span>
-              )}
-            </label>
-            <input
-              type="number" min={0} step="any" value={entry || ""}
-              onChange={(e) => setEntry(parseFloat(e.target.value) || 0)}
-              placeholder={selectedQuote.data?.c ? selectedQuote.data.c.toFixed(2) : "0.00"}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums"
-            />
-          </div>
-
-          <div>
-            <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Richtung</label>
-            <select
-              value={side}
-              onChange={(e) => setSide(e.target.value as "LONG" | "SHORT")}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="LONG">LONG</option>
-              <option value="SHORT">SHORT</option>
-            </select>
-          </div>
-
-          <button
-            type="submit" disabled={atLimit}
-            className="self-end inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Plus className="h-4 w-4" /> Hinzufügen
-          </button>
-        </form>
-      </div>
+      {/* Unified Command Center: manual add + AI assistant */}
+      <PortfolioCommandCenter />
 
       {/* Summary Stats */}
       <Summary positions={positions} rowMap={rowMap} />
@@ -289,7 +160,7 @@ function PortfolioPage() {
         </div>
       </div>
 
-      <PortfolioChat />
+      
 
       <DisclaimerInline />
     </div>
