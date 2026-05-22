@@ -321,6 +321,12 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
               entry = currentPrice;
             }
 
+            if (entryLooksLikePositionValue && !currentPrice) {
+              console.warn("portfolio-extract: dropped — Positionswert konnte nicht in Stückkurs umgerechnet werden", { symbol, entry, qty, currentValue });
+              dropped++;
+              continue;
+            }
+
             if (!symbol || !qty || qty <= 0 || !entry || entry <= 0) {
               console.warn("portfolio-extract: dropped position", { symbol, qty, entry, currentValue, currentPrice });
               dropped++;
