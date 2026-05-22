@@ -382,9 +382,7 @@ function AnalysePage() {
   const sendQuery = (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
-    const reply: Msg = sym
-      ? { role: "agent", text: "", symbol: sym }
-      : { role: "agent", text: "Kein bekanntes Symbol erkannt. Versuch's mit einem Ticker (AAPL, NVDA, SAP) oder einem Namen (Apple, Siemens, DAX)." };
+    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
     setMessages((m) => [...m, userMsg, reply]);
     setInput("");
   };
