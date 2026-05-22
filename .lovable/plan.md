@@ -1,62 +1,75 @@
-## Plan: Enhanced Onboarding + Professional News Hub
+# Overhaul: Onboarding, Subscription Gating, News Engine
 
-This is a large, multi-area change. Before implementing, I want to confirm scope and surface a couple of decisions so we don't waste cycles.
+A focused plan across 5 areas. Reuses existing infrastructure (`useSubscription`, `useSettings`, `SymbolSearch`, `ManageWatchlistDialog`, `news-sentiment`, `AgencyLogo`, `BreakingNewsTicker`) — no DB migrations, all preferences extend the existing `ta_settings` localStorage shape.
 
-### 1. Enhanced Onboarding (`src/routes/welcome.tsx` + `user_trading_profile`)
+## 1. Subscription Tier Limits
 
-Add three new steps to the existing onboarding wizard:
+Add a single helper `getPortfolioLimit()` in `src/lib/portfolio.ts`:
+- Free: 10 symbols
+- Pro (`pro_*`): 20 symbols
+- Elite/Ultimate (`elite_*`, `ultimate_*`): `Infinity`
 
-- **Portfolio Setup** — reuse `SymbolSearch` component; validate each ticker via the existing `/api/public/quote` endpoint before allowing "Next". Seed the user's default watchlist with these tickers (via `useSettings().addSymbols`).
-- **Base Currency** — USD / EUR / GBP / CHF selection cards → writes to `settings.currency`.
-- **Experience Level** — Beginner / Intermediate / Pro → stored on `user_trading_profile` (new column `experience_level`) and injected into the ARIA system prompt to tailor signal complexity.
-- **Notification Preferences** — toggle desktop toasts for Breaking News (uses existing `notif_breakout`, `notif_realtime` columns + new `notif_breaking_news` boolean).
+Reads from existing `useSubscription` hook. Used by onboarding, `SymbolSearch`, and the Edit Portfolio dialog.
 
-DB migration: add `experience_level text`, `base_currency text`, `notif_breaking_news boolean`, `news_sources jsonb` to `user_trading_profile`.
+## 2. Tiered Onboarding (`src/routes/welcome.tsx`)
 
-### 2. Professional News Hub (`src/routes/news.tsx`)
+Extend the existing welcome flow with two new steps inserted before final submit:
+- **Step: Build Your Portfolio** — embedded `SymbolSearch` + chip list. Live counter `X / LIMIT`. Blocks "Next" if zero. Tickers validated via existing `/api/public/search` + `/api/public/quote` round-trip (already wired in `SymbolSearch`).
+- **Step: Source Selection** — 5 toggle cards (Reuters/Bloomberg/CNBC/FT/Yahoo) writing to `settings.newsSources`.
 
-- Rewrite `src/routes/api/public/news-sentiment.ts` (or add a new `/api/public/news-feed.ts`) to fetch from Yahoo Finance RSS and filter publisher to the Tier-1 whitelist: **Reuters, Bloomberg, Yahoo Finance, CNBC, Financial Times**.
-- **Source toggles panel** on the news page — reads/writes `news_sources` from settings.
-- **"For You" section** — sorts/filters articles whose mentioned tickers intersect the user's active watchlist, scored by recency × match count. No extra AI call needed (matching is deterministic; cheap & fast).
-- Each card: agency logo (small inline SVG/emoji map), headline, timestamp, **clickable ticker chips** → `Link to="/produkte/$symbol"`.
+On finish, seed `watchlists[0].symbols` with the picked portfolio (replaces default seed) and mark `portfolioOnboarded: true` in settings so we know which symbols are "Holdings" vs Market Watch.
 
-### 3. Breaking News Live Ticker + Toasts
+## 3. Portfolio-vs-Watch Split + Edit Portfolio
 
-- New component `src/components/BreakingNewsTicker.tsx` mounted in `__root.tsx` — horizontally scrolling marquee at the top, polls `/api/public/news-feed?breaking=1` every 60s.
-- When a new "breaking" item arrives (priority publishers + keyword heuristic: "breaking", "halts", "surges", "plunges", "downgrades", earnings beats), fire a `sonner` toast with the headline + ticker chip. Gated by the user's `notif_breaking_news` setting.
+Extend `src/lib/settings.ts`:
+- Add `portfolioSymbols: string[]` (the user's holdings from onboarding) — separate from the general watchlist.
+- Add `costBasis: Record<string, number>` (placeholder, optional per-symbol).
+- New helpers: `setPortfolio(syms)`, `reorderPortfolio(syms)`, `addToPortfolio(sym)`, `removeFromPortfolio(sym)`.
 
-### 4. Portfolio-Centric Watchlist Table
+`src/routes/index.tsx` watchlist section becomes two stacked tables:
+- **My Portfolio** (top) — rows show `HOLDING` badge, Cost Basis col, Total G/L col (computed from current quote vs cost basis, placeholder $0 if not set). Drag-and-drop via existing `@dnd-kit` setup.
+- **Market Watch** (below) — remaining `watchlist` symbols not in portfolio, plus defaults (SPY, QQQ, DIA, IWM) if missing.
 
-- Widen watchlist rows in `src/routes/index.tsx`: add **Market Cap**, **Volume**, **Day Range (L–H)** columns. Volume + 52W already exist on the Quote type from the previous round; Market Cap requires extending `/api/public/quote.ts` to pull `marketCap` from Yahoo `quoteSummary`.
-- **Drag-and-drop reorder** in the "Manage Watchlist" modal — use lightweight `@dnd-kit/core` + `@dnd-kit/sortable` (already a common, small dep). Persist new order via `setWatchlistSymbols(id, ordered)` (new helper in `settings.ts`).
+New `EditPortfolioDialog` (clone of `ManageWatchlistDialog`, operates on `portfolioSymbols`) wired to a prominent "Portfolio bearbeiten" button at the top of the My Portfolio table. Enforces tier limit; surfaces Upgrade modal on overflow.
 
-### Files to create
-- `src/routes/api/public/news-feed.ts` — Yahoo RSS proxy with publisher whitelist + ticker extraction
-- `src/components/BreakingNewsTicker.tsx`
-- `src/components/AgencyLogo.tsx` — small mapping of publisher → inline mark
-- `src/components/NewsCard.tsx`
-- `src/components/SortableWatchlist.tsx` — dnd-kit wrapper
+## 4. AI "Alpha" News Summaries
 
-### Files to edit
-- `supabase/migrations/*` — new columns on `user_trading_profile`
-- `src/routes/welcome.tsx` — add three new steps
-- `src/routes/news.tsx` — full rewrite to Professional Newsroom
-- `src/routes/index.tsx` — add Market Cap / Volume / Day Range columns
-- `src/lib/settings.ts` — add `reorderActive(ids)` + `news_sources` field
-- `src/routes/api/public/quote.ts` — add `marketCap`
-- `src/lib/finnhub.ts` — extend `Quote` type
-- `src/routes/__root.tsx` — mount `<BreakingNewsTicker />`
-- `src/routes/api/public/agent-chat.ts` — inject experience level into ARIA prompt
+Server: extend `src/routes/api/public/news-sentiment.ts` to optionally call Lovable AI (`google/gemini-3-flash-preview`) with the headline + ticker, returning a 1-sentence `aiSummary` per item. Gated by request flag `withSummary: true` and capped to top 20 items to control cost. Failures fall back to no summary (non-blocking).
 
-### Open questions before I start
+Client (`src/routes/news.tsx`):
+- New "Personalisiert" (For You) tab uses portfolio symbols only and requests `withSummary: true`.
+- News card renders the summary line below the headline in a subtle accent box: *"Warum das für deine TSLA-Position zählt: …"*.
 
-1. **News data source** — Yahoo Finance doesn't expose a clean public news API with publisher filtering. The realistic options:
-   - **(a)** Yahoo RSS per ticker (`finance.yahoo.com/rss/headline?s=AAPL`) — free, reliable, but publisher attribution is messy.
-   - **(b)** Use **Firecrawl** (already connected) to search the Tier-1 publisher domains directly — much cleaner attribution, costs Firecrawl credits per refresh.
-   - **(c)** Add a dedicated news API key (Marketaux / NewsAPI / Benzinga) — best quality, requires a new secret.
+## 5. Breaking-News Toasts for Holdings
 
-2. **Drag-and-drop dependency** — OK to add `@dnd-kit/core` + `@dnd-kit/sortable` (~25KB gz, the de-facto standard)?
+`src/components/BreakingNewsTicker.tsx` already polls and toasts. Tighten the filter: only toast if at least one ticker in the item overlaps `portfolioSymbols` AND item is `breaking`. Use `sonner` `toast.error`/`toast.success` based on `sentiment`, with the agency logo and a "Chart öffnen" action linking to `/produkte/$symbol`.
 
-3. **Breaking News toasts** — should these be **session-only** (only fire while the tab is open) or do we need real **Web Push** notifications (requires service worker + VAPID keys + user permission flow)? Most "Bloomberg-style" implementations are session-only.
+## 6. Upsell Modal
 
-Confirm answers to those three and I'll ship it in one pass.
+New `src/components/UpgradeModal.tsx` (shadcn Dialog):
+- Triggered when adding an 11th symbol on Free / 21st on Pro.
+- Headline: "Erweitere dein Portfolio", list of benefits (more symbols, more sources, alpha summaries), CTA → `/preise`.
+
+Exposed via a tiny context/hook `useUpgradePrompt()` so `SymbolSearch`, onboarding, and `EditPortfolioDialog` can all call `promptUpgrade("portfolio_limit")`.
+
+## Technical Details
+
+**Files created:**
+- `src/components/EditPortfolioDialog.tsx`
+- `src/components/UpgradeModal.tsx`
+- `src/hooks/use-upgrade-prompt.tsx`
+
+**Files edited:**
+- `src/lib/settings.ts` — add `portfolioSymbols`, `costBasis`, `portfolioOnboarded`; new mutators.
+- `src/lib/portfolio.ts` — `getPortfolioLimit(tier)` + tier resolver.
+- `src/routes/welcome.tsx` — add 2 new steps, seed portfolio on finish.
+- `src/routes/index.tsx` — split watchlist into Portfolio (drag-reorder, Cost Basis, G/L) + Market Watch; "Portfolio bearbeiten" button.
+- `src/components/SymbolSearch.tsx` — accept `limit`/`current` props; call upgrade prompt on overflow.
+- `src/routes/news.tsx` — Personalisiert tab, AI summary rendering.
+- `src/routes/api/public/news-sentiment.ts` — optional `withSummary` via Lovable AI Gateway.
+- `src/components/BreakingNewsTicker.tsx` — portfolio overlap filter + sentiment-colored toasts.
+- `src/routes/__root.tsx` — mount `<UpgradeModal />` provider.
+
+**No DB migrations.** All portfolio/cost-basis state lives in `ta_settings` localStorage to keep this scope tight; we can promote to Supabase in a follow-up.
+
+**No new dependencies.** Reuses `@dnd-kit/*`, `sonner`, shadcn Dialog, Lovable AI Gateway (existing `LOVABLE_API_KEY`).
