@@ -7,9 +7,29 @@ type Settings = {
   minConfidence: number;
   watchlist: string[];
   lastSelected?: string;
+  currency: "USD" | "EUR" | "CHF";
+  density: "comfortable" | "compact";
+  soundOnAlert: boolean;
+  defaultTakeProfit: number;
+  defaultStopLoss: number;
+  language: "de" | "en";
+  hideLowConfidence: boolean;
 };
 
-const DEFAULT: Settings = { risk: "ausgewogen", theme: "dark", minConfidence: 60, watchlist: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"], lastSelected: undefined };
+const DEFAULT: Settings = {
+  risk: "ausgewogen",
+  theme: "dark",
+  minConfidence: 60,
+  watchlist: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"],
+  lastSelected: undefined,
+  currency: "USD",
+  density: "comfortable",
+  soundOnAlert: true,
+  defaultTakeProfit: 8,
+  defaultStopLoss: 4,
+  language: "de",
+  hideLowConfidence: true,
+};
 
 function read(): Settings {
   if (typeof window === "undefined") return DEFAULT;
