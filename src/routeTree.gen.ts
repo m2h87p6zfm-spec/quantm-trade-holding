@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PreiseRouteImport } from './routes/preise'
@@ -37,6 +38,11 @@ import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candle
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WarRoomRoute = WarRoomRouteImport.update({
   id: '/war-room',
   path: '/war-room',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
   '/war-room': typeof WarRoomRoute
+  '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/preise'
     | '/signale'
     | '/war-room'
+    | '/welcome'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -312,6 +322,7 @@ export interface FileRouteTypes {
     | '/preise'
     | '/signale'
     | '/war-room'
+    | '/welcome'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/preise'
     | '/signale'
     | '/war-room'
+    | '/welcome'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   PreiseRoute: typeof PreiseRoute
   SignaleRoute: typeof SignaleRoute
   WarRoomRoute: typeof WarRoomRoute
+  WelcomeRoute: typeof WelcomeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
@@ -384,6 +397,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/war-room': {
       id: '/war-room'
       path: '/war-room'
@@ -595,6 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   PreiseRoute: PreiseRoute,
   SignaleRoute: SignaleRoute,
   WarRoomRoute: WarRoomRoute,
+  WelcomeRoute: WelcomeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
