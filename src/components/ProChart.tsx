@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
+import { Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
 
