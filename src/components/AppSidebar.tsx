@@ -37,7 +37,9 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { tier } = useSubscription();
   const isActive = (url: string) => (url === "/" ? path === "/" : path.startsWith(url));
+  const isLocked = (item: NavItem) => !!item.feature && !tierAllows(tier, FEATURE_TIERS[item.feature]);
 
   return (
     <Sidebar collapsible="icon">
@@ -68,19 +70,23 @@ export function AppSidebar() {
               <SidebarMenu>
                 {quantCore.map((item) => {
                   const active = isActive(item.url);
+                  const locked = isLocked(item);
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
-                        tooltip={item.title}
+                        tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}
                         className={active ? "bg-primary/15 text-primary hover:bg-primary/20 data-[active=true]:bg-primary/15" : "hover:bg-primary/[0.08]"}
                       >
                         <Link to={item.url} className="flex items-center gap-2.5">
                           <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-primary/70"}`} />
                           {!collapsed && (
-                            <div className="flex min-w-0 flex-col leading-tight">
-                              <span className="truncate text-sm font-medium">{item.title}</span>
+                            <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                              <span className="truncate text-sm font-medium flex items-center gap-1.5">
+                                {item.title}
+                                {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                              </span>
                               <span className="truncate text-[10px] text-muted-foreground">{item.desc}</span>
                             </div>
                           )}
@@ -98,16 +104,20 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Märkte</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {markets.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {markets.map((item) => {
+                const locked = isLocked(item);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -116,19 +126,24 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trading</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {trading.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {trading.map((item) => {
+                const locked = isLocked(item);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">System</SidebarGroupLabel>
