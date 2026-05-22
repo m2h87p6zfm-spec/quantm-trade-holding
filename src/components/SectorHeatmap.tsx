@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Flame } from "lucide-react";
 import { findProduct } from "@/lib/products";
+import { ExplainAiButton } from "@/components/ExplainAiButton";
 
 type Cell = { symbol: string; change: number; price: number };
 
