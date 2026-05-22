@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, Send, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
+import { FeedbackButtons } from "@/components/FeedbackButtons";
 
 export const Route = createFileRoute("/agent")({
   component: AgentPage,
