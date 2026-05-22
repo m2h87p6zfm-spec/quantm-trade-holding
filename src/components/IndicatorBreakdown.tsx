@@ -99,6 +99,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "bollinger", rawValue: { price: p, lower: lo, upper: hi },
     });
   }
 
