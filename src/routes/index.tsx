@@ -197,6 +197,10 @@ function Cockpit() {
           <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
             <SectorHeatmap cells={heatmapCells} />
           </div>
+
+          <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
+            <WatchlistSignalsPanel />
+          </div>
         </div>
       </div>
       <ManageWatchlistDialog open={manageOpen} onOpenChange={setManageOpen} />
