@@ -174,6 +174,27 @@ export type Database = {
           },
         ]
       }
+      analysis_credit_usage: {
+        Row: {
+          id: string
+          symbol: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          symbol: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          symbol?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

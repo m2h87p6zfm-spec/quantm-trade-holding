@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock } from "lucide-react";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
@@ -14,7 +15,11 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
+import { consumeAnalysisCredit } from "@/lib/credits.functions";
+import { creditLabel } from "@/lib/credits";
+import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
+
 
 
 
@@ -53,10 +58,88 @@ function extractSymbol(q: string): string | null {
   return null;
 }
 
+type CreditState =
+  | { phase: "checking" }
+  | { phase: "anon" }
+  | { phase: "blocked"; tier: string; limit: number; used: number }
+  | { phase: "ok" };
+
 function AgentResponse({ symbol }: { symbol: string }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
+  const { user } = useAuth();
+  const consume = useServerFn(consumeAnalysisCredit);
+  const record = useServerFn(recordPrediction);
+  const queryClient = useQueryClient();
+
+  const [credit, setCredit] = useState<CreditState>({ phase: "checking" });
+
+  // Credit pro Symbol-Analyse verbrauchen (1× pro Mount)
+  useEffect(() => {
+    if (!user) {
+      setCredit({ phase: "anon" });
+      return;
+    }
+    let alive = true;
+    setCredit({ phase: "checking" });
+    consume({ data: { symbol } })
+      .then((r) => {
+        if (!alive) return;
+        queryClient.invalidateQueries({ queryKey: ["analysis-credits"] });
+        if (r.allowed) setCredit({ phase: "ok" });
+        else setCredit({ phase: "blocked", tier: r.tier, limit: r.limit, used: r.used });
+      })
+      .catch(() => alive && setCredit({ phase: "ok" })); // bei Netzwerkfehler nicht hart blocken
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbol, user?.id]);
+
+  if (credit.phase === "anon") {
+    return (
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+        <div className="flex items-center gap-2 font-semibold text-foreground">
+          <Lock className="h-4 w-4 text-primary" />
+          Login für die Analyse erforderlich
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Jeder Plan bekommt monatlich eigene Analyse-Credits. Logge dich ein, um loszulegen — Free startet mit 3 gratis Analysen.
+        </p>
+        <Link
+          to="/login"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Einloggen
+        </Link>
+      </div>
+    );
+  }
+
+  if (credit.phase === "checking") {
+    return <div className="text-sm text-muted-foreground">Prüfe Credits…</div>;
+  }
+
+  if (credit.phase === "blocked") {
+    return (
+      <div className="rounded-xl border border-amber-400/40 bg-amber-400/5 p-4 text-sm">
+        <div className="flex items-center gap-2 font-semibold text-amber-300">
+          <Coins className="h-4 w-4" />
+          Credits aufgebraucht ({credit.used} / {credit.limit})
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Du hast dein monatliches Analyse-Limit im <span className="font-medium text-foreground">{creditLabel(credit.tier as "free" | "pro" | "elite")}</span>-Plan erreicht. Upgrade für mehr — Pro: 50/Monat, Elite: 250/Monat.
+        </p>
+        <Link
+          to="/preise"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Plan upgraden
+        </Link>
+      </div>
+    );
+  }
 
   if (candles.isLoading && !candles.data) return <div className="text-sm text-muted-foreground">Lade Echtzeit-Daten für {symbol}…</div>;
   if (!candles.data) {
@@ -73,12 +156,44 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
   const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
-  const record = useServerFn(recordPrediction);
 
-  const { user } = useAuth();
+  // KI-Tracking läuft weiterhin nur für eingeloggte Nutzer
+  // (siehe useEffect unten)
+  return (
+    <AgentAnalysisView
+      symbol={symbol}
+      decision={decision}
+      sig={sig}
+      indicators={indicators}
+      regime={regime}
+      scenarioTag={scenarioTag}
+      user={user}
+      record={record}
+    />
+  );
+}
 
+function AgentAnalysisView({
+  symbol,
+  decision,
+  sig,
+  indicators,
+  regime,
+  scenarioTag,
+  user,
+  record,
+}: {
+  symbol: string;
+  decision: ReturnType<typeof buildDecision>;
+  sig: ReturnType<typeof scoreIndicators>;
+  indicators: NonNullable<ReturnType<typeof useAnalysis>["indicators"]>;
+  regime: ReturnType<typeof detectRegime>;
+  scenarioTag: string;
+  user: ReturnType<typeof useAuth>["user"];
+  record: ReturnType<typeof useServerFn<typeof recordPrediction>>;
+}) {
   useEffect(() => {
-    if (!user) return; // Nur eingeloggte Nutzer haben einen Auth-Token für die Server-Fn
+    if (!user) return;
     record({
       data: {
         symbol,
@@ -93,7 +208,6 @@ function AgentResponse({ symbol }: { symbol: string }) {
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, scenarioTag, regime, sig.verdict, user?.id]);
-
 
   return (
     <div className="space-y-4">
@@ -117,6 +231,7 @@ function AgentResponse({ symbol }: { symbol: string }) {
     </div>
   );
 }
+
 
 
 
@@ -163,13 +278,15 @@ function AnalysePage() {
           </div>
         </div>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight">Analyse-Agent</h1>
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
               LIVE
             </span>
+            <AnalysisCreditBadge />
           </div>
+
           <p className="text-sm text-muted-foreground">Dein statistischer Wall-Street-Broker. Klare Urteile, datengetrieben.</p>
         </div>
       </div>
