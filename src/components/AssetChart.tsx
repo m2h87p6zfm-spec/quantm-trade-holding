@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
+import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
 
 /**
  * Premium interactive chart with timeframe switcher.
@@ -82,8 +83,8 @@ export const AssetChart = memo(function AssetChart({
 
   const first = data[0]?.close ?? 0;
   const last = data[data.length - 1]?.close ?? 0;
-  const changeAbs = last - first;
-  const changePct = first ? (changeAbs / first) * 100 : 0;
+  const changeAbs = absChange(first, last);
+  const changePct = pctChange(first, last);
   const up = changeAbs >= 0;
 
   const { min, max } = useMemo(() => {
@@ -94,11 +95,8 @@ export const AssetChart = memo(function AssetChart({
     return { min: mn - pad, max: mx + pad };
   }, [data]);
 
-  const fmtPrice = useCallback((n: number) => {
-    const abs = Math.abs(n);
-    const digits = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 4;
-    return `${currency}${n.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
-  }, [currency]);
+  const fmtPrice = useCallback((n: number) => formatPrice(n, currency), [currency]);
+  const fmtAxis = useCallback((n: number) => formatPrice(n, currency, axisDecimals(n)), [currency]);
 
   const xTickFmt = useCallback((ms: number) => {
     const d = new Date(ms);
@@ -108,7 +106,7 @@ export const AssetChart = memo(function AssetChart({
     return d.toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
   }, [tf]);
 
-  const lineColor = up ? "hsl(var(--bull))" : "hsl(var(--bear))";
+  const lineColor = up ? "var(--bull)" : "var(--bear)";
   const gradientId = `assetChartGrad-${up ? "up" : "dn"}-${symbol.replace(/[^a-z0-9]/gi, "")}-${tf}`;
 
   const perfLabel = {
@@ -126,7 +124,7 @@ export const AssetChart = memo(function AssetChart({
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-sm tabular-nums">
             <span className={up ? "text-bull" : "text-bear"}>
-              {up ? "+" : ""}{changeAbs.toFixed(Math.abs(last) >= 100 ? 1 : 2)} ({up ? "+" : ""}{changePct.toFixed(2)} %)
+              {formatSignedAbs(changeAbs, axisDecimals(last))} ({formatPercent(changePct)})
             </span>
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{perfLabel}</span>
             {q.data?.stale && (
@@ -157,29 +155,29 @@ export const AssetChart = memo(function AssetChart({
                   <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 6" vertical={false} opacity={0.4} />
+              <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="2 6" vertical={false} />
               <XAxis
                 dataKey="t"
                 type="number"
                 domain={["dataMin", "dataMax"]}
                 tickFormatter={xTickFmt}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
+                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={48}
               />
               <YAxis
                 domain={[min, max]}
-                tickFormatter={(v) => fmtPrice(v)}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
+                tickFormatter={fmtAxis}
+                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
                 tickLine={false}
                 axisLine={false}
-                width={64}
+                width={72}
                 orientation="right"
               />
-              <ReferenceLine y={first} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" opacity={0.4} />
+              <ReferenceLine y={first} stroke="var(--chart-axis)" strokeDasharray="2 4" strokeOpacity={0.5} />
               <Tooltip
-                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "2 3", strokeOpacity: 0.6 }}
+                cursor={{ stroke: "var(--chart-axis)", strokeDasharray: "2 3", strokeOpacity: 0.8 }}
                 content={(props: any) => (
                   <ChartTooltip
                     active={props.active}
@@ -199,7 +197,7 @@ export const AssetChart = memo(function AssetChart({
                 isAnimationActive
                 animationDuration={420}
                 animationEasing="ease-out"
-                activeDot={{ r: 3, stroke: lineColor, strokeWidth: 1.5, fill: "hsl(var(--background))" }}
+                activeDot={{ r: 3, stroke: lineColor, strokeWidth: 1.5, fill: "var(--background)" }}
                 dot={false}
               />
             </AreaChart>
@@ -231,7 +229,7 @@ const TimeframeBar = memo(function TimeframeBar({
             className={[
               "relative h-7 min-w-[34px] px-2 rounded-md font-mono text-[11px] font-semibold tabular-nums transition-all duration-200",
               active
-                ? "bg-primary/15 text-foreground ring-1 ring-primary/40 shadow-[0_0_12px_-2px_hsl(var(--primary)/0.55)]"
+                ? "bg-primary/15 text-foreground ring-1 ring-primary/40 shadow-[0_0_14px_-2px_color-mix(in_oklab,var(--primary)_55%,transparent)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/40",
             ].join(" ")}
           >
@@ -258,41 +256,37 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
-  const pct = base ? ((p.close - base) / base) * 100 : 0;
+  const pct = pctChange(base, p.close);
+  const abs = absChange(base, p.close);
   const up = pct >= 0;
   const d = new Date(p.t);
   const dateStr =
-    tf === "1D"
+    tf === "1D" || tf === "1W" || tf === "1M"
       ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-      : tf === "1W" || tf === "1M"
-        ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-        : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
-
-  const fmt = (n: number) =>
-    `${currency}${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <div className="rounded-lg border border-border/70 bg-popover/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{dateStr}</div>
-      <div className="mt-1 font-mono text-base font-semibold tabular-nums text-foreground">{fmt(p.close)}</div>
-      <div className={`mt-0.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-        {up ? "+" : ""}{pct.toFixed(2)} % seit Periodenstart
+    <div className="min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
+      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
+      <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
+        {formatPrice(p.close, currency)}
       </div>
+      <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
+        <span>{formatSignedAbs(abs, axisDecimals(p.close))}</span>
+        <span>·</span>
+        <span>{formatPercent(pct)}</span>
+      </div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">seit Periodenstart</div>
       {p.volume > 0 && (
-        <div className="mt-1 font-mono text-[10px] text-muted-foreground tabular-nums">
-          Vol {formatCompact(p.volume)}
+        <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+          <span className="uppercase tracking-wider">Vol</span>
+          <span className="text-foreground/80">{formatCompact(p.volume, 2)}</span>
         </div>
       )}
     </div>
   );
 }
 
-function formatCompact(n: number) {
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + "k";
-  return n.toString();
-}
 
 /* prefetch hook (optional) */
 export function useAssetChartPrefetch(_symbol: string) {
