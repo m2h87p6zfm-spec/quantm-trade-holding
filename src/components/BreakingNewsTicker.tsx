@@ -84,7 +84,7 @@ export function BreakingNewsTicker() {
           <Zap className="h-3 w-3 animate-pulse" /> Live
         </div>
         <div className="relative flex-1 overflow-hidden">
-          <div className="flex animate-marquee whitespace-nowrap py-1.5 will-change-transform">
+          <div className="flex animate-ticker whitespace-nowrap py-1.5 will-change-transform" style={{ animationDuration: "90s" }}>
             {[...marquee, ...marquee].map((it, i) => (
               <a
                 key={`${it.uuid}-${i}`}
