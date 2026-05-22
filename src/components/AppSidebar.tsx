@@ -45,10 +45,10 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-3.5">
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_22px_-4px_hsl(var(--primary)/0.5)]">
-            <ApexLogo className="h-8 w-8" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-bull animate-pulse ring-2 ring-sidebar" />
+        <div className={`flex items-center gap-3 ${collapsed ? "justify-center px-0 py-2" : "px-2 py-3.5"}`}>
+          <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_22px_-4px_hsl(var(--primary)/0.5)] ${collapsed ? "h-9 w-9" : "h-12 w-12"}`}>
+            <ApexLogo className={collapsed ? "h-6 w-6" : "h-8 w-8"} />
+            <span className={`absolute -bottom-0.5 -right-0.5 rounded-full bg-bull animate-pulse ring-2 ring-sidebar ${collapsed ? "h-2 w-2" : "h-2.5 w-2.5"}`} />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
