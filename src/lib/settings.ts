@@ -45,6 +45,7 @@ const DEFAULT_LIST: Watchlist = {
 
 const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
   reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
+  marketwatch: false, investing: false, wsj: false,
 };
 
 /** Market Watch defaults — appended below the user's portfolio. */
