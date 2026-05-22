@@ -164,8 +164,6 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
                 preferences: prof?.preferences ?? {},
                 updated_at: new Date().toISOString(),
               });
-          }
-
 
             // Verdichte aktualisiertes Profil in einen Memory-Eintrag,
             // damit jede künftige Antwort die Präferenzen direkt aus ai_memory liest.
