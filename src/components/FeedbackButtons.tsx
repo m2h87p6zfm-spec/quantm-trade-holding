@@ -14,6 +14,7 @@ const REASONS_NEG = [
   "Zu wenig Tiefe",
   "Schlechte Struktur",
   "Zu lang",
+  "Zu generisch",
   "Nicht relevant",
 ];
 

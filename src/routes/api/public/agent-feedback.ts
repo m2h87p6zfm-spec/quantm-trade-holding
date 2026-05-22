@@ -10,6 +10,54 @@ type Body = {
   reason?: string;
 };
 
+// Map UI reason strings to canonical failure categories (used as negative signal keys)
+const REASON_CATEGORY: Record<string, string> = {
+  "Zu unklar": "fail:unclear",
+  "Falsche Annahme": "fail:wrong_assumption",
+  "Zu wenig Tiefe": "fail:too_shallow",
+  "Schlechte Struktur": "fail:bad_structure",
+  "Zu lang": "fail:too_long",
+  "Nicht relevant": "fail:irrelevant",
+  "Zu generisch": "fail:generic",
+};
+
+// Extract signal features from an assistant message
+function extractFeatures(text: string): string[] {
+  const feats: string[] = [];
+  const len = text.length;
+  const lenBucket = len < 600 ? "short" : len < 1800 ? "medium" : "long";
+  feats.push(`length:${lenBucket}`);
+
+  // Structure
+  if (/^#{1,3}\s/m.test(text)) feats.push("structure:headings");
+  if (/^[-*]\s/m.test(text)) feats.push("structure:bullets");
+  if (/\|.+\|/.test(text)) feats.push("structure:tables");
+  if (/^\d+\.\s/m.test(text)) feats.push("structure:numbered");
+  if (text.split(/\n\n+/).length <= 3 && !/^[-*#]/m.test(text)) feats.push("structure:prose");
+
+  // Depth signals
+  const numericDensity = (text.match(/\d+([.,]\d+)?\s*%?/g) ?? []).length / Math.max(1, len / 200);
+  if (numericDensity > 2) feats.push("depth:quantitative");
+  if (/\b(DCF|P\/E|EBITDA|FCF|ROIC|Multiple|Margin of Safety|Graham)\b/i.test(text)) feats.push("depth:valuation");
+  if (/\b(RSI|MACD|EMA|SMA|Support|Resistance|Breakout)\b/i.test(text)) feats.push("depth:technical");
+  if (/\b(Fed|EZB|Zinsen|Inflation|Makro|Geopolitik|Liquidität)\b/i.test(text)) feats.push("depth:macro");
+  if (/\b(Quelle|Source|laut|gemäß)\b/i.test(text) || /\[\d+\]/.test(text)) feats.push("depth:sourced");
+
+  // Style cues — pulled from user prompt would be better, but assistant tone reflects what worked
+  if (/\b(langfristig|Buy.?and.?Hold|Dividende|Value)\b/i.test(text)) feats.push("style:long_term");
+  if (/\b(Swing|Momentum|Trend|kurzfristig)\b/i.test(text)) feats.push("style:active");
+  if (/\b(spekulat|Hebel|Optionen|aggress)/i.test(text)) feats.push("style:aggressive");
+
+  // Complexity
+  const avgSentence = text.split(/[.!?]\s/).reduce((s, x) => s + x.length, 0) / Math.max(1, text.split(/[.!?]\s/).length);
+  if (avgSentence > 140) feats.push("complexity:high");
+  else if (avgSentence < 70) feats.push("complexity:low");
+  else feats.push("complexity:medium");
+
+  return feats;
+}
+
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -68,21 +116,27 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
               .eq("user_id", user_id)
               .maybeSingle();
 
-            const pos = (prof?.positive_signals as Record<string, number>) ?? {};
-            const neg = (prof?.negative_signals as Record<string, number>) ?? {};
+            const pos = { ...((prof?.positive_signals as Record<string, number>) ?? {}) };
+            const neg = { ...((prof?.negative_signals as Record<string, number>) ?? {}) };
             const target = body.rating === 1 ? pos : neg;
 
-            // crude pattern signals
-            const lenBucket =
-              assistant.length < 600 ? "short" : assistant.length < 1800 ? "medium" : "long";
-            const hasTables = /\|.+\|/.test(assistant);
-            const hasNumbers = /\d+([.,]\d+)?\s*%/.test(assistant);
-            const hasBullets = /^[-*]\s/m.test(assistant);
+            // Extract & weight all features
+            for (const feat of extractFeatures(assistant)) {
+              target[feat] = (target[feat] ?? 0) + 1;
+            }
 
-            target[`length:${lenBucket}`] = (target[`length:${lenBucket}`] ?? 0) + 1;
-            if (hasTables) target["format:tables"] = (target["format:tables"] ?? 0) + 1;
-            if (hasNumbers) target["format:quantitative"] = (target["format:quantitative"] ?? 0) + 1;
-            if (hasBullets) target["format:bullets"] = (target["format:bullets"] ?? 0) + 1;
+            // Categorize explicit failure reason
+            if (body.rating === -1 && body.reason) {
+              const cat = REASON_CATEGORY[body.reason.trim()] ?? "fail:other";
+              neg[cat] = (neg[cat] ?? 0) + 2; // weighted heavier — explicit user signal
+            }
+
+            // Decay opposite side slightly to keep profile responsive
+            const opposite = body.rating === 1 ? neg : pos;
+            for (const k of Object.keys(opposite)) {
+              opposite[k] = Math.max(0, opposite[k] - 0.25);
+              if (opposite[k] === 0) delete opposite[k];
+            }
 
             await supabaseAdmin
               .from("ai_user_preferences")
@@ -92,8 +146,10 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
                 negative_signals: neg,
                 feedback_count: (prof?.feedback_count ?? 0) + 1,
                 preferences: prof?.preferences ?? {},
+                updated_at: new Date().toISOString(),
               });
           }
+
 
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,

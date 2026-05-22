@@ -26,6 +26,24 @@ function topKeys(obj: Record<string, number>, n: number): string[] {
     .map(([k]) => k);
 }
 
+// Pick dominant value from a category (e.g. length:short vs length:long)
+function dominant(signals: Record<string, number>, category: string): string | null {
+  const entries = Object.entries(signals).filter(([k]) => k.startsWith(`${category}:`));
+  if (entries.length === 0) return null;
+  entries.sort((a, b) => b[1] - a[1]);
+  return entries[0][0].split(":")[1];
+}
+
+const FAIL_LABEL: Record<string, string> = {
+  "fail:unclear": "war zu unklar",
+  "fail:wrong_assumption": "enthielt falsche Annahmen",
+  "fail:too_shallow": "war zu oberflächlich",
+  "fail:bad_structure": "war schlecht strukturiert",
+  "fail:too_long": "war zu lang",
+  "fail:irrelevant": "war nicht relevant",
+  "fail:generic": "war zu generisch",
+};
+
 async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
   if (!userId) return "";
   const { data } = await supabaseAdmin
@@ -33,12 +51,50 @@ async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
     .select("positive_signals, negative_signals, feedback_count")
     .eq("user_id", userId)
     .maybeSingle();
-  if (!data || (data.feedback_count ?? 0) < 2) return "";
-  const pos = topKeys((data.positive_signals as Record<string, number>) ?? {}, 4);
-  const neg = topKeys((data.negative_signals as Record<string, number>) ?? {}, 4);
-  if (pos.length === 0 && neg.length === 0) return "";
-  return `\n\n## ADAPTIVE USER PROFILE (aus ${data.feedback_count} Feedback-Signalen)\nBevorzugte Muster (verstärken, falls fachlich passend): ${pos.join(", ") || "—"}\nAbgelehnte Muster (vermeiden, falls möglich, ohne Genauigkeit zu opfern): ${neg.join(", ") || "—"}\nWICHTIG: Nutzerpräferenzen NIE über mathematische Korrektheit, faktische Genauigkeit oder Risikotransparenz stellen.`;
+  if (!data || (data.feedback_count ?? 0) < 1) return "";
+
+  const pos = (data.positive_signals as Record<string, number>) ?? {};
+  const neg = (data.negative_signals as Record<string, number>) ?? {};
+
+  // Derive concrete preferences from dominant positive signals
+  const preferredLength = dominant(pos, "length");
+  const preferredStructure = dominant(pos, "structure");
+  const preferredDepth = dominant(pos, "depth");
+  const preferredStyle = dominant(pos, "style");
+  const preferredComplexity = dominant(pos, "complexity");
+
+  // Top negative patterns (avoid)
+  const negTop = topKeys(neg, 5);
+  const failReasons = negTop.filter((k) => k.startsWith("fail:")).map((k) => FAIL_LABEL[k] ?? k);
+  const negPatterns = negTop.filter((k) => !k.startsWith("fail:"));
+
+  const lines: string[] = [];
+  lines.push(`## ADAPTIVE USER PROFILE (aus ${data.feedback_count} Feedback-Signalen)`);
+  lines.push("Diese Präferenzen wurden aus echtem Nutzer-Feedback gelernt. Wende sie auf jede Antwort an, **bevor** du sie generierst.");
+  lines.push("");
+  lines.push("### Bestätigte Präferenzen (verstärken):");
+  if (preferredLength) lines.push(`- **Länge**: ${preferredLength === "short" ? "kurz (<600 Zeichen)" : preferredLength === "medium" ? "mittel (600–1800 Zeichen)" : "ausführlich (>1800 Zeichen)"}`);
+  if (preferredStructure) lines.push(`- **Struktur**: ${preferredStructure === "tables" ? "Tabellen für Vergleiche" : preferredStructure === "bullets" ? "Bullet-Listen" : preferredStructure === "headings" ? "klare Überschriften" : preferredStructure === "numbered" ? "nummerierte Schritte" : "fließender Text"}`);
+  if (preferredDepth) lines.push(`- **Analyse-Tiefe**: ${preferredDepth === "quantitative" ? "stark quantitativ, viele Zahlen" : preferredDepth === "valuation" ? "Bewertungs-fokussiert (DCF, P/E, Multiples)" : preferredDepth === "technical" ? "technische Analyse (RSI, MACD, Trend)" : preferredDepth === "macro" ? "Makro-Kontext (Zinsen, Inflation)" : "quellen-gestützt mit Zitaten"}`);
+  if (preferredStyle) lines.push(`- **Investment-Stil**: ${preferredStyle === "long_term" ? "langfristig / Value / Buy-and-Hold" : preferredStyle === "active" ? "aktiv / Swing / Momentum" : "aggressiv / spekulativ"}`);
+  if (preferredComplexity) lines.push(`- **Komplexität**: ${preferredComplexity === "high" ? "anspruchsvoll, fachlich dicht" : preferredComplexity === "low" ? "einfach erklärt, kurze Sätze" : "ausgewogen"}`);
+  if (!preferredLength && !preferredStructure && !preferredDepth && !preferredStyle && !preferredComplexity) {
+    lines.push("- Noch keine dominanten Positiv-Muster — neutral antworten.");
+  }
+
+  if (failReasons.length > 0 || negPatterns.length > 0) {
+    lines.push("");
+    lines.push("### Vermeiden (negative Signale):");
+    if (failReasons.length > 0) lines.push(`- Vorherige Antworten ${failReasons.join(", ")} — gezielt gegensteuern.`);
+    if (negPatterns.length > 0) lines.push(`- Schwache Muster: ${negPatterns.join(", ")}`);
+  }
+
+  lines.push("");
+  lines.push("**Regel**: Wende dieses Profil aktiv an. Aber: Präferenzen dürfen NIE Korrektheit, Risiko-Transparenz oder Quellentreue verdrängen. Wenn ein Nutzer 'kurz' bevorzugt, eine korrekte Antwort aber Tiefe braucht — liefere Tiefe, aber so kompakt wie möglich.");
+
+  return "\n\n" + lines.join("\n");
 }
+
 
 async function buildTradingProfileAddendum(userId: string | null): Promise<string> {
   if (!userId) return "";
