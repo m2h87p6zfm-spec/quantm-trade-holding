@@ -53,15 +53,19 @@ function ProductDetail() {
       {indicators && sig && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-4">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-2 flex items-end justify-between">
+            <div className="rounded-xl border border-border/70 bg-gradient-to-br from-card/90 to-card/40 p-5 backdrop-blur">
+              <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <div className="font-mono text-3xl font-bold tabular-nums">{indicators.price.toFixed(2)}</div>
-                  <div className={`font-mono text-sm ${change >= 0 ? "text-bull" : "text-bear"}`}>
-                    {change >= 0 ? "+" : ""}{change.toFixed(2)}% ({abs >= 0 ? "+" : ""}{abs.toFixed(2)})
-                  </div>
+                  <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
                 </div>
-                <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
+                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{symbol} · Yahoo Finance</div>
+              </div>
+              <AssetChart symbol={symbol} height={420} defaultTf="1Y" currency={product?.currency ?? "$"} />
+            </div>
+
+            <div className="rounded-lg border border-border bg-card p-4">
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Technische Analyse · Candles & Indikatoren
               </div>
               {candles.data && (
                 <ProChart
