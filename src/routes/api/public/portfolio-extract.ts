@@ -39,41 +39,48 @@ TICKER
 FRAKTIONALE STÜCK
 - qty darf eine Dezimalzahl sein (Trade Republic, Scalable, Revolut und Trading 212 erlauben Bruchstücke wie 0.5234 oder 12.781). Niemals runden.
 
+ZAHLENFORMATE (kritisch — Abweichungen entstehen meist hier)
+- DE/EU-Brokers (Trade Republic, Scalable, Comdirect, ING, DKB …): Komma = Dezimaltrennzeichen, Punkt = Tausendertrennzeichen. "1.234,56 €" = 1234.56. "12,34 €" = 12.34.
+- US/UK-Brokers (Robinhood, Schwab, IBKR …): Punkt = Dezimal, Komma = Tausender. "1,234.56" = 1234.56.
+- Lies jede Ziffer einzeln vom Bild ab — nicht raten, nicht runden. Übertrage immer alle sichtbaren Nachkommastellen.
+- Gib im JSON ausschließlich rohe Zahlen ohne Tausendertrenner aus (z. B. 1234.56, nicht "1.234,56").
+
 ABLEITUNG (zwingend nutzen, wenn Felder fehlen)
 Broker-Apps zeigen meist:
   · "Wert" / "Kurswert" / "Position Value"   = current_value  (qty × aktueller Kurs)
   · "Kurs" / "Letzter Kurs" / "Price"        = current_price  (Kurs pro Stück, aktuell)
-  · "Performance" / "Rendite" / "G/V %"      = pnl_pct        (% seit Einstand)
-  · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust)
+  · "Performance" / "Rendite" / "G/V %"      = pnl_pct        (% seit Einstand, oft auf 2 Stellen gerundet → ungenau!)
+  · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust, deutlich präziser als %)
   · "Eingesetzt" / "Invested" / "Einstand"   = invested       (qty × Einstandskurs)
 
-Regeln zur Ableitung — IMMER nach diesem Wasserfall:
+Regeln zur Ableitung — STRIKT in dieser Reihenfolge (höchste Genauigkeit zuerst):
   1. qty:
-     · falls "Stück" / "Anteile" / "Shares" / "Qty" sichtbar → übernehmen (auch dezimal).
-     · sonst falls current_value UND current_price sichtbar → qty = current_value / current_price.
-     · sonst falls invested UND entry sichtbar → qty = invested / entry.
-  2. entry (Einstandskurs pro Stück):
-     · falls direkt sichtbar ("Ø-Kurs", "Einstand", "Cost basis") → übernehmen.
-     · sonst falls invested UND qty bekannt → entry = invested / qty.
-     · sonst falls current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100).
-     · sonst falls current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
+     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal, alle Nachkommastellen).
+     b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
+     c) sonst invested UND entry sichtbar → qty = invested / entry.
+  2. entry (Einstandskurs pro Stück) — bevorzuge € vor %, weil % gerundet ist:
+     a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
+     b) sonst invested UND qty bekannt → entry = invested / qty.   (sehr genau)
+     c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.   (genau)
+     d) NUR als letzter Ausweg, wenn nichts in € verfügbar ist: current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann max. 0.6.
   3. Werte > 0 prüfen. Bei Division durch 0 → Position auslassen.
-  4. Rundung: qty bis zu 6 Nachkommastellen, entry auf 4 Nachkommastellen.
+  4. KEINE harte Rundung — gib entry mit voller Präzision aus (mind. so viele Nachkommastellen wie das Original).
+  5. Konsistenz-Check: Wenn entry, qty und current_value bekannt sind, prüfe |qty·entry − invested| / invested < 0.02. Falls Abweichung > 2 %, hast du eine Zahl falsch gelesen — neu ablesen.
 
 WÄHRUNG
 - Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen, einfach den angezeigten Zahlenwert nehmen.
 
 CONFIDENCE
-- direkt sichtbare Stück + Einstand: 0.85–1.0
-- ein Wert direkt sichtbar, einer abgeleitet: 0.65–0.85
-- beide Werte abgeleitet aus current_value + pnl_pct: 0.45–0.7
-- unscharfe / verdeckte Zahlen: < 0.5
+- direkt sichtbarer Einstandskurs: 0.9–1.0
+- entry aus invested/qty oder (current_value−pnl_abs)/qty: 0.75–0.9
+- entry aus current_price und pnl_pct (gerundet): 0.45–0.6
+- unscharfe / verdeckte Zahlen: < 0.4
 
 WICHTIG
 - Side ist immer "LONG", außer das Bild zeigt explizit "Short" / "Leerverkauf".
 - Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist (kein "Heute"-Datum erfinden).
 - Niemals halluzinieren. Wenn weder Stück noch ableitbarer Wert sichtbar sind → Position weglassen.
-- Notes: kurz festhalten, woher entry/qty stammen (z. B. "qty aus Wert/Kurs", "entry aus Performance %").`;
+- Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance % — ungenau").`;
 
 const EXTRACT_TOOL = {
   type: "function" as const,
