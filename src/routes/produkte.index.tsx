@@ -3,13 +3,15 @@ import { useState } from "react";
 import { Search, Star, StarOff } from "lucide-react";
 import { PRODUCTS, SECTORS, searchProducts } from "@/lib/products";
 import { useSettings } from "@/lib/settings";
+import { useWatchlistLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/produkte/")({ component: KatalogPage });
 
 function KatalogPage() {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState<string>("Alle");
-  const { settings, toggleWatch } = useSettings();
+  const { settings } = useSettings();
+  const { guardedAdd } = useWatchlistLimit();
   const customSymbol = q.trim().toUpperCase().replace(/\s+/g, "");
   const exactMatch = listHasExactSymbol(searchProducts(q), customSymbol);
 
