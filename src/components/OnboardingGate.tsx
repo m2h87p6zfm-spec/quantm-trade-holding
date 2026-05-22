@@ -118,9 +118,9 @@ export function OnboardingGate() {
           )}
           {step === 3 && (
             <StepGrid>
-              <StepTitle>Market Preferences (Mehrfachauswahl)</StepTitle>
+              <StepTitle>Interessen — Aktien & ETFs (Mehrfachauswahl)</StepTitle>
               {MARKETS.map((g) => (
-                <Choice key={g.v} active={a.markets.includes(g.v)} onClick={() => toggleMarket(g.v)} label={g.label} />
+                <Choice key={g.v} active={a.markets.includes(g.v)} onClick={() => toggleMarket(g.v)} label={g.label} desc={g.desc} />
               ))}
             </StepGrid>
           )}
