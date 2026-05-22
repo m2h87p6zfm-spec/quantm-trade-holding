@@ -6,7 +6,8 @@ import { de } from "date-fns/locale";
 import {
   Microscope, Sparkles, CalendarIcon, ChevronRight, ChevronLeft, Search,
   Loader2, TrendingUp, TrendingDown, BookOpen, Newspaper, LineChart, Scale,
-  Compass, RotateCcw, CheckCircle2, AlertTriangle,
+  Compass, RotateCcw, CheckCircle2, AlertTriangle, Landmark, Lightbulb, Zap,
+  ExternalLink, Wallet, Clock,
 } from "lucide-react";
 import { PRODUCTS, searchProducts, findProduct, type Product } from "@/lib/products";
 import { FeatureGate } from "@/lib/featureGate";
@@ -29,6 +30,8 @@ export const Route = createFileRoute("/explain-trade")({
   head: () => ({ meta: [{ title: "Explain My Trade — Apex Trades" }] }),
 });
 
+type Source = { title: string; url: string; description: string; source: string };
+
 type AnalysisResult = {
   symbol: string;
   name: string;
@@ -48,9 +51,19 @@ type AnalysisResult = {
   benchmarks: { sp500: number | null; dax: number | null; msciWorld: number | null };
   analysis: string;
   aiError?: string | null;
+  sold: boolean;
+  sellRequestedDate: string | null;
+  sellResolvedDate: string | null;
+  sellAdjusted: boolean;
+  sellClose: number | null;
+  realizedPnlAbs: number | null;
+  realizedPnlPct: number | null;
+  postSellPct: number | null;
+  valueIfHeld: number | null;
+  sources: Source[];
 };
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4 | 5;
 
 function ExplainTradePage() {
   const [step, setStep] = useState<Step>(1);
@@ -58,9 +71,11 @@ function ExplainTradePage() {
   const [customSymbol, setCustomSymbol] = useState<string>("");
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [sharesStr, setSharesStr] = useState<string>("");
+  const [sold, setSold] = useState<boolean | null>(null);
+  const [sellDate, setSellDate] = useState<Date | undefined>(undefined);
 
   const mutation = useMutation({
-    mutationFn: async (input: { symbol: string; name: string; buyDate: string; shares: number }) => {
+    mutationFn: async (input: { symbol: string; name: string; buyDate: string; shares: number; sellDate: string | null; sector?: string }) => {
       const r = await fetch("/api/public/explain-trade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,6 +92,9 @@ function ExplainTradePage() {
   const sharesValid = Number.isFinite(shares) && shares > 0;
   const selectedSymbol = product?.symbol || customSymbol.trim().toUpperCase();
   const selectedName = product?.name || selectedSymbol;
+  const selectedSector = product?.sector;
+
+  const totalSteps = sold === true ? 5 : 4;
 
   function reset() {
     mutation.reset();
@@ -85,15 +103,20 @@ function ExplainTradePage() {
     setCustomSymbol("");
     setDate(undefined);
     setSharesStr("");
+    setSold(null);
+    setSellDate(undefined);
   }
 
   function submit() {
     if (!selectedSymbol || !date || !sharesValid) return;
+    if (sold === true && !sellDate) return;
     mutation.mutate({
       symbol: selectedSymbol,
       name: selectedName,
       buyDate: format(date, "yyyy-MM-dd"),
       shares,
+      sellDate: sold === true && sellDate ? format(sellDate, "yyyy-MM-dd") : null,
+      sector: selectedSector,
     });
   }
 
@@ -110,18 +133,18 @@ function ExplainTradePage() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">Explain My Trade</h1>
             <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-              <Sparkles className="h-3 w-3" /> Auto-Analyse
+              <Sparkles className="h-3 w-3" /> Live-News & KI
             </span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Wähle deine Aktie, dein Kaufdatum und die Stückzahl — wir holen Kaufpreis, aktuellen Kurs und Benchmarks automatisch.
+            Aktie wählen, Kaufdatum, Stückzahl — optional Verkaufsdatum. Wir holen Kurse, Benchmarks und aktuelle Nachrichten automatisch.
           </p>
         </div>
       </header>
 
       {!result && !mutation.isPending && (
         <>
-          <Stepper current={step} />
+          <Stepper current={step} total={totalSteps} sold={sold} />
           <section className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
             {step === 1 && (
               <StepSymbol
@@ -145,8 +168,34 @@ function ExplainTradePage() {
                 shares={sharesStr}
                 setShares={setSharesStr}
                 onBack={() => setStep(2)}
-                onSubmit={submit}
+                onNext={() => sharesValid && setStep(4)}
                 summary={{ name: selectedName, symbol: selectedSymbol, date: date ? format(date, "dd.MM.yyyy", { locale: de }) : "" }}
+              />
+            )}
+            {step === 4 && (
+              <StepSold
+                sold={sold}
+                setSold={(v) => { setSold(v); if (v === false) setSellDate(undefined); }}
+                onBack={() => setStep(3)}
+                onNext={() => {
+                  if (sold === false) submit();
+                  else if (sold === true) setStep(5);
+                }}
+                buyDate={date ? format(date, "dd.MM.yyyy", { locale: de }) : ""}
+              />
+            )}
+            {step === 5 && (
+              <StepSellDate
+                sellDate={sellDate}
+                setSellDate={setSellDate}
+                minDate={date}
+                onBack={() => setStep(4)}
+                onSubmit={submit}
+                summary={{
+                  name: selectedName, symbol: selectedSymbol,
+                  buyDate: date ? format(date, "dd.MM.yyyy", { locale: de }) : "",
+                  shares: sharesStr,
+                }}
               />
             )}
           </section>
@@ -158,7 +207,7 @@ function ExplainTradePage() {
           <div className="flex flex-col items-center gap-3 text-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <div className="text-base font-medium">Analyse wird erstellt…</div>
-            <div className="text-sm text-muted-foreground">Wir holen historische Kurse, aktuellen Preis und Benchmark-Daten und übergeben sie an unseren Analyst-Agenten.</div>
+            <div className="text-sm text-muted-foreground">Wir holen historische Kurse, aktuelle Nachrichten, staatliche Programme und Branchen-Updates — das dauert einen Moment.</div>
           </div>
         </div>
       )}
@@ -185,14 +234,17 @@ function ExplainTradePage() {
 
 /* ---------------- Stepper ---------------- */
 
-function Stepper({ current }: { current: Step }) {
-  const steps = [
+function Stepper({ current, total, sold }: { current: Step; total: number; sold: boolean | null }) {
+  const allSteps = [
     { n: 1, label: "Aktie / ETF" },
     { n: 2, label: "Kaufdatum" },
     { n: 3, label: "Anzahl" },
+    { n: 4, label: "Verkauft?" },
+    { n: 5, label: "Verkaufsdatum" },
   ] as const;
+  const steps = allSteps.filter((s) => s.n <= total || (sold === true && s.n <= 5));
   return (
-    <ol className="flex items-center gap-2 text-xs">
+    <ol className="flex flex-wrap items-center gap-2 text-xs">
       {steps.map((s, i) => {
         const active = s.n === current;
         const done = s.n < current;
@@ -359,12 +411,12 @@ function StepDate({
 /* ---------------- Step 3: Shares ---------------- */
 
 function StepShares({
-  shares, setShares, onBack, onSubmit, summary,
+  shares, setShares, onBack, onNext, summary,
 }: {
   shares: string;
   setShares: (s: string) => void;
   onBack: () => void;
-  onSubmit: () => void;
+  onNext: () => void;
   summary: { name: string; symbol: string; date: string };
 }) {
   const valid = Number.isFinite(Number(shares.replace(",", "."))) && Number(shares.replace(",", ".")) > 0;
@@ -382,7 +434,7 @@ function StepShares({
       />
 
       <div className="rounded-lg border border-border bg-background/40 p-3 text-xs space-y-1">
-        <div className="text-muted-foreground">Zusammenfassung deines Trades:</div>
+        <div className="text-muted-foreground">Bisher:</div>
         <div><span className="text-muted-foreground">Wertpapier:</span> <span className="font-medium">{summary.name} ({summary.symbol})</span></div>
         <div><span className="text-muted-foreground">Kaufdatum:</span> <span className="font-medium">{summary.date}</span></div>
         {valid && <div><span className="text-muted-foreground">Anzahl:</span> <span className="font-medium">{shares}</span></div>}
@@ -392,7 +444,120 @@ function StepShares({
         <Button variant="ghost" onClick={onBack}>
           <ChevronLeft className="mr-1 h-4 w-4" /> Zurück
         </Button>
-        <Button onClick={onSubmit} disabled={!valid} size="lg">
+        <Button onClick={onNext} disabled={!valid}>
+          Weiter <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Step 4: Sold? ---------------- */
+
+function StepSold({
+  sold, setSold, onBack, onNext, buyDate,
+}: {
+  sold: boolean | null;
+  setSold: (v: boolean) => void;
+  onBack: () => void;
+  onNext: () => void;
+  buyDate: string;
+}) {
+  return (
+    <div className="space-y-4">
+      <StepHeader n={4} title="Hast du diese Position bereits verkauft?" subtitle={`Kaufdatum: ${buyDate}. Falls verkauft, berechnen wir realisierten Gewinn/Verlust und was du seit dem Verkauf zusätzlich verpasst oder vermieden hättest.`} />
+
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => setSold(false)}
+          className={cn(
+            "rounded-xl border p-4 text-left transition",
+            sold === false ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border hover:bg-accent",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span className="font-semibold">Nein, halte ich noch</span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Analyse mit heutigem Kurs als Referenz.</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setSold(true)}
+          className={cn(
+            "rounded-xl border p-4 text-left transition",
+            sold === true ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border hover:bg-accent",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-primary" />
+            <span className="font-semibold">Ja, schon verkauft</span>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Realisierter Gewinn + Was-wäre-wenn-Vergleich.</p>
+        </button>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <Button variant="ghost" onClick={onBack}>
+          <ChevronLeft className="mr-1 h-4 w-4" /> Zurück
+        </Button>
+        <Button onClick={onNext} disabled={sold === null} size={sold === false ? "lg" : "default"}>
+          {sold === false ? (<><Microscope className="mr-2 h-4 w-4" /> Trade analysieren</>) : (<>Weiter <ChevronRight className="ml-1 h-4 w-4" /></>)}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Step 5: Sell date ---------------- */
+
+function StepSellDate({
+  sellDate, setSellDate, minDate, onBack, onSubmit, summary,
+}: {
+  sellDate: Date | undefined;
+  setSellDate: (d: Date | undefined) => void;
+  minDate: Date | undefined;
+  onBack: () => void;
+  onSubmit: () => void;
+  summary: { name: string; symbol: string; buyDate: string; shares: string };
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-4">
+      <StepHeader n={5} title="Wann hast du verkauft?" subtitle="Wir nehmen den Schlusskurs dieses Tages — bei Wochenende/Feiertag den nächsten Handelstag." />
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-11", !sellDate && "text-muted-foreground")}>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {sellDate ? format(sellDate, "EEEE, dd. MMMM yyyy", { locale: de }) : "Verkaufsdatum wählen"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={sellDate}
+            onSelect={(d) => { setSellDate(d); setOpen(false); }}
+            disabled={(d) => d > new Date() || (minDate ? d < minDate : false)}
+            initialFocus
+            className={cn("p-3 pointer-events-auto")}
+          />
+        </PopoverContent>
+      </Popover>
+
+      <div className="rounded-lg border border-border bg-background/40 p-3 text-xs space-y-1">
+        <div className="text-muted-foreground">Zusammenfassung:</div>
+        <div><span className="text-muted-foreground">Wertpapier:</span> <span className="font-medium">{summary.name} ({summary.symbol})</span></div>
+        <div><span className="text-muted-foreground">Kauf:</span> <span className="font-medium">{summary.buyDate}</span> · <span className="text-muted-foreground">Anzahl:</span> <span className="font-medium">{summary.shares}</span></div>
+        {sellDate && <div><span className="text-muted-foreground">Verkauf:</span> <span className="font-medium">{format(sellDate, "dd.MM.yyyy", { locale: de })}</span></div>}
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <Button variant="ghost" onClick={onBack}>
+          <ChevronLeft className="mr-1 h-4 w-4" /> Zurück
+        </Button>
+        <Button onClick={onSubmit} disabled={!sellDate} size="lg">
           <Microscope className="mr-2 h-4 w-4" /> Trade analysieren
         </Button>
       </div>
@@ -403,7 +568,7 @@ function StepShares({
 function StepHeader({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
   return (
     <div>
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Schritt {n} von 3</div>
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Schritt {n}</div>
       <h2 className="mt-0.5 text-xl font-bold">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
     </div>
@@ -421,13 +586,24 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
       ? `${result.heldMonths} M. ${result.heldDays - result.heldMonths * 30} T.`
       : `${result.heldDays} T.`;
 
+  // What-if since sell
+  const missedPositive = result.postSellPct != null && result.postSellPct >= 0;
+
   return (
     <div className="space-y-4">
       {result.adjusted && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
           <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-500" />
           <div>
-            <span className="font-medium">Hinweis:</span> Dein angefragtes Datum ({fmtDate(result.requestedDate)}) war ein Wochenende oder Feiertag. Wir haben den nächsten Handelstag verwendet: <span className="font-semibold">{fmtDate(result.resolvedDate)}</span>.
+            <span className="font-medium">Hinweis:</span> Dein Kaufdatum ({fmtDate(result.requestedDate)}) war kein Handelstag — wir haben den nächsten verwendet: <span className="font-semibold">{fmtDate(result.resolvedDate)}</span>.
+          </div>
+        </div>
+      )}
+      {result.sold && result.sellAdjusted && result.sellRequestedDate && result.sellResolvedDate && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
+          <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-500" />
+          <div>
+            <span className="font-medium">Verkaufsdatum angepasst:</span> {fmtDate(result.sellRequestedDate)} → <span className="font-semibold">{fmtDate(result.sellResolvedDate)}</span> (nächster Handelstag).
           </div>
         </div>
       )}
@@ -440,13 +616,18 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{result.name} · {result.symbol}</div>
-            <div className="mt-1 text-sm text-muted-foreground">Gekauft am {fmtDate(result.resolvedDate)} · {result.shares} Anteile</div>
+            <div className="mt-1 text-sm text-muted-foreground">
+              Gekauft am {fmtDate(result.resolvedDate)} · {result.shares} Anteile
+              {result.sold && result.sellResolvedDate && <> · Verkauft am {fmtDate(result.sellResolvedDate)}</>}
+            </div>
           </div>
           {positive ? <TrendingUp className="h-8 w-8 text-bull" /> : <TrendingDown className="h-8 w-8 text-bear" />}
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Gewinn / Verlust</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              {result.sold ? "Realisierter Gewinn / Verlust" : "Gewinn / Verlust"}
+            </div>
             <div className={cn("text-4xl font-bold tabular-nums", positive ? "text-bull" : "text-bear")}>
               {sign}{formatMoney(result.pnlAbs)}
             </div>
@@ -455,7 +636,9 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Aktueller Gesamtwert</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              {result.sold ? "Verkaufserlös" : "Aktueller Gesamtwert"}
+            </div>
             <div className="text-4xl font-bold tabular-nums">{formatMoney(result.currentValue)}</div>
             <div className="text-xs text-muted-foreground">Kaufwert: {formatMoney(result.totalCost)}</div>
           </div>
@@ -465,13 +648,46 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
       {/* Numbers grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Kaufpreis" value={formatPrice(result.entryClose)} />
-        <Stat label="Aktueller Kurs" value={formatPrice(result.currentClose)} />
+        <Stat
+          label={result.sold ? "Verkaufspreis" : "Aktueller Kurs"}
+          value={formatPrice(result.sellClose ?? result.currentClose)}
+        />
         <Stat label="Anzahl Anteile" value={String(result.shares)} />
         <Stat label="Haltedauer" value={heldLabel} hint={`${result.heldDays} Tage`} />
       </div>
 
+      {/* What-if card — only when sold */}
+      {result.sold && result.postSellPct != null && result.valueIfHeld != null && (
+        <div className={cn(
+          "rounded-2xl border p-5 shadow-sm",
+          missedPositive ? "border-amber-500/40 bg-amber-500/5" : "border-bull/40 bg-bull/5",
+        )}>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">Was wäre, wenn du gehalten hättest?</h3>
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Entwicklung seit Verkauf</div>
+              <div className={cn("text-3xl font-bold tabular-nums", missedPositive ? "text-amber-500" : "text-bull")}>
+                {missedPositive ? "+" : ""}{(result.postSellPct * 100).toFixed(2)}%
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Heutiger Wert (wenn gehalten)</div>
+              <div className="text-3xl font-bold tabular-nums">{formatMoney(result.valueIfHeld)}</div>
+              <div className="text-xs text-muted-foreground">
+                {missedPositive
+                  ? `Verpasst: ${formatMoney(result.valueIfHeld - result.currentValue)}`
+                  : `Vermieden: ${formatMoney(result.currentValue - result.valueIfHeld)}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Benchmark comparison */}
-      <Card icon={Scale} title="Performance-Vergleich seit Kauf">
+      <Card icon={Scale} title={result.sold ? "Performance-Vergleich im Halte-Zeitraum" : "Performance-Vergleich seit Kauf"}>
         <div className="space-y-2">
           <BenchRow label={result.name} pct={result.pnlPct} highlight />
           <BenchRow label="S&P 500" pct={result.benchmarks.sp500} />
@@ -489,6 +705,25 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
         <AiSections markdown={result.analysis} />
       )}
 
+      {/* Sources */}
+      {result.sources && result.sources.length > 0 && (
+        <Card icon={ExternalLink} title="Quellen (Live-Websuche)">
+          <ul className="space-y-2 text-sm">
+            {result.sources.map((s) => (
+              <li key={s.url} className="flex items-start gap-2">
+                <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                <div className="min-w-0">
+                  <a href={s.url} target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:underline break-words">
+                    {s.title || s.url}
+                  </a>
+                  <div className="text-[11px] text-muted-foreground">{s.source}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
       <div className="flex items-center justify-center pt-2">
         <Button onClick={onReset} variant="outline" size="lg">
           <RotateCcw className="mr-2 h-4 w-4" /> Neue Analyse starten
@@ -500,18 +735,24 @@ function ResultView({ result, onReset }: { result: AnalysisResult; onReset: () =
 
 function AiSections({ markdown }: { markdown: string }) {
   const sections = parseSections(markdown);
-  const icons = {
+  const icons: Record<string, typeof BookOpen> = {
     "Zusammenfassung des Trades": BookOpen,
     "Was damals passierte": Newspaper,
+    "Politische & wirtschaftliche Rückenwind-Faktoren": Landmark,
+    "Katalysatoren für die Kursbewegung": Zap,
     "Warum sich der Kurs seitdem so entwickelt hat": LineChart,
     "Bewertung des Trades": Scale,
+    "Was du vielleicht noch nicht weißt": Lightbulb,
     "Ausblick": Compass,
-  } as const;
+  };
   const order = [
     "Zusammenfassung des Trades",
     "Was damals passierte",
+    "Politische & wirtschaftliche Rückenwind-Faktoren",
+    "Katalysatoren für die Kursbewegung",
     "Warum sich der Kurs seitdem so entwickelt hat",
     "Bewertung des Trades",
+    "Was du vielleicht noch nicht weißt",
     "Ausblick",
   ];
   const remaining = sections.filter((s) => !order.includes(s.title));
@@ -529,7 +770,7 @@ function AiSections({ markdown }: { markdown: string }) {
   return (
     <div className="space-y-3">
       {ordered.map((s) => {
-        const Icon = (icons as Record<string, typeof BookOpen>)[s.title] ?? BookOpen;
+        const Icon = icons[s.title] ?? BookOpen;
         return (
           <Card key={s.title} icon={Icon} title={s.title}>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{s.body.trim()}</p>

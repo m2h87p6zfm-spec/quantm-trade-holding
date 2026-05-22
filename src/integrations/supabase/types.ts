@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_config: {
+        Row: {
+          agent_name: string | null
+          created_at: string | null
+          emoji_usage: boolean | null
+          id: number
+          language_style: string | null
+          markdown_formatting: boolean | null
+          reasoning_level: string | null
+          response_style: string | null
+          structured_answers: boolean | null
+          system_prompt: string | null
+          use_memory: boolean | null
+          use_web_search: boolean | null
+        }
+        Insert: {
+          agent_name?: string | null
+          created_at?: string | null
+          emoji_usage?: boolean | null
+          id?: number
+          language_style?: string | null
+          markdown_formatting?: boolean | null
+          reasoning_level?: string | null
+          response_style?: string | null
+          structured_answers?: boolean | null
+          system_prompt?: string | null
+          use_memory?: boolean | null
+          use_web_search?: boolean | null
+        }
+        Update: {
+          agent_name?: string | null
+          created_at?: string | null
+          emoji_usage?: boolean | null
+          id?: number
+          language_style?: string | null
+          markdown_formatting?: boolean | null
+          reasoning_level?: string | null
+          response_style?: string | null
+          structured_answers?: boolean | null
+          system_prompt?: string | null
+          use_memory?: boolean | null
+          use_web_search?: boolean | null
+        }
+        Relationships: []
+      }
       ai_chat_feedback: {
         Row: {
           assistant_message: string
@@ -417,6 +462,54 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_summaries: {
+        Row: {
+          created_at: string | null
+          id: number
+          key_topics: string[] | null
+          summary: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          key_topics?: string[] | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          key_topics?: string[] | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      memory_quality: {
+        Row: {
+          created_at: string | null
+          id: number
+          importance_score: number | null
+          memory_type: string | null
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          importance_score?: number | null
+          memory_type?: string | null
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          importance_score?: number | null
+          memory_type?: string | null
+          summary?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -438,6 +531,36 @@ export type Database = {
           display_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      response_feedback: {
+        Row: {
+          ai_response: string | null
+          created_at: string | null
+          feedback: string | null
+          id: number
+          rating: number | null
+          user_id: string | null
+          user_message: string | null
+        }
+        Insert: {
+          ai_response?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: number
+          rating?: number | null
+          user_id?: string | null
+          user_message?: string | null
+        }
+        Update: {
+          ai_response?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: number
+          rating?: number | null
+          user_id?: string | null
+          user_message?: string | null
         }
         Relationships: []
       }
