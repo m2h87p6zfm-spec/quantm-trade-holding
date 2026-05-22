@@ -7,6 +7,7 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision, whyNow, type Decision } from "@/lib/analysis";
 import { detectRegime, regimeLabel, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
+import { SignalChat } from "@/components/SignalChat";
 
 export const Route = createFileRoute("/signale")({ component: SignalsPage });
 
