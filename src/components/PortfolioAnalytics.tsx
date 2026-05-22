@@ -4,6 +4,7 @@ import type { Position } from "@/lib/portfolio";
 import { pnl } from "@/lib/portfolio";
 import type { CockpitRow } from "@/lib/cockpit";
 import { findProduct } from "@/lib/products";
+import { ExplainAiButton } from "@/components/ExplainAiButton";
 
 type Metrics = {
   totalValue: number;
