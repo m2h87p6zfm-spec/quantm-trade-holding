@@ -121,18 +121,19 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 p-3 text-xs text-muted-foreground">
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-        ARIA denkt nach …
+        APEX denkt nach …
       </div>
     );
   }
   return (
     <div className="rounded-lg border border-primary/20 bg-primary/[0.04] p-3 text-sm leading-relaxed whitespace-pre-wrap">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">ARIA · KI-Einschätzung</div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">APEX · KI-Einschätzung</div>
       {text}
       {!done && <span className="ml-0.5 inline-block h-3 w-1 animate-pulse bg-primary align-middle" />}
     </div>
   );
 }
+
 
 const NAME_STOPWORDS = new Set([
   "inc", "inc.", "corp", "corp.", "corporation", "company", "co", "co.", "ag", "se", "sa", "nv", "plc",
