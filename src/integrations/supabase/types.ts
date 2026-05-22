@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_feedback: {
+        Row: {
+          assistant_message: string
+          created_at: string
+          id: string
+          meta: Json
+          rating: number
+          reason: string | null
+          response_length: number
+          session_id: string | null
+          user_id: string | null
+          user_prompt: string
+        }
+        Insert: {
+          assistant_message?: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          rating: number
+          reason?: string | null
+          response_length?: number
+          session_id?: string | null
+          user_id?: string | null
+          user_prompt?: string
+        }
+        Update: {
+          assistant_message?: string
+          created_at?: string
+          id?: string
+          meta?: Json
+          rating?: number
+          reason?: string | null
+          response_length?: number
+          session_id?: string | null
+          user_id?: string | null
+          user_prompt?: string
+        }
+        Relationships: []
+      }
       ai_learning_events: {
         Row: {
           after_belief: string
@@ -173,6 +212,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ai_user_preferences: {
+        Row: {
+          feedback_count: number
+          negative_signals: Json
+          positive_signals: Json
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          feedback_count?: number
+          negative_signals?: Json
+          positive_signals?: Json
+          preferences?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          feedback_count?: number
+          negative_signals?: Json
+          positive_signals?: Json
+          preferences?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       analysis_credit_usage: {
         Row: {

@@ -1,6 +1,44 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createClient } from "@supabase/supabase-js";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
+
+async function resolveUserId(request: Request): Promise<string | null> {
+  const auth = request.headers.get("Authorization");
+  if (!auth?.startsWith("Bearer ")) return null;
+  try {
+    const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+      global: { headers: { Authorization: auth } },
+      auth: { persistSession: false },
+    });
+    const { data } = await sb.auth.getUser();
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function topKeys(obj: Record<string, number>, n: number): string[] {
+  return Object.entries(obj)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+    .map(([k]) => k);
+}
+
+async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
+  if (!userId) return "";
+  const { data } = await supabaseAdmin
+    .from("ai_user_preferences")
+    .select("positive_signals, negative_signals, feedback_count")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data || (data.feedback_count ?? 0) < 2) return "";
+  const pos = topKeys((data.positive_signals as Record<string, number>) ?? {}, 4);
+  const neg = topKeys((data.negative_signals as Record<string, number>) ?? {}, 4);
+  if (pos.length === 0 && neg.length === 0) return "";
+  return `\n\n## ADAPTIVE USER PROFILE (aus ${data.feedback_count} Feedback-Signalen)\nBevorzugte Muster (verstärken, falls fachlich passend): ${pos.join(", ") || "—"}\nAbgelehnte Muster (vermeiden, falls möglich, ohne Genauigkeit zu opfern): ${neg.join(", ") || "—"}\nWICHTIG: Nutzerpräferenzen NIE über mathematische Korrektheit, faktische Genauigkeit oder Risikotransparenz stellen.`;
+}
 
 const SYSTEM = `# QUANTUM CORE — Institutional Quantitative Intelligence System
 
@@ -104,6 +142,9 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
+          const userId = await resolveUserId(request);
+          const addendum = await buildAdaptiveAddendum(userId);
+
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -113,7 +154,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               stream: true,
-              messages: [{ role: "system", content: SYSTEM }, ...messages],
+              messages: [{ role: "system", content: SYSTEM + addendum }, ...messages],
             }),
           });
 
