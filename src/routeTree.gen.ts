@@ -35,6 +35,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiPublicSignalChatRouteImport } from './routes/api/public/signal-chat'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicPortfolioExtractRouteImport } from './routes/api/public/portfolio-extract'
@@ -179,6 +180,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSignalChatRoute = ApiPublicSignalChatRouteImport.update({
+  id: '/api/public/signal-chat',
+  path: '/api/public/signal-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSearchRoute = ApiPublicSearchRouteImport.update({
   id: '/api/public/search',
   path: '/api/public/search',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -327,6 +334,7 @@ export interface FileRoutesByTo {
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/signal-chat'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/signal-chat'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/signal-chat'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -536,6 +548,7 @@ export interface RootRouteChildren {
   ApiPublicPortfolioExtractRoute: typeof ApiPublicPortfolioExtractRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
+  ApiPublicSignalChatRoute: typeof ApiPublicSignalChatRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -724,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/signal-chat': {
+      id: '/api/public/signal-chat'
+      path: '/api/public/signal-chat'
+      fullPath: '/api/public/signal-chat'
+      preLoaderRoute: typeof ApiPublicSignalChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/search': {
       id: '/api/public/search'
       path: '/api/public/search'
@@ -856,9 +876,20 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortfolioExtractRoute: ApiPublicPortfolioExtractRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
+  ApiPublicSignalChatRoute: ApiPublicSignalChatRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
