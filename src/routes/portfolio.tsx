@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check } from "lucide-react";
-import { usePortfolio, pnl, type Position } from "@/lib/portfolio";
+import { usePortfolio, pnl, costBasis, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
 import { findProduct } from "@/lib/products";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
@@ -176,7 +176,7 @@ function Summary({ positions, rowMap }: { positions: Position[]; rowMap: Map<str
     const { abs, value } = pnl(pos, px);
     total += value;
     pl += abs;
-    basis += pos.entry * pos.qty;
+    basis += costBasis(pos);
   }
   const plPct = basis ? (pl / basis) * 100 : 0;
   const up = pl >= 0;
