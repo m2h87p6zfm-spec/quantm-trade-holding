@@ -223,11 +223,21 @@ function PricingPage() {
 
                 <Button
                   onClick={() => onChoose(plan)}
-                  disabled={isCurrent}
+                  disabled={isCurrent || portalBusy}
                   variant={plan.highlighted ? "default" : "outline"}
                   className="w-full mb-6"
                 >
-                  {isCurrent ? "Aktueller Plan" : plan.id === "free" ? "Kostenlos starten" : `${plan.name} wählen`}
+                  {portalBusy && currentTier !== "free" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isCurrent ? (
+                    "Aktueller Plan"
+                  ) : currentTier !== "free" ? (
+                    "Plan im Portal wechseln"
+                  ) : plan.id === "free" ? (
+                    "Kostenlos starten"
+                  ) : (
+                    `${plan.name} wählen`
+                  )}
                 </Button>
 
                 <ul className="space-y-2.5 text-sm">
