@@ -5,9 +5,18 @@ import { useState } from "react";
 import { Brain, TrendingUp, TrendingDown, Activity, CheckCircle2, XCircle, MinusCircle, Sparkles, Target, BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, ScatterChart, Scatter, CartesianGrid, BarChart, Bar, Cell } from "recharts";
 import { getPerformanceMetrics } from "@/lib/ai-learning.functions";
+import { FeatureGate } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/ai-learning")({
-  component: AiLearningPage,
+  component: () => (
+    <FeatureGate
+      feature="ai_learning"
+      title="AI Learning ist Elite"
+      description="Sieh, wie die Engine aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration und Selbstkorrekturen pro Marktregime."
+    >
+      <AiLearningPage />
+    </FeatureGate>
+  ),
   head: () => ({
     meta: [
       { title: "AI Learning · Apex Trades" },
