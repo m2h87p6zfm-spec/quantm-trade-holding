@@ -106,5 +106,6 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
     }),
   );
 
-  return { analyses, benchmarks } satisfies TrackRecordPayload;
+  return { analyses, benchmarks } as unknown as TrackRecordPayload;
 });
+
