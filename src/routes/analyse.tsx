@@ -196,7 +196,7 @@ type CreditState =
   | { phase: "blocked"; tier: string; limit: number; used: number }
   | { phase: "ok" };
 
-function AgentResponse({ symbol }: { symbol: string }) {
+function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: string }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
