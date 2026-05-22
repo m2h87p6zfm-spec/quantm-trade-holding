@@ -852,6 +852,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_portfolio_positions: {
+        Row: {
+          broker_currency: string | null
+          broker_current_price: number | null
+          broker_current_value: number | null
+          broker_invested: number | null
+          broker_pnl_abs: number | null
+          broker_pnl_pct: number | null
+          client_id: string
+          created_at: string
+          entry: number
+          id: string
+          opened_at: string
+          qty: number
+          side: string
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          broker_currency?: string | null
+          broker_current_price?: number | null
+          broker_current_value?: number | null
+          broker_invested?: number | null
+          broker_pnl_abs?: number | null
+          broker_pnl_pct?: number | null
+          client_id: string
+          created_at?: string
+          entry: number
+          id?: string
+          opened_at?: string
+          qty: number
+          side: string
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          broker_currency?: string | null
+          broker_current_price?: number | null
+          broker_current_value?: number | null
+          broker_invested?: number | null
+          broker_pnl_abs?: number | null
+          broker_pnl_pct?: number | null
+          client_id?: string
+          created_at?: string
+          entry?: number
+          id?: string
+          opened_at?: string
+          qty?: number
+          side?: string
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_trading_profile: {
         Row: {
           ai_style: string | null
