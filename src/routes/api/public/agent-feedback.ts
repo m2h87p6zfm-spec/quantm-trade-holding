@@ -116,21 +116,27 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
               .eq("user_id", user_id)
               .maybeSingle();
 
-            const pos = (prof?.positive_signals as Record<string, number>) ?? {};
-            const neg = (prof?.negative_signals as Record<string, number>) ?? {};
+            const pos = { ...((prof?.positive_signals as Record<string, number>) ?? {}) };
+            const neg = { ...((prof?.negative_signals as Record<string, number>) ?? {}) };
             const target = body.rating === 1 ? pos : neg;
 
-            // crude pattern signals
-            const lenBucket =
-              assistant.length < 600 ? "short" : assistant.length < 1800 ? "medium" : "long";
-            const hasTables = /\|.+\|/.test(assistant);
-            const hasNumbers = /\d+([.,]\d+)?\s*%/.test(assistant);
-            const hasBullets = /^[-*]\s/m.test(assistant);
+            // Extract & weight all features
+            for (const feat of extractFeatures(assistant)) {
+              target[feat] = (target[feat] ?? 0) + 1;
+            }
 
-            target[`length:${lenBucket}`] = (target[`length:${lenBucket}`] ?? 0) + 1;
-            if (hasTables) target["format:tables"] = (target["format:tables"] ?? 0) + 1;
-            if (hasNumbers) target["format:quantitative"] = (target["format:quantitative"] ?? 0) + 1;
-            if (hasBullets) target["format:bullets"] = (target["format:bullets"] ?? 0) + 1;
+            // Categorize explicit failure reason
+            if (body.rating === -1 && body.reason) {
+              const cat = REASON_CATEGORY[body.reason.trim()] ?? "fail:other";
+              neg[cat] = (neg[cat] ?? 0) + 2; // weighted heavier — explicit user signal
+            }
+
+            // Decay opposite side slightly to keep profile responsive
+            const opposite = body.rating === 1 ? neg : pos;
+            for (const k of Object.keys(opposite)) {
+              opposite[k] = Math.max(0, opposite[k] - 0.25);
+              if (opposite[k] === 0) delete opposite[k];
+            }
 
             await supabaseAdmin
               .from("ai_user_preferences")
@@ -140,8 +146,10 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
                 negative_signals: neg,
                 feedback_count: (prof?.feedback_count ?? 0) + 1,
                 preferences: prof?.preferences ?? {},
+                updated_at: new Date().toISOString(),
               });
           }
+
 
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,
