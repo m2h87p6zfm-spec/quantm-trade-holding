@@ -13,8 +13,6 @@ const HEADERS = {
   "User-Agent": UA,
   "Accept": "application/json,text/plain,*/*",
   "Accept-Language": "en-US,en;q=0.9",
-  "Referer": "https://finance.yahoo.com/",
-  "Origin": "https://finance.yahoo.com",
 } as const;
 
 function parseJsonFromText(text: string): any {
