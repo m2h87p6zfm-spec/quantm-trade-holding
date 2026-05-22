@@ -50,4 +50,18 @@ export async function fetchCandles(symbol: string, resolution: "D" | "60" | "W" 
   return data;
 }
 
+export type SymbolSearchHit = { symbol: string; name: string; exchange?: string; type?: string };
+
+export async function searchSymbols(q: string): Promise<SymbolSearchHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+  try {
+    const res = await fetch(`/api/public/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j?.results) ? j.results : [];
+  } catch { return []; }
+}
+
 export { FinnhubError };
+
