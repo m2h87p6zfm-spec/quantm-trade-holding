@@ -284,16 +284,19 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               headers: { "Content-Type": "application/json" },
             });
           }
-          const body = (await request.json()) as { messages?: Msg[] };
+          const body = (await request.json()) as { messages?: Msg[]; sessionId?: string };
           const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
+          const sessionId = body.sessionId ?? null;
           if (messages.length === 0) {
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), { status: 400, headers: { "Content-Type": "application/json" } });
           }
 
           const userId = await resolveUserId(request);
-          const [addendum, profileAddendum] = await Promise.all([
+          const [addendum, profileAddendum, memoryAddendum, feedbackAddendum] = await Promise.all([
             buildAdaptiveAddendum(userId),
             buildTradingProfileAddendum(userId),
+            buildMemoryAddendum(userId, 10),
+            buildFeedbackAddendum(userId, 5),
           ]);
 
           // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
