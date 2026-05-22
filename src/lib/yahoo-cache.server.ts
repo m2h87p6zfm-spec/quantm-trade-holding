@@ -90,12 +90,12 @@ export async function fetchYahooChartCached(
     const sparkPath = `/v7/finance/spark?symbols=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
     const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
 
-    // Wellenweise: erst Direct-Chart parallel, dann Spark parallel, dann Reader-Fallback.
+    // Wellenweise: erst Direct-Chart (beide Hosts parallel), dann Spark-Variante
+    // parallel über beide Hosts. Reader-Fallback nur 1× kurz — er ist langsam
+    // und blockiert sonst den ganzen Bulk-Scan.
     const waves: Array<Array<() => Promise<any>>> = [
-      hosts.map((h) => () => fetchJson(h + path)),
-      hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart)),
-      hosts.map((h) => () => fetchJsonViaReader(h + path)),
-      hosts.map((h) => () => fetchJsonViaReader(h + sparkPath).then(sparkToChart)),
+      [...hosts.map((h) => () => fetchJson(h + path)), ...hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart))],
+      [() => fetchJsonViaReader(hosts[0] + sparkPath).then(sparkToChart)],
     ];
 
     for (const wave of waves) {
@@ -105,7 +105,7 @@ export async function fetchYahooChartCached(
         STORE.set(key, {
           value: j,
           expires: now + ttlSec * 1000,
-          staleUntil: now + Math.max(ttlSec * 24, 24 * 3600) * 1000,
+          staleUntil: now + Math.max(ttlSec * 168, 7 * 24 * 3600) * 1000, // 7 Tage stale-OK
         });
         return { value: j, stale: false, lastUpdated: now };
       } catch {
