@@ -256,29 +256,31 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
-  const pct = base ? ((p.close - base) / base) * 100 : 0;
+  const pct = pctChange(base, p.close);
+  const abs = absChange(base, p.close);
   const up = pct >= 0;
   const d = new Date(p.t);
   const dateStr =
-    tf === "1D"
+    tf === "1D" || tf === "1W" || tf === "1M"
       ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-      : tf === "1W" || tf === "1M"
-        ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-        : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
-
-  const fmt = (n: number) =>
-    `${currency}${n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <div className="rounded-lg border border-border/70 bg-popover/95 px-3 py-2 text-xs shadow-xl backdrop-blur">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">{dateStr}</div>
-      <div className="mt-1 font-mono text-base font-semibold tabular-nums text-foreground">{fmt(p.close)}</div>
-      <div className={`mt-0.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-        {up ? "+" : ""}{pct.toFixed(2)} % seit Periodenstart
+    <div className="min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
+      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
+      <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
+        {formatPrice(p.close, currency)}
       </div>
+      <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
+        <span>{formatSignedAbs(abs, axisDecimals(p.close))}</span>
+        <span>·</span>
+        <span>{formatPercent(pct)}</span>
+      </div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">seit Periodenstart</div>
       {p.volume > 0 && (
-        <div className="mt-1 font-mono text-[10px] text-muted-foreground tabular-nums">
-          Vol {formatCompact(p.volume)}
+        <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+          <span className="uppercase tracking-wider">Vol</span>
+          <span className="text-foreground/80">{formatCompact(p.volume, 2)}</span>
         </div>
       )}
     </div>
