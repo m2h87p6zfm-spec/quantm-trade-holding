@@ -44,11 +44,12 @@ const plans: Plan[] = [
     monthlyPrice: 0,
     yearlyPrice: 0,
     features: [
+      "3 Analyse-Agent Credits / Monat",
       "Bis zu 5 Watchlist-Werte",
+      "1 Preis-Alert",
       "Cockpit mit Live-Preisen (15 Min verzögert)",
       "Heatmap (1 Tag)",
       "News-Feed (ohne AI-Sentiment)",
-      "1 Preis-Alert",
       "Basis-Charts",
     ],
   },
@@ -63,6 +64,7 @@ const plans: Plan[] = [
     yearlyPriceId: "apex_pro_yearly",
     highlighted: true,
     features: [
+      "50 Analyse-Agent Credits / Monat",
       "Unlimitierte Watchlist & Smart Alerts",
       "Analyse-Agent — strukturierte Broker Research Note pro Aktie",
       "Quant-Signale (LONG/SHORT/NEUTRAL) mit Konfidenz",
@@ -83,6 +85,7 @@ const plans: Plan[] = [
     monthlyPriceId: "apex_elite_monthly",
     yearlyPriceId: "apex_elite_yearly",
     features: [
+      "250 Analyse-Agent Credits / Monat",
       "Alles aus Pro",
       "AI Learning — Transparenz, was die Engine aus Fehlern lernt",
       "Institutional Decision Engine mit Smart-Money- & Regime-Filter",
