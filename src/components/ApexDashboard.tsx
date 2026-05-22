@@ -244,13 +244,13 @@ export function ApexDashboard({
   const VerdictIcon = verdictColor.icon;
 
   // Fundamentals
-  const fundamentals = [
-    { label: "Aktueller Kurs", value: `${fmt(indicators.price)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal },
-    { label: "Marktkapitalisierung", value: quote?.marketCap ? fmtBig(quote.marketCap) : "—", signal: "neu" as Signal },
-    { label: "52-W-Hoch", value: quote?.h52 ? fmt(quote.h52) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100)} v. ATH` : undefined, signal: "neu" as Signal },
-    { label: "52-W-Tief", value: quote?.l52 ? fmt(quote.l52) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100)} ü. ATL` : undefined, signal: "neu" as Signal },
-    { label: "Beta vs. Markt", value: fmt(indicators.beta, 2), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal },
-    { label: "Sharpe Ratio (Qualität)", value: fmt(indicators.sharpe, 2), sub: indicators.sharpe > 1 ? "institutionell" : indicators.sharpe < 0 ? "unattraktiv" : "akzeptabel", signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal },
+  const fundamentals: Array<{ label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }> = [
+    { label: "Aktueller Kurs", value: `${fmt(indicators.price)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal, infoKey: "price", rawValue: { changePct: quote?.dp } },
+    { label: "Marktkapitalisierung", value: quote?.marketCap ? fmtBig(quote.marketCap) : "—", signal: "neu" as Signal, infoKey: "marketCap" },
+    { label: "52-W-Hoch", value: quote?.h52 ? fmt(quote.h52) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100)} v. ATH` : undefined, signal: "neu" as Signal, infoKey: "high52" },
+    { label: "52-W-Tief", value: quote?.l52 ? fmt(quote.l52) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100)} ü. ATL` : undefined, signal: "neu" as Signal, infoKey: "low52" },
+    { label: "Beta vs. Markt", value: fmt(indicators.beta, 2), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal, infoKey: "beta", rawValue: indicators.beta },
+    { label: "Sharpe Ratio (Qualität)", value: fmt(indicators.sharpe, 2), sub: indicators.sharpe > 1 ? "institutionell" : indicators.sharpe < 0 ? "unattraktiv" : "akzeptabel", signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal, infoKey: "sharpe", rawValue: indicators.sharpe },
   ];
   const fundamentalVerdict: Signal = fundamentals.filter((f) => f.signal === "pos").length >= fundamentals.filter((f) => f.signal === "neg").length ? "pos" : "neg";
 
