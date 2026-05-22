@@ -60,7 +60,7 @@ function ProductDetail() {
                 </div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{symbol} · Yahoo Finance</div>
               </div>
-              <AssetChart symbol={symbol} height={420} defaultTf="1Y" currency={product?.currency ?? "$"} />
+              <AssetChart symbol={symbol} height={420} defaultTf="1Y" currency="$" />
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4">
