@@ -83,6 +83,9 @@ function migrate(raw: any): StoredSettings {
     merged.activeWatchlistId = merged.watchlists[0].id;
   }
   merged.newsSources = { ...DEFAULT_SOURCES, ...(merged.newsSources || {}) };
+  if (!Array.isArray(merged.portfolioSymbols)) merged.portfolioSymbols = [];
+  if (!merged.costBasis || typeof merged.costBasis !== "object") merged.costBasis = {};
+  if (typeof merged.portfolioOnboarded !== "boolean") merged.portfolioOnboarded = false;
   delete (merged as any).watchlist;
   return merged;
 }
