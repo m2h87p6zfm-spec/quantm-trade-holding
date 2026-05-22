@@ -301,6 +301,7 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
       scenarioTag={scenarioTag}
       user={user}
       record={record}
+      userQuery={userQuery}
     />
   );
 }
