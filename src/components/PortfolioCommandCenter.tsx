@@ -641,7 +641,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
 
       const positions = Array.isArray(data?.positions) ? (data.positions as Extracted[]) : [];
       if (positions.length === 0) {
-        toast.info("Keine Positionen erkannt. Versuch ein klareres Bild.");
+        toast.info(typeof data?.hint === "string" ? data.hint : "Keine Positionen erkannt. Versuch ein klareres Bild.");
       } else {
         toast.success(`${positions.length} ${positions.length === 1 ? "Position" : "Positionen"} erkannt`);
       }
