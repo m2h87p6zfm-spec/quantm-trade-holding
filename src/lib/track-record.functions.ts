@@ -1,7 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { insertAnalysisAndOutcome } from "@/lib/track-record.server";
 
 const recordSchema = z.object({
   ticker: z.string().min(1).max(20),
@@ -17,6 +15,7 @@ const recordSchema = z.object({
 export const recordApexAnalysis = createServerFn({ method: "POST" })
   .inputValidator((data) => recordSchema.parse(data))
   .handler(async ({ data }) => {
+    const { insertAnalysisAndOutcome } = await import("@/lib/track-record.server");
     const id = await insertAnalysisAndOutcome(data);
     return { id };
   });
@@ -47,20 +46,10 @@ export type TrackRecordPayload = {
   benchmarks: Record<string, { return90d: number | null; return1y: number | null }>;
 };
 
-async function benchmarkReturn(symbol: string, days: number): Promise<number | null> {
-  const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
-  const range = days <= 100 ? "3mo" : "1y";
-  const res = await fetchYahooChartCached(symbol, "1d", range, 60 * 60 * 6);
-  const r = res.value?.chart?.result?.[0];
-  if (!r) return null;
-  const closes: number[] = (r.indicators?.quote?.[0]?.close || []).filter((x: number) => Number.isFinite(x));
-  if (closes.length < 2) return null;
-  const first = closes[0];
-  const last = closes[closes.length - 1];
-  return ((last - first) / first) * 100;
-}
-
 export const getTrackRecord = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
+
   const { data: rows, error } = await supabaseAdmin
     .from("apex_analyses")
     .select("id, ticker, name, sector, asset_type, analyzed_at, verdict, confidence_score, price_at_analysis, indicators, apex_outcomes(price_after_30d, price_after_60d, price_after_90d, return_30d, return_60d, return_90d, is_correct)")
@@ -95,6 +84,18 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
     };
   });
 
+  async function benchmarkReturn(symbol: string, days: number): Promise<number | null> {
+    const range = days <= 100 ? "3mo" : "1y";
+    const res = await fetchYahooChartCached(symbol, "1d", range, 60 * 60 * 6);
+    const r = res.value?.chart?.result?.[0];
+    if (!r) return null;
+    const closes: number[] = (r.indicators?.quote?.[0]?.close || []).filter((x: number) => Number.isFinite(x));
+    if (closes.length < 2) return null;
+    const first = closes[0];
+    const last = closes[closes.length - 1];
+    return ((last - first) / first) * 100;
+  }
+
   const benchSyms = { "S&P 500": "SPY", "MSCI World": "URTH", DAX: "^GDAXI" } as const;
   const benchmarks: TrackRecordPayload["benchmarks"] = {};
   await Promise.all(
@@ -109,4 +110,3 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
 
   return { analyses, benchmarks } as unknown as TrackRecordPayload;
 });
-
