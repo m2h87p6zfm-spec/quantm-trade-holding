@@ -21,6 +21,9 @@ import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { FeedbackButtons } from "@/components/FeedbackButtons";
 import { supabase } from "@/integrations/supabase/client";
+import { buildIndicatorPrompt } from "@/lib/indicator-prompt";
+import type { IndicatorSet } from "@/lib/indicators";
+import type { MarketRegime } from "@/lib/ai-learning";
 
 
 
@@ -31,7 +34,7 @@ export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
 type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string };
 
-function AiCommentary({ query, symbol }: { query: string; symbol?: string }) {
+function AiCommentary({ query, symbol, indicators, regime }: { query: string; symbol?: string; indicators?: IndicatorSet | null; regime?: MarketRegime }) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -55,14 +58,18 @@ function AiCommentary({ query, symbol }: { query: string; symbol?: string }) {
         const sys = symbol
           ? `Der Nutzer fragt nach ${symbol}. Liefere eine kompakte, frische Einschätzung (max. 8 Sätze) — variiere Einstieg, beziehe Memory & Feedback ein, keine Wiederholung früherer Antworten.`
           : "Beantworte die Nutzerfrage kompakt und variantenreich.";
+        const indicatorBlock =
+          symbol && indicators && regime ? buildIndicatorPrompt(symbol, indicators, regime) : null;
+        const msgs = [
+          { role: "system", content: sys },
+          ...(indicatorBlock ? [{ role: "system", content: indicatorBlock }] : []),
+          { role: "user", content: query },
+        ];
         const res = await fetch("/api/public/agent-chat", {
           method: "POST",
           headers,
           body: JSON.stringify({
-            messages: [
-              { role: "system", content: sys },
-              { role: "user", content: query },
-            ],
+            messages: msgs,
             sessionId: `analyse-${symbol ?? "free"}-${Date.now()}`,
           }),
           signal: controller.signal,
@@ -106,7 +113,7 @@ function AiCommentary({ query, symbol }: { query: string; symbol?: string }) {
     })();
 
     return () => controller.abort();
-  }, [query, symbol]);
+  }, [query, symbol, indicators, regime]);
 
   if (error) {
     return <div className="rounded-lg border border-bear/30 bg-bear/5 p-3 text-xs text-bear">KI-Kommentar fehlgeschlagen: {error}</div>;
@@ -346,7 +353,7 @@ function AgentAnalysisView({
 
   return (
     <div className="space-y-4">
-      <AiCommentary query={userQuery} symbol={symbol} />
+      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
       <DecisionCard report={decision} symbol={symbol} />
       <div className="flex items-center gap-2 pt-1">
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
