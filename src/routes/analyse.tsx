@@ -330,7 +330,9 @@ function AnalysePage() {
       <div className="relative flex-1 overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/60 to-card/20 shadow-inner">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-background/40 to-transparent" aria-hidden />
         <div className="h-full space-y-4 overflow-y-auto p-5">
-          {messages.map((m, i) => (
+          {messages.map((m, i) => {
+            const prevUser = m.role === "agent" ? [...messages.slice(0, i)].reverse().find((x) => x.role === "user")?.text ?? "" : "";
+            return (
             <div key={i} className={`flex items-start gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               {m.role === "agent" && (
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card">
@@ -352,6 +354,13 @@ function AnalysePage() {
                     dangerouslySetInnerHTML={{ __html: m.text.replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>') }}
                   />
                 )}
+                {m.role === "agent" && i > 0 && (
+                  <FeedbackButtons
+                    sessionId={sessionId}
+                    userPrompt={prevUser}
+                    assistantMessage={m.symbol ? `Analyse: ${m.symbol}` : m.text}
+                  />
+                )}
               </div>
               {m.role === "user" && (
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card">
@@ -359,7 +368,8 @@ function AnalysePage() {
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
 
           {showSuggestions && (
             <div className="pt-2">
