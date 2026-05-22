@@ -546,8 +546,12 @@ function AnalysePage() {
                   <AiCommentary query={m.query} />
                 ) : (
                   <div
-                    className="text-sm leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: m.text.replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>') }}
+                    className="text-sm leading-relaxed whitespace-pre-line"
+                    dangerouslySetInnerHTML={{
+                      __html: m.text
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>'),
+                    }}
                   />
                 )}
                 {m.role === "agent" && i > 0 && (
