@@ -447,7 +447,9 @@ function AnalysePage() {
                 }`}
               >
                 {m.symbol ? (
-                  <AgentResponse symbol={m.symbol} />
+                  <AgentResponse symbol={m.symbol} userQuery={m.query ?? ""} />
+                ) : m.query ? (
+                  <AiCommentary query={m.query} />
                 ) : (
                   <div
                     className="text-sm leading-relaxed"
