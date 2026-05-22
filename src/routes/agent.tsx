@@ -171,7 +171,7 @@ function AgentPage() {
   );
 }
 
-function Bubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+function Bubble({ role, content, feedback }: { role: "user" | "assistant"; content: string; feedback?: React.ReactNode }) {
   const isUser = role === "user";
   return (
     <div className={`flex gap-2 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -180,8 +180,11 @@ function Bubble({ role, content }: { role: "user" | "assistant"; content: string
           <Bot className="h-4 w-4" />
         </div>
       )}
-      <div className={`max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-        {content}
+      <div className={`flex max-w-[80%] flex-col ${isUser ? "items-end" : "items-start"}`}>
+        <div className={`whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+          {content}
+        </div>
+        {feedback}
       </div>
       {isUser && (
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
