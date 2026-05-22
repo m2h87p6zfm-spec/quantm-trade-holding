@@ -18,6 +18,11 @@ type Extracted = {
   currency?: string;      // EUR / USD / ...
   confidence: number;     // 0..1
   notes?: string;
+  current_price?: number;
+  current_value?: number;
+  invested?: number;
+  pnl_abs?: number;
+  pnl_pct?: number;
 };
 
 const SYSTEM = `Du bist ein universeller Vision-Extraktor für Aktien-, ETF- und Krypto-Portfolios. Du verarbeitest Screenshots aus JEDEM Broker, JEDER Trading-App und JEDEM Depotauszug — egal in welcher Sprache, welchem Layout oder welcher Währung.
