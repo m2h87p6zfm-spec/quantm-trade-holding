@@ -248,11 +248,10 @@ const TimeframeBar = memo(function TimeframeBar({
 
 /* --- Tooltip --- */
 function ChartTooltip({
-  active, payload, label, base, currency, tf,
+  active, payload, base, currency, tf,
 }: {
   active?: boolean;
-  payload?: Array<{ payload: { t: number; close: number; volume: number } }>;
-  label?: number;
+  payload?: any[];
   base: number;
   currency: string;
   tf: Timeframe;
