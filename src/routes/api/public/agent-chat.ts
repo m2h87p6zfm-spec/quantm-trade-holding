@@ -382,47 +382,90 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           ]);
 
           // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
+          // Multi-query: simple user query + catalyst/news-focused variants so
+          // sector- or policy-driving headlines (e.g. "USA $2B Quantum Computing
+          // investment" for IonQ) actually surface, even when the user just
+          // wrote "analysiere ionq".
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
           let webContext = "";
           if (lastUser && process.env.FIRECRAWL_API_KEY) {
             try {
-              const q = lastUser.content.slice(0, 400);
-              const ctrl = new AbortController();
-              const tid = setTimeout(() => ctrl.abort(), 12000);
-              const fc = await fetch("https://api.firecrawl.dev/v2/search", {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ query: q, limit: 5, tbs: "qdr:m" }),
-                signal: ctrl.signal,
-              }).finally(() => clearTimeout(tid));
-              if (fc.ok) {
-                const json = (await fc.json()) as { data?: { web?: Array<{ title?: string; url?: string; description?: string }> } | Array<{ title?: string; url?: string; description?: string }> };
-                const raw = Array.isArray(json.data) ? json.data : json.data?.web ?? [];
-                const results = raw.slice(0, 5);
-                if (results.length > 0) {
-                  webContext =
-                    "## WEB CONTEXT (Live-Suche, " +
-                    new Date().toISOString().slice(0, 10) +
-                    ")\nZitiere diese Quellen inline als [1]..[" +
-                    results.length +
-                    "] und liste sie am Ende unter '## Quellen'.\n\n" +
-                    results
-                      .map((r, i) => `[${i + 1}] ${r.title ?? "Untitled"}\nURL: ${r.url ?? ""}\nSnippet: ${(r.description ?? "").slice(0, 400)}`)
-                      .join("\n\n");
+              const raw = lastUser.content.slice(0, 400).trim();
+              // crude asset-token extraction: uppercase ticker OR first noun-ish word
+              const tickerMatch = raw.match(/\b[A-Z]{2,5}\b/);
+              const lowerWords = raw.toLowerCase().replace(/[^a-z0-9äöüß\s$.-]/g, " ").split(/\s+/).filter(Boolean);
+              const stop = new Set(["analysiere","analyse","bitte","mir","die","der","das","ein","eine","aktie","stock","etf","von","und","oder","mit","für","fuer","zu","auf","im","in","am","an","zum","wie","ist","sind","über","ueber","kannst","du","mal","gib","aktien","investieren","kaufen","verkaufen","kurs","preis","heute","jetzt"]);
+              const token = (tickerMatch?.[0] ?? lowerWords.find((w) => !stop.has(w) && w.length > 1) ?? raw).slice(0, 40);
+              const today = new Date();
+              const monthName = today.toLocaleString("en-US", { month: "long", year: "numeric" });
+
+              const queries = [
+                { q: raw, tbs: "qdr:m", limit: 4 },
+                { q: `${token} stock news catalyst ${monthName}`, tbs: "qdr:w", limit: 4 },
+                { q: `${token} announcement OR funding OR regulation OR earnings`, tbs: "qdr:w", limit: 4 },
+                { q: `${token} share price driver why moving today`, tbs: "qdr:d", limit: 3 },
+              ];
+
+              const fcCall = async (q: string, tbs: string, limit: number) => {
+                const ctrl = new AbortController();
+                const tid = setTimeout(() => ctrl.abort(), 9000);
+                try {
+                  const res = await fetch("https://api.firecrawl.dev/v2/search", {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ query: q, limit, tbs }),
+                    signal: ctrl.signal,
+                  });
+                  if (!res.ok) return [] as Array<{ title?: string; url?: string; description?: string }>;
+                  const json = (await res.json()) as { data?: { web?: Array<{ title?: string; url?: string; description?: string }> } | Array<{ title?: string; url?: string; description?: string }> };
+                  const arr = Array.isArray(json.data) ? json.data : json.data?.web ?? [];
+                  return arr;
+                } catch {
+                  return [] as Array<{ title?: string; url?: string; description?: string }>;
+                } finally {
+                  clearTimeout(tid);
                 }
-              } else {
-                console.warn("Firecrawl search failed", fc.status);
+              };
+
+              const buckets = await Promise.all(queries.map((qq) => fcCall(qq.q, qq.tbs, qq.limit)));
+              const seen = new Set<string>();
+              const merged: Array<{ title?: string; url?: string; description?: string }> = [];
+              for (const bucket of buckets) {
+                for (const r of bucket) {
+                  const key = (r.url ?? r.title ?? "").toLowerCase();
+                  if (!key || seen.has(key)) continue;
+                  // filter social-media junk per system prompt
+                  if (/(reddit\.com|twitter\.com|x\.com|tiktok\.com|facebook\.com|instagram\.com)/i.test(r.url ?? "")) continue;
+                  seen.add(key);
+                  merged.push(r);
+                  if (merged.length >= 10) break;
+                }
+                if (merged.length >= 10) break;
+              }
+
+              if (merged.length > 0) {
+                webContext =
+                  "## WEB CONTEXT (Live-Suche, " +
+                  new Date().toISOString().slice(0, 10) +
+                  `, Asset-Token: "${token}")\n` +
+                  "Diese Quellen enthalten die jüngsten Katalysatoren und Schlagzeilen. Du MUSST sie im Pflichtblock '📰 Aktuelle Katalysatoren' verarbeiten und inline als [1]..[" +
+                  merged.length +
+                  "] zitieren. Auflistung am Ende unter '## Quellen'.\n\n" +
+                  merged
+                    .map((r, i) => `[${i + 1}] ${r.title ?? "Untitled"}\nURL: ${r.url ?? ""}\nSnippet: ${(r.description ?? "").slice(0, 500)}`)
+                    .join("\n\n");
               }
             } catch (err) {
-              console.warn("Firecrawl search error", err);
+              console.warn("Firecrawl multi-search error", err);
             }
           }
           if (!webContext) {
-            webContext = "## WEB CONTEXT\nKeine verifizierten Live-Daten verfügbar — Analyse explizit als modellbasiert kennzeichnen.";
+            webContext = "## WEB CONTEXT\nKeine verifizierten Live-Daten verfügbar — Analyse explizit als modellbasiert kennzeichnen und im Katalysatoren-Block 'Keine signifikanten frischen Katalysatoren in den abgerufenen Quellen' schreiben.";
           }
+
 
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
