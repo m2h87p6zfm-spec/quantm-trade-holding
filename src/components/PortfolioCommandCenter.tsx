@@ -1,8 +1,21 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import {
-  Send, Bot, User as UserIcon, Loader2, Sparkles, Search, Plus,
-  Wallet, Wand2, KeyboardIcon, Camera, Image as ImageIcon, X, Check, AlertTriangle,
+  Send,
+  Bot,
+  User as UserIcon,
+  Loader2,
+  Sparkles,
+  Search,
+  Plus,
+  Wallet,
+  Wand2,
+  KeyboardIcon,
+  Camera,
+  Image as ImageIcon,
+  X,
+  Check,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePortfolio, type Position } from "@/lib/portfolio";
@@ -13,7 +26,14 @@ import { usePortfolioLimit } from "@/lib/featureGate";
 /* ---------- shared types ---------- */
 
 type Msg = { role: "user" | "assistant"; content: string };
-type AddAction = { type: "ADD"; symbol: string; qty: number; entry: number; side?: "LONG" | "SHORT"; date?: string };
+type AddAction = {
+  type: "ADD";
+  symbol: string;
+  qty: number;
+  entry: number;
+  side?: "LONG" | "SHORT";
+  date?: string;
+};
 type RemoveAction = { type: "REMOVE"; symbol: string };
 type Action = AddAction | RemoveAction;
 
@@ -21,15 +41,23 @@ const ACTION_RE = /```action\s*([\s\S]*?)```/gi;
 
 function extractActions(text: string): { cleaned: string; actions: Action[] } {
   const actions: Action[] = [];
-  const cleaned = text.replace(ACTION_RE, (_, json: string) => {
-    try {
-      const parsed = JSON.parse(json.trim());
-      if (parsed && typeof parsed === "object" && (parsed.type === "ADD" || parsed.type === "REMOVE")) {
-        actions.push(parsed as Action);
+  const cleaned = text
+    .replace(ACTION_RE, (_, json: string) => {
+      try {
+        const parsed = JSON.parse(json.trim());
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          (parsed.type === "ADD" || parsed.type === "REMOVE")
+        ) {
+          actions.push(parsed as Action);
+        }
+      } catch {
+        /* ignore */
       }
-    } catch { /* ignore */ }
-    return "";
-  }).trim();
+      return "";
+    })
+    .trim();
   return { cleaned, actions };
 }
 
@@ -70,16 +98,28 @@ export function PortfolioCommandCenter() {
 
       {/* Tabs */}
       <div className="relative flex flex-wrap items-center gap-1 border-b border-border/70 bg-background/40 px-2">
-        <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<KeyboardIcon className="h-3.5 w-3.5" />}>
+        <TabButton
+          active={tab === "manual"}
+          onClick={() => setTab("manual")}
+          icon={<KeyboardIcon className="h-3.5 w-3.5" />}
+        >
           Manuell
         </TabButton>
-        <TabButton active={tab === "photo"} onClick={() => setTab("photo")} icon={<Camera className="h-3.5 w-3.5" />}>
+        <TabButton
+          active={tab === "photo"}
+          onClick={() => setTab("photo")}
+          icon={<Camera className="h-3.5 w-3.5" />}
+        >
           Foto-Import
           <span className="ml-1.5 rounded bg-gold/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
             Neu
           </span>
         </TabButton>
-        <TabButton active={tab === "ai"} onClick={() => setTab("ai")} icon={<Wand2 className="h-3.5 w-3.5" />}>
+        <TabButton
+          active={tab === "ai"}
+          onClick={() => setTab("ai")}
+          icon={<Wand2 className="h-3.5 w-3.5" />}
+        >
           KI-Assistent
           <span className="ml-1.5 rounded bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
             PORTFOLIO
@@ -98,9 +138,15 @@ export function PortfolioCommandCenter() {
 }
 
 function TabButton({
-  active, onClick, icon, children,
+  active,
+  onClick,
+  icon,
+  children,
 }: {
-  active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <button
@@ -159,7 +205,9 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
     }
     if (!guard()) return;
     add({ symbol: selectedSymbol.toUpperCase(), qty, entry: finalEntry, side });
-    toast.success(`${side} ${qty} × ${selectedSymbol.toUpperCase()} @ ${finalEntry.toFixed(2)} hinzugefügt`);
+    toast.success(
+      `${side} ${qty} × ${selectedSymbol.toUpperCase()} @ ${finalEntry.toFixed(2)} hinzugefügt`,
+    );
     setEntry(0);
   }
 
@@ -179,14 +227,25 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
       <form onSubmit={onAdd} className="grid gap-3 md:grid-cols-[2fr,90px,140px,110px,auto]">
         {/* Symbol Picker */}
         <div className="relative">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Symbol / Firma</label>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Symbol / Firma
+          </label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
-              value={symbolInput || (showPicker ? "" : `${selectedSymbol} · ${selectedProduct?.name ?? ""}`)}
-              onChange={(e) => { setSymbolInput(e.target.value); setShowPicker(true); }}
-              onFocus={() => { setShowPicker(true); setSymbolInput(""); }}
+              value={
+                symbolInput ||
+                (showPicker ? "" : `${selectedSymbol} · ${selectedProduct?.name ?? ""}`)
+              }
+              onChange={(e) => {
+                setSymbolInput(e.target.value);
+                setShowPicker(true);
+              }}
+              onFocus={() => {
+                setShowPicker(true);
+                setSymbolInput("");
+              }}
               onBlur={() => setTimeout(() => setShowPicker(false), 150)}
               placeholder="z. B. AAPL, Apple, Vertiv…"
               className="w-full rounded-md border border-input bg-background pl-8 pr-3 py-2 text-sm focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -198,7 +257,10 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
                 <button
                   key={p.symbol}
                   type="button"
-                  onMouseDown={(e) => { e.preventDefault(); selectSymbol(p.symbol); }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    selectSymbol(p.symbol);
+                  }}
                   className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-accent/50"
                 >
                   <div className="min-w-0">
@@ -215,9 +277,14 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
         </div>
 
         <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Menge</label>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Menge
+          </label>
           <input
-            type="number" min={0} step="any" value={qty}
+            type="number"
+            min={0}
+            step="any"
+            value={qty}
             onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
           />
@@ -237,7 +304,10 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
             )}
           </label>
           <input
-            type="number" min={0} step="any" value={entry || ""}
+            type="number"
+            min={0}
+            step="any"
+            value={entry || ""}
             onChange={(e) => setEntry(parseFloat(e.target.value) || 0)}
             placeholder={livePrice ? livePrice.toFixed(2) : "0.00"}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -245,7 +315,9 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
         </div>
 
         <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Richtung</label>
+          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            Richtung
+          </label>
           <div className="grid grid-cols-2 overflow-hidden rounded-md border border-input">
             {(["LONG", "SHORT"] as const).map((s) => (
               <button
@@ -267,7 +339,8 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
         </div>
 
         <button
-          type="submit" disabled={atLimit}
+          type="submit"
+          disabled={atLimit}
           className="inline-flex items-center justify-center gap-1.5 self-end rounded-md bg-gradient-to-r from-primary to-violet-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
         >
           <Plus className="h-4 w-4" /> Hinzufügen
@@ -302,30 +375,43 @@ function AiPanel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const positionsRef = useRef<Position[]>(positions);
 
-  useEffect(() => { positionsRef.current = positions; }, [positions]);
+  useEffect(() => {
+    positionsRef.current = positions;
+  }, [positions]);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  const applyActions = useCallback((actions: Action[]) => {
-    for (const a of actions) {
-      if (a.type === "ADD") {
-        const sym = a.symbol.toUpperCase();
-        if (!a.qty || !a.entry || a.qty <= 0 || a.entry <= 0) {
-          toast.error(`${sym}: ungültige Menge oder Preis`);
-          continue;
+  const applyActions = useCallback(
+    (actions: Action[]) => {
+      for (const a of actions) {
+        if (a.type === "ADD") {
+          const sym = a.symbol.toUpperCase();
+          if (!a.qty || !a.entry || a.qty <= 0 || a.entry <= 0) {
+            toast.error(`${sym}: ungültige Menge oder Preis`);
+            continue;
+          }
+          add({
+            symbol: sym,
+            qty: a.qty,
+            entry: a.entry,
+            side: a.side === "SHORT" ? "SHORT" : "LONG",
+          });
+          toast.success(`${sym} hinzugefügt: ${a.qty} × € ${a.entry.toFixed(2)}`);
+        } else if (a.type === "REMOVE") {
+          const sym = a.symbol.toUpperCase();
+          const target = positionsRef.current.find((p) => p.symbol.toUpperCase() === sym);
+          if (!target) {
+            toast.error(`${sym} nicht im Portfolio gefunden`);
+            continue;
+          }
+          remove(target.id);
+          toast.success(`${sym} entfernt`);
         }
-        add({ symbol: sym, qty: a.qty, entry: a.entry, side: a.side === "SHORT" ? "SHORT" : "LONG" });
-        toast.success(`${sym} hinzugefügt: ${a.qty} × € ${a.entry.toFixed(2)}`);
-      } else if (a.type === "REMOVE") {
-        const sym = a.symbol.toUpperCase();
-        const target = positionsRef.current.find((p) => p.symbol.toUpperCase() === sym);
-        if (!target) { toast.error(`${sym} nicht im Portfolio gefunden`); continue; }
-        remove(target.id);
-        toast.success(`${sym} entfernt`);
       }
-    }
-  }, [add, remove]);
+    },
+    [add, remove],
+  );
 
   async function send(textOverride?: string) {
     const text = (textOverride ?? input).trim();
@@ -339,8 +425,12 @@ function AiPanel() {
       const payload = {
         messages: next,
         positions: positionsRef.current.map((p) => ({
-          symbol: p.symbol, name: findProduct(p.symbol)?.name,
-          qty: p.qty, entry: p.entry, side: p.side, openedAt: p.openedAt,
+          symbol: p.symbol,
+          name: findProduct(p.symbol)?.name,
+          qty: p.qty,
+          entry: p.entry,
+          side: p.side,
+          openedAt: p.openedAt,
         })),
       };
 
@@ -382,7 +472,9 @@ function AiPanel() {
                 return copy;
               });
             }
-          } catch { /* partial */ }
+          } catch {
+            /* partial */
+          }
         }
       }
 
@@ -468,7 +560,10 @@ function AiPanel() {
 
       {/* Input */}
       <form
-        onSubmit={(e) => { e.preventDefault(); send(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          send();
+        }}
         className="flex items-center gap-2 border-t border-border/70 bg-background/40 p-3"
       >
         <div className="relative flex-1">
@@ -538,7 +633,11 @@ function blobToDataUrl(file: Blob): Promise<string> {
 
 function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Bild konnte nicht optimiert werden"))), "image/jpeg", quality);
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Bild konnte nicht optimiert werden"))),
+      "image/jpeg",
+      quality,
+    );
   });
 }
 
@@ -546,16 +645,23 @@ function loadImageElement(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Bildformat konnte nicht gelesen werden.")); };
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Bildformat konnte nicht gelesen werden."));
+    };
     img.src = url;
   });
 }
 
 async function optimizeImageFile(file: File): Promise<string> {
-  const source = await (typeof createImageBitmap === "function"
-    ? createImageBitmap(file)
-    : Promise.reject(new Error("createImageBitmap unavailable"))
+  const source = await (
+    typeof createImageBitmap === "function"
+      ? createImageBitmap(file)
+      : Promise.reject(new Error("createImageBitmap unavailable"))
   ).catch(() => loadImageElement(file));
   const settings = [
     { maxEdge: 1800, quality: 0.78 },
@@ -641,14 +747,22 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
 
       const positions = Array.isArray(data?.positions) ? (data.positions as Extracted[]) : [];
       if (positions.length === 0) {
-        toast.info(typeof data?.hint === "string" ? data.hint : "Keine Positionen erkannt. Versuch ein klareres Bild.");
+        toast.info(
+          typeof data?.hint === "string"
+            ? data.hint
+            : "Keine Positionen erkannt. Versuch ein klareres Bild.",
+        );
       } else {
-        toast.success(`${positions.length} ${positions.length === 1 ? "Position" : "Positionen"} erkannt`);
+        toast.success(
+          `${positions.length} ${positions.length === 1 ? "Position" : "Positionen"} erkannt`,
+        );
       }
       setDrafts(positions.map((p) => ({ ...p, id: crypto.randomUUID(), enabled: true })));
     } catch (e) {
       if (e instanceof DOMException && e.name === "AbortError") {
-        toast.error("Analyse dauert zu lange. Bitte nutze einen enger zugeschnittenen Screenshot und versuch es erneut.");
+        toast.error(
+          "Analyse dauert zu lange. Bitte nutze einen enger zugeschnittenen Screenshot und versuch es erneut.",
+        );
       } else {
         toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
       }
@@ -674,7 +788,18 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     let n = 0;
     for (const d of toAdd) {
       if (!d.symbol || d.qty <= 0 || d.entry <= 0) continue;
-      add({ symbol: d.symbol.toUpperCase(), qty: d.qty, entry: d.entry, side: d.side });
+      add({
+        symbol: d.symbol.toUpperCase(),
+        qty: d.qty,
+        entry: d.entry,
+        side: d.side,
+        brokerCurrentPrice: d.current_price,
+        brokerCurrentValue: d.current_value,
+        brokerInvested: d.invested,
+        brokerPnlAbs: d.pnl_abs,
+        brokerPnlPct: d.pnl_pct,
+        brokerCurrency: d.currency,
+      });
       n++;
     }
     toast.success(`${n} ${n === 1 ? "Position übernommen" : "Positionen übernommen"} ✓`);
@@ -686,7 +811,10 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     <div className="p-5 space-y-4">
       {/* Dropzone */}
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => {
           e.preventDefault();
@@ -706,17 +834,22 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+          onChange={(e) => {
+            if (e.target.files) addFiles(e.target.files);
+            e.target.value = "";
+          }}
         />
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-violet-accent/20 ring-1 ring-primary/30">
           <Camera className="h-5 w-5 text-primary" />
         </div>
         <div className="mt-3 text-sm font-semibold">Screenshot oder Foto hochladen</div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Broker-App, Depotauszug, Excel-Liste, handschriftliche Notiz — die KI liest Ticker, Stückzahl und Einstandskurs aus.
+          Broker-App, Depotauszug, Excel-Liste, handschriftliche Notiz — die KI liest Ticker,
+          Stückzahl und Einstandskurs aus.
         </p>
         <p className="mt-1 text-[10px] text-muted-foreground/70">
-          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · wird vor dem Senden automatisch optimiert
+          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · wird vor dem Senden automatisch
+          optimiert
         </p>
       </div>
 
@@ -724,11 +857,17 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
       {files.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {files.map((f) => (
-            <div key={f.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-muted">
+            <div
+              key={f.id}
+              className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-muted"
+            >
               <img src={f.url} alt={f.file.name} className="h-full w-full object-cover" />
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); removeFile(f.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFile(f.id);
+                }}
                 className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 ring-1 ring-border transition-opacity group-hover:opacity-100 hover:text-rose-400"
                 aria-label="Entfernen"
               >
@@ -742,7 +881,11 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
             disabled={loading}
             className="inline-flex h-20 items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-violet-accent px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
             {loading ? "Analysiere…" : "Positionen erkennen"}
           </button>
         </div>
@@ -780,7 +923,13 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
   );
 }
 
-function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<DraftRow>) => void }) {
+function DraftRowItem({
+  row,
+  onPatch,
+}: {
+  row: DraftRow;
+  onPatch: (p: Partial<DraftRow>) => void;
+}) {
   const lowConf = row.confidence < 0.6;
   const curSym = row.currency === "USD" ? "$" : row.currency === "GBP" ? "£" : "€";
 
@@ -791,11 +940,9 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
   const liveValue =
     row.current_value ?? (livePrice && row.qty > 0 ? livePrice * row.qty : undefined);
   const invested = row.invested ?? row.entry * row.qty;
-  const pnlAbs =
-    row.pnl_abs ?? (liveValue !== undefined ? liveValue - invested : undefined);
+  const pnlAbs = row.pnl_abs ?? (liveValue !== undefined ? liveValue - invested : undefined);
   const pnlPct =
-    row.pnl_pct ??
-    (pnlAbs !== undefined && invested > 0 ? (pnlAbs / invested) * 100 : undefined);
+    row.pnl_pct ?? (pnlAbs !== undefined && invested > 0 ? (pnlAbs / invested) * 100 : undefined);
   const hasLive = livePrice !== undefined || pnlAbs !== undefined;
   const pnlPositive = (pnlAbs ?? 0) >= 0;
 
@@ -817,16 +964,24 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
           className="w-20 rounded border border-input bg-background px-2 py-1 font-semibold tabular-nums focus:border-primary/60 focus:outline-none"
         />
         <input
-          type="number" step="any" min={0} value={row.qty}
+          type="number"
+          step="any"
+          min={0}
+          value={row.qty}
           onChange={(e) => onPatch({ qty: parseFloat(e.target.value) || 0 })}
           className="w-16 rounded border border-input bg-background px-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
           placeholder="Menge"
         />
         <span className="text-muted-foreground">×</span>
         <div className="relative">
-          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">{curSym}</span>
+          <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {curSym}
+          </span>
           <input
-            type="number" step="any" min={0} value={row.entry}
+            type="number"
+            step="any"
+            min={0}
+            value={row.entry}
             onChange={(e) => onPatch({ entry: parseFloat(e.target.value) || 0 })}
             className="w-24 rounded border border-input bg-background pl-5 pr-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
             title="Einstandskurs pro Stück"
@@ -840,7 +995,9 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
               onClick={() => onPatch({ side: s })}
               className={`px-2 py-1 transition-colors ${
                 row.side === s
-                  ? s === "LONG" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                  ? s === "LONG"
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-rose-500/20 text-rose-400"
                   : "bg-background text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -849,12 +1006,14 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {row.name && <span className="hidden sm:inline max-w-[140px] truncate text-[10px] text-muted-foreground">{row.name}</span>}
+          {row.name && (
+            <span className="hidden sm:inline max-w-[140px] truncate text-[10px] text-muted-foreground">
+              {row.name}
+            </span>
+          )}
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-              lowConf
-                ? "bg-amber-500/15 text-amber-400"
-                : "bg-emerald-500/15 text-emerald-400"
+              lowConf ? "bg-amber-500/15 text-amber-400" : "bg-emerald-500/15 text-emerald-400"
             }`}
             title={`Confidence ${(row.confidence * 100).toFixed(0)}%`}
           >
@@ -870,7 +1029,8 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
             <span>
               Kurs lt. Broker:{" "}
               <span className="font-semibold tabular-nums text-foreground">
-                {curSym}{fmt(livePrice, livePrice < 10 ? 4 : 2)}
+                {curSym}
+                {fmt(livePrice, livePrice < 10 ? 4 : 2)}
               </span>
             </span>
           )}
@@ -878,7 +1038,8 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
             <span>
               Wert:{" "}
               <span className="font-semibold tabular-nums text-foreground">
-                {curSym}{fmt(liveValue)}
+                {curSym}
+                {fmt(liveValue)}
               </span>
             </span>
           )}
@@ -888,10 +1049,13 @@ function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<Dr
                 pnlPositive ? "text-emerald-400" : "text-rose-400"
               }`}
             >
-              {pnlPositive ? "+" : ""}{curSym}{fmt(pnlAbs)}
+              {pnlPositive ? "+" : ""}
+              {curSym}
+              {fmt(pnlAbs)}
               {pnlPct !== undefined && (
                 <span className="ml-1 opacity-80">
-                  ({pnlPositive ? "+" : ""}{fmt(pnlPct)} %)
+                  ({pnlPositive ? "+" : ""}
+                  {fmt(pnlPct)} %)
                 </span>
               )}
             </span>

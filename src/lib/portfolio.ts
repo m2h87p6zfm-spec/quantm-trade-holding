@@ -8,6 +8,12 @@ export type Position = {
   entry: number; // Einstandskurs
   side: "LONG" | "SHORT";
   openedAt: number;
+  brokerCurrentPrice?: number;
+  brokerCurrentValue?: number;
+  brokerInvested?: number;
+  brokerPnlAbs?: number;
+  brokerPnlPct?: number;
+  brokerCurrency?: string;
 };
 
 const KEY = "apex.portfolio.v1";
@@ -52,8 +58,40 @@ export function usePortfolio() {
 }
 
 export function pnl(pos: Position, price: number) {
+  if (
+    pos.brokerCurrentValue &&
+    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
+  ) {
+    const value = pos.brokerCurrentValue;
+    const basis =
+      pos.brokerInvested ??
+      (pos.brokerPnlAbs !== undefined
+        ? value - pos.brokerPnlAbs
+        : value / (1 + (pos.brokerPnlPct ?? 0) / 100));
+    const abs = pos.brokerPnlAbs ?? value - basis;
+    const pct = pos.brokerPnlPct ?? (basis > 0 ? (abs / basis) * 100 : 0);
+    return { abs, pct, value };
+  }
+  if (pos.qty === 1 && pos.entry > 500 && price > 0 && pos.entry / price > 5) {
+    return { abs: 0, pct: 0, value: pos.entry };
+  }
   const diff = pos.side === "LONG" ? price - pos.entry : pos.entry - price;
   const abs = diff * pos.qty;
   const pct = (diff / pos.entry) * 100;
   return { abs, pct, value: price * pos.qty };
+}
+
+export function costBasis(pos: Position) {
+  if (
+    pos.brokerCurrentValue &&
+    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
+  ) {
+    return (
+      pos.brokerInvested ??
+      (pos.brokerPnlAbs !== undefined
+        ? pos.brokerCurrentValue - pos.brokerPnlAbs
+        : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100))
+    );
+  }
+  return pos.entry * pos.qty;
 }

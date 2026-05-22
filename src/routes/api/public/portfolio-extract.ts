@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 /**
  * Extracts portfolio positions from one or more screenshots / photos
@@ -14,9 +15,9 @@ type Extracted = {
   qty: number;
   entry: number;
   side: "LONG" | "SHORT";
-  date?: string;          // dd.mm.yyyy
-  currency?: string;      // EUR / USD / ...
-  confidence: number;     // 0..1
+  date?: string; // dd.mm.yyyy
+  currency?: string; // EUR / USD / ...
+  confidence: number; // 0..1
   notes?: string;
   current_price?: number;
   current_value?: number;
@@ -24,6 +25,23 @@ type Extracted = {
   pnl_abs?: number;
   pnl_pct?: number;
 };
+
+async function fetchMarketPrice(symbol: string): Promise<number | undefined> {
+  try {
+    const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+    const j = cached.value;
+    const r = j?.chart?.result?.[0];
+    const metaPrice = Number(r?.meta?.regularMarketPrice);
+    if (Number.isFinite(metaPrice) && metaPrice > 0) return metaPrice;
+    const closes = Array.isArray(r?.indicators?.quote?.[0]?.close)
+      ? r.indicators.quote[0].close
+      : [];
+    const last = [...closes].reverse().find((x) => Number.isFinite(Number(x)) && Number(x) > 0);
+    return last === undefined ? undefined : Number(last);
+  } catch {
+    return undefined;
+  }
+}
 
 const SYSTEM = `Du bist ein universeller Vision-Extraktor für Aktien-, ETF- und Krypto-Portfolios. Du verarbeitest Screenshots aus JEDEM Broker, JEDER Trading-App und JEDEM Depotauszug — egal in welcher Sprache, welchem Layout oder welcher Währung.
 
@@ -61,7 +79,8 @@ Broker-Apps zeigen meist:
 FUNDAMENTAL — NIEMALS VERLETZEN
 - entry ist IMMER der Kurs PRO STÜCK (z. B. 312.45), NIEMALS der gesamte Positionswert.
 - qty ist IMMER die Anzahl der Stücke (oft dezimal, z. B. 22.4123), NIEMALS 1 als Notlösung.
-- Wenn du den per-Stück-Kurs nicht aus dem Bild rekonstruieren kannst → Position WEGLASSEN. Lieber 0 Positionen als ein erfundener Einstand, der 100× zu groß ist.
+- Wenn Stückzahl oder per-Stück-Kurs nicht sichtbar sind, aber Positionswert/Performance sichtbar sind: current_value und pnl_pct/pnl_abs ausgeben, qty/entry leer lassen. Der Server berechnet Stückzahl/Einstand mit Marktkursen.
+- NIEMALS current_value, invested oder Positionswert in entry schreiben. 7.016,83 € Positionswert für UNH ist NICHT entry=7016.83.
 - Plausibilitätsprüfung vor Ausgabe: entry · qty muss ungefähr dem aktuellen oder eingesetzten Geldbetrag entsprechen. Wenn entry · qty > 5× current_value → entry ist falsch (du hast Positionswert mit Stückkurs verwechselt), Position weglassen.
 
 Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
@@ -69,16 +88,18 @@ Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
      a) "Stück" / "Anteile" / "Shares" / "Qty" / "Nominal" direkt sichtbar → übernehmen (dezimal erlaubt).
      b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
      c) sonst invested UND entry sichtbar → qty = invested / entry.
-     d) sonst → Position WEGLASSEN (keine qty raten, NIEMALS qty=1 setzen).
+     d) sonst current_value sichtbar, aber kein Stückkurs → qty/entry leer lassen und current_value + Performance ausgeben; der Server ergänzt das mit Marktkursen.
+     e) sonst → Position WEGLASSEN (keine qty raten, NIEMALS qty=1 setzen).
   2. entry (Einstandskurs PRO STÜCK) — bevorzuge € vor %, weil % gerundet ist:
      a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
      b) sonst invested UND qty bekannt → entry = invested / qty.
      c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
      d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence ≤ 0.6.
-     e) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
-     f) sonst → Position WEGLASSEN.
+      e) sonst current_value UND pnl_pct/pnl_abs sichtbar, aber qty/current_price nicht sichtbar → entry und qty weglassen; current_value + pnl_pct/pnl_abs ausgeben.
+      f) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
+      g) sonst → Position WEGLASSEN.
   3. Werte > 0 prüfen.
-  4. Plausibilitäts-Check vor Ausgabe: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → Position weglassen, du hast eine Zahl falsch zugeordnet.
+  4. Plausibilitäts-Check vor Ausgabe nur wenn entry UND current_price existieren: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → entry/qty leer lassen und nur Broker-Wert/Performance ausgeben.
   5. KEINE harte Rundung — gib entry mit voller Präzision aus.
 
 WÄHRUNG
@@ -112,20 +133,44 @@ const EXTRACT_TOOL = {
             properties: {
               symbol: { type: "string", description: "Ticker-Symbol in Großbuchstaben" },
               name: { type: "string", description: "Optionaler Firmenname" },
-              qty: { type: "number", description: "Anzahl Stücke (darf dezimal sein, z. B. 0.5234)" },
-              entry: { type: "number", description: "Einstandskurs pro Stück (ggf. aus Wert/Kurs/Performance abgeleitet)" },
-              current_value: { type: "number", description: "Falls im Bild sichtbar: aktueller Positionswert (qty × Kurs)" },
-              current_price: { type: "number", description: "Falls im Bild sichtbar: aktueller Kurs pro Stück" },
-              invested: { type: "number", description: "Falls sichtbar: eingesetztes Kapital (qty × Einstandskurs)" },
-              pnl_abs: { type: "number", description: "Falls sichtbar: Gewinn/Verlust in Währung (z. B. €)" },
-              pnl_pct: { type: "number", description: "Falls sichtbar: Performance in % seit Einstand (oft gerundet)" },
+              qty: {
+                type: "number",
+                description: "Anzahl Stücke (darf dezimal sein, z. B. 0.5234)",
+              },
+              entry: {
+                type: "number",
+                description: "Einstandskurs pro Stück (ggf. aus Wert/Kurs/Performance abgeleitet)",
+              },
+              current_value: {
+                type: "number",
+                description: "Falls im Bild sichtbar: aktueller Positionswert (qty × Kurs)",
+              },
+              current_price: {
+                type: "number",
+                description: "Falls im Bild sichtbar: aktueller Kurs pro Stück",
+              },
+              invested: {
+                type: "number",
+                description: "Falls sichtbar: eingesetztes Kapital (qty × Einstandskurs)",
+              },
+              pnl_abs: {
+                type: "number",
+                description: "Falls sichtbar: Gewinn/Verlust in Währung (z. B. €)",
+              },
+              pnl_pct: {
+                type: "number",
+                description: "Falls sichtbar: Performance in % seit Einstand (oft gerundet)",
+              },
               side: { type: "string", enum: ["LONG", "SHORT"] },
               date: { type: "string", description: "Kaufdatum dd.mm.yyyy nur wenn klar erkennbar" },
               currency: { type: "string", description: "Währung, z. B. EUR / USD" },
               confidence: { type: "number", description: "0..1" },
-              notes: { type: "string", description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')" },
+              notes: {
+                type: "string",
+                description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')",
+              },
             },
-            required: ["symbol", "qty", "entry", "side", "confidence"],
+            required: ["symbol", "side", "confidence"],
             additionalProperties: false,
           },
         },
@@ -135,7 +180,6 @@ const EXTRACT_TOOL = {
     },
   },
 };
-
 
 const MAX_IMAGES = 5;
 const MAX_BYTES_PER_IMAGE = 1.5 * 1024 * 1024; // optimized client upload
@@ -185,7 +229,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             if (typeof img !== "string" || !img.startsWith("data:image/"))
               return json({ error: "Bild muss als data:image/... base64 übergeben werden." }, 400);
             if (approxBase64Bytes(img) > MAX_BYTES_PER_IMAGE)
-              return json({ error: "Bild zu groß. Bitte Screenshot zuschneiden oder erneut hochladen." }, 413);
+              return json(
+                { error: "Bild zu groß. Bitte Screenshot zuschneiden oder erneut hochladen." },
+                413,
+              );
           }
 
           const controller = new AbortController();
@@ -202,7 +249,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
                 {
                   role: "user",
                   content: [
-                    { type: "text", text: "Extrahiere alle Aktien-Positionen aus den folgenden Bildern." },
+                    {
+                      type: "text",
+                      text: "Extrahiere alle Aktien-Positionen aus den folgenden Bildern.",
+                    },
                     ...images.map((url) => ({ type: "image_url" as const, image_url: { url } })),
                   ],
                 },
@@ -216,7 +266,8 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           if (!upstream.ok) {
             const txt = await upstream.text();
             console.error("portfolio-extract gateway error", upstream.status, txt);
-            if (upstream.status === 429) return json({ error: "Zu viele Anfragen — kurz warten." }, 429);
+            if (upstream.status === 429)
+              return json({ error: "Zu viele Anfragen — kurz warten." }, 429);
             if (upstream.status === 402) return json({ error: "AI-Credits aufgebraucht." }, 402);
             return json({ error: "AI-Dienst nicht erreichbar." }, 502);
           }
@@ -234,13 +285,19 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           const choice = data.choices?.[0];
           const call = choice?.message?.tool_calls?.[0];
           const rawContent = choice?.message?.content?.slice(0, 400);
-          console.log("portfolio-extract: finish=", choice?.finish_reason, "tool=", !!call, "content=", rawContent);
+          console.log(
+            "portfolio-extract: finish=",
+            choice?.finish_reason,
+            "tool=",
+            !!call,
+            "content=",
+            rawContent,
+          );
 
           if (!call?.function?.arguments) {
             return json({
               positions: [] satisfies Extracted[],
-              hint:
-                "Die KI konnte im Bild keine Wertpapier-Positionen erkennen. Bitte einen Screenshot der Depot-Übersicht (Tabellen-/Listenansicht mit Tickern und Werten) verwenden — nicht das Sparplan- oder Chart-Fenster.",
+              hint: "Die KI konnte im Bild keine Wertpapier-Positionen erkennen. Bitte einen Screenshot der Depot-Übersicht (Tabellen-/Listenansicht mit Tickern und Werten) verwenden — nicht das Sparplan- oder Chart-Fenster.",
             });
           }
 
@@ -249,44 +306,124 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             parsed = JSON.parse(call.function.arguments);
           } catch (e) {
             console.error("portfolio-extract: invalid tool args", e);
-            return json({ positions: [] satisfies Extracted[], hint: "KI-Antwort war unvollständig. Bitte erneut versuchen." });
+            return json({
+              positions: [] satisfies Extracted[],
+              hint: "KI-Antwort war unvollständig. Bitte erneut versuchen.",
+            });
           }
 
           const rawArr = Array.isArray(parsed.positions) ? parsed.positions : [];
           const out: Extracted[] = [];
           let dropped = 0;
+          const marketPricePromises = new Map<string, Promise<number | undefined>>();
+          for (const raw of rawArr) {
+            if (!raw || typeof raw !== "object") continue;
+            const item = raw as Record<string, unknown>;
+            const sym = typeof item.symbol === "string" ? item.symbol.toUpperCase().trim() : "";
+            const value = Number(item.current_value);
+            if (sym && Number.isFinite(value) && value > 0 && !marketPricePromises.has(sym)) {
+              marketPricePromises.set(sym, fetchMarketPrice(sym));
+            }
+          }
           for (const p of rawArr) {
-            if (!p || typeof p !== "object") { dropped++; continue; }
-            const o = p as Record<string, unknown>;
-            const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
-            const qty = Number(o.qty);
-            const entry = Number(o.entry);
-            const side = o.side === "SHORT" ? "SHORT" : "LONG";
-            const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
-            if (!symbol || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(entry) || entry <= 0) {
-              console.warn("portfolio-extract: dropped position", { symbol, qty, entry });
+            if (!p || typeof p !== "object") {
               dropped++;
               continue;
             }
+            const o = p as Record<string, unknown>;
+            const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
+            const side = o.side === "SHORT" ? "SHORT" : "LONG";
+            const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
             const optNum = (k: string): number | undefined => {
               const v = Number(o[k]);
               return Number.isFinite(v) && v > 0 ? v : undefined;
             };
             const pnlPct = Number(o.pnl_pct);
             const pnlAbs = Number(o.pnl_abs);
-            const currentPrice = optNum("current_price");
+            let qty = optNum("qty");
+            let entry = optNum("entry");
+            let currentPrice = optNum("current_price");
             const currentValue = optNum("current_value");
+            const brokerInvested = optNum("invested");
+            const entryLooksLikePositionValue = !!(
+              entry &&
+              currentValue &&
+              entry > 500 &&
+              Math.abs(entry - currentValue) / currentValue < 0.08
+            );
+            const qtyLooksLikeFallback = !qty || (qty === 1 && entryLooksLikePositionValue);
+
+            if (
+              symbol &&
+              currentValue &&
+              (!currentPrice || qtyLooksLikeFallback || entryLooksLikePositionValue)
+            ) {
+              currentPrice = (await marketPricePromises.get(symbol)) ?? currentPrice;
+            }
+
+            if (currentValue && currentPrice && (!qty || qtyLooksLikeFallback)) {
+              qty = currentValue / currentPrice;
+            }
+            if (qty && brokerInvested && (!entry || entryLooksLikePositionValue)) {
+              entry = brokerInvested / qty;
+            } else if (
+              qty &&
+              currentValue &&
+              Number.isFinite(pnlAbs) &&
+              (!entry || entryLooksLikePositionValue)
+            ) {
+              entry = (currentValue - pnlAbs) / qty;
+            } else if (
+              currentPrice &&
+              Number.isFinite(pnlPct) &&
+              (!entry || entryLooksLikePositionValue)
+            ) {
+              entry = currentPrice / (1 + pnlPct / 100);
+            } else if (currentPrice && !entry) {
+              entry = currentPrice;
+            }
+
+            if (entryLooksLikePositionValue && !currentPrice) {
+              console.warn(
+                "portfolio-extract: dropped — Positionswert konnte nicht in Stückkurs umgerechnet werden",
+                { symbol, entry, qty, currentValue },
+              );
+              dropped++;
+              continue;
+            }
+
+            if (!symbol || !qty || qty <= 0 || !entry || entry <= 0) {
+              console.warn("portfolio-extract: dropped position", {
+                symbol,
+                qty,
+                entry,
+                currentValue,
+                currentPrice,
+              });
+              dropped++;
+              continue;
+            }
 
             // Plausibilitäts-Check: entry darf höchstens 5× vom aktuellen Stückkurs abweichen.
             // Schützt davor, dass die KI den Positionswert (z. B. 7000 €) als Einstand pro Stück übernimmt.
             if (currentPrice && (entry / currentPrice > 5 || currentPrice / entry > 5)) {
-              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", { symbol, entry, currentPrice, qty });
+              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", {
+                symbol,
+                entry,
+                currentPrice,
+                qty,
+              });
               dropped++;
               continue;
             }
             // Wenn entry · qty deutlich größer ist als der aktuelle Wert, hat die KI Positionswert mit Stückkurs verwechselt.
             if (currentValue && entry * qty > currentValue * 5) {
-              console.warn("portfolio-extract: dropped — entry·qty >> current_value", { symbol, entry, qty, currentValue });
+              console.warn("portfolio-extract: dropped — entry·qty >> current_value", {
+                symbol,
+                entry,
+                qty,
+                currentValue,
+              });
               dropped++;
               continue;
             }
@@ -308,7 +445,14 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             });
           }
 
-          console.log("portfolio-extract: raw=", rawArr.length, "kept=", out.length, "dropped=", dropped);
+          console.log(
+            "portfolio-extract: raw=",
+            rawArr.length,
+            "kept=",
+            out.length,
+            "dropped=",
+            dropped,
+          );
 
           if (out.length === 0) {
             const hint =
@@ -322,7 +466,13 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
         } catch (e) {
           console.error("portfolio-extract error", e);
           if (e instanceof Error && e.name === "AbortError") {
-            return json({ error: "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen." }, 504);
+            return json(
+              {
+                error:
+                  "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen.",
+              },
+              504,
+            );
           }
           return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
         }
