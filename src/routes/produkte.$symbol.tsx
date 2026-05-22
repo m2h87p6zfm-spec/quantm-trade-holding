@@ -9,6 +9,8 @@ import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
 import { AssetChart } from "@/components/AssetChart";
 import { BrokerAssessment } from "@/components/BrokerAssessment";
+import { MarketConsensus } from "@/components/MarketConsensus";
+import { ExplainAiButton } from "@/components/ExplainAiButton";
 
 export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
 
