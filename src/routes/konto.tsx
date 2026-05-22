@@ -37,7 +37,10 @@ function AccountPage() {
   const { tier, status, currentPeriodEnd, cancelAtPeriodEnd, priceId, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const openPortal = useServerFn(createPortalSession);
+  const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -62,6 +65,20 @@ function AccountPage() {
       toast.error(e instanceof Error ? e.message : "Konnte Billing-Portal nicht öffnen");
     } finally {
       setPortalBusy(false);
+    }
+  };
+
+  const onDelete = async () => {
+    setDeleteBusy(true);
+    try {
+      await callDelete({ data: undefined });
+      await supabase.auth.signOut();
+      toast.success("Konto und alle Daten gelöscht.");
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Löschen fehlgeschlagen");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
