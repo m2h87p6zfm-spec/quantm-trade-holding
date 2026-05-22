@@ -296,6 +296,7 @@ export function useSettings() {
     removeSymbol,
     reorderActive,
     createWatchlist,
+    createWatchlistWithSymbols,
     renameWatchlist,
     deleteWatchlist,
     setActiveWatchlist,
