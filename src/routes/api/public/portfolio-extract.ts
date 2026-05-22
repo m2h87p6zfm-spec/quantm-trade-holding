@@ -115,8 +115,8 @@ const EXTRACT_TOOL = {
 
 
 const MAX_IMAGES = 5;
-const MAX_BYTES_PER_IMAGE = 2.2 * 1024 * 1024; // optimized client upload
-const GATEWAY_TIMEOUT_MS = 24_000;
+const MAX_BYTES_PER_IMAGE = 1.5 * 1024 * 1024; // optimized client upload
+const GATEWAY_TIMEOUT_MS = 18_000;
 
 function approxBase64Bytes(dataUrl: string): number {
   const i = dataUrl.indexOf(",");
