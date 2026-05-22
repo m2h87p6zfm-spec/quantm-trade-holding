@@ -271,6 +271,7 @@ function AgentAnalysisView({
 
 function AnalysePage() {
   const [input, setInput] = useState("");
+  const [sessionId] = useState(() => `analyse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const initial: Msg[] = [
     { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX*, oder *Soll ich Tesla kaufen*." },
   ];
