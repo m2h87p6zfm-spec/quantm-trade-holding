@@ -74,6 +74,30 @@ function PicksPage() {
   const loading = settled < total;
   const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
 
+  // Auto-Heal: fehlgeschlagene Symbole automatisch erneut abrufen (max. 3 Runden,
+  // exponentielles Backoff), damit "ohne Daten" sich von selbst auflöst.
+  const autoRetryRef = useRef<Map<string, number>>(new Map());
+  useEffect(() => {
+    if (loading) return;
+    const toRetry: number[] = [];
+    candleQs.forEach((q, i) => {
+      if (!q.isError) return;
+      const sym = filtered[i]?.symbol;
+      if (!sym) return;
+      const n = autoRetryRef.current.get(sym) ?? 0;
+      if (n >= 3) return;
+      autoRetryRef.current.set(sym, n + 1);
+      toRetry.push(i);
+    });
+    if (toRetry.length === 0) return;
+    const delay = 1200 + Math.random() * 800;
+    const t = setTimeout(() => {
+      toRetry.forEach((i) => { candleQs[i]?.refetch?.(); });
+    }, delay);
+    return () => clearTimeout(t);
+  }, [loading, candleQs, filtered]);
+
+
 
   const picks = useMemo(() => {
     type Row = {
