@@ -34,6 +34,7 @@ export const Route = createFileRoute("/einstellungen")({
 
 function SettingsPage() {
   const { settings, update } = useSettings();
+  const t = useT();
   const [confirmReset, setConfirmReset] = useState(false);
 
   const resetAll = () => {
@@ -54,8 +55,13 @@ function SettingsPage() {
       language: "de",
       hideLowConfidence: true,
     });
-    toast.success("Einstellungen zurückgesetzt.");
+    toast.success(t("settings.reset.toast"));
     setConfirmReset(false);
+  };
+
+  const changeLanguage = (lang: Lang) => {
+    update({ language: lang });
+    toast.success(t("settings.saved"));
   };
 
   return (
