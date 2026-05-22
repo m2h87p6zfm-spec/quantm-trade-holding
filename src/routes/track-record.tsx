@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Progress } from "@/components/ui/progress";
 import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown } from "lucide-react";
 import { formatPercent, formatNumber, formatPrice } from "@/lib/format";
+import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
 export const Route = createFileRoute("/track-record")({
   head: () => ({
