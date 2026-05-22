@@ -521,6 +521,92 @@ export type Database = {
         }
         Relationships: []
       }
+      apex_analyses: {
+        Row: {
+          analyzed_at: string
+          asset_type: string
+          confidence_score: number
+          id: string
+          indicators: Json
+          name: string
+          price_at_analysis: number
+          sector: string | null
+          ticker: string
+          verdict: string
+        }
+        Insert: {
+          analyzed_at?: string
+          asset_type?: string
+          confidence_score: number
+          id?: string
+          indicators?: Json
+          name: string
+          price_at_analysis: number
+          sector?: string | null
+          ticker: string
+          verdict: string
+        }
+        Update: {
+          analyzed_at?: string
+          asset_type?: string
+          confidence_score?: number
+          id?: string
+          indicators?: Json
+          name?: string
+          price_at_analysis?: number
+          sector?: string | null
+          ticker?: string
+          verdict?: string
+        }
+        Relationships: []
+      }
+      apex_outcomes: {
+        Row: {
+          analysis_id: string
+          id: string
+          is_correct: boolean | null
+          price_after_30d: number | null
+          price_after_60d: number | null
+          price_after_90d: number | null
+          return_30d: number | null
+          return_60d: number | null
+          return_90d: number | null
+          updated_at: string
+        }
+        Insert: {
+          analysis_id: string
+          id?: string
+          is_correct?: boolean | null
+          price_after_30d?: number | null
+          price_after_60d?: number | null
+          price_after_90d?: number | null
+          return_30d?: number | null
+          return_60d?: number | null
+          return_90d?: number | null
+          updated_at?: string
+        }
+        Update: {
+          analysis_id?: string
+          id?: string
+          is_correct?: boolean | null
+          price_after_30d?: number | null
+          price_after_60d?: number | null
+          price_after_90d?: number | null
+          return_30d?: number | null
+          return_60d?: number | null
+          return_90d?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apex_outcomes_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: true
+            referencedRelation: "apex_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           content: string

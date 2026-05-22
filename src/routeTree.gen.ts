@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WarRoomRouteImport } from './routes/war-room'
+import { Route as TrackRecordRouteImport } from './routes/track-record'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
@@ -44,6 +45,7 @@ import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candle
 import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/agent-feedback'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -53,6 +55,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const WarRoomRoute = WarRoomRouteImport.update({
   id: '/war-room',
   path: '/war-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRecordRoute = TrackRecordRouteImport.update({
+  id: '/track-record',
+  path: '/track-record',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignaleRoute = SignaleRouteImport.update({
@@ -221,6 +228,12 @@ const ApiPublicPaymentsWebhookRoute =
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTrackOutcomesRoute =
+  ApiPublicHooksTrackOutcomesRouteImport.update({
+    id: '/api/public/hooks/track-outcomes',
+    path: '/api/public/hooks/track-outcomes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -243,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -257,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -280,6 +295,7 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -294,6 +310,7 @@ export interface FileRoutesByTo {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -318,6 +335,7 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
+  '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -332,6 +350,7 @@ export interface FileRoutesById {
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
+  '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -357,6 +376,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -371,6 +391,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -394,6 +415,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -408,6 +430,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -431,6 +454,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/signale'
+    | '/track-record'
     | '/war-room'
     | '/welcome'
     | '/checkout/return'
@@ -445,6 +469,7 @@ export interface FileRouteTypes {
     | '/api/public/news-sentiment'
     | '/api/public/quote'
     | '/api/public/search'
+    | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -469,6 +494,7 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   PreiseRoute: typeof PreiseRoute
   SignaleRoute: typeof SignaleRoute
+  TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
@@ -483,6 +509,7 @@ export interface RootRouteChildren {
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
+  ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -500,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/war-room'
       fullPath: '/war-room'
       preLoaderRoute: typeof WarRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track-record': {
+      id: '/track-record'
+      path: '/track-record'
+      fullPath: '/track-record'
+      preLoaderRoute: typeof TrackRecordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signale': {
@@ -733,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/track-outcomes': {
+      id: '/api/public/hooks/track-outcomes'
+      path: '/api/public/hooks/track-outcomes'
+      fullPath: '/api/public/hooks/track-outcomes'
+      preLoaderRoute: typeof ApiPublicHooksTrackOutcomesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -757,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   PreiseRoute: PreiseRoute,
   SignaleRoute: SignaleRoute,
+  TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
@@ -771,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
+  ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
