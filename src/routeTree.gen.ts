@@ -38,6 +38,7 @@ import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/
 import { Route as ApiPublicExplainConceptRouteImport } from './routes/api/public/explain-concept'
 import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/cron-evaluate'
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
+import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/agent-feedback'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -186,6 +187,11 @@ const ApiPublicCandlesRoute = ApiPublicCandlesRouteImport.update({
   path: '/api/public/candles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAgentFeedbackRoute = ApiPublicAgentFeedbackRouteImport.update({
+  id: '/api/public/agent-feedback',
+  path: '/api/public/agent-feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAgentChatRoute = ApiPublicAgentChatRouteImport.update({
   id: '/api/public/agent-chat',
   path: '/api/public/agent-chat',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
+  '/api/public/agent-feedback': typeof ApiPublicAgentFeedbackRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
+  '/api/public/agent-feedback': typeof ApiPublicAgentFeedbackRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
   '/api/public/agent-chat': typeof ApiPublicAgentChatRoute
+  '/api/public/agent-feedback': typeof ApiPublicAgentFeedbackRoute
   '/api/public/candles': typeof ApiPublicCandlesRoute
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
+    | '/api/public/agent-feedback'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/produkte/$symbol'
     | '/produkte'
     | '/api/public/agent-chat'
+    | '/api/public/agent-feedback'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/produkte/$symbol'
     | '/produkte/'
     | '/api/public/agent-chat'
+    | '/api/public/agent-feedback'
     | '/api/public/candles'
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
   ApiPublicAgentChatRoute: typeof ApiPublicAgentChatRoute
+  ApiPublicAgentFeedbackRoute: typeof ApiPublicAgentFeedbackRoute
   ApiPublicCandlesRoute: typeof ApiPublicCandlesRoute
   ApiPublicCronEvaluateRoute: typeof ApiPublicCronEvaluateRoute
   ApiPublicExplainConceptRoute: typeof ApiPublicExplainConceptRoute
@@ -639,6 +652,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCandlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/agent-feedback': {
+      id: '/api/public/agent-feedback'
+      path: '/api/public/agent-feedback'
+      fullPath: '/api/public/agent-feedback'
+      preLoaderRoute: typeof ApiPublicAgentFeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/agent-chat': {
       id: '/api/public/agent-chat'
       path: '/api/public/agent-chat'
@@ -682,6 +702,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,
   ApiPublicAgentChatRoute: ApiPublicAgentChatRoute,
+  ApiPublicAgentFeedbackRoute: ApiPublicAgentFeedbackRoute,
   ApiPublicCandlesRoute: ApiPublicCandlesRoute,
   ApiPublicCronEvaluateRoute: ApiPublicCronEvaluateRoute,
   ApiPublicExplainConceptRoute: ApiPublicExplainConceptRoute,
