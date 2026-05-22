@@ -162,7 +162,7 @@ function Cockpit() {
               <div className="col-span-3 text-right">Signal</div>
             </div>
             {cockpitSymbols.map((s, i) => (
-              <RowItem key={s} symbol={s} idx={i} showRemove={!usingDefault} row={rowMap.get(s)} onRemove={() => toggleWatch(s)} />
+              <RowItem key={s} symbol={s} idx={i} showRemove={!usingDefault} row={rowMap.get(s)} onRemove={() => removeSymbol(s)} />
             ))}
           </div>
 
