@@ -674,7 +674,18 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     let n = 0;
     for (const d of toAdd) {
       if (!d.symbol || d.qty <= 0 || d.entry <= 0) continue;
-      add({ symbol: d.symbol.toUpperCase(), qty: d.qty, entry: d.entry, side: d.side });
+      add({
+        symbol: d.symbol.toUpperCase(),
+        qty: d.qty,
+        entry: d.entry,
+        side: d.side,
+        brokerCurrentPrice: d.current_price,
+        brokerCurrentValue: d.current_value,
+        brokerInvested: d.invested,
+        brokerPnlAbs: d.pnl_abs,
+        brokerPnlPct: d.pnl_pct,
+        brokerCurrency: d.currency,
+      });
       n++;
     }
     toast.success(`${n} ${n === 1 ? "Position übernommen" : "Positionen übernommen"} ✓`);
