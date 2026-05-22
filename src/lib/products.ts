@@ -2,7 +2,7 @@ export type Product = {
   symbol: string;
   name: string;
   sector: "Technologie" | "Energie" | "Finanzen" | "Gesundheit" | "Konsum" | "Industrie" | "Rohstoffe" | "Index";
-  region: "US" | "DE" | "EU" | "JP";
+  region: "US" | "DE" | "EU" | "UK" | "JP";
 };
 
 export const PRODUCTS: Product[] = [
