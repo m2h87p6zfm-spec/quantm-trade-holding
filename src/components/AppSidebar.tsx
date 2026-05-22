@@ -40,18 +40,19 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_18px_-4px_hsl(var(--primary)/0.45)]">
-            <ApexLogo className="h-6 w-6" />
-            <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-bull animate-pulse ring-2 ring-sidebar" />
+        <div className="flex items-center gap-3 px-2 py-3.5">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_22px_-4px_hsl(var(--primary)/0.5)]">
+            <ApexLogo className="h-8 w-8" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-bull animate-pulse ring-2 ring-sidebar" />
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-bold tracking-tight">Apex <span className="text-gradient-gold">Trades</span></span>
-              <span className="text-[10px] text-muted-foreground">Statistical Trading Agent</span>
+              <span className="text-lg font-bold tracking-tight">Apex <span className="text-gradient-gold">Trades</span></span>
+              <span className="text-[11px] text-muted-foreground">Statistical Trading Agent</span>
             </div>
           )}
         </div>
+
       </SidebarHeader>
 
       <SidebarContent>
