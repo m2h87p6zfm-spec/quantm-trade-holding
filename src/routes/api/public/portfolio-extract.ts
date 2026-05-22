@@ -274,6 +274,22 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             };
             const pnlPct = Number(o.pnl_pct);
             const pnlAbs = Number(o.pnl_abs);
+            const currentPrice = optNum("current_price");
+            const currentValue = optNum("current_value");
+
+            // Plausibilitäts-Check: entry darf höchstens 5× vom aktuellen Stückkurs abweichen.
+            // Schützt davor, dass die KI den Positionswert (z. B. 7000 €) als Einstand pro Stück übernimmt.
+            if (currentPrice && (entry / currentPrice > 5 || currentPrice / entry > 5)) {
+              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", { symbol, entry, currentPrice, qty });
+              dropped++;
+              continue;
+            }
+            // Wenn entry · qty deutlich größer ist als der aktuelle Wert, hat die KI Positionswert mit Stückkurs verwechselt.
+            if (currentValue && entry * qty > currentValue * 5) {
+              console.warn("portfolio-extract: dropped — entry·qty >> current_value", { symbol, entry, qty, currentValue });
+              dropped++;
+              continue;
+            }
             out.push({
               symbol,
               name: typeof o.name === "string" ? o.name : undefined,
