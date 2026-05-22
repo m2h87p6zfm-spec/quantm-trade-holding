@@ -349,39 +349,19 @@ export function ProChart({
       {/* Legende */}
       <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
         {overlays.includes("ema20") && (
-          <Legend
-            swatch="#38bdf8"
-            label="EMA 20"
-            info="Exponentieller gleitender Durchschnitt der letzten 20 Perioden. Reagiert schneller als die einfache SMA — gilt als kurzfristiger Trend-Indikator. Liegt der Kurs darüber, ist das kurzfristige Momentum bullish."
-          />
+          <Legend swatch="var(--chart-1)" label="EMA 20" info="Exponentieller gleitender Durchschnitt der letzten 20 Perioden. Reagiert schneller als die SMA — kurzfristiger Trend-Indikator. Kurs darüber = kurzfristig bullish." />
         )}
         {overlays.includes("ema50") && (
-          <Legend
-            swatch="#fbbf24"
-            label="EMA 50"
-            info="Exponentieller 50-Tage-Durchschnitt — der klassische mittelfristige Trend-Filter. Viele Institutionelle nutzen ihn als dynamische Support-/Resistance-Linie. Kreuzungen mit EMA 20 markieren Trendwechsel."
-          />
+          <Legend swatch="var(--chart-2)" label="EMA 50" info="Mittelfristiger Trend-Filter. Institutionelle nutzen ihn als dynamische Support-/Resistance-Linie." />
         )}
         {overlays.includes("sma200") && (
-          <Legend
-            swatch="#c084fc"
-            label="SMA 200"
-            info="Einfacher 200-Tage-Durchschnitt — der wichtigste Langfrist-Trendmarker. Kurs über SMA 200 = Bullenmarkt-Bias, darunter = Bärenmarkt-Bias. Der ‚Death Cross‘ (EMA 50 unter SMA 200) gilt als klassisches Verkaufssignal."
-          />
+          <Legend swatch="var(--chart-3)" label="SMA 200" info="Wichtigster Langfrist-Trendmarker. Kurs über SMA 200 = Bullenmarkt-Bias, darunter = Bärenmarkt-Bias." />
         )}
         {overlays.includes("bbands") && (
-          <Legend
-            swatch="#38bdf8"
-            label="Bollinger 20·2σ"
-            info="Bänder rund um die 20-Tage-SMA, ±2 Standardabweichungen breit. Sie messen Volatilität: Enge Bänder = ruhiger Markt (oft vor Ausbruch), weite Bänder = hohe Volatilität. Berührt der Kurs das obere Band, gilt er als kurzfristig überkauft, unteres Band = überverkauft."
-          />
+          <Legend swatch="var(--chart-4)" label="Bollinger 20·2σ" info="Bänder rund um die 20-Perioden-SMA, ±2 σ. Eng = ruhig (oft vor Ausbruch), weit = hohe Volatilität." />
         )}
         {showZones && zones.length > 0 && (
-          <Legend
-            swatch="#22c55e"
-            label={`${zones.length} Smart-Zones`}
-            info="Algorithmisch erkannte Support- und Resistance-Zonen, basierend auf gehäuften Kursreaktionen und Volumen-Clustern. Diese Bereiche sind oft Entscheidungspunkte für Kauf-/Verkaufsdruck."
-          />
+          <Legend swatch="var(--bull)" label={`${zones.length} Smart-Zones`} info="Algorithmisch erkannte Support-/Resistance-Zonen aus Kursreaktionen und Volumen-Clustern." />
         )}
       </div>
     </div>
