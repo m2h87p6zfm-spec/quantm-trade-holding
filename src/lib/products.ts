@@ -529,6 +529,28 @@ export const PRODUCTS: Product[] = [
   { symbol: "BTBT", name: "Bit Digital", sector: "Technologie", region: "US" },
   { symbol: "CIFR", name: "Cipher Mining", sector: "Technologie", region: "US" },
   { symbol: "CLSK", name: "CleanSpark", sector: "Technologie", region: "US" },
+
+  // === Häufig gesuchte Nachzügler ===
+  { symbol: "VRT", name: "Vertiv Holdings", sector: "Industrie", region: "US" },
+  { symbol: "VST", name: "Vistra Corp", sector: "Energie", region: "US" },
+  { symbol: "CEG", name: "Constellation Energy", sector: "Energie", region: "US" },
+  { symbol: "TLN", name: "Talen Energy", sector: "Energie", region: "US" },
+  { symbol: "OKLO", name: "Oklo Inc.", sector: "Energie", region: "US" },
+  { symbol: "SMR", name: "NuScale Power", sector: "Energie", region: "US" },
+  { symbol: "CRWV", name: "CoreWeave", sector: "Technologie", region: "US" },
+  { symbol: "NBIS", name: "Nebius Group", sector: "Technologie", region: "US" },
+  { symbol: "TEM", name: "Tempus AI", sector: "Gesundheit", region: "US" },
+  { symbol: "RKLB", name: "Rocket Lab", sector: "Industrie", region: "US" },
+  { symbol: "ASTS", name: "AST SpaceMobile", sector: "Technologie", region: "US" },
+  { symbol: "LUNR", name: "Intuitive Machines", sector: "Industrie", region: "US" },
+  { symbol: "JOBY", name: "Joby Aviation", sector: "Industrie", region: "US" },
+  { symbol: "ACHR", name: "Archer Aviation", sector: "Industrie", region: "US" },
+  { symbol: "ANF", name: "Abercrombie & Fitch", sector: "Konsum", region: "US" },
+  { symbol: "DKNG", name: "DraftKings", sector: "Konsum", region: "US" },
+  { symbol: "MGM", name: "MGM Resorts", sector: "Konsum", region: "US" },
+  { symbol: "LVS", name: "Las Vegas Sands", sector: "Konsum", region: "US" },
+  { symbol: "WBD", name: "Warner Bros. Discovery", sector: "Konsum", region: "US" },
+  { symbol: "PARA", name: "Paramount Global", sector: "Konsum", region: "US" },
 ];
 
 export const SECTORS = ["Technologie", "Energie", "Finanzen", "Gesundheit", "Konsum", "Industrie", "Rohstoffe"] as const;
