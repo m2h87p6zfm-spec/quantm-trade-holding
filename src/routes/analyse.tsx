@@ -8,7 +8,7 @@ import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Bra
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis, useQuote } from "@/lib/useMarketData";
-import { scoreIndicators, buildDecision } from "@/lib/analysis";
+import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
@@ -305,7 +305,11 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
   const sig = scoreIndicators(indicators, settings.risk);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
-  const decision = buildDecision(symbol, productName, indicators, sig, regime);
+  const rawDecision = buildDecision(symbol, productName, indicators, sig, regime);
+  const stable = stabilizeDecision(symbol, rawDecision.decision, rawDecision.confidence);
+  const decision = stable.decision === rawDecision.decision
+    ? { ...rawDecision, adjustments: [...rawDecision.adjustments, `Stabilität: ${stable.reason}`] }
+    : { ...rawDecision, decision: stable.decision, adjustments: [...rawDecision.adjustments, `Stabilität: ${stable.reason}`] };
 
   return (
     <AgentAnalysisView

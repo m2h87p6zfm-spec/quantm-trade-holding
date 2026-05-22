@@ -371,3 +371,81 @@ export function buildDecision(
     adjustments,
   };
 }
+
+// ============================================================
+//  DECISION STABILITY (Hysterese gegen Flip-Flop)
+// ============================================================
+// Indikatoren werden auf Live-Marktdaten berechnet — Preis, RSI, MACD ändern
+// sich im Minutentakt. Genau an der 50-%-Schwelle kann eine identische Logik
+// zwischen BUY/SELL/HOLD wechseln, obwohl sich nur Nachkommastellen
+// verschoben haben. Diese Funktion klebt die letzte Entscheidung pro Symbol
+// fest und verlangt eine klare Konfidenz-Reserve, bevor sie kippen darf:
+//
+//   • HOLD  → BUY/SELL  benötigt Konfidenz ≥ 58
+//   • BUY   → SELL      benötigt Konfidenz ≥ 65 (oder umgekehrt)
+//   • BUY/SELL bleibt stehen, solange Konfidenz ≥ 45
+//   • Fällt Konfidenz < 45, wird auf HOLD zurückgestuft
+//
+// Damit ist die Empfehlung reproduzierbar: gleiche Indikatoren → gleiche
+// Entscheidung, und kleine Schwankungen lösen kein Hin und Her aus.
+
+type StableDecisionCache = {
+  decision: Decision;
+  confidence: number;
+  updatedAt: number;
+};
+
+const STABILITY_KEY = "apex.decision.stability.v1";
+const STABILITY_TTL_MS = 1000 * 60 * 60 * 6; // 6 h Halbwertszeit
+
+function loadStability(): Record<string, StableDecisionCache> {
+  if (typeof localStorage === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(STABILITY_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, StableDecisionCache>;
+  } catch { return {}; }
+}
+
+function saveStability(map: Record<string, StableDecisionCache>) {
+  if (typeof localStorage === "undefined") return;
+  try { localStorage.setItem(STABILITY_KEY, JSON.stringify(map)); } catch { /* ignore */ }
+}
+
+export function stabilizeDecision(
+  symbol: string,
+  next: Decision,
+  confidence: number,
+): { decision: Decision; flipped: boolean; reason: string } {
+  const map = loadStability();
+  const prev = map[symbol];
+  const now = Date.now();
+  const fresh = prev && now - prev.updatedAt < STABILITY_TTL_MS ? prev : null;
+
+  let final: Decision = next;
+  let flipped = false;
+  let reason = "Erste Bewertung — neue Entscheidung übernommen.";
+
+  if (fresh) {
+    if (fresh.decision === next) {
+      reason = `Bestätigt: Entscheidung unverändert seit ${new Date(fresh.updatedAt).toLocaleString("de-DE")}.`;
+    } else if (fresh.decision === "HOLD") {
+      // HOLD → BUY/SELL
+      if (confidence >= 58) { final = next; flipped = true; reason = `Wechsel von HOLD → ${next} (Konfidenz ${confidence}% ≥ 58 %).`; }
+      else { final = "HOLD"; reason = `Signal zeigt ${next}, aber Konfidenz ${confidence}% < 58 % — bleibe bei HOLD (kein Flip-Flop).`; }
+    } else if (next === "HOLD") {
+      // BUY/SELL → HOLD
+      if (confidence < 45) { final = "HOLD"; flipped = true; reason = `Konfidenz auf ${confidence}% gefallen — Position auf HOLD zurückgestuft.`; }
+      else { final = fresh.decision; reason = `Signal schwankt Richtung HOLD, aber Konfidenz ${confidence}% ≥ 45 % — bleibe bei ${fresh.decision}.`; }
+    } else {
+      // BUY ↔ SELL (Richtungswechsel)
+      if (confidence >= 65) { final = next; flipped = true; reason = `Richtungswechsel ${fresh.decision} → ${next} (Konfidenz ${confidence}% ≥ 65 %).`; }
+      else { final = fresh.decision; reason = `Signal kippt Richtung ${next}, aber Konfidenz ${confidence}% < 65 % — Richtungswechsel braucht klarere Mehrheit.`; }
+    }
+  }
+
+  map[symbol] = { decision: final, confidence, updatedAt: now };
+  saveStability(map);
+  return { decision: final, flipped, reason };
+}
+
