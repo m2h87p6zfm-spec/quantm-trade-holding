@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw } from "lucide-react";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
@@ -10,6 +10,7 @@ import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { recordApexAnalysis } from "@/lib/track-record.functions";
 
 function regimeLabel(r: MarketRegime) {
   return { bull: "Bullisch", bear: "Bärisch", chop: "Seitwärts", high_vol: "Hochvolatil", low_vol: "Ruhig" }[r];
@@ -108,6 +109,46 @@ function PicksPage() {
     rows.sort((a, b) => b.score - a.score);
     return rows.slice(0, 15);
   }, [candleQs, filtered, settings.risk]);
+
+  // Persist BUY picks into the public Track Record (dedup per symbol per day).
+  const recordedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (loading || picks.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    let stored: Record<string, string> = {};
+    try { stored = JSON.parse(localStorage.getItem("apex_picks_recorded") || "{}"); } catch { /* ignore */ }
+    for (const row of picks) {
+      const key = row.p.symbol;
+      if (recordedRef.current.has(key)) continue;
+      if (stored[key] === today) { recordedRef.current.add(key); continue; }
+      recordedRef.current.add(key);
+      stored[key] = today;
+      recordApexAnalysis({
+        data: {
+          ticker: row.p.symbol,
+          name: row.p.name,
+          sector: row.p.sector ?? null,
+          asset_type: "Aktie",
+          verdict: "KAUF",
+          confidence_score: row.report.confidence,
+          price_at_analysis: row.last,
+          indicators: {
+            zScore: row.ind.zScore,
+            rsi: row.ind.rsi,
+            macdHist: row.ind.macd.histogram,
+            sma50: row.ind.sma50,
+            sma200: row.ind.sma200,
+            volatility: row.ind.volatility,
+            momentum: row.ind.momentum,
+            regime: row.regime,
+            upsidePct: row.upsidePct,
+            source: "picks-scan",
+          },
+        },
+      }).catch(() => { /* fire-and-forget */ });
+    }
+    try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
+  }, [loading, picks]);
 
   const podium = picks.slice(0, 3);
   const rest = picks.slice(3);
