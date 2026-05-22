@@ -187,14 +187,24 @@ function WelcomePage() {
             />
           )}
           {step === 9 && (
+            <ScreenNewsSources
+              value={answers.newsSources ?? NEWS_SOURCE_OPTIONS.map((o) => o.key)}
+              onChange={(v) => set({ newsSources: v })}
+              onContinue={() => {
+                persistNewsSources(answers.newsSources ?? NEWS_SOURCE_OPTIONS.map((o) => o.key));
+                next();
+              }}
+            />
+          )}
+          {step === 10 && (
             <ScreenEmail
               value={answers.email ?? ""}
               onChange={(v) => set({ email: v })}
               onContinue={next}
             />
           )}
-          {step === 10 && <ScreenLoading onDone={next} />}
-          {step === 11 && (
+          {step === 11 && <ScreenLoading onDone={next} />}
+          {step === 12 && (
             <ScreenFinal
               email={answers.email}
               onEnter={() => navigate({ to: "/login" })}
@@ -204,7 +214,7 @@ function WelcomePage() {
         </div>
 
         {/* footer nav */}
-        {step > 1 && step !== 10 && (
+        {step > 1 && step !== 11 && (
           <div className="mt-10 flex items-center justify-between text-xs text-muted-foreground">
             <button onClick={back} className="hover:text-foreground transition-colors">Back</button>
             <div className="flex items-center gap-2">
