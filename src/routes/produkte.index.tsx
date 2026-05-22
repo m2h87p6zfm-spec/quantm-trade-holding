@@ -44,7 +44,7 @@ function KatalogPage() {
             <div className="text-xs text-muted-foreground">Wenn Twelve Data das Symbol kennt, lädt die App Analyse und Chart trotzdem.</div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => toggleWatch(customSymbol)} className="rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent">
+            <button onClick={() => guardedAdd(customSymbol)} className="rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent">
               {settings.watchlist.includes(customSymbol) ? "Aus Watchlist entfernen" : "Zur Watchlist"}
             </button>
             <Link to="/produkte/$symbol" params={{ symbol: customSymbol }} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
@@ -66,7 +66,7 @@ function KatalogPage() {
                 </div>
                 <div className="text-xs text-muted-foreground">{p.name}</div>
               </Link>
-              <button onClick={() => toggleWatch(p.symbol)} className={`rounded p-1.5 ${watched ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} aria-label="Watchlist">
+              <button onClick={() => guardedAdd(p.symbol)} className={`rounded p-1.5 ${watched ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} aria-label="Watchlist">
                 {watched ? <Star className="h-4 w-4 fill-current" /> : <StarOff className="h-4 w-4" />}
               </button>
             </div>
