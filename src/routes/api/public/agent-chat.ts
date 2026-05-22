@@ -330,7 +330,19 @@ WEB CONTEXT & GEDÄCHTNIS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 - WEB CONTEXT (Firecrawl) ist unten angehängt. Inline-Zitate [1], [2] … direkt am Faktum, am Ende **Quellen:** mit Titel — URL — Datum.
 - MEMORY/PROFIL/FEEDBACK: aktiv nutzen, Folgefragen automatisch auf das letzte Thema beziehen, Vorlieben (Risiko, Stil, Region, Horizont) übernehmen, bei thumbs_down Stil ändern.
-- Fehlt ein Datenblock: explizit "keine [Memory/Profil/Feedback/Live-Daten] verfügbar" sagen.`;
+- Fehlt ein Datenblock: explizit "keine [Memory/Profil/Feedback/Live-Daten] verfügbar" sagen.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PFLICHTBLOCK: AKTUELLE KATALYSATOREN & NEWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bei JEDER Asset-Analyse MUSS direkt vor ⑥ HANDLUNGSEMPFEHLUNG ein Block stehen:
+
+**📰 Aktuelle Katalysatoren (letzte 30 Tage)**
+- 3–6 konkrete, datierte News/Ereignisse aus dem WEB CONTEXT, die den Kurs aktuell bewegen (Regulatorik, Subventionen, M&A, Earnings, Produkt-Launches, Makro-Schocks, politische Entscheidungen, Sektor-Treiber).
+- Jede Zeile: **[Datum]** · Kurzbeschreibung · *Kurswirkung (bullish/bearish/neutral)* · Quelle [n]
+- Wenn der WEB CONTEXT explizite Treiber liefert (z. B. staatliche Förderprogramme für Quantum/AI/Chips für Werte wie IONQ, RGTI, NVDA), MÜSSEN diese genannt werden — niemals weglassen, auch wenn die quantitative Analyse vollständig wirkt.
+- Verbinde die Katalysatoren mit der Empfehlung: "Score 72 BUY wird durch staatlichen Quantum-Push [3] zusätzlich gestützt."
+- Wenn der WEB CONTEXT leer/dünn ist: explizit "Keine signifikanten frischen Katalysatoren in den abgerufenen Quellen" schreiben — nicht erfinden.`;
 
 
 export const Route = createFileRoute("/api/public/agent-chat")({
