@@ -50,7 +50,8 @@ export const Route = createFileRoute("/api/public/candles")({
               status: 200, headers: { "Content-Type": "application/json", ...CORS },
             });
           }
-          const ttl = interval === "1d" || interval === "1wk" || interval === "1mo" ? 3600 : 300;
+          const isIntraday = !["1d", "5d", "1wk", "1mo", "3mo"].includes(interval);
+          const ttl = isIntraday ? 60 : 3600;
           const cached = await fetchYahooChartCached(symbol, interval, range, ttl);
           const data = cached.value ? transform(cached.value) : null;
           if (!data) {
