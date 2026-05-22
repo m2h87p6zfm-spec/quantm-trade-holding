@@ -195,13 +195,13 @@ function SettingsPage() {
       </Card>
 
       {/* Signal-Filter */}
-      <Card icon={<Sparkles className="h-4 w-4" />} title="Signal-Filter" hint="Welche Signale dir angezeigt werden.">
+      <Card icon={<Sparkles className="h-4 w-4" />} title={t("settings.filter")} hint={t("settings.filter.hint")}>
         <div className="space-y-5">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium">Mindest-Konfidenz</div>
-                <div className="text-[11px] text-muted-foreground">Signale unter dieser Schwelle werden ausgeblendet.</div>
+                <div className="text-sm font-medium">{t("settings.minconf")}</div>
+                <div className="text-[11px] text-muted-foreground">{t("settings.minconf.hint")}</div>
               </div>
               <span className="rounded-md bg-primary/10 px-2.5 py-1 font-mono text-sm font-bold text-primary tabular-nums">
                 {settings.minConfidence}%
@@ -217,14 +217,14 @@ function SettingsPage() {
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-              <span>Alle</span>
-              <span>Streng</span>
+              <span>{t("settings.minconf.all")}</span>
+              <span>{t("settings.minconf.strict")}</span>
             </div>
           </div>
 
           <Toggle
-            label="Low-Confidence Signale verbergen"
-            hint="Versteckt HOLD-Signale unter 50 % Konfidenz."
+            label={t("settings.hidelow")}
+            hint={t("settings.hidelow.hint")}
             value={settings.hideLowConfidence}
             onChange={(v) => update({ hideLowConfidence: v })}
           />
@@ -232,10 +232,10 @@ function SettingsPage() {
       </Card>
 
       {/* Trading-Defaults */}
-      <Card icon={<Target className="h-4 w-4" />} title="Trading-Defaults" hint="Werden als Vorschlag in Setups und Smart Alerts genutzt.">
+      <Card icon={<Target className="h-4 w-4" />} title={t("settings.defaults")} hint={t("settings.defaults.hint")}>
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField
-            label="Standard Take-Profit"
+            label={t("settings.tp")}
             suffix="%"
             icon={<TrendingUp className="h-3.5 w-3.5 text-bull" />}
             value={settings.defaultTakeProfit}
@@ -245,7 +245,7 @@ function SettingsPage() {
             step={0.5}
           />
           <NumberField
-            label="Standard Stop-Loss"
+            label={t("settings.sl")}
             suffix="%"
             icon={<TrendingDown className="h-3.5 w-3.5 text-bear" />}
             value={settings.defaultStopLoss}
@@ -256,7 +256,7 @@ function SettingsPage() {
           />
         </div>
         <div className="mt-3 rounded-lg border border-border/40 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground">
-          Risk/Reward Ratio:{" "}
+          {t("settings.rr")}{" "}
           <span className="font-mono font-bold text-foreground">
             1 : {(settings.defaultTakeProfit / settings.defaultStopLoss).toFixed(2)}
           </span>
@@ -264,10 +264,10 @@ function SettingsPage() {
       </Card>
 
       {/* Benachrichtigungen */}
-      <Card icon={<Bell className="h-4 w-4" />} title="Benachrichtigungen" hint="Verhalten von Smart Alerts.">
+      <Card icon={<Bell className="h-4 w-4" />} title={t("settings.notifications")} hint={t("settings.notifications.hint")}>
         <Toggle
-          label="Sound bei Alert-Auslösung"
-          hint="Spielt einen kurzen Ton beim Auslösen ab."
+          label={t("settings.sound")}
+          hint={t("settings.sound.hint")}
           value={settings.soundOnAlert}
           onChange={(v) => update({ soundOnAlert: v })}
           icon={settings.soundOnAlert ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -275,7 +275,7 @@ function SettingsPage() {
       </Card>
 
       {/* Reset */}
-      <Card icon={<Trash2 className="h-4 w-4" />} title="Zurücksetzen" hint="Setzt alle Präferenzen auf die Standardwerte zurück (Watchlist und Alerts bleiben erhalten)." danger>
+      <Card icon={<Trash2 className="h-4 w-4" />} title={t("settings.reset")} hint={t("settings.reset.hint")} danger>
         <button
           onClick={resetAll}
           className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all ${
@@ -285,7 +285,7 @@ function SettingsPage() {
           }`}
         >
           <Trash2 className="h-4 w-4" />
-          {confirmReset ? "Wirklich zurücksetzen?" : "Einstellungen zurücksetzen"}
+          {confirmReset ? t("settings.reset.confirm") : t("settings.reset.btn")}
         </button>
       </Card>
     </div>
