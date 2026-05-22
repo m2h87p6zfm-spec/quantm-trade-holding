@@ -12,7 +12,7 @@ type Settings = {
   soundOnAlert: boolean;
   defaultTakeProfit: number;
   defaultStopLoss: number;
-  language: "de" | "en";
+  language: "de" | "en" | "fr" | "es" | "ar";
   hideLowConfidence: boolean;
 };
 
