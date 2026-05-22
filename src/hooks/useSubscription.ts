@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useAuth } from "./use-auth";
@@ -101,7 +101,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     };
   }, [user, authLoading]);
 
-  return <SubscriptionContext.Provider value={info}>{children}</SubscriptionContext.Provider>;
+  return createElement(SubscriptionContext.Provider, { value: info }, children);
 }
 
 export function useSubscription(): SubscriptionInfo {
