@@ -101,6 +101,24 @@ export function useAlertsLimit() {
   return { tier, max, count: active, atLimit: active >= max, guardedAdd };
 }
 
+export function usePortfolioLimit(count: number) {
+  const { tier } = useSubscription();
+  const max = LIMITS.portfolio[tier];
+  const atLimit = count >= max;
+  const guard = () => {
+    if (atLimit) {
+      toast.error(`Portfolio-Limit erreicht (${max})`, {
+        description: "Upgrade auf Pro für unlimitierte Positionen.",
+        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      });
+      return false;
+    }
+    return true;
+  };
+  return { tier, max, count, atLimit, guard };
+}
+
+
 // ---------------------------------------------------------------------------
 // FeatureGate Wrapper
 // ---------------------------------------------------------------------------
