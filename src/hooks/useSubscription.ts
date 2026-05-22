@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { useAuth } from "./use-auth";
@@ -19,6 +19,19 @@ export interface SubscriptionInfo {
   loading: boolean;
 }
 
+const defaultSubscriptionInfo: SubscriptionInfo = {
+  tier: "free",
+  isPro: false,
+  isElite: false,
+  status: null,
+  priceId: null,
+  currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
+  loading: true,
+};
+
+const SubscriptionContext = createContext<SubscriptionInfo | undefined>(undefined);
+
 function tierForPrice(priceId: string | null): Tier {
   if (!priceId) return "free";
   if (ELITE_PRICES.has(priceId)) return "elite";
@@ -28,18 +41,9 @@ function tierForPrice(priceId: string | null): Tier {
 
 const ACTIVE = new Set(["active", "trialing", "past_due"]);
 
-export function useSubscription(): SubscriptionInfo {
+export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const [info, setInfo] = useState<SubscriptionInfo>({
-    tier: "free",
-    isPro: false,
-    isElite: false,
-    status: null,
-    priceId: null,
-    currentPeriodEnd: null,
-    cancelAtPeriodEnd: false,
-    loading: true,
-  });
+  const [info, setInfo] = useState<SubscriptionInfo>(defaultSubscriptionInfo);
 
   useEffect(() => {
     if (authLoading) return;
@@ -79,16 +83,29 @@ export function useSubscription(): SubscriptionInfo {
     };
 
     load();
-    const channel = supabase
-      .channel(`sub:${user.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` }, () => load())
-      .subscribe();
+    const uniqueChannelId = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(`sub:${user.id}:${uniqueChannelId}`);
+
+    channel.on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${user.id}` },
+      () => load(),
+    );
+    channel.subscribe();
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [user, authLoading]);
 
+  return createElement(SubscriptionContext.Provider, { value: info }, children);
+}
+
+export function useSubscription(): SubscriptionInfo {
+  const info = useContext(SubscriptionContext);
+  if (!info) return defaultSubscriptionInfo;
   return info;
 }

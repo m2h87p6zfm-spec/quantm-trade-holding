@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
 
@@ -79,6 +79,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SubscriptionProvider>
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
@@ -114,6 +115,7 @@ function RootComponent() {
           <Toaster />
           <QuickPanel />
         </SidebarProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
