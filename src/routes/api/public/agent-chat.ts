@@ -158,6 +158,49 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           const userId = await resolveUserId(request);
           const addendum = await buildAdaptiveAddendum(userId);
 
+          // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
+          const lastUser = [...messages].reverse().find((m) => m.role === "user");
+          let webContext = "";
+          if (lastUser && process.env.FIRECRAWL_API_KEY) {
+            try {
+              const q = lastUser.content.slice(0, 400);
+              const ctrl = new AbortController();
+              const tid = setTimeout(() => ctrl.abort(), 12000);
+              const fc = await fetch("https://api.firecrawl.dev/v2/search", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ query: q, limit: 5, tbs: "qdr:m" }),
+                signal: ctrl.signal,
+              }).finally(() => clearTimeout(tid));
+              if (fc.ok) {
+                const json = (await fc.json()) as { data?: { web?: Array<{ title?: string; url?: string; description?: string }> } | Array<{ title?: string; url?: string; description?: string }> };
+                const raw = Array.isArray(json.data) ? json.data : json.data?.web ?? [];
+                const results = raw.slice(0, 5);
+                if (results.length > 0) {
+                  webContext =
+                    "## WEB CONTEXT (Live-Suche, " +
+                    new Date().toISOString().slice(0, 10) +
+                    ")\nZitiere diese Quellen inline als [1]..[" +
+                    results.length +
+                    "] und liste sie am Ende unter '## Quellen'.\n\n" +
+                    results
+                      .map((r, i) => `[${i + 1}] ${r.title ?? "Untitled"}\nURL: ${r.url ?? ""}\nSnippet: ${(r.description ?? "").slice(0, 400)}`)
+                      .join("\n\n");
+                }
+              } else {
+                console.warn("Firecrawl search failed", fc.status);
+              }
+            } catch (err) {
+              console.warn("Firecrawl search error", err);
+            }
+          }
+          if (!webContext) {
+            webContext = "## WEB CONTEXT\nKeine verifizierten Live-Daten verfügbar — Analyse explizit als modellbasiert kennzeichnen.";
+          }
+
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -168,7 +211,11 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               model: "google/gemini-3-flash-preview",
               stream: true,
               reasoning: { effort: "medium" },
-              messages: [{ role: "system", content: SYSTEM + addendum }, ...messages],
+              messages: [
+                { role: "system", content: SYSTEM + addendum },
+                { role: "system", content: webContext },
+                ...messages,
+              ],
             }),
 
           });
