@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Send, Bot, User as UserIcon, Loader2, Sparkles, Search, Plus,
-  Wallet, Wand2, KeyboardIcon,
+  Wallet, Wand2, KeyboardIcon, Camera, Image as ImageIcon, X, Check, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePortfolio, type Position } from "@/lib/portfolio";
@@ -35,7 +35,7 @@ function extractActions(text: string): { cleaned: string; actions: Action[] } {
 
 /* ---------- top-level ---------- */
 
-type Tab = "manual" | "ai";
+type Tab = "manual" | "photo" | "ai";
 
 export function PortfolioCommandCenter() {
   const [tab, setTab] = useState<Tab>("manual");
@@ -59,7 +59,7 @@ export function PortfolioCommandCenter() {
             <Sparkles className="h-3 w-3 text-gold" />
           </div>
           <div className="text-[11px] text-muted-foreground">
-            Manuell präzise · KI-gestützt · Live-Kurse & Risiko in einem
+            Manuell · Foto-Import · KI-Assistent — alles in einem
           </div>
         </div>
         <div className="text-[10px] text-muted-foreground tabular-nums">
@@ -69,9 +69,15 @@ export function PortfolioCommandCenter() {
       </header>
 
       {/* Tabs */}
-      <div className="relative flex items-center gap-1 border-b border-border/70 bg-background/40 px-2">
+      <div className="relative flex flex-wrap items-center gap-1 border-b border-border/70 bg-background/40 px-2">
         <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<KeyboardIcon className="h-3.5 w-3.5" />}>
-          Manuell hinzufügen
+          Manuell
+        </TabButton>
+        <TabButton active={tab === "photo"} onClick={() => setTab("photo")} icon={<Camera className="h-3.5 w-3.5" />}>
+          Foto-Import
+          <span className="ml-1.5 rounded bg-gold/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
+            Neu
+          </span>
         </TabButton>
         <TabButton active={tab === "ai"} onClick={() => setTab("ai")} icon={<Wand2 className="h-3.5 w-3.5" />}>
           KI-Assistent
@@ -83,7 +89,9 @@ export function PortfolioCommandCenter() {
 
       {/* Body */}
       <div className="relative">
-        {tab === "manual" ? <ManualPanel atLimit={atLimit} tier={tier} /> : <AiPanel />}
+        {tab === "manual" && <ManualPanel atLimit={atLimit} tier={tier} />}
+        {tab === "photo" && <PhotoImportPanel atLimit={atLimit} />}
+        {tab === "ai" && <AiPanel />}
       </div>
     </section>
   );
@@ -482,6 +490,286 @@ function AiPanel() {
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
       </form>
+    </div>
+  );
+}
+
+/* =========================================================================
+   PHOTO IMPORT PANEL — upload screenshot/photo → AI extracts positions
+   ========================================================================= */
+
+type Extracted = {
+  symbol: string;
+  name?: string;
+  qty: number;
+  entry: number;
+  side: "LONG" | "SHORT";
+  date?: string;
+  currency?: string;
+  confidence: number;
+  notes?: string;
+};
+
+type DraftRow = Extracted & { id: string; enabled: boolean };
+
+const MAX_FILES = 5;
+const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6 MB
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden"));
+    r.readAsDataURL(file);
+  });
+}
+
+function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
+  const { add } = usePortfolio();
+  const [files, setFiles] = useState<{ id: string; file: File; url: string }[]>([]);
+  const [drafts, setDrafts] = useState<DraftRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  async function addFiles(list: FileList | File[]) {
+    const incoming = Array.from(list).filter((f) => f.type.startsWith("image/"));
+    if (incoming.length === 0) {
+      toast.error("Bitte Bilddateien (JPG/PNG) auswählen.");
+      return;
+    }
+    const room = MAX_FILES - files.length;
+    const accepted: { id: string; file: File; url: string }[] = [];
+    for (const f of incoming.slice(0, room)) {
+      if (f.size > MAX_FILE_BYTES) {
+        toast.error(`${f.name}: zu groß (max. 6 MB)`);
+        continue;
+      }
+      try {
+        const url = await fileToDataUrl(f);
+        accepted.push({ id: crypto.randomUUID(), file: f, url });
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Lesefehler");
+      }
+    }
+    if (accepted.length > 0) setFiles((prev) => [...prev, ...accepted]);
+    if (incoming.length > room) toast.warning(`Maximal ${MAX_FILES} Bilder.`);
+  }
+
+  function removeFile(id: string) {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
+  }
+
+  async function extract() {
+    if (files.length === 0 || loading) return;
+    setLoading(true);
+    setDrafts([]);
+    try {
+      const res = await fetch("/api/public/portfolio-extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ images: files.map((f) => f.url) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? `Fehler ${res.status}`);
+
+      const positions = Array.isArray(data?.positions) ? (data.positions as Extracted[]) : [];
+      if (positions.length === 0) {
+        toast.info("Keine Positionen erkannt. Versuch ein klareres Bild.");
+      } else {
+        toast.success(`${positions.length} ${positions.length === 1 ? "Position" : "Positionen"} erkannt`);
+      }
+      setDrafts(positions.map((p) => ({ ...p, id: crypto.randomUUID(), enabled: true })));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function patch(id: string, p: Partial<DraftRow>) {
+    setDrafts((prev) => prev.map((d) => (d.id === id ? { ...d, ...p } : d)));
+  }
+
+  function importAll() {
+    const toAdd = drafts.filter((d) => d.enabled);
+    if (toAdd.length === 0) {
+      toast.error("Keine Position ausgewählt.");
+      return;
+    }
+    if (atLimit) {
+      toast.error("Positionslimit erreicht.");
+      return;
+    }
+    let n = 0;
+    for (const d of toAdd) {
+      if (!d.symbol || d.qty <= 0 || d.entry <= 0) continue;
+      add({ symbol: d.symbol.toUpperCase(), qty: d.qty, entry: d.entry, side: d.side });
+      n++;
+    }
+    toast.success(`${n} ${n === 1 ? "Position übernommen" : "Positionen übernommen"} ✓`);
+    setDrafts([]);
+    setFiles([]);
+  }
+
+  return (
+    <div className="p-5 space-y-4">
+      {/* Dropzone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          if (e.dataTransfer.files) addFiles(e.dataTransfer.files);
+        }}
+        onClick={() => inputRef.current?.click()}
+        className={`relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed p-6 text-center transition-all ${
+          dragOver
+            ? "border-primary/70 bg-primary/[0.07]"
+            : "border-border/70 bg-background/40 hover:border-primary/40 hover:bg-background/60"
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
+        />
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-violet-accent/20 ring-1 ring-primary/30">
+          <Camera className="h-5 w-5 text-primary" />
+        </div>
+        <div className="mt-3 text-sm font-semibold">Screenshot oder Foto hochladen</div>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Broker-App, Depotauszug, Excel-Liste, handschriftliche Notiz — die KI liest Ticker, Stückzahl und Einstandskurs aus.
+        </p>
+        <p className="mt-1 text-[10px] text-muted-foreground/70">
+          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · je 6 MB
+        </p>
+      </div>
+
+      {/* Thumbnails */}
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {files.map((f) => (
+            <div key={f.id} className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-muted">
+              <img src={f.url} alt={f.file.name} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); removeFile(f.id); }}
+                className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-background/90 text-foreground opacity-0 ring-1 ring-border transition-opacity group-hover:opacity-100 hover:text-rose-400"
+                aria-label="Entfernen"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={extract}
+            disabled={loading}
+            className="inline-flex h-20 items-center gap-2 rounded-lg bg-gradient-to-r from-primary to-violet-accent px-5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? "Analysiere…" : "Positionen erkennen"}
+          </button>
+        </div>
+      )}
+
+      {/* Extracted drafts */}
+      {drafts.length > 0 && (
+        <div className="rounded-xl border border-border bg-background/40">
+          <div className="flex items-center justify-between border-b border-border/70 px-4 py-2.5">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <ImageIcon className="h-4 w-4 text-primary" />
+              Erkannte Positionen
+              <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                {drafts.filter((d) => d.enabled).length} / {drafts.length}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={importAll}
+              disabled={atLimit}
+              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/90 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Check className="h-3.5 w-3.5" />
+              Ausgewählte übernehmen
+            </button>
+          </div>
+          <div className="divide-y divide-border/60">
+            {drafts.map((d) => (
+              <DraftRowItem key={d.id} row={d} onPatch={(p) => patch(d.id, p)} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DraftRowItem({ row, onPatch }: { row: DraftRow; onPatch: (p: Partial<DraftRow>) => void }) {
+  const lowConf = row.confidence < 0.6;
+  return (
+    <div className={`flex flex-wrap items-center gap-2 px-3 py-2.5 text-xs ${row.enabled ? "" : "opacity-40"}`}>
+      <input
+        type="checkbox"
+        checked={row.enabled}
+        onChange={(e) => onPatch({ enabled: e.target.checked })}
+        className="h-4 w-4 accent-primary"
+      />
+      <input
+        value={row.symbol}
+        onChange={(e) => onPatch({ symbol: e.target.value.toUpperCase() })}
+        className="w-20 rounded border border-input bg-background px-2 py-1 font-semibold tabular-nums focus:border-primary/60 focus:outline-none"
+      />
+      <input
+        type="number" step="any" min={0} value={row.qty}
+        onChange={(e) => onPatch({ qty: parseFloat(e.target.value) || 0 })}
+        className="w-16 rounded border border-input bg-background px-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
+        placeholder="Menge"
+      />
+      <span className="text-muted-foreground">×</span>
+      <div className="relative">
+        <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+        <input
+          type="number" step="any" min={0} value={row.entry}
+          onChange={(e) => onPatch({ entry: parseFloat(e.target.value) || 0 })}
+          className="w-24 rounded border border-input bg-background pl-5 pr-2 py-1 text-right tabular-nums focus:border-primary/60 focus:outline-none"
+        />
+      </div>
+      <div className="grid grid-cols-2 overflow-hidden rounded border border-input text-[10px] font-semibold">
+        {(["LONG", "SHORT"] as const).map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => onPatch({ side: s })}
+            className={`px-2 py-1 transition-colors ${
+              row.side === s
+                ? s === "LONG" ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400"
+                : "bg-background text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="ml-auto flex items-center gap-2">
+        {row.name && <span className="hidden sm:inline max-w-[140px] truncate text-[10px] text-muted-foreground">{row.name}</span>}
+        <span
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+            lowConf
+              ? "bg-amber-500/15 text-amber-400"
+              : "bg-emerald-500/15 text-emerald-400"
+          }`}
+          title={`Confidence ${(row.confidence * 100).toFixed(0)}%`}
+        >
+          {lowConf && <AlertTriangle className="h-3 w-3" />}
+          {(row.confidence * 100).toFixed(0)}%
+        </span>
+      </div>
     </div>
   );
 }

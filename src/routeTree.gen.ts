@@ -37,6 +37,7 @@ import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
+import { Route as ApiPublicPortfolioExtractRouteImport } from './routes/api/public/portfolio-extract'
 import { Route as ApiPublicPortfolioChatRouteImport } from './routes/api/public/portfolio-chat'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
 import { Route as ApiPublicExplainTradeRouteImport } from './routes/api/public/explain-trade'
@@ -188,6 +189,12 @@ const ApiPublicQuoteRoute = ApiPublicQuoteRouteImport.update({
   path: '/api/public/quote',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPortfolioExtractRoute =
+  ApiPublicPortfolioExtractRouteImport.update({
+    id: '/api/public/portfolio-extract',
+    path: '/api/public/portfolio-extract',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPortfolioChatRoute = ApiPublicPortfolioChatRouteImport.update({
   id: '/api/public/portfolio-chat',
   path: '/api/public/portfolio-chat',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
+  '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
@@ -316,6 +324,7 @@ export interface FileRoutesByTo {
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
+  '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
@@ -357,6 +366,7 @@ export interface FileRoutesById {
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
+  '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
+    | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
     | '/api/public/hooks/track-outcomes'
@@ -439,6 +450,7 @@ export interface FileRouteTypes {
     | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
+    | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
     | '/api/public/hooks/track-outcomes'
@@ -479,6 +491,7 @@ export interface FileRouteTypes {
     | '/api/public/explain-trade'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
+    | '/api/public/portfolio-extract'
     | '/api/public/quote'
     | '/api/public/search'
     | '/api/public/hooks/track-outcomes'
@@ -520,6 +533,7 @@ export interface RootRouteChildren {
   ApiPublicExplainTradeRoute: typeof ApiPublicExplainTradeRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicPortfolioChatRoute: typeof ApiPublicPortfolioChatRoute
+  ApiPublicPortfolioExtractRoute: typeof ApiPublicPortfolioExtractRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
@@ -724,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicQuoteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/portfolio-extract': {
+      id: '/api/public/portfolio-extract'
+      path: '/api/public/portfolio-extract'
+      fullPath: '/api/public/portfolio-extract'
+      preLoaderRoute: typeof ApiPublicPortfolioExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/portfolio-chat': {
       id: '/api/public/portfolio-chat'
       path: '/api/public/portfolio-chat'
@@ -832,6 +853,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicExplainTradeRoute: ApiPublicExplainTradeRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicPortfolioChatRoute: ApiPublicPortfolioChatRoute,
+  ApiPublicPortfolioExtractRoute: ApiPublicPortfolioExtractRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
