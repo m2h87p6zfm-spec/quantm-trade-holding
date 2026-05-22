@@ -127,6 +127,7 @@ function RootComponent() {
           </div>
           <Toaster />
           <QuickPanel />
+          <OnboardingGate />
         </SidebarProvider>
         </SubscriptionProvider>
       </AuthProvider>
