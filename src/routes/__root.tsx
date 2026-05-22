@@ -133,6 +133,7 @@ function RootComponent() {
           <Toaster />
           <QuickPanel />
           <OnboardingGate />
+          <UpgradeModal />
         </SidebarProvider>
         </SubscriptionProvider>
       </AuthProvider>
