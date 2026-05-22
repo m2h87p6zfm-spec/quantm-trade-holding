@@ -149,8 +149,31 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html, body { background-color: var(--color-background); color: var(--color-foreground); }
-  body { font-feature-settings: "tnum" 1, "cv11" 1; }
+  html, body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-body);
+    font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  .font-mono, code, kbd, pre, samp, [data-numeric] {
+    font-family: var(--font-mono);
+    font-feature-settings: "tnum" 1, "zero" 1, "ss02" 1;
+  }
+  /* Calmer section labels */
+  .label-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--muted-foreground) 90%, transparent);
+  }
 }
 
 @keyframes flash-up { 0% { background-color: color-mix(in oklab, var(--bull) 35%, transparent); } 100% { background-color: transparent; } }
