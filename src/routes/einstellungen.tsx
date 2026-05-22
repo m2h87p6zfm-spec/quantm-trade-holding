@@ -1,19 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Lock } from "lucide-react";
 import { useSettings } from "@/lib/settings";
+import { useWatchlistLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/einstellungen")({ component: SettingsPage });
 
 function SettingsPage() {
   const { settings, update } = useSettings();
+  const { guardedAdd, tier, max, count, atLimit } = useWatchlistLimit();
   const [watchSymbol, setWatchSymbol] = useState("");
 
   const addWatch = () => {
     const symbol = watchSymbol.trim().toUpperCase().replace(/\s+/g, "");
     if (!symbol || settings.watchlist.includes(symbol)) return;
-    update({ watchlist: [...settings.watchlist, symbol] });
-    setWatchSymbol("");
+    if (guardedAdd(symbol)) setWatchSymbol("");
   };
 
   return (
@@ -32,10 +33,21 @@ function SettingsPage() {
       </section>
 
       <section className="rounded-lg border border-border bg-card p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Watchlist & API-Verbrauch</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Jeder neue Analysewert verbraucht ungefähr 1 Kerzen-Call. Automatische Massenscans wurden abgeschaltet; „Trends & Signale“ scannt nur diese Watchlist.</p>
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Watchlist & API-Verbrauch</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Jeder neue Analysewert verbraucht ungefähr 1 Kerzen-Call. Automatische Massenscans wurden abgeschaltet; „Trends & Signale“ scannt nur diese Watchlist.</p>
+          </div>
+          <span className={`shrink-0 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium ${atLimit ? "border-bear/40 bg-bear/10 text-bear" : "border-border bg-muted/30 text-muted-foreground"}`}>
+            {count}{Number.isFinite(max) ? ` / ${max}` : ""} · {tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Elite"}
+          </span>
         </div>
+        {atLimit && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-gold/40 bg-gold/10 px-3 py-2 text-xs text-gold">
+            <span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Watchlist-Limit ({max}) erreicht.</span>
+            <Link to="/preise" className="rounded bg-gold/20 px-2 py-1 font-semibold hover:bg-gold/30">Upgrade</Link>
+          </div>
+        )}
         <div className="flex gap-2">
           <input value={watchSymbol} onChange={(e) => setWatchSymbol(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") addWatch(); }} placeholder="Ticker hinzufügen, z. B. AMD, SAP.DE, VTI" className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring" />
           <button onClick={addWatch} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">

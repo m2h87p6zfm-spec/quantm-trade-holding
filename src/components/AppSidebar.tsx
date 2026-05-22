@@ -1,31 +1,33 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, LogIn, LogOut, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/useSubscription";
+import { FEATURE_TIERS, tierAllows, type Feature } from "@/lib/featureGate";
 
-// Der "Quant Core" ist das Herzstück der App: statistische & mathematische
-// Aktienanalyse. Diese Gruppe wird oben, visuell hervorgehoben angezeigt.
-const quantCore = [
+type NavItem = { title: string; url: string; icon: typeof Bell; desc?: string; feature?: Feature };
+
+const quantCore: NavItem[] = [
   { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
   { title: "Quant-Signale", url: "/signale", icon: Sparkles, desc: "Live Setups" },
-  { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend" },
+  { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend", feature: "ai_learning" },
 ];
 
-const markets = [
+const markets: NavItem[] = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
   { title: "Heatmap", url: "/heatmap", icon: Flame },
-  { title: "News & Sentiment", url: "/news", icon: Newspaper },
-  { title: "Kalender", url: "/kalender", icon: Calendar },
+  { title: "News & Sentiment", url: "/news", icon: Newspaper, feature: "news_sentiment" },
+  { title: "Kalender", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
-const trading = [
-  { title: "Portfolio", url: "/portfolio", icon: Wallet },
+const trading: NavItem[] = [
+  { title: "Portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
   { title: "Smart Alerts", url: "/alerts", icon: Bell },
 ];
 
-const system = [
+const system: NavItem[] = [
   { title: "Preise & Pläne", url: "/preise", icon: CreditCard },
   { title: "Produktkatalog", url: "/produkte", icon: LineChart },
   { title: "Einstellungen", url: "/einstellungen", icon: SettingsIcon },
@@ -35,7 +37,9 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { tier } = useSubscription();
   const isActive = (url: string) => (url === "/" ? path === "/" : path.startsWith(url));
+  const isLocked = (item: NavItem) => !!item.feature && !tierAllows(tier, FEATURE_TIERS[item.feature]);
 
   return (
     <Sidebar collapsible="icon">
@@ -66,19 +70,23 @@ export function AppSidebar() {
               <SidebarMenu>
                 {quantCore.map((item) => {
                   const active = isActive(item.url);
+                  const locked = isLocked(item);
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
-                        tooltip={item.title}
+                        tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}
                         className={active ? "bg-primary/15 text-primary hover:bg-primary/20 data-[active=true]:bg-primary/15" : "hover:bg-primary/[0.08]"}
                       >
                         <Link to={item.url} className="flex items-center gap-2.5">
                           <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-primary" : "text-primary/70"}`} />
                           {!collapsed && (
-                            <div className="flex min-w-0 flex-col leading-tight">
-                              <span className="truncate text-sm font-medium">{item.title}</span>
+                            <div className="flex min-w-0 flex-1 flex-col leading-tight">
+                              <span className="truncate text-sm font-medium flex items-center gap-1.5">
+                                {item.title}
+                                {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                              </span>
                               <span className="truncate text-[10px] text-muted-foreground">{item.desc}</span>
                             </div>
                           )}
@@ -96,16 +104,20 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Märkte</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {markets.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {markets.map((item) => {
+                const locked = isLocked(item);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -114,19 +126,24 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trading</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {trading.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {trading.map((item) => {
+                const locked = isLocked(item);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{item.title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">System</SidebarGroupLabel>

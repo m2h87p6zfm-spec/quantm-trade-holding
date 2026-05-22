@@ -3,7 +3,19 @@ import { useEffect, useMemo, useState } from "react";
 import { upcomingEvents, timeUntil, type EconEvent } from "@/lib/calendar";
 import { Calendar, AlertTriangle, Activity, ChevronRight } from "lucide-react";
 
-export const Route = createFileRoute("/kalender")({ component: CalendarPage });
+import { FeatureGate } from "@/lib/featureGate";
+
+export const Route = createFileRoute("/kalender")({
+  component: () => (
+    <FeatureGate
+      feature="calendar"
+      title="Economic Calendar ist Pro"
+      description="Kuratierte Makro-Events mit Marktwirkung — Zinsentscheidungen, CPI, NFP und mehr."
+    >
+      <CalendarPage />
+    </FeatureGate>
+  ),
+});
 
 const COUNTRY_FLAG: Record<EconEvent["country"], string> = { US: "🇺🇸", EU: "🇪🇺", DE: "🇩🇪", JP: "🇯🇵", UK: "🇬🇧", CN: "🇨🇳" };
 const IMPACT_STYLE: Record<EconEvent["impact"], string> = {

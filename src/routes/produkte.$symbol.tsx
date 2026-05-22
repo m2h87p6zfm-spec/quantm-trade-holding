@@ -4,6 +4,7 @@ import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
+import { useWatchlistLimit } from "@/lib/featureGate";
 import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
 import { BrokerAssessment } from "@/components/BrokerAssessment";
@@ -14,7 +15,8 @@ function ProductDetail() {
   const { symbol } = Route.useParams();
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
-  const { settings, toggleWatch } = useSettings();
+  const { settings } = useSettings();
+  const { guardedAdd } = useWatchlistLimit();
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
@@ -35,7 +37,7 @@ function ProductDetail() {
           </div>
           <p className="text-sm text-muted-foreground">{product?.name ?? "Freies Symbol aus dem Datenfeed"}</p>
         </div>
-        <button onClick={() => toggleWatch(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent">
+        <button onClick={() => guardedAdd(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent">
           {watched ? <><Star className="h-4 w-4 fill-current text-primary" /> In Watchlist</> : <><StarOff className="h-4 w-4" /> Watchlist hinzufügen</>}
         </button>
       </div>
