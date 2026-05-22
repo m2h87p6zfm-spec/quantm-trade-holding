@@ -73,7 +73,10 @@ function AgentResponse({ symbol }: { symbol: string }) {
   const decision = buildDecision(symbol, product?.name ?? symbol, indicators, sig, regime);
   const record = useServerFn(recordPrediction);
 
+  const { user } = useAuth();
+
   useEffect(() => {
+    if (!user) return; // Nur eingeloggte Nutzer haben einen Auth-Token für die Server-Fn
     record({
       data: {
         symbol,
@@ -87,7 +90,8 @@ function AgentResponse({ symbol }: { symbol: string }) {
       },
     }).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, scenarioTag, regime, sig.verdict]);
+  }, [symbol, scenarioTag, regime, sig.verdict, user?.id]);
+
 
   return (
     <div className="space-y-4">
