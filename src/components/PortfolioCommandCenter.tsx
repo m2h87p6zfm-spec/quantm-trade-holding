@@ -35,7 +35,7 @@ function extractActions(text: string): { cleaned: string; actions: Action[] } {
 
 /* ---------- top-level ---------- */
 
-type Tab = "manual" | "ai";
+type Tab = "manual" | "photo" | "ai";
 
 export function PortfolioCommandCenter() {
   const [tab, setTab] = useState<Tab>("manual");
@@ -59,7 +59,7 @@ export function PortfolioCommandCenter() {
             <Sparkles className="h-3 w-3 text-gold" />
           </div>
           <div className="text-[11px] text-muted-foreground">
-            Manuell präzise · KI-gestützt · Live-Kurse & Risiko in einem
+            Manuell · Foto-Import · KI-Assistent — alles in einem
           </div>
         </div>
         <div className="text-[10px] text-muted-foreground tabular-nums">
@@ -69,9 +69,15 @@ export function PortfolioCommandCenter() {
       </header>
 
       {/* Tabs */}
-      <div className="relative flex items-center gap-1 border-b border-border/70 bg-background/40 px-2">
+      <div className="relative flex flex-wrap items-center gap-1 border-b border-border/70 bg-background/40 px-2">
         <TabButton active={tab === "manual"} onClick={() => setTab("manual")} icon={<KeyboardIcon className="h-3.5 w-3.5" />}>
-          Manuell hinzufügen
+          Manuell
+        </TabButton>
+        <TabButton active={tab === "photo"} onClick={() => setTab("photo")} icon={<Camera className="h-3.5 w-3.5" />}>
+          Foto-Import
+          <span className="ml-1.5 rounded bg-gold/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-gold">
+            Neu
+          </span>
         </TabButton>
         <TabButton active={tab === "ai"} onClick={() => setTab("ai")} icon={<Wand2 className="h-3.5 w-3.5" />}>
           KI-Assistent
@@ -83,7 +89,9 @@ export function PortfolioCommandCenter() {
 
       {/* Body */}
       <div className="relative">
-        {tab === "manual" ? <ManualPanel atLimit={atLimit} tier={tier} /> : <AiPanel />}
+        {tab === "manual" && <ManualPanel atLimit={atLimit} tier={tier} />}
+        {tab === "photo" && <PhotoImportPanel atLimit={atLimit} />}
+        {tab === "ai" && <AiPanel />}
       </div>
     </section>
   );
