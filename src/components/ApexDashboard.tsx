@@ -317,7 +317,7 @@ export function ApexDashboard({
       <SectionCard icon={BarChart3} title="📈 Technische & statistische Analyse">
         <div className="divide-y divide-border/40">
           {techRows.map((r) => (
-            <Row key={r.label} label={r.label} value={r.value} sub={r.sub} signal={r.signal} />
+            <Row key={r.label} label={r.label} value={r.value} sub={r.sub} signal={r.signal} infoKey={r.infoKey} rawValue={r.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">
