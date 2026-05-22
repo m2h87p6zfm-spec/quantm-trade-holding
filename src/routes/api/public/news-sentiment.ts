@@ -86,6 +86,46 @@ async function classifySentiments(items: NewsItem[]): Promise<NewsItem[]> {
     });
   } catch {
     return items;
+}
+
+async function generateSummaries(items: NewsItem[], portfolio: string[]): Promise<NewsItem[]> {
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey || items.length === 0) return items;
+  const portSet = new Set(portfolio.map((s) => s.toUpperCase()));
+  const target = items.slice(0, 20).filter((it) => it.tickers.some((t) => portSet.has(t)));
+  if (target.length === 0) return items;
+  const primarySym = (it: NewsItem) => it.tickers.find((t) => portSet.has(t)) ?? it.symbol;
+  const numbered = target.map((it, i) => `${i + 1}. [${primarySym(it)}] ${it.title}`).join("\n");
+  try {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-3-flash-preview",
+        messages: [
+          {
+            role: "system",
+            content:
+              'Du erklärst für jede Schlagzeile in EINEM kurzen deutschen Satz (max. 22 Wörter), warum sie für die genannte Position relevant ist. Antwort STRIKT als JSON-Objekt: {"items":[{"i":1,"s":"…"}, …]}. Kein Markdown, keine Floskeln, keine Disclaimer.',
+          },
+          { role: "user", content: `Erkläre je Schlagzeile die Portfolio-Relevanz für das jeweilige Ticker-Symbol:\n${numbered}` },
+        ],
+        response_format: { type: "json_object" },
+      }),
+    });
+    if (!res.ok) return items;
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = json.choices?.[0]?.message?.content ?? "";
+    const parsed = JSON.parse(raw) as { items?: Array<{ i: number; s: string }> };
+    const arr = parsed.items ?? [];
+    const map = new Map<string, string>();
+    target.forEach((it, idx) => {
+      const m = arr.find((x) => x.i === idx + 1);
+      if (m?.s) map.set(it.uuid, m.s);
+    });
+    return items.map((it) => (map.has(it.uuid) ? { ...it, aiSummary: map.get(it.uuid) } : it));
+  } catch {
+    return items;
   }
 }
 
