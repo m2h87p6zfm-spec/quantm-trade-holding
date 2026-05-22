@@ -25,6 +25,34 @@ type Extracted = {
   pnl_pct?: number;
 };
 
+const QUOTE_HEADERS = {
+  "User-Agent": "Mozilla/5.0 ApexMarkets",
+  "Accept": "application/json,text/plain,*/*",
+} as const;
+
+async function fetchMarketPrice(symbol: string): Promise<number | undefined> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1_800);
+  try {
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=false`,
+      { headers: QUOTE_HEADERS, signal: controller.signal },
+    );
+    if (!res.ok) return undefined;
+    const j = await res.json() as any;
+    const r = j?.chart?.result?.[0];
+    const metaPrice = Number(r?.meta?.regularMarketPrice);
+    if (Number.isFinite(metaPrice) && metaPrice > 0) return metaPrice;
+    const closes = Array.isArray(r?.indicators?.quote?.[0]?.close) ? r.indicators.quote[0].close : [];
+    const last = [...closes].reverse().find((x) => Number.isFinite(Number(x)) && Number(x) > 0);
+    return last === undefined ? undefined : Number(last);
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 const SYSTEM = `Du bist ein universeller Vision-Extraktor für Aktien-, ETF- und Krypto-Portfolios. Du verarbeitest Screenshots aus JEDEM Broker, JEDER Trading-App und JEDEM Depotauszug — egal in welcher Sprache, welchem Layout oder welcher Währung.
 
 UNTERSTÜTZTE QUELLEN (nicht abschließend)
@@ -61,7 +89,8 @@ Broker-Apps zeigen meist:
 FUNDAMENTAL — NIEMALS VERLETZEN
 - entry ist IMMER der Kurs PRO STÜCK (z. B. 312.45), NIEMALS der gesamte Positionswert.
 - qty ist IMMER die Anzahl der Stücke (oft dezimal, z. B. 22.4123), NIEMALS 1 als Notlösung.
-- Wenn du den per-Stück-Kurs nicht aus dem Bild rekonstruieren kannst → Position WEGLASSEN. Lieber 0 Positionen als ein erfundener Einstand, der 100× zu groß ist.
+- Wenn Stückzahl oder per-Stück-Kurs nicht sichtbar sind, aber Positionswert/Performance sichtbar sind: current_value und pnl_pct/pnl_abs ausgeben, qty/entry leer lassen. Der Server berechnet Stückzahl/Einstand mit Marktkursen.
+- NIEMALS current_value, invested oder Positionswert in entry schreiben. 7.016,83 € Positionswert für UNH ist NICHT entry=7016.83.
 - Plausibilitätsprüfung vor Ausgabe: entry · qty muss ungefähr dem aktuellen oder eingesetzten Geldbetrag entsprechen. Wenn entry · qty > 5× current_value → entry ist falsch (du hast Positionswert mit Stückkurs verwechselt), Position weglassen.
 
 Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
@@ -75,8 +104,9 @@ Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
      b) sonst invested UND qty bekannt → entry = invested / qty.
      c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
      d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence ≤ 0.6.
-     e) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
-     f) sonst → Position WEGLASSEN.
+      e) sonst current_value UND pnl_pct/pnl_abs sichtbar, aber qty/current_price nicht sichtbar → entry und qty weglassen; current_value + pnl_pct/pnl_abs ausgeben.
+      f) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
+      g) sonst → Position WEGLASSEN.
   3. Werte > 0 prüfen.
   4. Plausibilitäts-Check vor Ausgabe: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → Position weglassen, du hast eine Zahl falsch zugeordnet.
   5. KEINE harte Rundung — gib entry mit voller Präzision aus.
@@ -125,7 +155,7 @@ const EXTRACT_TOOL = {
               confidence: { type: "number", description: "0..1" },
               notes: { type: "string", description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')" },
             },
-            required: ["symbol", "qty", "entry", "side", "confidence"],
+            required: ["symbol", "side", "confidence"],
             additionalProperties: false,
           },
         },
