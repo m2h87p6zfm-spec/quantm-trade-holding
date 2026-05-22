@@ -1,19 +1,20 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Lock } from "lucide-react";
 import { useSettings } from "@/lib/settings";
+import { useWatchlistLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/einstellungen")({ component: SettingsPage });
 
 function SettingsPage() {
   const { settings, update } = useSettings();
+  const { guardedAdd, tier, max, count, atLimit } = useWatchlistLimit();
   const [watchSymbol, setWatchSymbol] = useState("");
 
   const addWatch = () => {
     const symbol = watchSymbol.trim().toUpperCase().replace(/\s+/g, "");
     if (!symbol || settings.watchlist.includes(symbol)) return;
-    update({ watchlist: [...settings.watchlist, symbol] });
-    setWatchSymbol("");
+    if (guardedAdd(symbol)) setWatchSymbol("");
   };
 
   return (
