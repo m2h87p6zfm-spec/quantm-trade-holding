@@ -139,9 +139,19 @@ function AgentPage() {
             </div>
           </div>
         )}
-        {messages.map((m, i) => (
-          <Bubble key={i} role={m.role} content={m.content} />
-        ))}
+        {messages.map((m, i) => {
+          const prevUser = m.role === "assistant" ? [...messages].slice(0, i).reverse().find((x) => x.role === "user")?.content ?? "" : "";
+          const isLastAssistant = m.role === "assistant" && i === messages.length - 1;
+          const showFeedback = m.role === "assistant" && (!isLastAssistant || !loading) && m.content.length > 0;
+          return (
+            <Bubble
+              key={i}
+              role={m.role}
+              content={m.content}
+              feedback={showFeedback ? <FeedbackButtons sessionId={sessionId} userPrompt={prevUser} assistantMessage={m.content} /> : null}
+            />
+          );
+        })}
         {loading && <div className="text-xs text-muted-foreground animate-pulse">Apex denkt nach…</div>}
       </div>
 
