@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon, Trash2, AlertTriangle, Pencil, Check, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useServerFn } from "@tanstack/react-start";
@@ -39,12 +39,32 @@ function AccountPage() {
   const [portalBusy, setPortalBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
   const openPortal = useServerFn(createPortalSession);
   const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setDisplayName((data?.display_name as string) ?? "");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   if (loading || !user) {
     return (
@@ -53,6 +73,32 @@ function AccountPage() {
       </div>
     );
   }
+
+  const saveName = async () => {
+    const trimmed = nameDraft.trim();
+    if (!trimmed) {
+      toast.error("Name darf nicht leer sein");
+      return;
+    }
+    if (trimmed.length > 60) {
+      toast.error("Max. 60 Zeichen");
+      return;
+    }
+    setNameBusy(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: trimmed })
+      .eq("id", user.id);
+    setNameBusy(false);
+    if (error) {
+      toast.error("Speichern fehlgeschlagen");
+      return;
+    }
+    setDisplayName(trimmed);
+    setEditingName(false);
+    toast.success("Name aktualisiert");
+  };
+
 
   const onPortal = async () => {
     setPortalBusy(true);
@@ -91,11 +137,48 @@ function AccountPage() {
 
       <Card className="p-5 border-border/60 bg-card/60">
         <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full bg-primary/15 text-primary flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0">
             <UserIcon className="h-5 w-5" />
           </div>
-          <div>
-            <div className="font-medium">{user.email}</div>
+          <div className="flex-1 min-w-0">
+            {editingName ? (
+              <div className="flex items-center gap-1.5">
+                <Input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  maxLength={60}
+                  className="h-8 text-sm"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void saveName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                />
+                <Button size="icon" variant="ghost" className="h-8 w-8" disabled={nameBusy} onClick={() => void saveName()}>
+                  {nameBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-4 w-4 text-bull" />}
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingName(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="font-medium truncate">{displayName || user.email}</div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground"
+                  onClick={() => {
+                    setNameDraft(displayName);
+                    setEditingName(true);
+                  }}
+                  aria-label="Namen ändern"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground truncate">{user.email}</div>
             <div className="text-xs text-muted-foreground">Angemeldet seit {new Date(user.created_at).toLocaleDateString("de-DE")}</div>
           </div>
         </div>
