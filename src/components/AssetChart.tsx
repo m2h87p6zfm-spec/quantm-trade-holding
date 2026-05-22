@@ -124,7 +124,7 @@ export const AssetChart = memo(function AssetChart({
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-sm tabular-nums">
             <span className={up ? "text-bull" : "text-bear"}>
-              {up ? "+" : ""}{changeAbs.toFixed(Math.abs(last) >= 100 ? 1 : 2)} ({up ? "+" : ""}{changePct.toFixed(2)} %)
+              {formatSignedAbs(changeAbs, axisDecimals(last))} ({formatPercent(changePct)})
             </span>
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{perfLabel}</span>
             {q.data?.stale && (
