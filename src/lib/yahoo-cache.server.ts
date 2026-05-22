@@ -13,8 +13,6 @@ const HEADERS = {
   "User-Agent": UA,
   "Accept": "application/json,text/plain,*/*",
   "Accept-Language": "en-US,en;q=0.9",
-  "Referer": "https://finance.yahoo.com/",
-  "Origin": "https://finance.yahoo.com",
 } as const;
 
 function parseJsonFromText(text: string): any {
@@ -25,7 +23,7 @@ function parseJsonFromText(text: string): any {
   return JSON.parse(marked.slice(start).trim());
 }
 
-async function fetchJson(url: string, timeoutMs = 2200): Promise<any> {
+async function fetchJson(url: string, timeoutMs = 6500): Promise<any> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -66,6 +64,11 @@ function sparkToChart(j: any) {
   return { chart: { result: [response], error: null } };
 }
 
+function requireChartResult(j: any) {
+  if (!j?.chart?.result?.[0]) throw new Error("Chart ohne Ergebnis");
+  return j;
+}
+
 export type CachedChart = { value: any | null; stale: boolean; lastUpdated: number };
 
 async function doFetch(symbol: string, interval: string, range: string, ttlSec: number, prevCached: Entry | undefined): Promise<CachedChart> {
@@ -74,15 +77,15 @@ async function doFetch(symbol: string, interval: string, range: string, ttlSec: 
   const hosts = ["https://query1.finance.yahoo.com", "https://query2.finance.yahoo.com"];
 
   const waves: Array<Array<() => Promise<any>>> = [
-    [...hosts.map((h) => () => fetchJson(h + path)), ...hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart))],
-    [() => fetchJsonViaReader(hosts[0] + sparkPath).then(sparkToChart)],
+    hosts.map((h) => () => fetchJson(h + path).then(requireChartResult)),
+    hosts.map((h) => () => fetchJson(h + sparkPath).then(sparkToChart).then(requireChartResult)),
+    [() => fetchJsonViaReader(hosts[0] + sparkPath).then(sparkToChart).then(requireChartResult)],
   ];
 
   const now = Date.now();
   for (const wave of waves) {
     try {
       const j = await firstSuccess(wave);
-      if (!j?.chart?.result?.[0]) continue;
       STORE.set(`${symbol}|${interval}|${range}`, {
         value: j,
         expires: now + ttlSec * 1000,

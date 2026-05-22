@@ -69,6 +69,7 @@ function PicksPage() {
   const settled = candleQs.filter((q) => q.data || q.isError || (!q.isLoading && !q.isFetching)).length;
   const succeeded = candleQs.filter((q) => q.data).length;
   const failed = candleQs.filter((q) => q.isError).length;
+  const pendingFeed = failed;
   const total = filtered.length;
   const loading = settled < total;
   const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
@@ -225,7 +226,7 @@ function PicksPage() {
             <span className="flex items-center gap-1.5">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
               Scan läuft — {settled}/{total} verarbeitet
-              {failed > 0 && <span className="text-amber-500">· {failed} ohne Daten</span>}
+              {pendingFeed > 0 && <span className="text-amber-500">· {pendingFeed} warten auf Datenfeed</span>}
             </span>
             <span className="font-mono tabular-nums">{progress}%</span>
           </div>
@@ -238,9 +239,9 @@ function PicksPage() {
         </div>
       )}
 
-      {!loading && succeeded < total && (
+      {!loading && pendingFeed > 0 && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-muted-foreground">
-          {succeeded} von {total} Werten erfolgreich analysiert · {failed} ohne verwertbare Kursdaten (z. B. illiquide, Symbol-Mismatch beim Datenanbieter).
+          {succeeded} von {total} Werten erfolgreich analysiert · {pendingFeed} Werte werden beim nächsten Scan automatisch erneut abgefragt.
         </div>
       )}
 

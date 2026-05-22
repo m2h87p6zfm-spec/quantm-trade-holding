@@ -57,6 +57,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const LS_PREFIX = "yh_candles:";
 const LS_TTL_MS = 12 * 60 * 60 * 1000; // 12 h für Tageskerzen
+const LS_STALE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function lsGet(key: string): Candles | null {
   if (typeof localStorage === "undefined") return null;
@@ -66,6 +67,16 @@ function lsGet(key: string): Candles | null {
     const j = JSON.parse(raw) as { t: number; d: Candles };
     if (!j?.t || Date.now() - j.t > LS_TTL_MS) return null;
     return j.d;
+  } catch { return null; }
+}
+function lsGetStale(key: string): Candles | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if (!raw) return null;
+    const j = JSON.parse(raw) as { t: number; d: Candles };
+    if (!j?.t || Date.now() - j.t > LS_STALE_TTL_MS || !j.d?.c?.length) return null;
+    return { ...j.d, stale: true };
   } catch { return null; }
 }
 function lsSet(key: string, d: Candles) {
@@ -98,6 +109,8 @@ export async function fetchCandles(symbol: string, resolution: "D" | "60" | "W" 
         return data;
       } catch (e) {
         lastErr = e;
+        const stale = resolution === "D" ? lsGetStale(cacheKey) : null;
+        if (stale) return stale;
         const retryable =
           e instanceof MarketDataReconnectingError ||
           (e instanceof FinnhubError && (e.status === 429 || e.status >= 500));
