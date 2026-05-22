@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { DunningBanner } from "@/components/DunningBanner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -91,6 +92,7 @@ function RootComponent() {
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
+            <DunningBanner />
             <div className="flex flex-1 w-full min-w-0">
               <AppSidebar />
               <div className="flex flex-1 flex-col relative min-w-0">

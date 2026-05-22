@@ -95,7 +95,12 @@ function LoginPage() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pwd">Passwort</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="pwd">Passwort</Label>
+                  <Link to="/passwort-vergessen" className="text-[11px] text-muted-foreground hover:text-foreground">
+                    Vergessen?
+                  </Link>
+                </div>
                 <Input id="pwd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
               </div>
               <Button onClick={signIn} disabled={busy || !email || !password} className="w-full mt-2">

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Check, Sparkles, Zap, Crown, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { createPortalSession } from "@/utils/payments.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/preise")({
@@ -102,19 +106,47 @@ const plans: Plan[] = [
 function PricingPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const [checkoutPrice, setCheckoutPrice] = useState<string | null>(null);
+  const [portalBusy, setPortalBusy] = useState(false);
   const { user } = useAuth();
   const { tier: currentTier } = useSubscription();
   const navigate = useNavigate();
+  const openPortal = useServerFn(createPortalSession);
 
   const yearlySavingsPct = useMemo(() => 20, []);
 
-  const onChoose = (plan: Plan) => {
-    if (plan.id === "free") {
-      navigate({ to: "/" });
-      return;
+  const goToPortal = async () => {
+    setPortalBusy(true);
+    try {
+      const url = await openPortal({
+        data: { environment: getStripeEnvironment(), returnUrl: window.location.href },
+      });
+      window.open(url, "_blank");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Portal konnte nicht geöffnet werden");
+    } finally {
+      setPortalBusy(false);
     }
+  };
+
+  const onChoose = (plan: Plan) => {
     if (!user) {
       navigate({ to: "/login" });
+      return;
+    }
+    // Bestehende zahlende Kunden -> Stripe Billing Portal (verhindert Doppel-Sub)
+    if (currentTier !== "free") {
+      if (plan.id === currentTier) {
+        // gleicher Plan -> Portal zum Verwalten
+        void goToPortal();
+        return;
+      }
+      // Plan-Wechsel (Upgrade/Downgrade/Free) -> Portal
+      void goToPortal();
+      return;
+    }
+    // Neukunde / Free
+    if (plan.id === "free") {
+      navigate({ to: "/" });
       return;
     }
     const priceId = cycle === "monthly" ? plan.monthlyPriceId! : plan.yearlyPriceId!;
@@ -191,11 +223,21 @@ function PricingPage() {
 
                 <Button
                   onClick={() => onChoose(plan)}
-                  disabled={isCurrent}
+                  disabled={isCurrent || portalBusy}
                   variant={plan.highlighted ? "default" : "outline"}
                   className="w-full mb-6"
                 >
-                  {isCurrent ? "Aktueller Plan" : plan.id === "free" ? "Kostenlos starten" : `${plan.name} wählen`}
+                  {portalBusy && currentTier !== "free" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isCurrent ? (
+                    "Aktueller Plan"
+                  ) : currentTier !== "free" ? (
+                    "Plan im Portal wechseln"
+                  ) : plan.id === "free" ? (
+                    "Kostenlos starten"
+                  ) : (
+                    `${plan.name} wählen`
+                  )}
                 </Button>
 
                 <ul className="space-y-2.5 text-sm">

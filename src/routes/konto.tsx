@@ -3,12 +3,26 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon } from "lucide-react";
+import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon, Trash2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useServerFn } from "@tanstack/react-start";
 import { createPortalSession } from "@/utils/payments.functions";
+import { deleteOwnAccount } from "@/lib/account.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/konto")({
@@ -23,7 +37,10 @@ function AccountPage() {
   const { tier, status, currentPeriodEnd, cancelAtPeriodEnd, priceId, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const openPortal = useServerFn(createPortalSession);
+  const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
@@ -48,6 +65,20 @@ function AccountPage() {
       toast.error(e instanceof Error ? e.message : "Konnte Billing-Portal nicht öffnen");
     } finally {
       setPortalBusy(false);
+    }
+  };
+
+  const onDelete = async () => {
+    setDeleteBusy(true);
+    try {
+      await callDelete({ data: undefined });
+      await supabase.auth.signOut();
+      toast.success("Konto und alle Daten gelöscht.");
+      navigate({ to: "/" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Löschen fehlgeschlagen");
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -120,6 +151,56 @@ function AccountPage() {
               )}
             </>
           )}
+        </div>
+      </Card>
+
+      <Card className="p-5 border-destructive/40 bg-destructive/5">
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-destructive/15 text-destructive flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-sm">Konto löschen</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Löscht dein Konto, dein Profil, deine Watchlist, Alerts, Portfolio und kündigt aktive Abos sofort.
+              Dieser Schritt ist <strong>endgültig</strong> und kann nicht rückgängig gemacht werden.
+            </p>
+            <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="mt-3">
+                  <Trash2 className="h-4 w-4 mr-1.5" /> Konto endgültig löschen
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Konto wirklich löschen?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Alle deine Daten (Profil, Watchlist, Alerts, Portfolio, Subscription) werden unwiderruflich entfernt.
+                    Aktive Stripe-Abos werden gekündigt. Tippe <strong>LÖSCHEN</strong> zur Bestätigung.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="LÖSCHEN"
+                  autoFocus
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={confirmText !== "LÖSCHEN" || deleteBusy}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void onDelete();
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleteBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Endgültig löschen"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </Card>
     </div>
