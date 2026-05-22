@@ -330,6 +330,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_trading_profile: {
+        Row: {
+          ai_style: string | null
+          ai_tone: string | null
+          confidence_threshold: number
+          created_at: string
+          explanation_depth: string | null
+          markets: Json
+          notif_breakout: boolean
+          notif_daily: boolean
+          notif_realtime: boolean
+          notif_silent: boolean
+          notif_weekly: boolean
+          onboarding_completed: boolean
+          region: string | null
+          risk_level: string | null
+          show_reasoning: boolean
+          signal_frequency: string | null
+          strategy_mode: string | null
+          trading_goal: string | null
+          updated_at: string
+          usage_frequency: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_style?: string | null
+          ai_tone?: string | null
+          confidence_threshold?: number
+          created_at?: string
+          explanation_depth?: string | null
+          markets?: Json
+          notif_breakout?: boolean
+          notif_daily?: boolean
+          notif_realtime?: boolean
+          notif_silent?: boolean
+          notif_weekly?: boolean
+          onboarding_completed?: boolean
+          region?: string | null
+          risk_level?: string | null
+          show_reasoning?: boolean
+          signal_frequency?: string | null
+          strategy_mode?: string | null
+          trading_goal?: string | null
+          updated_at?: string
+          usage_frequency?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_style?: string | null
+          ai_tone?: string | null
+          confidence_threshold?: number
+          created_at?: string
+          explanation_depth?: string | null
+          markets?: Json
+          notif_breakout?: boolean
+          notif_daily?: boolean
+          notif_realtime?: boolean
+          notif_silent?: boolean
+          notif_weekly?: boolean
+          onboarding_completed?: boolean
+          region?: string | null
+          risk_level?: string | null
+          show_reasoning?: boolean
+          signal_frequency?: string | null
+          strategy_mode?: string | null
+          trading_goal?: string | null
+          updated_at?: string
+          usage_frequency?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

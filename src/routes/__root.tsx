@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { OnboardingGate } from "@/components/OnboardingGate";
 import { DunningBanner } from "@/components/DunningBanner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -126,6 +127,7 @@ function RootComponent() {
           </div>
           <Toaster />
           <QuickPanel />
+          <OnboardingGate />
         </SidebarProvider>
         </SubscriptionProvider>
       </AuthProvider>
@@ -198,6 +200,9 @@ function AuthHeaderButton() {
         ) : null}
         <DropdownMenuItem onSelect={() => navigate({ to: "/einstellungen" })}>
           <Settings className="h-4 w-4 mr-2" /> Einstellungen
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/handelsprofil" })}>
+          <Sparkles className="h-4 w-4 mr-2" /> Handelsprofil
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
