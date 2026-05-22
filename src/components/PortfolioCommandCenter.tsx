@@ -286,7 +286,7 @@ function AiPanel() {
     {
       role: "assistant",
       content:
-        "Willkommen bei **PORTFOLIO** 💼\n\nIch verwalte dein Depot per Sprache, berechne Kennzahlen und führe Risiko-Checks durch.\n\n_Tipp: nutze die Vorschläge unten oder schreib einfach „Füge NVDA hinzu"._",
+        'Willkommen bei **PORTFOLIO** 💼\n\nIch verwalte dein Depot per Sprache, berechne Kennzahlen und führe Risiko-Checks durch.\n\n_Tipp: nutze die Vorschläge unten oder schreib einfach „Füge NVDA hinzu"._',
     },
   ]);
   const [input, setInput] = useState("");
