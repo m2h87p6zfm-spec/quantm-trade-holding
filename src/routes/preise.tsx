@@ -64,16 +64,17 @@ const plans: Plan[] = [
     yearlyPriceId: "apex_pro_yearly",
     highlighted: true,
     features: [
-      "200 Analyse-Agent Credits / Monat",
+      "100 Analyse-Agent Credits / Monat",
       "Unlimitierte Watchlist & Smart Alerts",
+      "Unlimitiertes Portfolio-Tracking (Free: max. 10 Positionen)",
       "Analyse-Agent — strukturierte Broker Research Note pro Aktie",
       "Quant-Signale (LONG/SHORT/NEUTRAL) mit Konfidenz",
       "Indikator-Breakdown: RSI, MACD, Bollinger, Z-Score, Sharpe, Beta",
       "AI News-Sentiment (Gemini Flash)",
       "Sektor-Heatmap & alle Timeframes",
       "Economic Calendar",
-      "Portfolio-Tracking",
     ],
+
   },
   {
     id: "elite",
@@ -85,7 +86,7 @@ const plans: Plan[] = [
     monthlyPriceId: "apex_elite_monthly",
     yearlyPriceId: "apex_elite_yearly",
     features: [
-      "270 Analyse-Agent Credits / Monat",
+      "200 Analyse-Agent Credits / Monat",
       "Alles aus Pro",
       "AI Learning — Transparenz, was die Engine aus Fehlern lernt",
       "Institutional Decision Engine mit Smart-Money- & Regime-Filter",
