@@ -37,106 +37,138 @@ function Cockpit() {
   const total = cockpitSymbols.length;
   const loading = loaded < total;
 
+  const avgConfidence = rows.length
+    ? Math.round(rows.reduce((s, r) => s + (r.sig.confidence ?? 0), 0) / rows.length)
+    : 0;
+  const avgChange = rows.length
+    ? rows.reduce((s, r) => s + r.change, 0) / rows.length
+    : 0;
+
   return (
-    <div className="space-y-6 pb-12">
+    <div className="pb-12">
       <TickerBand />
 
-      <div className="mx-auto max-w-7xl space-y-6 px-6">
-        <MarketPulseHeader rows={rows} />
+      <div className="relative">
+        <div className="absolute inset-x-0 top-0 h-64 bg-terminal-grid pointer-events-none" />
 
-        {/* Kompakte Hero-Leiste */}
-        <div className="pt-2 animate-fade-up">
-          <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="relative mx-auto max-w-7xl space-y-6 px-6 pt-6">
+          {/* Hero strip */}
+          <div className="flex flex-wrap items-end justify-between gap-4 animate-fade-up">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                <Zap className="h-3 w-3 text-gold" /> Live Cockpit
+              <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 backdrop-blur px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-bull animate-pulse" />
+                Live · Cockpit
               </div>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
-                {usingDefault ? <>Markt-<span className="text-gradient-primary">Cockpit</span></> : <>Meine <span className="text-gradient-primary">Watchlist</span></>}
+              <h1 className="mt-2 font-display text-3xl sm:text-4xl font-semibold tracking-tight">
+                {usingDefault ? "Markt-Cockpit" : "Watchlist"}
               </h1>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {loading ? `Lade ${loaded}/${total} Werte…` : `${loaded} Werte aktiv`}
-                {" · "}<span className="text-bull">{longCount} Long</span>
-                {" · "}<span className="text-bear">{shortCount} Short</span>
-                {" · "}<span className="text-muted-foreground">{neutralCount} Neutral</span>
+              <p className="mt-1 text-xs text-muted-foreground num">
+                {loading ? `Sync ${loaded}/${total}` : `${loaded} Werte aktiv`}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/produkte" className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium hover:bg-accent/40">
+              <Link to="/produkte" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
                 <Search className="h-3.5 w-3.5" /> Katalog
               </Link>
-              <Link to="/produkte" className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-primary to-cyan-accent px-4 py-2 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-shadow">
-                <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
+              <Link to="/produkte" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold hover:bg-primary/90 transition-colors">
+                <Plus className="h-3.5 w-3.5" />
                 Werte hinzufügen
               </Link>
             </div>
           </div>
-        </div>
 
-        {/* WATCHLIST — jetzt direkt oben, sofort sichtbar */}
-        <div className="card-glow rounded-xl overflow-hidden animate-fade-up" style={{ animationDelay: "40ms" }}>
-          <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {usingDefault ? "Demo-Auswahl" : "Watchlist"}
+          {/* KPI strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>
+            <div className="kpi-tile">
+              <div className="kpi-label">Long Signale</div>
+              <div className="kpi-value text-bull">{longCount}</div>
+              <div className="kpi-delta text-muted-foreground">von {total}</div>
+            </div>
+            <div className="kpi-tile">
+              <div className="kpi-label">Short Signale</div>
+              <div className="kpi-value text-bear">{shortCount}</div>
+              <div className="kpi-delta text-muted-foreground">von {total}</div>
+            </div>
+            <div className="kpi-tile">
+              <div className="kpi-label">Ø Konfidenz</div>
+              <div className="kpi-value">{avgConfidence}<span className="text-sm text-muted-foreground">%</span></div>
+              <div className="kpi-delta text-muted-foreground">{neutralCount} neutral</div>
+            </div>
+            <div className="kpi-tile">
+              <div className="kpi-label">Ø Tag Δ</div>
+              <div className={`kpi-value ${avgChange >= 0 ? "text-bull" : "text-bear"}`}>
+                {avgChange >= 0 ? "+" : ""}{avgChange.toFixed(2)}<span className="text-sm text-muted-foreground">%</span>
               </div>
-              {usingDefault && (
-                <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[9px] font-semibold uppercase text-gold ring-1 ring-gold/30">
-                  Watchlist leer
-                </span>
-              )}
-              {loading && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold uppercase text-primary ring-1 ring-primary/30">
-                  <Activity className="h-2.5 w-2.5 animate-pulse" /> Live-Stream
-                </span>
-              )}
-            </div>
-            <div className="text-[10px] text-muted-foreground tabular-nums">
-              {total} Werte
+              <div className="kpi-delta text-muted-foreground">Watchlist</div>
             </div>
           </div>
-          <div className="hidden sm:grid grid-cols-12 gap-2 border-b border-border/60 bg-muted/15 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <div className="col-span-3">Symbol</div>
-            <div className="col-span-2">Kurs</div>
-            <div className="col-span-2">Tag Δ</div>
-            <div className="col-span-2">30T Trend</div>
-            <div className="col-span-3 text-right">Signal</div>
-          </div>
-          {cockpitSymbols.map((s, i) => (
-            <RowItem key={s} symbol={s} idx={i} showRemove={!usingDefault} row={rowMap.get(s)} onRemove={() => toggleWatch(s)} />
-          ))}
-        </div>
 
-        {/* AI Market Insight */}
-        <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
-          <MarketAiInsight rows={rows} />
-        </div>
-
-        {/* Sekundärer Block: Signal des Tages + Pulse + Gauge */}
-        <div className="grid gap-4 lg:grid-cols-3 animate-fade-up" style={{ animationDelay: "120ms" }}>
-          <div className="lg:col-span-2">
-            {featured ? (
-              <SignalOfDay symbol={featured.symbol} ind={featured.ind} sig={featured.sig} closes={featured.closes} />
-            ) : (
-              <SkeletonCard label="Signal des Tages" />
-            )}
+          <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+            <MarketPulseHeader rows={rows} />
           </div>
-          <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
-            {featured ? (
-              <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
-            ) : (
-              <SkeletonCard label="Setup-Score" />
-            )}
-          </div>
-        </div>
 
-        <div className="animate-fade-up" style={{ animationDelay: "180ms" }}>
-          <SectorHeatmap cells={heatmapCells} />
+          {/* BENTO — Signal of Day · Setup-Score · AI Insight */}
+          <div className="bento animate-fade-up" style={{ animationDelay: "120ms" }}>
+            <div className="col-span-12 lg:col-span-8">
+              {featured ? (
+                <SignalOfDay symbol={featured.symbol} ind={featured.ind} sig={featured.sig} closes={featured.closes} />
+              ) : (
+                <SkeletonCard label="Signal des Tages" />
+              )}
+            </div>
+            <div className="col-span-12 lg:col-span-4">
+              {featured ? (
+                <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
+              ) : (
+                <SkeletonCard label="Setup-Score" />
+              )}
+            </div>
+            <div className="col-span-12">
+              <MarketAiInsight rows={rows} />
+            </div>
+          </div>
+
+          {/* Watchlist — primary data panel */}
+          <div className="surface overflow-hidden animate-fade-up" style={{ animationDelay: "160ms" }}>
+            <div className="panel-header">
+              <div className="flex items-center gap-2">
+                <div className="panel-title">
+                  {usingDefault ? "Demo-Auswahl" : "Watchlist"}
+                </div>
+                {usingDefault && (
+                  <span className="rounded-sm bg-gold/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-gold ring-1 ring-gold/30">
+                    leer
+                  </span>
+                )}
+                {loading && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                    <Activity className="h-2.5 w-2.5 animate-pulse" /> Stream
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] num text-muted-foreground">{total} Werte</div>
+            </div>
+            <div className="hidden sm:grid grid-cols-12 gap-2 border-b border-border/40 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              <div className="col-span-3">Symbol</div>
+              <div className="col-span-2">Kurs</div>
+              <div className="col-span-2">Tag Δ</div>
+              <div className="col-span-2">30T Trend</div>
+              <div className="col-span-3 text-right">Signal</div>
+            </div>
+            {cockpitSymbols.map((s, i) => (
+              <RowItem key={s} symbol={s} idx={i} showRemove={!usingDefault} row={rowMap.get(s)} onRemove={() => toggleWatch(s)} />
+            ))}
+          </div>
+
+          <div className="animate-fade-up" style={{ animationDelay: "200ms" }}>
+            <SectorHeatmap cells={heatmapCells} />
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 function RowItem({ symbol, idx, showRemove, row, onRemove }: { symbol: string; idx: number; showRemove: boolean; row?: CockpitRow; onRemove: () => void }) {
   const product = findProduct(symbol);
