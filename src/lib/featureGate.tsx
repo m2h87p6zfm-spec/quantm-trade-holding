@@ -59,7 +59,9 @@ export function useFeature(feature: Feature) {
 export const LIMITS = {
   watchlist: { free: 5, pro: Infinity, elite: Infinity },
   alerts: { free: 1, pro: Infinity, elite: Infinity },
+  portfolio: { free: 10, pro: Infinity, elite: Infinity },
 } as const;
+
 
 export function useWatchlistLimit() {
   const { tier } = useSubscription();
