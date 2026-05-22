@@ -513,15 +513,72 @@ type Extracted = {
 type DraftRow = Extracted & { id: string; enabled: boolean };
 
 const MAX_FILES = 5;
-const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6 MB
+const MAX_FILE_BYTES = 12 * 1024 * 1024; // original file limit before optimization
+const TARGET_UPLOAD_BYTES = 1.2 * 1024 * 1024;
+const EXTRACT_TIMEOUT_MS = 20_000;
 
-function fileToDataUrl(file: File): Promise<string> {
+function dataUrlBytes(dataUrl: string): number {
+  const comma = dataUrl.indexOf(",");
+  return comma === -1 ? 0 : Math.floor((dataUrl.length - comma - 1) * 0.75);
+}
+
+function blobToDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result));
     r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden"));
     r.readAsDataURL(file);
   });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Bild konnte nicht optimiert werden"))), "image/jpeg", quality);
+  });
+}
+
+function loadImageElement(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Bildformat konnte nicht gelesen werden.")); };
+    img.src = url;
+  });
+}
+
+async function optimizeImageFile(file: File): Promise<string> {
+  const source = await (typeof createImageBitmap === "function"
+    ? createImageBitmap(file)
+    : Promise.reject(new Error("createImageBitmap unavailable"))
+  ).catch(() => loadImageElement(file));
+  const settings = [
+    { maxEdge: 1800, quality: 0.78 },
+    { maxEdge: 1500, quality: 0.72 },
+    { maxEdge: 1200, quality: 0.66 },
+    { maxEdge: 1000, quality: 0.62 },
+  ];
+
+  try {
+    for (let i = 0; i < settings.length; i++) {
+      const { maxEdge, quality } = settings[i];
+      const scale = Math.min(1, maxEdge / Math.max(source.width, source.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(source.width * scale));
+      canvas.height = Math.max(1, Math.round(source.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Bild konnte nicht verarbeitet werden");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+      const dataUrl = await blobToDataUrl(await canvasToBlob(canvas, quality));
+      if (dataUrlBytes(dataUrl) <= TARGET_UPLOAD_BYTES || i === settings.length - 1) return dataUrl;
+    }
+  } finally {
+    if (typeof ImageBitmap !== "undefined" && source instanceof ImageBitmap) source.close();
+  }
+
+  throw new Error("Bild konnte nicht optimiert werden");
 }
 
 function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
@@ -542,11 +599,11 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     const accepted: { id: string; file: File; url: string }[] = [];
     for (const f of incoming.slice(0, room)) {
       if (f.size > MAX_FILE_BYTES) {
-        toast.error(`${f.name}: zu groß (max. 6 MB)`);
+        toast.error(`${f.name}: zu groß (max. 12 MB)`);
         continue;
       }
       try {
-        const url = await fileToDataUrl(f);
+        const url = await optimizeImageFile(f);
         accepted.push({ id: crypto.randomUUID(), file: f, url });
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Lesefehler");
@@ -565,11 +622,15 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     setLoading(true);
     setDrafts([]);
     try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), EXTRACT_TIMEOUT_MS);
       const res = await fetch("/api/public/portfolio-extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ images: files.map((f) => f.url) }),
       });
+      window.clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? `Fehler ${res.status}`);
 
@@ -581,7 +642,11 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
       }
       setDrafts(positions.map((p) => ({ ...p, id: crypto.randomUUID(), enabled: true })));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
+      if (e instanceof DOMException && e.name === "AbortError") {
+        toast.error("Analyse dauert zu lange. Bitte nutze einen enger zugeschnittenen Screenshot und versuch es erneut.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
+      }
     } finally {
       setLoading(false);
     }
@@ -646,7 +711,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
           Broker-App, Depotauszug, Excel-Liste, handschriftliche Notiz — die KI liest Ticker, Stückzahl und Einstandskurs aus.
         </p>
         <p className="mt-1 text-[10px] text-muted-foreground/70">
-          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · je 6 MB
+          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · wird vor dem Senden automatisch optimiert
         </p>
       </div>
 

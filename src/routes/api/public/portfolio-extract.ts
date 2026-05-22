@@ -115,7 +115,8 @@ const EXTRACT_TOOL = {
 
 
 const MAX_IMAGES = 5;
-const MAX_BYTES_PER_IMAGE = 6 * 1024 * 1024; // 6 MB after base64 decoding
+const MAX_BYTES_PER_IMAGE = 1.5 * 1024 * 1024; // optimized client upload
+const GATEWAY_TIMEOUT_MS = 18_000;
 
 function approxBase64Bytes(dataUrl: string): number {
   const i = dataUrl.indexOf(",");
@@ -161,14 +162,17 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             if (typeof img !== "string" || !img.startsWith("data:image/"))
               return json({ error: "Bild muss als data:image/... base64 übergeben werden." }, 400);
             if (approxBase64Bytes(img) > MAX_BYTES_PER_IMAGE)
-              return json({ error: "Bild zu groß (max. 6 MB)." }, 413);
+              return json({ error: "Bild zu groß. Bitte Screenshot zuschneiden oder erneut hochladen." }, 413);
           }
 
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), GATEWAY_TIMEOUT_MS);
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
+            signal: controller.signal,
             headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-pro",
+              model: "google/gemini-2.5-flash",
               temperature: 0.1,
               messages: [
                 { role: "system", content: SYSTEM },
@@ -184,6 +188,7 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
               tool_choice: { type: "function", function: { name: "extract_positions" } },
             }),
           });
+          clearTimeout(timeoutId);
 
           if (!upstream.ok) {
             const txt = await upstream.text();
@@ -243,6 +248,9 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           return json({ positions: out });
         } catch (e) {
           console.error("portfolio-extract error", e);
+          if (e instanceof Error && e.name === "AbortError") {
+            return json({ error: "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen." }, 504);
+          }
           return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
         }
       },
