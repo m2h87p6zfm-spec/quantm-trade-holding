@@ -8,6 +8,7 @@ import { rsi as rsiCalc, stddev, mean } from "@/lib/indicators";
 import type { Candles, Quote } from "@/lib/finnhub";
 import type { DecisionReport } from "@/lib/analysis";
 import type { MarketRegime } from "@/lib/ai-learning";
+import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
 type Signal = "pos" | "neg" | "neu";
 
