@@ -8,10 +8,12 @@ type Tone = "bull" | "bear" | "neutral";
 type Row = {
   name: string;
   value: string;
-  definition: string; // was misst der Indikator?
-  reading: string;    // was sagt dieser konkrete Wert?
+  definition: string;
+  reading: string;
   tone: Tone;
-  verdict: string;    // kurzes Label: Kaufsignal / Verkaufssignal / Neutral / Vorsicht ...
+  verdict: string;
+  infoKey?: string;
+  rawValue?: any;
 };
 
 const fmt = (n: number, d = 2) =>
