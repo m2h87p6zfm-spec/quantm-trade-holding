@@ -442,6 +442,39 @@ function AnalysePage() {
   const sendQuery = (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
+
+    // Off-Topic-Guard: keine Aktie erkannt UND keine Finanz-Stichwörter
+    // → sofort freundlich antworten statt minutenlang auf den KI-Stream zu
+    //   warten (das System-Prompt ist auf Asset-Analyse ausgelegt).
+    if (!sym) {
+      const lower = text.toLowerCase();
+      const FINANCE_HINTS = [
+        "aktie", "aktien", "etf", "fond", "fonds", "depot", "portfolio", "broker",
+        "markt", "märkte", "maerkte", "börse", "boerse", "dax", "nasdaq", "s&p", "dow",
+        "kauf", "verkauf", "verkaufen", "kaufen", "halten", "long", "short", "trade",
+        "trading", "investier", "rendite", "dividende", "kurs", "chart", "analyse",
+        "bewert", "prognose", "sektor", "branche", "earnings", "quartal", "bilanz",
+        "zinsen", "inflation", "fed", "ezb", "crypto", "krypto", "bitcoin", "btc", "eth",
+        "öl", "gold", "silber", "rohstoff", "anleihe", "bond", "yield",
+      ];
+      const isFinance = FINANCE_HINTS.some((k) => lower.includes(k));
+      if (!isFinance) {
+        const canned: Msg = {
+          role: "agent",
+          text:
+            "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
+            "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
+            "• *Analysiere NVDA*\n" +
+            "• *Wie steht der DAX?*\n" +
+            "• *Soll ich Tesla kaufen?*\n" +
+            "• *Bewerte Apple*",
+        };
+        setMessages((m) => [...m, userMsg, canned]);
+        setInput("");
+        return;
+      }
+    }
+
     const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
     setMessages((m) => [...m, userMsg, reply]);
     setInput("");
@@ -513,8 +546,12 @@ function AnalysePage() {
                   <AiCommentary query={m.query} />
                 ) : (
                   <div
-                    className="text-sm leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: m.text.replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>') }}
+                    className="text-sm leading-relaxed whitespace-pre-line"
+                    dangerouslySetInnerHTML={{
+                      __html: m.text
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>'),
+                    }}
                   />
                 )}
                 {m.role === "agent" && i > 0 && (
