@@ -2,14 +2,17 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchCandles, fetchQuote, MarketDataReconnectingError } from "./finnhub";
 import { computeAll } from "./indicators";
 
-// Bei Reconnect-Signalen niemals retrien — der Server liefert dann sowieso
-// nur „reconnecting" zurück, bis Yahoo wieder antwortet. Andere Fehler bis
-// zu 3× mit exponentiellem Backoff.
+// Reconnect-Signale werden automatisch im Hintergrund nachgepollt (alle 2,5 s,
+// bis zu ~8×), damit Nutzer:innen nicht selbst „Erneut laden" klicken müssen.
+// Andere Fehler maximal 3× mit exponentiellem Backoff.
 function retryPolicy(failureCount: number, error: unknown) {
-  if (error instanceof MarketDataReconnectingError) return false;
+  if (error instanceof MarketDataReconnectingError) return failureCount < 8;
   return failureCount < 3;
 }
-const retryDelay = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
+const retryDelay = (attempt: number, error: unknown) => {
+  if (error instanceof MarketDataReconnectingError) return 2500;
+  return Math.min(1000 * 2 ** attempt, 8000);
+};
 
 export function useQuote(symbol: string, refetchMs = 0) {
   return useQuery({
