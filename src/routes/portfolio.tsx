@@ -39,7 +39,7 @@ function deriveSignalState(pos: Position, row?: CockpitRow): SignalState {
 
 function PositionRow({ pos, row, onRemove }: { pos: Position; row?: CockpitRow; onRemove: (id: string) => void }) {
   const q = useQuote(pos.symbol, 30_000);
-  const price = q.data?.c ?? row?.last;
+  const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
