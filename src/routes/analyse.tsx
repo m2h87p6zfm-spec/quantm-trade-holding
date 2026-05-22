@@ -353,7 +353,7 @@ function AgentAnalysisView({
 
   return (
     <div className="space-y-4">
-      <AiCommentary query={userQuery} symbol={symbol} />
+      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
       <DecisionCard report={decision} symbol={symbol} />
       <div className="flex items-center gap-2 pt-1">
         <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
