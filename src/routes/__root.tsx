@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, Link } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, Link, useNavigate } from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DisclaimerBanner } from "@/components/Disclaimer";
@@ -10,6 +10,18 @@ import { QuickPanel } from "@/components/QuickPanel";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Badge } from "@/components/ui/badge";
+import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
 
 import appCss from "../styles.css?url";
 
@@ -108,19 +120,82 @@ function RootComponent() {
 }
 
 function AuthHeaderButton() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const { tier } = useSubscription();
+  const navigate = useNavigate();
   if (loading) return null;
-  if (user) {
+  if (!user) {
     return (
-      <Button asChild size="sm" variant="ghost" className="text-xs">
-        <Link to="/konto">Konto</Link>
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">Anmelden</Link></Button>
+        <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">Upgrade</Link></Button>
+      </div>
     );
   }
+
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const displayName = (meta.full_name as string) || (meta.name as string) || user.email?.split("@")[0] || "Konto";
+  const avatarUrl = (meta.avatar_url as string) || (meta.picture as string) || undefined;
+  const initials = displayName.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "A";
+  const tierLabel = tier === "elite" ? "Apex Elite" : tier === "pro" ? "Apex Pro" : "Free";
+
   return (
-    <div className="flex items-center gap-1">
-      <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">Anmelden</Link></Button>
-      <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">Upgrade</Link></Button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/50 transition-colors" aria-label="Profilmenü">
+          <Avatar className="h-7 w-7">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+            <AvatarFallback className="text-[10px] bg-primary/15 text-primary">{initials}</AvatarFallback>
+          </Avatar>
+          <span className="hidden sm:inline text-xs font-medium text-foreground/90 max-w-[120px] truncate">{displayName}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex items-center gap-3 py-1">
+            <Avatar className="h-9 w-9">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+              <AvatarFallback className="text-xs bg-primary/15 text-primary">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium truncate">{displayName}</div>
+              <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+              <Badge variant={tier === "free" ? "outline" : "default"} className={`mt-1 text-[10px] ${tier === "elite" ? "bg-primary" : ""}`}>
+                {tierLabel}
+              </Badge>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => navigate({ to: "/konto" })}>
+          <UserIcon className="h-4 w-4 mr-2" /> Profil & Konto
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/konto" })}>
+          <CreditCard className="h-4 w-4 mr-2" /> Abo verwalten
+        </DropdownMenuItem>
+        {tier === "free" ? (
+          <DropdownMenuItem onSelect={() => navigate({ to: "/preise" })}>
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Auf Pro upgraden
+          </DropdownMenuItem>
+        ) : tier === "pro" ? (
+          <DropdownMenuItem onSelect={() => navigate({ to: "/preise" })}>
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Auf Elite upgraden
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem onSelect={() => navigate({ to: "/einstellungen" })}>
+          <Settings className="h-4 w-4 mr-2" /> Einstellungen
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={async () => {
+            await signOut();
+            navigate({ to: "/" });
+          }}
+          className="text-destructive focus:text-destructive"
+        >
+          <LogOut className="h-4 w-4 mr-2" /> Abmelden
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
