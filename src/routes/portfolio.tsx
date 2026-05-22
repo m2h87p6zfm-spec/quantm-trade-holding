@@ -297,43 +297,58 @@ function PortfolioPage() {
 }
 
 function Summary({ positions, rowMap }: { positions: Position[]; rowMap: Map<string, CockpitRow> }) {
-  const symbols = useMemo(() => Array.from(new Set(positions.map((p) => p.symbol))), [positions]);
-  const quotes = symbols.map((s) => ({ s, q: useQuote(s, 30_000) }));
-  const priceMap = new Map<string, number>();
-  for (const { s, q } of quotes) {
-    if (q.data?.c) priceMap.set(s, q.data.c);
-    else {
-      const r = rowMap.get(s);
-      if (r?.last) priceMap.set(s, r.last);
-    }
-  }
-
+  // IMPORTANT: do NOT call useQuote() in a loop — hook count must be stable.
+  // Use the cockpit rowMap (already fetched by the parent) for live prices.
   let total = 0, pl = 0, basis = 0;
   for (const pos of positions) {
-    const px = priceMap.get(pos.symbol);
-    if (px == null) continue;
+    const px = rowMap.get(pos.symbol)?.last ?? pos.entry;
     const { abs, value } = pnl(pos, px);
-    total += value; pl += abs; basis += pos.entry * pos.qty;
+    total += value;
+    pl += abs;
+    basis += pos.entry * pos.qty;
   }
   const plPct = basis ? (pl / basis) * 100 : 0;
   const up = pl >= 0;
+  const fmt = (n: number) =>
+    n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="grid gap-3 md:grid-cols-4">
-      <Stat label="Portfolio-Wert" value={total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
-      <Stat label="Einstand" value={basis.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sub="Eingesetztes Kapital" />
-      <Stat label="Unrealisierter P&L" value={`${up ? "+" : ""}${pl.toFixed(2)}`} tone={up ? "up" : "down"} icon={up ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} />
+      <Stat label="Portfolio-Wert" value={`€ ${fmt(total)}`} accent="primary" icon={<Wallet className="h-4 w-4" />} />
+      <Stat label="Einstand" value={`€ ${fmt(basis)}`} sub="Eingesetztes Kapital" />
+      <Stat
+        label="Unrealisierter P&L"
+        value={`${up ? "+" : "−"}€ ${fmt(Math.abs(pl))}`}
+        tone={up ? "up" : "down"}
+        icon={up ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+      />
       <Stat label="Performance" value={`${up ? "+" : ""}${plPct.toFixed(2)} %`} tone={up ? "up" : "down"} />
     </div>
   );
 }
 
-function Stat({ label, value, tone, icon, sub }: { label: string; value: string; tone?: "up" | "down"; icon?: React.ReactNode; sub?: string }) {
-  const c = tone === "up" ? "text-emerald-400" : tone === "down" ? "text-rose-400" : "text-foreground";
+function Stat({
+  label, value, tone, icon, sub, accent,
+}: {
+  label: string; value: string; tone?: "up" | "down";
+  icon?: React.ReactNode; sub?: string; accent?: "primary";
+}) {
+  const valueColor =
+    tone === "up" ? "text-emerald-400"
+    : tone === "down" ? "text-rose-400"
+    : accent === "primary" ? "text-primary"
+    : "text-foreground";
+  const grad =
+    tone === "up" ? "from-emerald-500/[0.10] ring-emerald-500/20"
+    : tone === "down" ? "from-rose-500/[0.10] ring-rose-500/20"
+    : accent === "primary" ? "from-primary/[0.10] ring-primary/25"
+    : "from-muted/30 ring-border";
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className={`relative overflow-hidden rounded-xl border border-border bg-gradient-to-br ${grad} via-card to-card p-4 ring-1`}>
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={`mt-1 flex items-center gap-2 text-2xl font-bold tabular-nums ${c}`}>{icon}{value}</div>
+      <div className={`mt-1 flex items-center gap-2 text-2xl font-bold tabular-nums ${valueColor}`}>
+        {icon}<span className="truncate">{value}</span>
+      </div>
       {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
     </div>
   );
