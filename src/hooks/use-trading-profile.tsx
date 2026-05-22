@@ -113,6 +113,17 @@ export function useTradingProfile() {
       usage_frequency: UsageFreq;
       markets: Market[];
       ai_style: AIStyle;
+      age_range?: AgeRange | null;
+      experience_level?: ExperienceLevel | null;
+      trader_type?: TraderType | null;
+      preferred_currency?: PreferredCurrency;
+      trusted_sources?: string[];
+      starter_watchlists?: string[];
+      ai_transparency_ack?: boolean;
+      notif_realtime?: boolean;
+      notif_daily?: boolean;
+      notif_weekly?: boolean;
+      notif_breakout?: boolean;
     }) => {
       if (!user) return;
       const confidence_threshold = RISK_TO_MIN_CONFIDENCE[answers.risk_level];
@@ -123,11 +134,16 @@ export function useTradingProfile() {
           : answers.usage_frequency === "weekly"
             ? "medium"
             : "low";
+      // Derive AI tone + explanation depth from experience level for instant personalization.
+      const ai_tone: AITone = answers.experience_level === "beginner" ? "simplified" : "professional";
+      const explanation_depth: ExplanationDepth = answers.experience_level === "advanced" ? "detailed" : "brief";
       const patch: Partial<TradingProfile> = {
         ...answers,
         confidence_threshold,
         strategy_mode,
         signal_frequency,
+        ai_tone,
+        explanation_depth,
         onboarding_completed: true,
       };
       setProfile((p) => (p ? { ...p, ...patch } as TradingProfile : p));
