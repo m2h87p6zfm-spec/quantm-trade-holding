@@ -18,7 +18,7 @@ export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
       { title: "Preise — Apex Trades" },
-      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Quant-Signale, Analyse-Agent, AI Learning, Smart Alerts und Realtime-Daten." },
+      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat. Apex Picks, Analyse-Agent, Watchlist mit Quant-Signalen, AI Learning, Smart Alerts und Realtime-Daten." },
     ],
   }),
   component: PricingPage,
@@ -49,7 +49,8 @@ const plans: Plan[] = [
     yearlyPrice: 0,
     features: [
       "7 Analyse-Agent Credits / Monat",
-      "Bis zu 5 Watchlist-Werte",
+      "Bis zu 5 Watchlist-Werte (inkl. Quant-Signale für deine Watchlist)",
+      "Apex Picks — Top-3-Vorschau der KI-Kandidaten",
       "1 Preis-Alert",
       "Cockpit mit Live-Preisen (15 Min verzögert)",
       "Heatmap (1 Tag)",
@@ -69,10 +70,11 @@ const plans: Plan[] = [
     highlighted: true,
     features: [
       "100 Analyse-Agent Credits / Monat",
-      "Unlimitierte Watchlist & Smart Alerts",
+      "Apex Picks — vollständige KI-Vorschlagsliste aus dem gesamten Universum",
+      "Unlimitierte Watchlist mit Quant-Signalen (BUY/SELL/HOLD + Konfidenz)",
+      "Unlimitierte Smart Alerts",
       "Unlimitiertes Portfolio-Tracking (Free: max. 10 Positionen)",
       "Analyse-Agent — strukturierte Broker Research Note pro Aktie",
-      "Quant-Signale (LONG/SHORT/NEUTRAL) mit Konfidenz",
       "Indikator-Breakdown: RSI, MACD, Bollinger, Z-Score, Sharpe, Beta",
       "AI News-Sentiment (Gemini Flash)",
       "Sektor-Heatmap & alle Timeframes",
@@ -93,7 +95,8 @@ const plans: Plan[] = [
       "200 Analyse-Agent Credits / Monat",
       "Alles aus Pro",
       "AI Learning — Transparenz, was die Engine aus Fehlern lernt",
-      "Institutional Decision Engine mit Smart-Money- & Regime-Filter",
+      "Apex Picks mit Smart-Money- & Regime-Filter (Institutional Decision Engine)",
+      "Hysterese-Stabilität: keine willkürlichen Signal-Flips",
       "Realtime-Streaming (kein 15-Min-Delay)",
       "Priority AI (Gemini Pro statt Flash)",
       "Custom Alert-Webhooks (Discord/Telegram)",
@@ -162,7 +165,7 @@ function PricingPage() {
             Schärfe deine Edge.
           </h1>
           <p className="mt-4 text-muted-foreground text-lg">
-            Analyse-Agent, Quant-Signale, AI Learning und Smart Alerts — wähle, was zu dir passt.
+            Apex Picks, Analyse-Agent, Watchlist-Signale, AI Learning und Smart Alerts — wähle, was zu dir passt.
           </p>
 
           <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border/60 bg-card/50 mt-8">
