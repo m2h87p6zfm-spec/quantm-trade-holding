@@ -285,6 +285,16 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           const rawArr = Array.isArray(parsed.positions) ? parsed.positions : [];
           const out: Extracted[] = [];
           let dropped = 0;
+          const marketPricePromises = new Map<string, Promise<number | undefined>>();
+          for (const raw of rawArr) {
+            if (!raw || typeof raw !== "object") continue;
+            const item = raw as Record<string, unknown>;
+            const sym = typeof item.symbol === "string" ? item.symbol.toUpperCase().trim() : "";
+            const value = Number(item.current_value);
+            if (sym && Number.isFinite(value) && value > 0 && !marketPricePromises.has(sym)) {
+              marketPricePromises.set(sym, fetchMarketPrice(sym));
+            }
+          }
           for (const p of rawArr) {
             if (!p || typeof p !== "object") { dropped++; continue; }
             const o = p as Record<string, unknown>;
@@ -306,7 +316,7 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             const qtyLooksLikeFallback = !qty || (qty === 1 && entryLooksLikePositionValue);
 
             if (symbol && currentValue && (!currentPrice || qtyLooksLikeFallback || entryLooksLikePositionValue)) {
-              currentPrice = await fetchMarketPrice(symbol) ?? currentPrice;
+              currentPrice = await marketPricePromises.get(symbol) ?? currentPrice;
             }
 
             if (currentValue && currentPrice && (!qty || qtyLooksLikeFallback)) {
