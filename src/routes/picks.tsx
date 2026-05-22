@@ -6,7 +6,7 @@ import { PRODUCTS, type Product } from "@/lib/products";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision, stabilizeDecision, whyNow } from "@/lib/analysis";
-import { detectRegime, regimeLabel as _r, type MarketRegime } from "@/lib/ai-learning";
+import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
