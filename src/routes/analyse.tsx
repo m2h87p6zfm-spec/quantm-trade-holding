@@ -117,15 +117,13 @@ function AgentResponse({ symbol }: { symbol: string }) {
 function AnalysePage() {
   const [input, setInput] = useState("");
   const initial: Msg[] = [
-    { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. Analysiere NVDA, Wie steht der DAX, oder Soll ich Tesla kaufen." },
+    { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX*, oder *Soll ich Tesla kaufen*." },
   ];
   const [messages, setMessages] = useState(initial);
 
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    const sym = extractSymbol(input);
-    const userMsg: Msg = { role: "user", text: input };
+  const sendQuery = (text: string) => {
+    const sym = extractSymbol(text);
+    const userMsg: Msg = { role: "user", text };
     const reply: Msg = sym
       ? { role: "agent", text: "", symbol: sym }
       : { role: "agent", text: "Kein bekanntes Symbol erkannt. Versuch's mit einem Ticker (AAPL, NVDA, SAP) oder einem Namen (Apple, Siemens, DAX)." };
@@ -133,36 +131,130 @@ function AnalysePage() {
     setInput("");
   };
 
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    sendQuery(input);
+  };
+
+  const suggestions = [
+    { icon: TrendingUp, label: "Analysiere NVDA", query: "Analysiere NVDA" },
+    { icon: Activity, label: "Wie steht der DAX?", query: "Wie steht der DAX" },
+    { icon: Search, label: "Soll ich Tesla kaufen?", query: "Soll ich Tesla kaufen" },
+    { icon: LineChart, label: "Bewerte Apple", query: "Bewerte Apple" },
+  ];
+
+  const showSuggestions = messages.length <= 1;
+
   return (
     <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-4xl flex-col p-6">
-      <div className="mb-4">
-        <h1 className="text-2xl font-bold">Analyse-Agent</h1>
-        <p className="text-sm text-muted-foreground">Dein statistischer Wall-Street-Broker. Klare Urteile, datengetrieben.</p>
+      {/* Header mit Icon + Glow */}
+      <div className="mb-5 flex items-start gap-3">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-xl bg-primary/30 blur-xl" aria-hidden />
+          <div className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card shadow-sm">
+            <Brain className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">Analyse-Agent</h1>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              LIVE
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground">Dein statistischer Wall-Street-Broker. Klare Urteile, datengetrieben.</p>
+        </div>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto rounded-lg border border-border bg-card/40 p-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[85%] rounded-lg px-4 py-3 ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}>
-              {m.symbol ? <AgentResponse symbol={m.symbol} /> : (
-                <div className="text-sm" dangerouslySetInnerHTML={{ __html: m.text.replace(/\*(.*?)\*/g, '<em>$1</em>') }} />
+      {/* Chat-Fläche mit subtilem Verlauf */}
+      <div className="relative flex-1 overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/60 to-card/20 shadow-inner">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-background/40 to-transparent" aria-hidden />
+        <div className="h-full space-y-4 overflow-y-auto p-5">
+          {messages.map((m, i) => (
+            <div key={i} className={`flex items-start gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              {m.role === "agent" && (
+                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card">
+                  <Bot className="h-3.5 w-3.5 text-primary" />
+                </div>
+              )}
+              <div
+                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                  m.role === "user"
+                    ? "rounded-tr-sm bg-primary text-primary-foreground"
+                    : "rounded-tl-sm border border-border bg-card"
+                }`}
+              >
+                {m.symbol ? (
+                  <AgentResponse symbol={m.symbol} />
+                ) : (
+                  <div
+                    className="text-sm leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: m.text.replace(/\*(.*?)\*/g, '<em class="text-primary not-italic font-medium">$1</em>') }}
+                  />
+                )}
+              </div>
+              {m.role === "user" && (
+                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card">
+                  <User className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
               )}
             </div>
-          </div>
-        ))}
+          ))}
+
+          {showSuggestions && (
+            <div className="pt-2">
+              <div className="mb-2 flex items-center gap-1.5 pl-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <Sparkles className="h-3 w-3" />
+                Schnellstart
+              </div>
+              <div className="grid grid-cols-1 gap-2 pl-9 sm:grid-cols-2">
+                {suggestions.map((s) => (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => sendQuery(s.query)}
+                    className="group flex items-center gap-2.5 rounded-xl border border-border bg-card/60 px-3 py-2.5 text-left text-sm transition hover:border-primary/40 hover:bg-card hover:shadow-sm"
+                  >
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary transition group-hover:bg-primary/20">
+                      <s.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="text-muted-foreground group-hover:text-foreground">{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <form onSubmit={submit} className="mt-4 flex gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder='z. B. "Analysiere Apple" oder "Wie bewertest du NVDA?"'
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-        <button type="submit" className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          <Send className="h-4 w-4" /> Senden
-        </button>
+      {/* Eingabe-Bar */}
+      <form onSubmit={submit} className="mt-4">
+        <div className="group relative flex items-center gap-2 rounded-2xl border border-border bg-card/80 p-1.5 shadow-sm transition focus-within:border-primary/50 focus-within:shadow-md">
+          <div className="flex h-8 w-8 items-center justify-center text-muted-foreground">
+            <Search className="h-4 w-4" />
+          </div>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder='z. B. "Analysiere Apple" oder "Wie bewertest du NVDA?"'
+            className="flex-1 bg-transparent px-1 py-2 text-sm placeholder:text-muted-foreground/70 focus:outline-none"
+          />
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-40"
+          >
+            <Send className="h-3.5 w-3.5" />
+            Senden
+          </button>
+        </div>
+        <p className="mt-2 pl-2 text-[11px] text-muted-foreground/70">
+          Tipp: Du kannst Ticker (NVDA, SAP) oder volle Namen verwenden.
+        </p>
       </form>
     </div>
   );
 }
+
