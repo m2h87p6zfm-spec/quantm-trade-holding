@@ -21,6 +21,9 @@ import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
 import { FeedbackButtons } from "@/components/FeedbackButtons";
 import { supabase } from "@/integrations/supabase/client";
+import { buildIndicatorPrompt } from "@/lib/indicator-prompt";
+import type { IndicatorSet } from "@/lib/indicators";
+import type { MarketRegime } from "@/lib/ai-learning";
 
 
 
