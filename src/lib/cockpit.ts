@@ -10,6 +10,9 @@ export type CockpitRow = {
   last: number;
   prev: number;
   change: number;
+  volume?: number;
+  high52?: number;
+  low52?: number;
   ind: ReturnType<typeof computeAll>;
   sig: ReturnType<typeof scoreIndicators>;
   alpha: number;
@@ -40,7 +43,14 @@ export function useCockpitData(symbols: string[]): CockpitRow[] {
       const ind = computeAll(closes);
       const sig = scoreIndicators(ind, "ausgewogen");
       const alpha = setupScore(ind);
-      rows.push({ symbol: symbols[i], closes, last, prev, change, ind, sig, alpha });
+      // Volume = last bar, 52w high/low from the rolling window
+      const vols = (data.v || []).filter((x: any) => Number.isFinite(x));
+      const volume = vols.length ? vols[vols.length - 1] : undefined;
+      const highs = (data.h || []).filter((x: any) => Number.isFinite(x));
+      const lows = (data.l || []).filter((x: any) => Number.isFinite(x));
+      const high52 = highs.length ? Math.max(...highs.slice(-252)) : undefined;
+      const low52 = lows.length ? Math.min(...lows.slice(-252)) : undefined;
+      rows.push({ symbol: symbols[i], closes, last, prev, change, volume, high52, low52, ind, sig, alpha });
     }
     return rows;
   }, [results.map((r) => r.dataUpdatedAt).join(","), symbols.join(",")]);

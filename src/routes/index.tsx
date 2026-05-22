@@ -11,6 +11,9 @@ import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { MarketAiInsight } from "@/components/MarketAiInsight";
+import { SymbolSearch } from "@/components/SymbolSearch";
+import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
+import { formatCompact } from "@/lib/format";
 
 export const Route = createFileRoute("/")({ component: Cockpit });
 
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/")({ component: Cockpit });
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
 function Cockpit() {
-  const { settings, toggleWatch } = useSettings();
+  const { settings, addSymbols, removeSymbol } = useSettings();
   const usingDefault = settings.watchlist.length === 0;
   const cockpitSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
   const rows = useCockpitData(cockpitSymbols);
@@ -67,15 +70,18 @@ function Cockpit() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Link to="/produkte" className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
+              <WatchlistSwitcher />
+              <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors">
                 <Search className="h-3.5 w-3.5" /> Katalog
-              </Link>
-              <Link to="/produkte" className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-3.5 py-2 text-xs font-semibold hover:bg-primary/90 transition-colors">
-                <Plus className="h-3.5 w-3.5" />
-                Werte hinzufügen
               </Link>
             </div>
           </div>
+
+          {/* Global search — any Yahoo Finance ticker */}
+          <div className="animate-fade-up" style={{ animationDelay: "20ms" }}>
+            <SymbolSearch existing={settings.watchlist} onAdd={(syms) => addSymbols(syms)} />
+          </div>
+
 
           {/* KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-fade-up" style={{ animationDelay: "40ms" }}>

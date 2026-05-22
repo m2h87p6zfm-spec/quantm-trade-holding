@@ -6,6 +6,7 @@
 
 export type Quote = {
   c: number; d: number; dp: number; h: number; l: number; o: number; pc: number; t: number;
+  v?: number; h52?: number; l52?: number;
   currency?: string; exchange?: string; name?: string;
   stale?: boolean; lastUpdated?: number;
 };
@@ -49,4 +50,18 @@ export async function fetchCandles(symbol: string, resolution: "D" | "60" | "W" 
   return data;
 }
 
+export type SymbolSearchHit = { symbol: string; name: string; exchange?: string; type?: string };
+
+export async function searchSymbols(q: string): Promise<SymbolSearchHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+  try {
+    const res = await fetch(`/api/public/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    const j = await res.json();
+    return Array.isArray(j?.results) ? j.results : [];
+  } catch { return []; }
+}
+
 export { FinnhubError };
+
