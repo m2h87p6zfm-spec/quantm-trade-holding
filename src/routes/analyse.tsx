@@ -8,7 +8,7 @@ import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Bra
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis, useQuote } from "@/lib/useMarketData";
-import { scoreIndicators, buildDecision } from "@/lib/analysis";
+import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
