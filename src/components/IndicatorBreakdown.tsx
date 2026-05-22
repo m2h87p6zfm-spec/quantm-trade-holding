@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { IndicatorSet } from "@/lib/indicators";
+import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
 type Tone = "bull" | "bear" | "neutral";
 
