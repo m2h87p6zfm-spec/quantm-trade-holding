@@ -201,6 +201,9 @@ function AuthHeaderButton() {
         <DropdownMenuItem onSelect={() => navigate({ to: "/einstellungen" })}>
           <Settings className="h-4 w-4 mr-2" /> Einstellungen
         </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/handelsprofil" })}>
+          <Sparkles className="h-4 w-4 mr-2" /> Handelsprofil
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
