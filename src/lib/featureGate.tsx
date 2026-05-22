@@ -25,7 +25,7 @@ export type Feature =
 
 export const FEATURE_TIERS: Record<Feature, Tier> = {
   ai_learning: "elite",
-  portfolio: "pro",
+  portfolio: "free",
   calendar: "pro",
   news_sentiment: "pro",
   smart_alerts_unlimited: "pro",

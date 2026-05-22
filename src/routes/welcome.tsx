@@ -23,10 +23,19 @@ type Answers = {
   industry?: string;
   workflow?: string;
   tone?: string;
+  newsSources?: string[];
   email?: string;
 };
 
 const STORAGE_KEY = "apex_onboarding";
+
+const NEWS_SOURCE_OPTIONS: { key: "reuters" | "bloomberg" | "ft" | "cnbc" | "yahoo"; label: string; desc: string }[] = [
+  { key: "reuters", label: "Reuters", desc: "Global wire — Markets & Macro" },
+  { key: "bloomberg", label: "Bloomberg", desc: "Institutional flow & earnings" },
+  { key: "ft", label: "Financial Times", desc: "Europe & deep analysis" },
+  { key: "cnbc", label: "CNBC", desc: "US live coverage" },
+  { key: "yahoo", label: "Yahoo Finance", desc: "Retail-focused aggregation" },
+];
 
 function loadAnswers(): Answers {
   if (typeof window === "undefined") return {};
@@ -36,7 +45,22 @@ function saveAnswers(a: Answers) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); } catch { /* noop */ }
 }
 
-const TOTAL_STEPS = 11;
+/** Persist the chosen news sources into the live app settings (ta_settings). */
+function persistNewsSources(selected: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("ta_settings");
+    const cur = raw ? JSON.parse(raw) : {};
+    const allKeys = NEWS_SOURCE_OPTIONS.map((o) => o.key);
+    const map: Record<string, boolean> = {};
+    for (const k of allKeys) map[k] = selected.includes(k);
+    cur.newsSources = { ...(cur.newsSources || {}), ...map };
+    localStorage.setItem("ta_settings", JSON.stringify(cur));
+    window.dispatchEvent(new CustomEvent("ta_settings_change"));
+  } catch { /* noop */ }
+}
+
+const TOTAL_STEPS = 12;
 
 function WelcomePage() {
   const navigate = useNavigate();
@@ -163,14 +187,24 @@ function WelcomePage() {
             />
           )}
           {step === 9 && (
+            <ScreenNewsSources
+              value={answers.newsSources ?? NEWS_SOURCE_OPTIONS.map((o) => o.key)}
+              onChange={(v) => set({ newsSources: v })}
+              onContinue={() => {
+                persistNewsSources(answers.newsSources ?? NEWS_SOURCE_OPTIONS.map((o) => o.key));
+                next();
+              }}
+            />
+          )}
+          {step === 10 && (
             <ScreenEmail
               value={answers.email ?? ""}
               onChange={(v) => set({ email: v })}
               onContinue={next}
             />
           )}
-          {step === 10 && <ScreenLoading onDone={next} />}
-          {step === 11 && (
+          {step === 11 && <ScreenLoading onDone={next} />}
+          {step === 12 && (
             <ScreenFinal
               email={answers.email}
               onEnter={() => navigate({ to: "/login" })}
@@ -180,7 +214,7 @@ function WelcomePage() {
         </div>
 
         {/* footer nav */}
-        {step > 1 && step !== 10 && (
+        {step > 1 && step !== 11 && (
           <div className="mt-10 flex items-center justify-between text-xs text-muted-foreground">
             <button onClick={back} className="hover:text-foreground transition-colors">Back</button>
             <div className="flex items-center gap-2">
@@ -388,6 +422,65 @@ function ScreenFinal({ email, onEnter, onTour }: { email?: string; onEnter: () =
         </Button>
         <Button onClick={onTour} variant="ghost" size="lg" className="h-12 px-8 text-sm font-medium">
           Watch Quick Overview
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ScreenNewsSources({
+  value, onChange, onContinue,
+}: { value: string[]; onChange: (v: string[]) => void; onContinue: () => void }) {
+  const toggle = (key: string) => {
+    if (value.includes(key)) onChange(value.filter((x) => x !== key));
+    else onChange([...value, key]);
+  };
+  const valid = value.length > 0;
+  return (
+    <div>
+      <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80">News Feed</div>
+      <h2 className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+        Which sources should power your news feed?
+      </h2>
+      <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
+        Choose the agencies you trust. You can change this anytime in Settings.
+      </p>
+
+      <div className="mt-10 grid gap-2.5 sm:grid-cols-2">
+        {NEWS_SOURCE_OPTIONS.map((opt) => {
+          const selected = value.includes(opt.key);
+          return (
+            <button
+              key={opt.key}
+              onClick={() => toggle(opt.key)}
+              className={[
+                "group relative flex items-start justify-between gap-3 rounded-xl border px-5 py-4 text-left transition-all duration-200 backdrop-blur",
+                selected
+                  ? "border-primary/60 bg-primary/10 text-foreground shadow-[0_0_0_1px_hsl(var(--primary)/0.3),0_10px_40px_-12px_hsl(var(--primary)/0.4)]"
+                  : "border-border/60 bg-card/40 text-foreground/90 hover:border-foreground/30 hover:bg-card/70",
+              ].join(" ")}
+            >
+              <div>
+                <div className="text-[14px] font-semibold">{opt.label}</div>
+                <div className="mt-0.5 text-[12px] text-muted-foreground">{opt.desc}</div>
+              </div>
+              <span className={[
+                "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-all",
+                selected ? "border-primary bg-primary text-primary-foreground" : "border-border/60 text-transparent group-hover:border-foreground/40",
+              ].join(" ")}>
+                <Check className="h-3 w-3" />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-8 flex items-center justify-between">
+        <span className="text-[11px] text-muted-foreground">
+          {value.length} of {NEWS_SOURCE_OPTIONS.length} selected
+        </span>
+        <Button onClick={onContinue} disabled={!valid} size="lg" className="h-12 px-8 text-sm font-medium">
+          Continue <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
