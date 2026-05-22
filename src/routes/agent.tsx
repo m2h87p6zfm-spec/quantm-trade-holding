@@ -27,6 +27,7 @@ function AgentPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const sessionId = useMemo(() => crypto.randomUUID(), []);
   const scroller = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
