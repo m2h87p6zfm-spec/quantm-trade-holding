@@ -235,54 +235,50 @@ export function buildDecision(
   let conf = sig.confidence;
 
   // --- Smart Money Filter ----------------------------------------------------
-  // Momentum ohne Volumen/Volatilitäts-Bestätigung → Confidence dämpfen
   const annVol = ind.volatility;
   if (Math.abs(ind.momentum) > 0.08 && annVol < 0.18) {
-    conf -= 8;
-    adjustments.push("Starkes Momentum bei niedriger Volatilität — kein Volumen-Confirm → −8");
+    conf -= 5;
+    adjustments.push("Starkes Momentum bei niedriger Volatilität — kein Volumen-Confirm → −5");
   }
-  // Hohe Vola + extremes Verdict → Konfidenz senken (illiquide / News-getrieben)
-  if (annVol > 0.6 && sig.verdict !== "NEUTRAL") {
-    conf -= 10;
-    adjustments.push("Sehr hohe Volatilität — institutionelle Hände meiden solche Tape-Phasen → −10");
+  if (annVol > 0.7 && sig.verdict !== "NEUTRAL") {
+    conf -= 5;
+    adjustments.push("Sehr hohe Volatilität — institutionelle Hände meiden solche Tape-Phasen → −5");
   }
-  // Beta >1.4 + Bear-Regime → Long abwerten
   if (sig.verdict === "LONG" && ind.beta > 1.4 && regime === "bear") {
-    conf -= 12;
-    adjustments.push("High-Beta-Long in Bärenmarkt — Smart Money meidet zyklisches Risiko → −12");
+    conf -= 8;
+    adjustments.push("High-Beta-Long in Bärenmarkt → −8");
   }
-  // Trend-Bestätigung: Verdict in Trendrichtung → Confidence anheben
   if (!isNaN(ind.sma50) && !isNaN(ind.sma200)) {
     const upTrend = ind.sma50 > ind.sma200 && ind.price > ind.sma50;
     const downTrend = ind.sma50 < ind.sma200 && ind.price < ind.sma50;
-    if (sig.verdict === "LONG" && upTrend) { conf += 6; adjustments.push("Long in intaktem Aufwärtstrend (50>200) → +6"); }
-    if (sig.verdict === "SHORT" && downTrend) { conf += 6; adjustments.push("Short in Death-Cross-Struktur → +6"); }
-    if (sig.verdict === "LONG" && downTrend) { conf -= 10; adjustments.push("Long gegen Death-Cross — Counter-Trend, Smart Money skeptisch → −10"); }
-    if (sig.verdict === "SHORT" && upTrend) { conf -= 10; adjustments.push("Short gegen Golden-Cross — Trend-Fight, hohes Risiko → −10"); }
+    if (sig.verdict === "LONG" && upTrend) { conf += 10; adjustments.push("Long in Aufwärtstrend (50>200) → +10"); }
+    if (sig.verdict === "SHORT" && downTrend) { conf += 10; adjustments.push("Short in Death-Cross-Struktur → +10"); }
+    if (sig.verdict === "NEUTRAL" && upTrend) { conf += 6; adjustments.push("Neutral, aber Aufwärtstrend intakt → +6 Richtung Long"); }
+    if (sig.verdict === "NEUTRAL" && downTrend) { conf += 6; adjustments.push("Neutral, aber Death-Cross aktiv → +6 Richtung Short"); }
+    if (sig.verdict === "LONG" && downTrend) { conf -= 8; adjustments.push("Long gegen Death-Cross → −8"); }
+    if (sig.verdict === "SHORT" && upTrend) { conf -= 8; adjustments.push("Short gegen Golden-Cross → −8"); }
   }
-  // Sharpe-Qualität: institutionelle Allocator schätzen risikoadjustierte Rendite
-  if (sig.verdict === "LONG" && ind.sharpe > 1.5) { conf += 4; adjustments.push("Sharpe >1.5 — institutionell allokierfähig → +4"); }
-  if (sig.verdict === "LONG" && ind.sharpe < 0) { conf -= 6; adjustments.push("Sharpe negativ — Allocator-No-Go → −6"); }
+  if (sig.verdict === "LONG" && ind.sharpe > 1.5) { conf += 6; adjustments.push("Sharpe >1.5 — institutionell allokierfähig → +6"); }
+  if (sig.verdict === "LONG" && ind.sharpe < 0) { conf -= 5; adjustments.push("Sharpe negativ → −5"); }
 
   // --- Regime Awareness -----------------------------------------------------
-  if (regime === "high_vol") {
-    conf -= 5;
-    adjustments.push("Regime: Hochvolatil — HOLD-Bias steigt → −5");
-  }
-  if (regime === "chop") {
-    conf -= 4;
-    adjustments.push("Regime: Seitwärts — Trend-Setups historisch schwach → −4");
-  }
-  if (regime === "bull" && sig.verdict === "LONG") { conf += 3; adjustments.push("Bullenmarkt unterstützt Long-Setups → +3"); }
-  if (regime === "bear" && sig.verdict === "SHORT") { conf += 3; adjustments.push("Bärenmarkt unterstützt Short-Setups → +3"); }
+  if (regime === "high_vol") { conf -= 2; adjustments.push("Regime: Hochvolatil → −2"); }
+  if (regime === "chop") { conf -= 2; adjustments.push("Regime: Seitwärts → −2"); }
+  if (regime === "bull" && sig.verdict === "LONG") { conf += 5; adjustments.push("Bullenmarkt unterstützt Long → +5"); }
+  if (regime === "bear" && sig.verdict === "SHORT") { conf += 5; adjustments.push("Bärenmarkt unterstützt Short → +5"); }
 
   conf = Math.max(5, Math.min(95, Math.round(conf)));
 
-  // --- Decision Mapping mit 60%-Schwelle ------------------------------------
+  // --- Decision Mapping mit 50%-Schwelle ------------------------------------
+  // Bei NEUTRAL: Trendrichtung bestimmt Bias, wenn Konfidenz hoch genug.
   let decision: Decision = "HOLD";
-  if (sig.verdict === "LONG" && conf >= 60) decision = "BUY";
-  else if (sig.verdict === "SHORT" && conf >= 60) decision = "SELL";
-  // sonst HOLD
+  const trendUp = !isNaN(ind.sma50) && !isNaN(ind.sma200) && ind.sma50 > ind.sma200 && ind.price > ind.sma50;
+  const trendDown = !isNaN(ind.sma50) && !isNaN(ind.sma200) && ind.sma50 < ind.sma200 && ind.price < ind.sma50;
+  if (sig.verdict === "LONG" && conf >= 50) decision = "BUY";
+  else if (sig.verdict === "SHORT" && conf >= 50) decision = "SELL";
+  else if (sig.verdict === "NEUTRAL" && conf >= 55 && trendUp) decision = "BUY";
+  else if (sig.verdict === "NEUTRAL" && conf >= 55 && trendDown) decision = "SELL";
+
 
   // --- Risk Level -----------------------------------------------------------
   let riskLevel: RiskLevel = "Mittel";
@@ -339,12 +335,27 @@ export function buildDecision(
     ? `These ist tot bei Schlusskurs > ${sig.stop.toFixed(2)} oder wenn das MACD-Histogramm zwei Tage in Folge ins Positive dreht.`
     : `HOLD-Status endet, sobald Vola, Trend und Sentiment in dieselbe Richtung zeigen und Confidence ≥ 60 erreicht.`;
 
-  // --- Reasoning ------------------------------------------------------------
-  const verdictLabel = decision === "BUY" ? "Akkumulation" : decision === "SELL" ? "Distribution" : "Abwarten";
-  const reasoning = `${name} (${symbol}) im ${regimeLabelDe(regime)}: ${verdictLabel} bei ${conf}% Konfidenz. ` +
-    `Die Konstellation aus ${sentiment.toLowerCase()} und ${institutional.toLowerCase()} ` +
-    `wird ${decision === "HOLD" ? "durch das Regime gedämpft" : "vom Trend gestützt"}. ` +
-    `${technical}`;
+  // --- Reasoning (Variantenpool für Abwechslung) ----------------------------
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const verdictLabel =
+    decision === "BUY"
+      ? pick(["Akkumulation", "Aufbau einer Long-Position", "schrittweiser Einstieg", "Long-Bias"])
+      : decision === "SELL"
+      ? pick(["Distribution", "Reduktion / Short-Bias", "Gewinnmitnahme bzw. Short", "Verkaufsdruck"])
+      : pick(["Beobachten", "Stillhalten", "Kein klares Edge", "Geduld geboten"]);
+  const linker = pick(["weil", "denn", "begründet durch", "getragen von", "gestützt auf"]);
+  const opener = pick([
+    `${name} (${symbol}) zeigt im ${regimeLabelDe(regime)}: ${verdictLabel} bei ${conf}% Konfidenz.`,
+    `Für ${name} (${symbol}) im ${regimeLabelDe(regime)} ergibt sich: ${verdictLabel} (${conf}% Konfidenz).`,
+    `${symbol} (${name}) — Marktphase ${regimeLabelDe(regime)}, Empfehlung: ${verdictLabel}, Konfidenz ${conf}%.`,
+    `Aktuelle Lage in ${name} (${symbol}): ${verdictLabel} mit ${conf}% Konfidenz im ${regimeLabelDe(regime)}.`,
+  ]);
+  const closer =
+    decision === "HOLD"
+      ? pick(["Setup noch nicht überzeugend.", "Kein eindeutiger Trigger.", "Risiko/Chance nicht klar genug."])
+      : pick(["Trend stützt die These.", "Setup ist gut aufgestellt.", "Risiko-Profil sauber.", "Edge ist messbar."]);
+  const reasoning = `${opener} ${linker} ${sentiment.toLowerCase()} und ${institutional.toLowerCase()} ${technical} ${closer}`;
+
 
   return {
     decision,
