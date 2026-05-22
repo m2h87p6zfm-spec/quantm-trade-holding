@@ -107,6 +107,11 @@ function Cockpit() {
           ))}
         </div>
 
+        {/* AI Market Insight */}
+        <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+          <MarketAiInsight rows={rows} />
+        </div>
+
         {/* Sekundärer Block: Signal des Tages + Pulse + Gauge */}
         <div className="grid gap-4 lg:grid-cols-3 animate-fade-up" style={{ animationDelay: "120ms" }}>
           <div className="lg:col-span-2">
