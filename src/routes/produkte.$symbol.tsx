@@ -7,6 +7,7 @@ import { useSettings } from "@/lib/settings";
 import { useWatchlistLimit } from "@/lib/featureGate";
 import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
+import { AssetChart } from "@/components/AssetChart";
 import { BrokerAssessment } from "@/components/BrokerAssessment";
 
 export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
