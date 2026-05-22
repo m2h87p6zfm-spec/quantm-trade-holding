@@ -7,6 +7,7 @@ import { useSettings } from "@/lib/settings";
 
 const ROUTES = [
   { label: "Watchlist / Cockpit", to: "/", icon: ListOrdered },
+  { label: "Apex Picks — KI-Vorschläge", to: "/picks", icon: Sparkles },
   { label: "War Room", to: "/war-room", icon: Swords },
   { label: "AI Analyst", to: "/agent", icon: Bot },
   { label: "Analyse-Agent", to: "/analyse", icon: MessageSquare },
