@@ -58,14 +58,18 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
         const sys = symbol
           ? `Der Nutzer fragt nach ${symbol}. Liefere eine kompakte, frische Einschätzung (max. 8 Sätze) — variiere Einstieg, beziehe Memory & Feedback ein, keine Wiederholung früherer Antworten.`
           : "Beantworte die Nutzerfrage kompakt und variantenreich.";
+        const indicatorBlock =
+          symbol && indicators && regime ? buildIndicatorPrompt(symbol, indicators, regime) : null;
+        const msgs = [
+          { role: "system", content: sys },
+          ...(indicatorBlock ? [{ role: "system", content: indicatorBlock }] : []),
+          { role: "user", content: query },
+        ];
         const res = await fetch("/api/public/agent-chat", {
           method: "POST",
           headers,
           body: JSON.stringify({
-            messages: [
-              { role: "system", content: sys },
-              { role: "user", content: query },
-            ],
+            messages: msgs,
             sessionId: `analyse-${symbol ?? "free"}-${Date.now()}`,
           }),
           signal: controller.signal,
