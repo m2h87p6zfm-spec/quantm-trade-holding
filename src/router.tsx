@@ -8,9 +8,12 @@ function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => vo
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">Marktdaten werden neu verbunden</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Die Plattform bleibt erreichbar. Bitte versuche es gleich erneut.</p>
-        <button onClick={() => { router.invalidate(); reset(); }} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Erneut laden</button>
+        <h1 className="text-xl font-semibold">Etwas ist schiefgelaufen</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Die Plattform bleibt erreichbar. Gehe zur Startseite oder versuche es erneut.</p>
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <button onClick={() => { reset(); router.invalidate(); }} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Erneut laden</button>
+          <button onClick={() => { reset(); router.navigate({ to: "/" }); }} className="rounded-md border border-border px-4 py-2 text-sm font-medium">Zur Startseite</button>
+        </div>
       </div>
     </div>
   );
