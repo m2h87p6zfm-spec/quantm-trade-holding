@@ -78,9 +78,12 @@ function TradingProfilePage() {
       </Section>
 
       <Section icon={<LineChart className="h-4 w-4" />} title="Markets">
-        <Row label="Aktive Märkte">
+        <Row label="Interessen (Aktien & ETFs)">
           <div className="flex flex-wrap gap-2">
-            {(["stocks", "crypto", "forex", "commodities", "mixed"] as Market[]).map((m) => {
+            {([
+              { v: "stocks" as Market, label: "Aktien" },
+              { v: "etfs" as Market, label: "ETFs" },
+            ]).map(({ v: m, label }) => {
               const on = profile.markets.includes(m);
               return (
                 <button
@@ -90,7 +93,7 @@ function TradingProfilePage() {
                     on ? "border-primary/60 bg-primary/15 text-primary" : "border-border text-muted-foreground hover:border-foreground/30"
                   }`}
                 >
-                  {m.charAt(0).toUpperCase() + m.slice(1)}
+                  {label}
                 </button>
               );
             })}
