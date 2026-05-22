@@ -287,7 +287,6 @@ function AnalysePage() {
             <AnalysisCreditBadge />
           </div>
 
-          </div>
           <p className="text-sm text-muted-foreground">Dein statistischer Wall-Street-Broker. Klare Urteile, datengetrieben.</p>
         </div>
       </div>
