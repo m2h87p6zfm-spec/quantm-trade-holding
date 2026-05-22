@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +10,7 @@ import { FEATURE_TIERS, tierAllows, type Feature } from "@/lib/featureGate";
 type NavItem = { title: string; url: string; icon: typeof Bell; desc?: string; feature?: Feature };
 
 const quantCore: NavItem[] = [
+  { title: "Apex Picks", url: "/picks", icon: Sparkles, desc: "KI-Vorschläge" },
   { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
   { title: "APEX Track Record", url: "/track-record", icon: ShieldCheck, desc: "Live-Trefferquote" },
   { title: "Explain My Trade", url: "/explain-trade", icon: Microscope, desc: "Reverse-Backtest", feature: "risk_analytics" },

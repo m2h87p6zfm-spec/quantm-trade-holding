@@ -15,6 +15,7 @@ import { Route as TrackRecordRouteImport } from './routes/track-record'
 import { Route as SignaleRouteImport } from './routes/signale'
 import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
+import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PasswortZuruecksetzenRouteImport } from './routes/passwort-zuruecksetzen'
 import { Route as PasswortVergessenRouteImport } from './routes/passwort-vergessen'
 import { Route as NewsRouteImport } from './routes/news'
@@ -78,6 +79,11 @@ const PreiseRoute = PreiseRouteImport.update({
 const PortfolioRoute = PortfolioRouteImport.update({
   id: '/portfolio',
   path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PicksRoute = PicksRouteImport.update({
+  id: '/picks',
+  path: '/picks',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PasswortZuruecksetzenRoute = PasswortZuruecksetzenRouteImport.update({
@@ -272,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
+  '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
@@ -314,6 +321,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
+  '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
@@ -357,6 +365,7 @@ export interface FileRoutesById {
   '/news': typeof NewsRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
+  '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/signale': typeof SignaleRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
+    | '/picks'
     | '/portfolio'
     | '/preise'
     | '/signale'
@@ -443,6 +453,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
+    | '/picks'
     | '/portfolio'
     | '/preise'
     | '/signale'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
+    | '/picks'
     | '/portfolio'
     | '/preise'
     | '/signale'
@@ -528,6 +540,7 @@ export interface RootRouteChildren {
   NewsRoute: typeof NewsRoute
   PasswortVergessenRoute: typeof PasswortVergessenRoute
   PasswortZuruecksetzenRoute: typeof PasswortZuruecksetzenRoute
+  PicksRoute: typeof PicksRoute
   PortfolioRoute: typeof PortfolioRoute
   PreiseRoute: typeof PreiseRoute
   SignaleRoute: typeof SignaleRoute
@@ -595,6 +608,13 @@ declare module '@tanstack/react-router' {
       path: '/portfolio'
       fullPath: '/portfolio'
       preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/picks': {
+      id: '/picks'
+      path: '/picks'
+      fullPath: '/picks'
+      preLoaderRoute: typeof PicksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/passwort-zuruecksetzen': {
@@ -856,6 +876,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsRoute: NewsRoute,
   PasswortVergessenRoute: PasswortVergessenRoute,
   PasswortZuruecksetzenRoute: PasswortZuruecksetzenRoute,
+  PicksRoute: PicksRoute,
   PortfolioRoute: PortfolioRoute,
   PreiseRoute: PreiseRoute,
   SignaleRoute: SignaleRoute,
