@@ -37,14 +37,15 @@ function PicksPage() {
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
-  const [universe, setUniverse] = useState<"top" | "all">("top");
+  const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
     if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
     if (region !== "Alle") list = list.filter((p) => p.region === region);
-    // "top" = erste 80 (liquideste, häufig zitierte Werte stehen vorne in PRODUCTS)
+    // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
+    else if (universe === "extended") list = list.slice(0, 250);
     return list;
   }, [sector, region, universe]);
 
@@ -60,10 +61,17 @@ function PicksPage() {
     })),
   });
 
-  const loaded = candleQs.filter((q) => q.data).length;
+  // CRITICAL FIX: ein gescheiterter Request (z. B. Symbol vom Yahoo-Proxy nicht
+  // gefunden, Rate-Limit, Timeout) hat den Scan-Zähler bei "loaded/total"
+  // einfrieren lassen, weil nur `data` gezählt wurde. Jetzt zählen wir auch
+  // erledigte Fehler als "fertig", damit der Fortschritt immer 100 % erreicht.
+  const settled = candleQs.filter((q) => q.data || q.isError || (!q.isLoading && !q.isFetching)).length;
+  const succeeded = candleQs.filter((q) => q.data).length;
+  const failed = candleQs.filter((q) => q.isError).length;
   const total = filtered.length;
-  const loading = loaded < total;
-  const progress = total > 0 ? Math.round((loaded / total) * 100) : 0;
+  const loading = settled < total;
+  const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
+
 
   const picks = useMemo(() => {
     type Row = {
@@ -151,9 +159,16 @@ function PicksPage() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-1.5">
-          <button onClick={() => setUniverse(universe === "top" ? "all" : "top")} className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent/40">
-            {universe === "top" ? "Top 80 scannen" : "Volles Universum"}
-          </button>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
+          {(["top", "extended", "all"] as const).map((u) => (
+            <button
+              key={u}
+              onClick={() => setUniverse(u)}
+              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
+            >
+              {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -166,14 +181,28 @@ function PicksPage() {
       {loading && (
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5"><RefreshCw className="h-3.5 w-3.5 animate-spin" /> KI scannt {total} Werte… {loaded}/{total}</span>
+            <span className="flex items-center gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+              Scan läuft — {settled}/{total} verarbeitet
+              {failed > 0 && <span className="text-amber-500">· {failed} ohne Daten</span>}
+            </span>
             <span className="font-mono tabular-nums">{progress}%</span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             <div className="h-full bg-gradient-to-r from-primary to-violet-accent transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Berechnung läuft lokal (Z-Score, RSI, MACD, Trend, Sharpe) — verbraucht <span className="text-foreground font-semibold">keine AI-Credits</span>, nur Marktdaten-Abrufe.
+          </p>
         </div>
       )}
+
+      {!loading && succeeded < total && (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-muted-foreground">
+          {succeeded} von {total} Werten erfolgreich analysiert · {failed} ohne verwertbare Kursdaten (z. B. illiquide, Symbol-Mismatch beim Datenanbieter).
+        </div>
+      )}
+
 
       {!loading && picks.length === 0 && (
         <Card className="p-8 text-center text-sm text-muted-foreground">
