@@ -513,15 +513,69 @@ type Extracted = {
 type DraftRow = Extracted & { id: string; enabled: boolean };
 
 const MAX_FILES = 5;
-const MAX_FILE_BYTES = 6 * 1024 * 1024; // 6 MB
+const MAX_FILE_BYTES = 12 * 1024 * 1024; // original file limit before optimization
+const TARGET_UPLOAD_BYTES = 1.8 * 1024 * 1024;
+const EXTRACT_TIMEOUT_MS = 24_000;
 
-function fileToDataUrl(file: File): Promise<string> {
+function dataUrlBytes(dataUrl: string): number {
+  const comma = dataUrl.indexOf(",");
+  return comma === -1 ? 0 : Math.floor((dataUrl.length - comma - 1) * 0.75);
+}
+
+function blobToDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload = () => resolve(String(r.result));
     r.onerror = () => reject(new Error("Datei konnte nicht gelesen werden"));
     r.readAsDataURL(file);
   });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Bild konnte nicht optimiert werden"))), "image/jpeg", quality);
+  });
+}
+
+function loadImageElement(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Bildformat konnte nicht gelesen werden.")); };
+    img.src = url;
+  });
+}
+
+async function optimizeImageFile(file: File): Promise<string> {
+  const source = await createImageBitmap(file).catch(() => loadImageElement(file));
+  const settings = [
+    { maxEdge: 2200, quality: 0.82 },
+    { maxEdge: 1800, quality: 0.76 },
+    { maxEdge: 1500, quality: 0.7 },
+    { maxEdge: 1200, quality: 0.66 },
+  ];
+
+  try {
+    for (let i = 0; i < settings.length; i++) {
+      const { maxEdge, quality } = settings[i];
+      const scale = Math.min(1, maxEdge / Math.max(source.width, source.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(source.width * scale));
+      canvas.height = Math.max(1, Math.round(source.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Bild konnte nicht verarbeitet werden");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+      const dataUrl = await blobToDataUrl(await canvasToBlob(canvas, quality));
+      if (dataUrlBytes(dataUrl) <= TARGET_UPLOAD_BYTES || i === settings.length - 1) return dataUrl;
+    }
+  } finally {
+    if (typeof ImageBitmap !== "undefined" && source instanceof ImageBitmap) source.close();
+  }
+
+  throw new Error("Bild konnte nicht optimiert werden");
 }
 
 function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
