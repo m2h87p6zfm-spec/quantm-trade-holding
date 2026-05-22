@@ -110,6 +110,46 @@ function PicksPage() {
     return rows.slice(0, 15);
   }, [candleQs, filtered, settings.risk]);
 
+  // Persist BUY picks into the public Track Record (dedup per symbol per day).
+  const recordedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (loading || picks.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    let stored: Record<string, string> = {};
+    try { stored = JSON.parse(localStorage.getItem("apex_picks_recorded") || "{}"); } catch { /* ignore */ }
+    for (const row of picks) {
+      const key = row.p.symbol;
+      if (recordedRef.current.has(key)) continue;
+      if (stored[key] === today) { recordedRef.current.add(key); continue; }
+      recordedRef.current.add(key);
+      stored[key] = today;
+      recordApexAnalysis({
+        data: {
+          ticker: row.p.symbol,
+          name: row.p.name,
+          sector: row.p.sector ?? null,
+          asset_type: (row.p.type === "ETF" ? "ETF" : "Aktie") as "Aktie" | "ETF",
+          verdict: "KAUF",
+          confidence_score: row.report.confidence,
+          price_at_analysis: row.last,
+          indicators: {
+            zScore: row.ind.zScore,
+            rsi: row.ind.rsi,
+            macdHist: row.ind.macdHist,
+            sma50: row.ind.sma50,
+            sma200: row.ind.sma200,
+            volatility: row.ind.volatility,
+            momentum: row.ind.momentum,
+            regime: row.regime,
+            upsidePct: row.upsidePct,
+            source: "picks-scan",
+          },
+        },
+      }).catch(() => { /* fire-and-forget */ });
+    }
+    try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
+  }, [loading, picks]);
+
   const podium = picks.slice(0, 3);
   const rest = picks.slice(3);
 
