@@ -81,22 +81,22 @@ function SettingsPage() {
             <SettingsIcon className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Einstellungen</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t("settings.title")}</h1>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Passe deinen Trading-Agent an deinen Stil an — Risiko, Darstellung, Benachrichtigungen und Standard-Targets.
+              {t("settings.subtitle")}
             </p>
           </div>
         </div>
       </section>
 
       {/* Risikoprofil */}
-      <Card icon={<Shield className="h-4 w-4" />} title="Risikoprofil" hint="Beeinflusst die Schwelle für LONG/SHORT-Empfehlungen.">
+      <Card icon={<Shield className="h-4 w-4" />} title={t("settings.risk")} hint={t("settings.risk.hint")}>
         <div className="grid grid-cols-3 gap-2">
           {(
             [
-              { v: "konservativ", desc: "Strenge Filter" },
-              { v: "ausgewogen", desc: "Balanciert" },
-              { v: "spekulativ", desc: "Höhere Frequenz" },
+              { v: "konservativ", label: t("settings.risk.conservative"), desc: t("settings.risk.conservative.desc") },
+              { v: "ausgewogen", label: t("settings.risk.balanced"), desc: t("settings.risk.balanced.desc") },
+              { v: "spekulativ", label: t("settings.risk.speculative"), desc: t("settings.risk.speculative.desc") },
             ] as const
           ).map((r) => {
             const active = settings.risk === r.v;
@@ -110,7 +110,7 @@ function SettingsPage() {
                     : "border-border bg-background/40 hover:border-border hover:bg-accent/40"
                 }`}
               >
-                <div className={`text-sm font-semibold capitalize ${active ? "text-primary" : "text-foreground"}`}>{r.v}</div>
+                <div className={`text-sm font-semibold ${active ? "text-primary" : "text-foreground"}`}>{r.label}</div>
                 <div className="mt-0.5 text-[11px] text-muted-foreground">{r.desc}</div>
               </button>
             );
@@ -119,45 +119,45 @@ function SettingsPage() {
       </Card>
 
       {/* Darstellung */}
-      <Card icon={<Palette className="h-4 w-4" />} title="Darstellung" hint="Theme, Dichte und Standardwährung.">
+      <Card icon={<Palette className="h-4 w-4" />} title={t("settings.appearance")} hint={t("settings.appearance.hint")}>
         <div className="space-y-5">
-          <Row label="Theme">
+          <Row label={t("settings.theme")}>
             <div className="flex gap-2">
               {(
                 [
-                  { v: "dark", label: "Dark", icon: <Moon className="h-3.5 w-3.5" /> },
-                  { v: "light", label: "Light", icon: <Sun className="h-3.5 w-3.5" /> },
+                  { v: "dark", label: t("settings.theme.dark"), icon: <Moon className="h-3.5 w-3.5" /> },
+                  { v: "light", label: t("settings.theme.light"), icon: <Sun className="h-3.5 w-3.5" /> },
                 ] as const
-              ).map((t) => {
-                const active = settings.theme === t.v;
+              ).map((th) => {
+                const active = settings.theme === th.v;
                 return (
                   <button
-                    key={t.v}
-                    onClick={() => update({ theme: t.v })}
+                    key={th.v}
+                    onClick={() => update({ theme: th.v })}
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm transition-all ${
                       active ? "border-primary/60 bg-primary/10 text-primary ring-1 ring-primary/30" : "border-border hover:bg-accent/40"
                     }`}
                   >
-                    {t.icon}
-                    {t.label}
+                    {th.icon}
+                    {th.label}
                   </button>
                 );
               })}
             </div>
           </Row>
 
-          <Row label="Dichte" hint="Kompakte Tabellen für mehr Inhalt auf einen Blick.">
+          <Row label={t("settings.density")} hint={t("settings.density.hint")}>
             <Segmented
               value={settings.density}
               onChange={(v) => update({ density: v as "comfortable" | "compact" })}
               options={[
-                { value: "comfortable", label: "Komfortabel" },
-                { value: "compact", label: "Kompakt" },
+                { value: "comfortable", label: t("settings.density.comfortable") },
+                { value: "compact", label: t("settings.density.compact") },
               ]}
             />
           </Row>
 
-          <Row label="Standardwährung" icon={<Coins className="h-3.5 w-3.5" />}>
+          <Row label={t("settings.currency")} icon={<Coins className="h-3.5 w-3.5" />}>
             <Segmented
               value={settings.currency}
               onChange={(v) => update({ currency: v as "USD" | "EUR" | "CHF" })}
@@ -169,23 +169,26 @@ function SettingsPage() {
             />
           </Row>
 
-          <Row label="Sprache" icon={<Languages className="h-3.5 w-3.5" />} hint="Aktuell nur Deutsch — Englisch folgt mit dem nächsten Release.">
-            <div className="inline-flex items-center gap-2">
-              <div className="inline-flex rounded-lg border border-border bg-background/40 p-0.5">
-                <button className="rounded-md bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary shadow-sm ring-1 ring-primary/20">
-                  Deutsch
-                </button>
-                <button
-                  disabled
-                  className="cursor-not-allowed rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground/60"
-                  title="Englisch ist noch nicht verfügbar"
-                >
-                  English
-                </button>
-              </div>
-              <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold ring-1 ring-gold/30">
-                Bald
-              </span>
+          <Row label={t("settings.language")} icon={<Languages className="h-3.5 w-3.5" />} hint={t("settings.language.hint")}>
+            <div className="flex flex-wrap gap-1.5">
+              {LANGUAGES.map((l) => {
+                const active = settings.language === l.code;
+                return (
+                  <button
+                    key={l.code}
+                    onClick={() => changeLanguage(l.code)}
+                    className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-all ${
+                      active
+                        ? "border-primary/60 bg-primary/15 text-primary ring-1 ring-primary/30"
+                        : "border-border bg-background/40 text-foreground/80 hover:border-foreground/30 hover:bg-accent/40"
+                    }`}
+                    lang={l.code}
+                    dir={l.dir}
+                  >
+                    {l.native}
+                  </button>
+                );
+              })}
             </div>
           </Row>
         </div>
