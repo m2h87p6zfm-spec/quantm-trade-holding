@@ -8,6 +8,7 @@ import { rsi as rsiCalc, stddev, mean } from "@/lib/indicators";
 import type { Candles, Quote } from "@/lib/finnhub";
 import type { DecisionReport } from "@/lib/analysis";
 import type { MarketRegime } from "@/lib/ai-learning";
+import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
 type Signal = "pos" | "neg" | "neu";
 
@@ -32,13 +33,14 @@ function SignalDot({ s }: { s: Signal }) {
   return <span className={`inline-block h-2 w-2 rounded-full ${cls}`} />;
 }
 
-function Row({ label, value, sub, signal }: { label: string; value: string; sub?: string; signal: Signal }) {
+function Row({ label, value, sub, signal, infoKey, rawValue }: { label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }) {
   const textColor = signal === "pos" ? "text-emerald-400" : signal === "neg" ? "text-rose-400" : "text-amber-300";
   return (
     <div className="flex items-center justify-between border-b border-border/40 px-3 py-2 last:border-b-0">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <SignalDot s={signal} />
         <span>{label}</span>
+        {infoKey && <IndicatorInfoButton infoKey={infoKey} rawValue={rawValue} />}
       </div>
       <div className="text-right">
         <div className={`font-mono text-base font-semibold ${textColor}`}>{value}</div>
@@ -86,13 +88,14 @@ function atr(candles: Candle[] | undefined, period = 14): number {
 }
 
 function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgVol: number, lastVol: number) {
-  const rows: Array<{ label: string; value: string; sub?: string; signal: Signal }> = [];
+  const rows: Array<{ label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }> = [];
   // RSI
   rows.push({
     label: "RSI (14)",
     value: fmt(ind.rsi, 1),
     sub: ind.rsi >= 70 ? "überkauft" : ind.rsi <= 30 ? "überverkauft" : "neutral",
     signal: ind.rsi <= 30 ? "pos" : ind.rsi >= 70 ? "neg" : "neu",
+    infoKey: "rsi", rawValue: ind.rsi,
   });
   // Stoch RSI
   rows.push({
@@ -100,6 +103,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(stoch, 1),
     sub: stoch >= 80 ? "überkauft" : stoch <= 20 ? "überverkauft" : "neutral",
     signal: stoch <= 20 ? "pos" : stoch >= 80 ? "neg" : "neu",
+    infoKey: "stochRsi", rawValue: stoch,
   });
   // MACD
   const macdSig: Signal = ind.macd.histogram > 0 && ind.macd.macd > ind.macd.signal ? "pos"
@@ -109,6 +113,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(ind.macd.histogram, 3),
     sub: `Signal ${fmt(ind.macd.signal, 3)}`,
     signal: macdSig,
+    infoKey: "macd", rawValue: ind.macd,
   });
   // Bollinger
   const boll: Signal = ind.price <= ind.bollinger.lower ? "pos" : ind.price >= ind.bollinger.upper ? "neg" : "neu";
@@ -117,6 +122,7 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: ind.price <= ind.bollinger.lower ? "unteres Band" : ind.price >= ind.bollinger.upper ? "oberes Band" : "im Korridor",
     sub: `${fmt(ind.bollinger.lower)} – ${fmt(ind.bollinger.upper)}`,
     signal: boll,
+    infoKey: "bollinger", rawValue: { price: ind.price, lower: ind.bollinger.lower, upper: ind.bollinger.upper },
   });
   // Z-Score
   const zSig: Signal = ind.zScore <= -1 ? "pos" : ind.zScore >= 1 ? "neg" : "neu";
@@ -125,33 +131,35 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: fmt(ind.zScore, 2),
     sub: Math.abs(ind.zScore) >= 2 ? "extrem" : Math.abs(ind.zScore) >= 1 ? "auffällig" : "neutral",
     signal: zSig,
+    infoKey: "zScore", rawValue: ind.zScore,
   });
   // SMA 20
   const sma20Sig: Signal = ind.price > ind.sma20 ? "pos" : ind.price < ind.sma20 ? "neg" : "neu";
-  rows.push({ label: "SMA 20", value: fmt(ind.sma20), sub: ind.price > ind.sma20 ? "Kurs darüber" : "Kurs darunter", signal: sma20Sig });
+  rows.push({ label: "SMA 20", value: fmt(ind.sma20), sub: ind.price > ind.sma20 ? "Kurs darüber" : "Kurs darunter", signal: sma20Sig, infoKey: "sma20", rawValue: { price: ind.price, sma: ind.sma20 } });
   // SMA 50
   if (!isNaN(ind.sma50)) {
     const sig: Signal = ind.price > ind.sma50 ? "pos" : "neg";
-    rows.push({ label: "SMA 50", value: fmt(ind.sma50), sub: ind.price > ind.sma50 ? "Kurs darüber" : "Kurs darunter", signal: sig });
+    rows.push({ label: "SMA 50", value: fmt(ind.sma50), sub: ind.price > ind.sma50 ? "Kurs darüber" : "Kurs darunter", signal: sig, infoKey: "sma50", rawValue: { price: ind.price, sma: ind.sma50 } });
   }
   // SMA 200
   if (!isNaN(ind.sma200)) {
     const sig: Signal = ind.price > ind.sma200 ? "pos" : "neg";
-    rows.push({ label: "SMA 200", value: fmt(ind.sma200), sub: ind.sma50 > ind.sma200 ? "Golden Cross" : "Death Cross", signal: sig });
+    rows.push({ label: "SMA 200", value: fmt(ind.sma200), sub: ind.sma50 > ind.sma200 ? "Golden Cross" : "Death Cross", signal: sig, infoKey: "sma200", rawValue: { price: ind.price, sma200: ind.sma200, sma50: ind.sma50 } });
   }
   // Momentum
   const momSig: Signal = ind.momentum > 0.02 ? "pos" : ind.momentum < -0.02 ? "neg" : "neu";
-  rows.push({ label: "Momentum (10 T.)", value: fmtPct(ind.momentum * 100), signal: momSig });
+  rows.push({ label: "Momentum (10 T.)", value: fmtPct(ind.momentum * 100), signal: momSig, infoKey: "momentum", rawValue: ind.momentum });
   // ATR
   rows.push({
     label: "ATR (14)",
     value: fmt(atrVal),
     sub: `${fmt((atrVal / ind.price) * 100, 2)}% v. Kurs`,
     signal: "neu",
+    infoKey: "atr", rawValue: { atr: atrVal, price: ind.price },
   });
   // Volatilität
   const volSig: Signal = ind.volatility > 0.5 ? "neg" : ind.volatility < 0.2 ? "pos" : "neu";
-  rows.push({ label: "Volatilität (annual.)", value: fmtPct(ind.volatility * 100, 1), signal: volSig });
+  rows.push({ label: "Volatilität (annual.)", value: fmtPct(ind.volatility * 100, 1), signal: volSig, infoKey: "volatility", rawValue: ind.volatility });
   // Volumen
   const volRatio = avgVol > 0 ? lastVol / avgVol : 1;
   const vSig: Signal = volRatio >= 1.5 ? "pos" : volRatio <= 0.6 ? "neg" : "neu";
@@ -160,13 +168,14 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
     value: `${fmt(volRatio, 2)}×`,
     sub: `${fmtBig(lastVol)} heute`,
     signal: vSig,
+    infoKey: "volume", rawValue: { ratio: volRatio },
   });
   // Sharpe
   const shSig: Signal = ind.sharpe > 1 ? "pos" : ind.sharpe < 0 ? "neg" : "neu";
-  rows.push({ label: "Sharpe Ratio", value: fmt(ind.sharpe, 2), signal: shSig });
+  rows.push({ label: "Sharpe Ratio", value: fmt(ind.sharpe, 2), signal: shSig, infoKey: "sharpe", rawValue: ind.sharpe });
   // Beta
   const bSig: Signal = ind.beta > 1.2 ? "neg" : ind.beta < 0.8 ? "pos" : "neu";
-  rows.push({ label: "Beta", value: fmt(ind.beta, 2), sub: ind.beta > 1.2 ? "aggressiv" : ind.beta < 0.8 ? "defensiv" : "marktnah", signal: bSig });
+  rows.push({ label: "Beta", value: fmt(ind.beta, 2), sub: ind.beta > 1.2 ? "aggressiv" : ind.beta < 0.8 ? "defensiv" : "marktnah", signal: bSig, infoKey: "beta", rawValue: ind.beta });
 
   return rows;
 }
@@ -235,13 +244,13 @@ export function ApexDashboard({
   const VerdictIcon = verdictColor.icon;
 
   // Fundamentals
-  const fundamentals = [
-    { label: "Aktueller Kurs", value: `${fmt(indicators.price)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal },
-    { label: "Marktkapitalisierung", value: quote?.marketCap ? fmtBig(quote.marketCap) : "—", signal: "neu" as Signal },
-    { label: "52-W-Hoch", value: quote?.h52 ? fmt(quote.h52) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100)} v. ATH` : undefined, signal: "neu" as Signal },
-    { label: "52-W-Tief", value: quote?.l52 ? fmt(quote.l52) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100)} ü. ATL` : undefined, signal: "neu" as Signal },
-    { label: "Beta vs. Markt", value: fmt(indicators.beta, 2), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal },
-    { label: "Sharpe Ratio (Qualität)", value: fmt(indicators.sharpe, 2), sub: indicators.sharpe > 1 ? "institutionell" : indicators.sharpe < 0 ? "unattraktiv" : "akzeptabel", signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal },
+  const fundamentals: Array<{ label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }> = [
+    { label: "Aktueller Kurs", value: `${fmt(indicators.price)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal, infoKey: "price", rawValue: { changePct: quote?.dp } },
+    { label: "Marktkapitalisierung", value: quote?.marketCap ? fmtBig(quote.marketCap) : "—", signal: "neu" as Signal, infoKey: "marketCap" },
+    { label: "52-W-Hoch", value: quote?.h52 ? fmt(quote.h52) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100)} v. ATH` : undefined, signal: "neu" as Signal, infoKey: "high52" },
+    { label: "52-W-Tief", value: quote?.l52 ? fmt(quote.l52) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100)} ü. ATL` : undefined, signal: "neu" as Signal, infoKey: "low52" },
+    { label: "Beta vs. Markt", value: fmt(indicators.beta, 2), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal, infoKey: "beta", rawValue: indicators.beta },
+    { label: "Sharpe Ratio (Qualität)", value: fmt(indicators.sharpe, 2), sub: indicators.sharpe > 1 ? "institutionell" : indicators.sharpe < 0 ? "unattraktiv" : "akzeptabel", signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal, infoKey: "sharpe", rawValue: indicators.sharpe },
   ];
   const fundamentalVerdict: Signal = fundamentals.filter((f) => f.signal === "pos").length >= fundamentals.filter((f) => f.signal === "neg").length ? "pos" : "neg";
 
@@ -308,7 +317,7 @@ export function ApexDashboard({
       <SectionCard icon={BarChart3} title="📈 Technische & statistische Analyse">
         <div className="divide-y divide-border/40">
           {techRows.map((r) => (
-            <Row key={r.label} label={r.label} value={r.value} sub={r.sub} signal={r.signal} />
+            <Row key={r.label} label={r.label} value={r.value} sub={r.sub} signal={r.signal} infoKey={r.infoKey} rawValue={r.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">
@@ -329,7 +338,7 @@ export function ApexDashboard({
       <SectionCard icon={Landmark} title="💰 Fundamentalanalyse">
         <div className="divide-y divide-border/40">
           {fundamentals.map((f) => (
-            <Row key={f.label} label={f.label} value={f.value} sub={f.sub} signal={f.signal} />
+            <Row key={f.label} label={f.label} value={f.value} sub={f.sub} signal={f.signal} infoKey={f.infoKey} rawValue={f.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">

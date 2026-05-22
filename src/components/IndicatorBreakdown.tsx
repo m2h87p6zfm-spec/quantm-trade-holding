@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { IndicatorSet } from "@/lib/indicators";
+import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
 type Tone = "bull" | "bear" | "neutral";
 
 type Row = {
   name: string;
   value: string;
-  definition: string; // was misst der Indikator?
-  reading: string;    // was sagt dieser konkrete Wert?
+  definition: string;
+  reading: string;
   tone: Tone;
-  verdict: string;    // kurzes Label: Kaufsignal / Verkaufssignal / Neutral / Vorsicht ...
+  verdict: string;
+  infoKey?: string;
+  rawValue?: any;
 };
 
 const fmt = (n: number, d = 2) =>
@@ -37,6 +40,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "rsi", rawValue: v,
     });
   }
 
@@ -57,6 +61,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "zScore", rawValue: v,
     });
   }
 
@@ -75,6 +80,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "macd", rawValue: ind.macd,
     });
   }
 
@@ -93,6 +99,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "bollinger", rawValue: { price: p, lower: lo, upper: hi },
     });
   }
 
@@ -112,6 +119,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "smaTrend", rawValue: { sma50: ind.sma50, sma200: ind.sma200, price: ind.price },
     });
   }
 
@@ -132,6 +140,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "momentum", rawValue: m,
     });
   }
 
@@ -151,6 +160,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "volatility", rawValue: v,
     });
   }
 
@@ -170,6 +180,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "sharpe", rawValue: s,
     });
   }
 
@@ -189,6 +200,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "beta", rawValue: b,
     });
   }
 
@@ -264,7 +276,10 @@ export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
               <div className="pl-2 space-y-1.5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{r.name}</div>
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span>{r.name}</span>
+                      {r.infoKey && <IndicatorInfoButton infoKey={r.infoKey} rawValue={r.rawValue} />}
+                    </div>
                     <div className="font-mono text-lg font-bold tabular-nums leading-tight">{r.value}</div>
                   </div>
                   <span className={`shrink-0 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${s.badge}`}>
