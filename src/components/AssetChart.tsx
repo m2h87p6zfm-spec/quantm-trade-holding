@@ -83,8 +83,8 @@ export const AssetChart = memo(function AssetChart({
 
   const first = data[0]?.close ?? 0;
   const last = data[data.length - 1]?.close ?? 0;
-  const changeAbs = last - first;
-  const changePct = first ? (changeAbs / first) * 100 : 0;
+  const changeAbs = absChange(first, last);
+  const changePct = pctChange(first, last);
   const up = changeAbs >= 0;
 
   const { min, max } = useMemo(() => {
@@ -95,11 +95,8 @@ export const AssetChart = memo(function AssetChart({
     return { min: mn - pad, max: mx + pad };
   }, [data]);
 
-  const fmtPrice = useCallback((n: number) => {
-    const abs = Math.abs(n);
-    const digits = abs >= 1000 ? 0 : abs >= 100 ? 1 : abs >= 1 ? 2 : 4;
-    return `${currency}${n.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
-  }, [currency]);
+  const fmtPrice = useCallback((n: number) => formatPrice(n, currency), [currency]);
+  const fmtAxis = useCallback((n: number) => formatPrice(n, currency, axisDecimals(n)), [currency]);
 
   const xTickFmt = useCallback((ms: number) => {
     const d = new Date(ms);
@@ -109,7 +106,7 @@ export const AssetChart = memo(function AssetChart({
     return d.toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
   }, [tf]);
 
-  const lineColor = up ? "hsl(var(--bull))" : "hsl(var(--bear))";
+  const lineColor = up ? "var(--bull)" : "var(--bear)";
   const gradientId = `assetChartGrad-${up ? "up" : "dn"}-${symbol.replace(/[^a-z0-9]/gi, "")}-${tf}`;
 
   const perfLabel = {
