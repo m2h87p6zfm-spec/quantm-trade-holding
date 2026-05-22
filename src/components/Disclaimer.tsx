@@ -5,7 +5,7 @@ export function DisclaimerBanner() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <div className="border-t border-border bg-card/60 backdrop-blur px-4 py-2 text-[11px] leading-snug text-muted-foreground">
+      <div className="border-t border-border bg-card/60 backdrop-blur px-4 py-2 text-[9px] leading-snug text-muted-foreground">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-2 gap-y-1">
           <ShieldAlert className="h-3.5 w-3.5 text-gold/80 shrink-0" />
           <strong className="text-foreground/80">Keine Anlageberatung.</strong>
