@@ -12,6 +12,17 @@ export type SignalFreq = "low" | "medium" | "high";
 export type StrategyMode = "conservative" | "balanced" | "aggressive";
 export type AITone = "professional" | "simplified";
 export type ExplanationDepth = "brief" | "detailed";
+export type AgeRange = "under_18" | "18_24" | "25_34" | "35_44" | "45_plus";
+export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+export type TraderType =
+  | "beginner_investor"
+  | "long_term_investor"
+  | "swing_trader"
+  | "day_trader"
+  | "options_trader"
+  | "crypto_trader"
+  | "mixed";
+export type PreferredCurrency = "USD" | "EUR" | "GBP" | "AUD" | "CAD" | "JPY" | "CHF";
 
 export type TradingProfile = {
   user_id: string;
@@ -33,6 +44,13 @@ export type TradingProfile = {
   ai_tone: AITone;
   explanation_depth: ExplanationDepth;
   show_reasoning: boolean;
+  age_range: AgeRange | null;
+  experience_level: ExperienceLevel | null;
+  trader_type: TraderType | null;
+  preferred_currency: PreferredCurrency;
+  trusted_sources: string[];
+  starter_watchlists: string[];
+  ai_transparency_ack: boolean;
 };
 
 export const RISK_TO_MIN_CONFIDENCE: Record<RiskLevel, number> = {
