@@ -1,7 +1,10 @@
-// Apex Trades Logo — ein "A" aus drei Candlesticks, das zur Spitze (Apex) aufsteigt.
-// Links: bärische Candle (kurz, rot) · Mitte: bullische Candle (lang, grün) bildet den
-// Peak · Rechts: bullische Candle (mittel, gold). Die Querstrebe des "A" ist eine
-// aufwärts-Trendlinie mit Pfeilspitze. Wicks oben/unten betonen Candle-Charakter.
+// Apex Trades Logo — Konzept "Trained Peak":
+// Ein abstrakter Gipfel (Apex) entsteht aus drei aufsteigenden Trainings-Stufen
+// (wie XP-/Level-Bars), die nach oben schmaler und intensiver werden — Sinnbild
+// für progressives Training. Eine durchgehende Chart-Linie schneidet als
+// Trade-Trajektorie quer durch die Stufen und endet in einem Spark am Gipfel:
+// das trainierte Setup, das den Peak trifft. Monogramm-Form bildet zugleich
+// ein stilisiertes "A" für Apex.
 export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg
@@ -12,52 +15,61 @@ export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
       aria-label="Apex Trades"
     >
       <defs>
-        <linearGradient id="apex-bull" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="oklch(0.62 0.18 145)" />
-          <stop offset="100%" stopColor="oklch(0.78 0.20 145)" />
+        <linearGradient id="apex-peak" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="oklch(0.55 0.18 250)" />
+          <stop offset="55%" stopColor="oklch(0.72 0.20 180)" />
+          <stop offset="100%" stopColor="oklch(0.88 0.18 145)" />
         </linearGradient>
-        <linearGradient id="apex-gold" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="oklch(0.70 0.14 80)" />
-          <stop offset="100%" stopColor="oklch(0.86 0.16 90)" />
+        <linearGradient id="apex-trail" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stopColor="oklch(0.75 0.18 85)" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="oklch(0.92 0.20 90)" />
         </linearGradient>
-        <linearGradient id="apex-bear" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="oklch(0.55 0.20 25)" />
-          <stop offset="100%" stopColor="oklch(0.68 0.22 30)" />
-        </linearGradient>
+        <radialGradient id="apex-spark" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="oklch(0.96 0.16 95)" />
+          <stop offset="60%" stopColor="oklch(0.85 0.18 85)" stopOpacity="0.6" />
+          <stop offset="100%" stopColor="oklch(0.85 0.18 85)" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
-      {/* Linke Candle (bearish, kurz) — bildet linken Schenkel des A */}
-      <line x1="6" y1="6" x2="6" y2="28" stroke="url(#apex-bear)" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
-      <rect x="4" y="14" width="4" height="12" rx="0.5" fill="url(#apex-bear)" />
-
-      {/* Mittlere Candle (bullish, lang) — bildet den Peak / Spitze des A */}
-      <line x1="16" y1="2" x2="16" y2="30" stroke="url(#apex-bull)" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
-      <rect x="14" y="5" width="4" height="21" rx="0.5" fill="url(#apex-bull)" />
-
-      {/* Rechte Candle (bullish, mittel, gold) — rechter Schenkel des A */}
-      <line x1="26" y1="4" x2="26" y2="28" stroke="url(#apex-gold)" strokeWidth="1" strokeLinecap="round" opacity="0.7" />
-      <rect x="24" y="10" width="4" height="16" rx="0.5" fill="url(#apex-gold)" />
-
-      {/* Querstrebe des A: Trendlinie mit Pfeil nach oben rechts */}
+      {/* Trainings-Stufen: drei aufsteigende Level-Bars formen den Gipfel (A) */}
+      {/* Basis-Level (breit, gedämpft) */}
       <path
-        d="M 5 22 L 27 12"
-        stroke="oklch(0.85 0.15 85)"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        opacity="0.9"
+        d="M 3 27 L 16 7 L 29 27 Z"
+        fill="url(#apex-peak)"
+        opacity="0.18"
       />
-      {/* Pfeilspitze am oberen Ende der Trendlinie */}
+      {/* Mittleres Level */}
       <path
-        d="M 27 12 L 23.5 12.3 M 27 12 L 26.7 15.5"
-        stroke="oklch(0.85 0.15 85)"
-        strokeWidth="1.2"
+        d="M 7.5 24 L 16 11 L 24.5 24 Z"
+        fill="url(#apex-peak)"
+        opacity="0.45"
+      />
+      {/* Top-Level (intensiv) — finaler Gipfel */}
+      <path
+        d="M 12 20 L 16 14 L 20 20 Z"
+        fill="url(#apex-peak)"
+      />
+
+      {/* Stufen-Kanten als Training-Marker links und rechts */}
+      <path d="M 3 27 L 7.5 24" stroke="url(#apex-peak)" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+      <path d="M 7.5 24 L 12 20" stroke="url(#apex-peak)" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
+      <path d="M 29 27 L 24.5 24" stroke="url(#apex-peak)" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+      <path d="M 24.5 24 L 20 20" stroke="url(#apex-peak)" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
+
+      {/* Trade-Trajektorie: Chart-Linie steigt aus links unten quer durch die
+          Stufen, durchbricht den Top-Level und trifft den Gipfel */}
+      <path
+        d="M 2 26 L 9 22 L 13 23 L 16 14"
+        stroke="url(#apex-trail)"
+        strokeWidth="1.6"
         strokeLinecap="round"
+        strokeLinejoin="round"
         fill="none"
       />
 
-      {/* Mini-Spark am Apex-Punkt: signalisiert "live" */}
-      <circle cx="16" cy="4" r="1.3" fill="oklch(0.9 0.18 145)" />
-      <circle cx="16" cy="4" r="2.6" fill="oklch(0.9 0.18 145)" opacity="0.25" />
+      {/* Spark am Apex — der getroffene Punkt */}
+      <circle cx="16" cy="14" r="4" fill="url(#apex-spark)" />
+      <circle cx="16" cy="14" r="1.6" fill="oklch(0.98 0.14 95)" />
     </svg>
   );
 }
