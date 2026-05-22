@@ -58,8 +58,18 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
         const headers: Record<string, string> = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
         const sys = symbol
-          ? `Der Nutzer fragt nach ${symbol}. Liefere eine kompakte, frische Einschätzung (max. 8 Sätze) — variiere Einstieg, beziehe Memory & Feedback ein, keine Wiederholung früherer Antworten.`
-          : "Beantworte die Nutzerfrage kompakt und variantenreich.";
+          ? `Der Nutzer fragt nach ${symbol}.
+
+PFLICHT:
+1. Berechne einen eigenen Gesamtscore (0–100) aus den unten gelieferten Indikatoren — nicht aus dem Bauch heraus. Zeige die 3–5 wichtigsten Teilscores kurz (Momentum, Trend, Volatilität, Risiko, ggf. Fundamentaldaten).
+2. Mappe daraus die Empfehlung: 80–100 STRONG BUY · 65–79 BUY · 45–64 HOLD · 25–44 SELL · 0–24 STRONG SELL.
+3. HOLD ist NUR erlaubt, wenn der Score wirklich zwischen 45 und 64 liegt. Niemals "aus Vorsicht" oder "wegen hoher Vola" auf HOLD ausweichen — Vola erhöht die Positionsgröße-Empfehlung, nicht die Richtung.
+4. Variiere Einstieg, Reihenfolge und Tonfall jedes Mal. Verboten sind Floskeln wie "in hochvolatilem Umfeld abwarten", "Markt beobachten", "Lage unsicher" — nur erlaubt mit direkt dahinter stehender messbarer Begründung.
+5. Jeder Fachbegriff/Wert bekommt eine kurze Klammer-Erklärung für Anfänger (z. B. *RSI 68 — Skala 0–100, >70 = überhitzt*).
+6. Länge: 6–12 Sätze, kompakt und konkret. Keine Wiederholung früherer Antworten.
+
+Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.now()}.`
+          : "Beantworte die Nutzerfrage kompakt, variantenreich und mit erklärten Fachbegriffen.";
         const indicatorBlock =
           symbol && indicators && regime ? buildIndicatorPrompt(symbol, indicators, regime) : null;
         const msgs = [
