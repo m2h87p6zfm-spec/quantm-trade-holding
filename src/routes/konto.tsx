@@ -153,6 +153,56 @@ function AccountPage() {
           )}
         </div>
       </Card>
+
+      <Card className="p-5 border-destructive/40 bg-destructive/5">
+        <div className="flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-destructive/15 text-destructive flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-sm">Konto löschen</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Löscht dein Konto, dein Profil, deine Watchlist, Alerts, Portfolio und kündigt aktive Abos sofort.
+              Dieser Schritt ist <strong>endgültig</strong> und kann nicht rückgängig gemacht werden.
+            </p>
+            <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="mt-3">
+                  <Trash2 className="h-4 w-4 mr-1.5" /> Konto endgültig löschen
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Konto wirklich löschen?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Alle deine Daten (Profil, Watchlist, Alerts, Portfolio, Subscription) werden unwiderruflich entfernt.
+                    Aktive Stripe-Abos werden gekündigt. Tippe <strong>LÖSCHEN</strong> zur Bestätigung.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="LÖSCHEN"
+                  autoFocus
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={confirmText !== "LÖSCHEN" || deleteBusy}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void onDelete();
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {deleteBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Endgültig löschen"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
