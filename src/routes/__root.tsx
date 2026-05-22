@@ -22,8 +22,21 @@ import {
 import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
+import { useEffect } from "react";
+import { useSettings } from "@/lib/settings";
+import { LANGUAGES } from "@/lib/i18n";
 
 import appCss from "../styles.css?url";
+
+function LangSync() {
+  const { settings } = useSettings();
+  useEffect(() => {
+    const entry = LANGUAGES.find((l) => l.code === settings.language) ?? LANGUAGES[0];
+    document.documentElement.lang = entry.code;
+    document.documentElement.dir = entry.dir;
+  }, [settings.language]);
+  return null;
+}
 
 function NotFoundComponent() {
   return (
@@ -81,6 +94,7 @@ function RootComponent() {
       <AuthProvider>
         <SubscriptionProvider>
         <SidebarProvider>
+          <LangSync />
           <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
             <PaymentTestModeBanner />
             <div className="flex flex-1 w-full min-w-0">
