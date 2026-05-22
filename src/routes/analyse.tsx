@@ -11,7 +11,7 @@ import { useAnalysis, useQuote } from "@/lib/useMarketData";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
 import { DisclaimerInline } from "@/components/Disclaimer";
-import { LearningProgressBlock } from "@/components/LearningProgressBlock";
+
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
 import { recordApexAnalysis } from "@/lib/track-record.functions";
