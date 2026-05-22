@@ -217,12 +217,22 @@ const toneStyles: Record<Tone, { card: string; badge: string; bar: string; label
 };
 
 export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
+  const [expanded, setExpanded] = useState(false);
   const rows = buildRows(ind);
 
   const counts = rows.reduce(
     (acc, r) => ({ ...acc, [r.tone]: acc[r.tone] + 1 }),
     { bull: 0, bear: 0, neutral: 0 } as Record<Tone, number>,
   );
+
+  // Wichtigste zuerst: nicht-neutrale Signale priorisieren
+  const sorted = [...rows].sort((a, b) => {
+    const score = (t: Tone) => (t === "neutral" ? 1 : 0);
+    return score(a.tone) - score(b.tone);
+  });
+  const PREVIEW = 3;
+  const visible = expanded ? sorted : sorted.slice(0, PREVIEW);
+  const hidden = sorted.length - PREVIEW;
 
   return (
     <div className="space-y-3">
@@ -239,8 +249,14 @@ export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
         </span>
       </div>
 
+      {!expanded && (
+        <p className="text-[11px] text-muted-foreground">
+          Die <span className="font-semibold text-foreground">{Math.min(PREVIEW, sorted.length)} wichtigsten</span> Signale für diese Aktie. Für Anfänger: grün = spricht für Kaufen, rot = spricht für Verkaufen, grau = neutral.
+        </p>
+      )}
+
       <div className="grid gap-2 sm:grid-cols-2">
-        {rows.map((r) => {
+        {visible.map((r) => {
           const s = toneStyles[r.tone];
           return (
             <div key={r.name} className={`relative overflow-hidden rounded-lg border ${s.card} p-3`}>
@@ -255,9 +271,11 @@ export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
                     {r.verdict}
                   </span>
                 </div>
-                <div className="text-[11px] leading-snug text-muted-foreground italic">
-                  {r.definition}
-                </div>
+                {expanded && (
+                  <div className="text-[11px] leading-snug text-muted-foreground italic">
+                    {r.definition}
+                  </div>
+                )}
                 <div className="text-xs leading-snug">
                   <span className="font-semibold text-muted-foreground">Heißt jetzt: </span>
                   {r.reading}
@@ -267,6 +285,24 @@ export function IndicatorBreakdown({ ind }: { ind: IndicatorSet }) {
           );
         })}
       </div>
+
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+        >
+          {expanded ? (
+            <>
+              <ChevronUp className="h-3.5 w-3.5" /> Weniger anzeigen
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-3.5 w-3.5" /> Mehr anzeigen ({hidden} weitere Indikatoren)
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
