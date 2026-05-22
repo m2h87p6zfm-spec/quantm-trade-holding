@@ -514,8 +514,8 @@ type DraftRow = Extracted & { id: string; enabled: boolean };
 
 const MAX_FILES = 5;
 const MAX_FILE_BYTES = 12 * 1024 * 1024; // original file limit before optimization
-const TARGET_UPLOAD_BYTES = 1.8 * 1024 * 1024;
-const EXTRACT_TIMEOUT_MS = 26_000;
+const TARGET_UPLOAD_BYTES = 1.2 * 1024 * 1024;
+const EXTRACT_TIMEOUT_MS = 20_000;
 
 function dataUrlBytes(dataUrl: string): number {
   const comma = dataUrl.indexOf(",");
@@ -553,10 +553,10 @@ async function optimizeImageFile(file: File): Promise<string> {
     : Promise.reject(new Error("createImageBitmap unavailable"))
   ).catch(() => loadImageElement(file));
   const settings = [
-    { maxEdge: 2200, quality: 0.82 },
-    { maxEdge: 1800, quality: 0.76 },
-    { maxEdge: 1500, quality: 0.7 },
+    { maxEdge: 1800, quality: 0.78 },
+    { maxEdge: 1500, quality: 0.72 },
     { maxEdge: 1200, quality: 0.66 },
+    { maxEdge: 1000, quality: 0.62 },
   ];
 
   try {
@@ -599,7 +599,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     const accepted: { id: string; file: File; url: string }[] = [];
     for (const f of incoming.slice(0, room)) {
       if (f.size > MAX_FILE_BYTES) {
-        toast.error(`${f.name}: zu groß (max. 6 MB)`);
+        toast.error(`${f.name}: zu groß (max. 12 MB)`);
         continue;
       }
       try {
