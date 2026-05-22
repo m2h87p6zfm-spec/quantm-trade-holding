@@ -58,35 +58,42 @@ Broker-Apps zeigen meist:
   · "G/V" oder "P&L" in €                    = pnl_abs        (€ Gewinn/Verlust, deutlich präziser als %)
   · "Eingesetzt" / "Invested" / "Einstand"   = invested       (qty × Einstandskurs)
 
-Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen (höchste Genauigkeit zuerst). WICHTIG: Lieber eine Position mit niedriger Confidence zurückgeben als gar nichts.
-  1. qty:
-     a) "Stück" / "Anteile" / "Shares" / "Qty" direkt sichtbar → übernehmen (auch dezimal).
+FUNDAMENTAL — NIEMALS VERLETZEN
+- entry ist IMMER der Kurs PRO STÜCK (z. B. 312.45), NIEMALS der gesamte Positionswert.
+- qty ist IMMER die Anzahl der Stücke (oft dezimal, z. B. 22.4123), NIEMALS 1 als Notlösung.
+- Wenn du den per-Stück-Kurs nicht aus dem Bild rekonstruieren kannst → Position WEGLASSEN. Lieber 0 Positionen als ein erfundener Einstand, der 100× zu groß ist.
+- Plausibilitätsprüfung vor Ausgabe: entry · qty muss ungefähr dem aktuellen oder eingesetzten Geldbetrag entsprechen. Wenn entry · qty > 5× current_value → entry ist falsch (du hast Positionswert mit Stückkurs verwechselt), Position weglassen.
+
+Regeln zur Ableitung — IN DIESER REIHENFOLGE versuchen:
+  1. qty (Anzahl Stücke):
+     a) "Stück" / "Anteile" / "Shares" / "Qty" / "Nominal" direkt sichtbar → übernehmen (dezimal erlaubt).
      b) sonst current_value UND current_price sichtbar → qty = current_value / current_price.
      c) sonst invested UND entry sichtbar → qty = invested / entry.
-     d) sonst NUR current_value sichtbar (kein Kurs/Stück) → qty = 1 setzen, entry = current_value, notes = "qty unbekannt, als Platzhalter 1 Stück".
-  2. entry (Einstandskurs pro Stück) — bevorzuge € vor %, weil % gerundet ist:
+     d) sonst → Position WEGLASSEN (keine qty raten, NIEMALS qty=1 setzen).
+  2. entry (Einstandskurs PRO STÜCK) — bevorzuge € vor %, weil % gerundet ist:
      a) "Ø-Kurs" / "Einstand" / "Avg Price" / "Cost basis" direkt sichtbar → übernehmen.
      b) sonst invested UND qty bekannt → entry = invested / qty.
      c) sonst current_value, pnl_abs UND qty bekannt → entry = (current_value − pnl_abs) / qty.
-     d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence dann ≤ 0.6.
-     e) sonst (nur aktueller Kurs/Wert sichtbar) → entry = current_price ODER current_value/qty als Näherung, Confidence ≤ 0.4, notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
-  3. Werte > 0 prüfen. Bei Division durch 0 oder unmöglichen Werten → die jeweilige Näherung d/e verwenden.
-  4. KEINE harte Rundung — gib entry mit voller Präzision aus.
+     d) sonst current_price UND pnl_pct bekannt → entry = current_price / (1 + pnl_pct/100). Confidence ≤ 0.6.
+     e) sonst nur current_price sichtbar (kein Einstand ableitbar) → entry = current_price als grobe Näherung. Confidence ≤ 0.35. notes = "kein Einstand sichtbar, aktueller Kurs übernommen".
+     f) sonst → Position WEGLASSEN.
+  3. Werte > 0 prüfen.
+  4. Plausibilitäts-Check vor Ausgabe: 0.2 ≤ (entry / current_price) ≤ 5  (Einstand darf typischerweise höchstens 5× vom aktuellen Kurs abweichen). Verletzt? → Position weglassen, du hast eine Zahl falsch zugeordnet.
+  5. KEINE harte Rundung — gib entry mit voller Präzision aus.
 
 WÄHRUNG
 - Wenn nur € sichtbar → currency "EUR". US-Broker-Werte in $ → "USD". Beträge NICHT umrechnen.
 
-CONFIDENCE (gib IMMER einen Wert, niemals weglassen)
+CONFIDENCE (gib IMMER einen Wert)
 - direkt sichtbarer Einstandskurs: 0.9–1.0
 - entry aus invested/qty oder (current_value−pnl_abs)/qty: 0.75–0.9
 - entry aus current_price und pnl_pct: 0.45–0.6
-- entry = aktueller Kurs als Näherung: 0.2–0.4
-- unscharfe / verdeckte Zahlen: < 0.3
+- entry = aktueller Kurs als Näherung: 0.2–0.35
 
 WICHTIG
 - Side ist immer "LONG", außer das Bild zeigt explizit "Short" / "Leerverkauf".
 - Datum nur setzen, wenn ein konkretes Kaufdatum sichtbar ist.
-- Erkenne IMMER mindestens jede Position, deren Ticker/Logo/Name eindeutig sichtbar ist. Lieber Platzhalter-Zahlen mit niedriger Confidence, damit der Nutzer korrigieren kann.
+- Verwechsle NIEMALS Positionswert (oft 4-stellige €-Summe) mit Einzelkurs.
 - Notes: kurz festhalten, woher entry stammt (z. B. "entry = invested/qty", "entry aus Performance %", "kein Einstand sichtbar").`;
 
 const EXTRACT_TOOL = {
@@ -267,6 +274,22 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             };
             const pnlPct = Number(o.pnl_pct);
             const pnlAbs = Number(o.pnl_abs);
+            const currentPrice = optNum("current_price");
+            const currentValue = optNum("current_value");
+
+            // Plausibilitäts-Check: entry darf höchstens 5× vom aktuellen Stückkurs abweichen.
+            // Schützt davor, dass die KI den Positionswert (z. B. 7000 €) als Einstand pro Stück übernimmt.
+            if (currentPrice && (entry / currentPrice > 5 || currentPrice / entry > 5)) {
+              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", { symbol, entry, currentPrice, qty });
+              dropped++;
+              continue;
+            }
+            // Wenn entry · qty deutlich größer ist als der aktuelle Wert, hat die KI Positionswert mit Stückkurs verwechselt.
+            if (currentValue && entry * qty > currentValue * 5) {
+              console.warn("portfolio-extract: dropped — entry·qty >> current_value", { symbol, entry, qty, currentValue });
+              dropped++;
+              continue;
+            }
             out.push({
               symbol,
               name: typeof o.name === "string" ? o.name : undefined,
@@ -277,8 +300,8 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
               currency: typeof o.currency === "string" ? o.currency : undefined,
               confidence,
               notes: typeof o.notes === "string" ? o.notes : undefined,
-              current_price: optNum("current_price"),
-              current_value: optNum("current_value"),
+              current_price: currentPrice,
+              current_value: currentValue,
               invested: optNum("invested"),
               pnl_abs: Number.isFinite(pnlAbs) ? pnlAbs : undefined,
               pnl_pct: Number.isFinite(pnlPct) ? pnlPct : undefined,
