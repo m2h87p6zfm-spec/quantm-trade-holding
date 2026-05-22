@@ -289,23 +289,44 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             if (!p || typeof p !== "object") { dropped++; continue; }
             const o = p as Record<string, unknown>;
             const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
-            const qty = Number(o.qty);
-            const entry = Number(o.entry);
             const side = o.side === "SHORT" ? "SHORT" : "LONG";
             const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
-            if (!symbol || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(entry) || entry <= 0) {
-              console.warn("portfolio-extract: dropped position", { symbol, qty, entry });
-              dropped++;
-              continue;
-            }
             const optNum = (k: string): number | undefined => {
               const v = Number(o[k]);
               return Number.isFinite(v) && v > 0 ? v : undefined;
             };
             const pnlPct = Number(o.pnl_pct);
             const pnlAbs = Number(o.pnl_abs);
-            const currentPrice = optNum("current_price");
+            let qty = optNum("qty");
+            let entry = optNum("entry");
+            let currentPrice = optNum("current_price");
             const currentValue = optNum("current_value");
+            const brokerInvested = optNum("invested");
+            const entryLooksLikePositionValue = !!(entry && currentValue && entry > 500 && Math.abs(entry - currentValue) / currentValue < 0.08);
+            const qtyLooksLikeFallback = !qty || (qty === 1 && entryLooksLikePositionValue);
+
+            if (symbol && currentValue && (!currentPrice || qtyLooksLikeFallback || entryLooksLikePositionValue)) {
+              currentPrice = await fetchMarketPrice(symbol) ?? currentPrice;
+            }
+
+            if (currentValue && currentPrice && (!qty || qtyLooksLikeFallback)) {
+              qty = currentValue / currentPrice;
+            }
+            if (qty && brokerInvested && (!entry || entryLooksLikePositionValue)) {
+              entry = brokerInvested / qty;
+            } else if (qty && currentValue && Number.isFinite(pnlAbs) && (!entry || entryLooksLikePositionValue)) {
+              entry = (currentValue - pnlAbs) / qty;
+            } else if (currentPrice && Number.isFinite(pnlPct) && (!entry || entryLooksLikePositionValue)) {
+              entry = currentPrice / (1 + pnlPct / 100);
+            } else if (currentPrice && !entry) {
+              entry = currentPrice;
+            }
+
+            if (!symbol || !qty || qty <= 0 || !entry || entry <= 0) {
+              console.warn("portfolio-extract: dropped position", { symbol, qty, entry, currentValue, currentPrice });
+              dropped++;
+              continue;
+            }
 
             // Plausibilitäts-Check: entry darf höchstens 5× vom aktuellen Stückkurs abweichen.
             // Schützt davor, dass die KI den Positionswert (z. B. 7000 €) als Einstand pro Stück übernimmt.
