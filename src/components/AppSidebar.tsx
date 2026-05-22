@@ -1,31 +1,33 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, LogIn, LogOut, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, Brain, Calendar, CreditCard, Flame, LineChart, ListOrdered, Lock, LogIn, LogOut, Newspaper, Settings as SettingsIcon, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/hooks/useSubscription";
+import { FEATURE_TIERS, tierAllows, type Feature } from "@/lib/featureGate";
 
-// Der "Quant Core" ist das Herzstück der App: statistische & mathematische
-// Aktienanalyse. Diese Gruppe wird oben, visuell hervorgehoben angezeigt.
-const quantCore = [
+type NavItem = { title: string; url: string; icon: typeof Bell; desc?: string; feature?: Feature };
+
+const quantCore: NavItem[] = [
   { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
   { title: "Quant-Signale", url: "/signale", icon: Sparkles, desc: "Live Setups" },
-  { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend" },
+  { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend", feature: "ai_learning" },
 ];
 
-const markets = [
+const markets: NavItem[] = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
   { title: "Heatmap", url: "/heatmap", icon: Flame },
-  { title: "News & Sentiment", url: "/news", icon: Newspaper },
-  { title: "Kalender", url: "/kalender", icon: Calendar },
+  { title: "News & Sentiment", url: "/news", icon: Newspaper, feature: "news_sentiment" },
+  { title: "Kalender", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
-const trading = [
-  { title: "Portfolio", url: "/portfolio", icon: Wallet },
+const trading: NavItem[] = [
+  { title: "Portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
   { title: "Smart Alerts", url: "/alerts", icon: Bell },
 ];
 
-const system = [
+const system: NavItem[] = [
   { title: "Preise & Pläne", url: "/preise", icon: CreditCard },
   { title: "Produktkatalog", url: "/produkte", icon: LineChart },
   { title: "Einstellungen", url: "/einstellungen", icon: SettingsIcon },
