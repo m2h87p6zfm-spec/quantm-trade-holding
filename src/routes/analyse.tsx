@@ -190,7 +190,7 @@ function AgentAnalysisView({
   regime: ReturnType<typeof detectRegime>;
   scenarioTag: string;
   user: ReturnType<typeof useAuth>["user"];
-  record: ReturnType<typeof useServerFn<typeof recordPrediction>>;
+  record: (args: { data: Parameters<typeof recordPrediction>[0]["data"] }) => Promise<unknown>;
 }) {
   useEffect(() => {
     if (!user) return;
