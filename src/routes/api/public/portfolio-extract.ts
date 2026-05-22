@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 
 /**
  * Extracts portfolio positions from one or more screenshots / photos
@@ -25,21 +26,10 @@ type Extracted = {
   pnl_pct?: number;
 };
 
-const QUOTE_HEADERS = {
-  "User-Agent": "Mozilla/5.0 ApexMarkets",
-  "Accept": "application/json,text/plain,*/*",
-} as const;
-
 async function fetchMarketPrice(symbol: string): Promise<number | undefined> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 1_800);
   try {
-    const res = await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d&includePrePost=false`,
-      { headers: QUOTE_HEADERS, signal: controller.signal },
-    );
-    if (!res.ok) return undefined;
-    const j = await res.json() as any;
+    const cached = await fetchYahooChartCached(symbol, "1d", "5d", 60);
+    const j = cached.value;
     const r = j?.chart?.result?.[0];
     const metaPrice = Number(r?.meta?.regularMarketPrice);
     if (Number.isFinite(metaPrice) && metaPrice > 0) return metaPrice;
@@ -48,8 +38,6 @@ async function fetchMarketPrice(symbol: string): Promise<number | undefined> {
     return last === undefined ? undefined : Number(last);
   } catch {
     return undefined;
-  } finally {
-    clearTimeout(timer);
   }
 }
 
