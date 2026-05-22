@@ -183,7 +183,10 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           }
 
           const userId = await resolveUserId(request);
-          const addendum = await buildAdaptiveAddendum(userId);
+          const [addendum, profileAddendum] = await Promise.all([
+            buildAdaptiveAddendum(userId),
+            buildTradingProfileAddendum(userId),
+          ]);
 
           // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
