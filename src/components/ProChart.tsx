@@ -283,8 +283,8 @@ export function ProChart({
           const innerH = subH - 12;
           return (
             <g key={sub} transform={`translate(0, ${yOff})`}>
-              <line x1={pad.l} x2={w - pad.r} y1={0} y2={0} stroke="var(--border)" />
-              <text x={pad.l + 4} y={11} fontSize={10} fill="var(--muted-foreground)" fontWeight={600} className="uppercase">
+              <line x1={pad.l} x2={w - pad.r} y1={0} y2={0} stroke="var(--chart-grid)" />
+              <text x={pad.l + 4} y={11} fontSize={10} fill="var(--chart-axis)" fontWeight={600} className="uppercase tracking-wider">
                 {sub === "volume" ? "Volume" : sub === "rsi" ? "RSI (14)" : "MACD (12/26/9)"}
               </text>
               {sub === "volume" && vols.map((v, i) => {
@@ -292,19 +292,19 @@ export function ProChart({
                 const up = closes[i] >= opens[i];
                 return (
                   <rect key={i} x={xAt(i) - candleW / 2} y={innerH - h + 2} width={candleW} height={h}
-                        fill={up ? "#22c55e" : "#ef4444"} opacity={0.55} />
+                        fill={up ? "var(--bull)" : "var(--bear)"} opacity={0.5} />
                 );
               })}
               {sub === "rsi" && (() => {
                 const ys = (val: number) => 2 + (1 - (val) / 100) * (innerH - 4);
                 return (
                   <>
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="#ef4444" strokeDasharray="3 3" opacity={0.5} />
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="#22c55e" strokeDasharray="3 3" opacity={0.5} />
-                    <line x1={pad.l} x2={w - pad.r} y1={ys(50)} y2={ys(50)} stroke="var(--border)" strokeDasharray="2 4" opacity={0.5} />
-                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="#38bdf8" width={1.4} />
-                    <text x={w - pad.r + 4} y={ys(70) + 3} fontSize={9} fill="var(--muted-foreground)">70</text>
-                    <text x={w - pad.r + 4} y={ys(30) + 3} fontSize={9} fill="var(--muted-foreground)">30</text>
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(70)} y2={ys(70)} stroke="var(--bear)" strokeDasharray="3 3" opacity={0.45} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(30)} y2={ys(30)} stroke="var(--bull)" strokeDasharray="3 3" opacity={0.45} />
+                    <line x1={pad.l} x2={w - pad.r} y1={ys(50)} y2={ys(50)} stroke="var(--chart-grid)" strokeDasharray="2 4" />
+                    <Linepath points={rsiArr.map((v, i) => isNaN(v) ? null : [xAt(i), ys(v)])} stroke="var(--chart-1)" width={1.4} />
+                    <text x={w - pad.r + 4} y={ys(70) + 3} fontSize={9} fill="var(--chart-axis)">70</text>
+                    <text x={w - pad.r + 4} y={ys(30) + 3} fontSize={9} fill="var(--chart-axis)">30</text>
                   </>
                 );
               })()}
@@ -316,16 +316,16 @@ export function ProChart({
                 const zeroY = yv(0);
                 return (
                   <>
-                    <line x1={pad.l} x2={w - pad.r} y1={zeroY} y2={zeroY} stroke="var(--border)" />
+                    <line x1={pad.l} x2={w - pad.r} y1={zeroY} y2={zeroY} stroke="var(--chart-grid)" />
                     {macd.hist.map((v, i) => {
                       const y = yv(v); const h = Math.abs(y - zeroY);
                       return (
                         <rect key={i} x={xAt(i) - candleW / 2} y={Math.min(y, zeroY)} width={candleW} height={Math.max(1, h)}
-                              fill={v >= 0 ? "#22c55e" : "#ef4444"} opacity={0.7} />
+                              fill={v >= 0 ? "var(--bull)" : "var(--bear)"} opacity={0.65} />
                       );
                     })}
-                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="#38bdf8" width={1.4} />
-                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="#fbbf24" width={1.2} />
+                    <Linepath points={macd.line.map((v, i) => [xAt(i), yv(v)])} stroke="var(--chart-1)" width={1.4} />
+                    <Linepath points={macd.sig.map((v, i) => [xAt(i), yv(v)])} stroke="var(--chart-2)" width={1.2} />
                   </>
                 );
               })()}
@@ -336,9 +336,9 @@ export function ProChart({
         {/* === GLOBAL CROSSHAIR === */}
         {cross && (
           <g pointerEvents="none">
-            <line x1={cross.x} x2={cross.x} y1={0} y2={totalH - 4} stroke="var(--muted-foreground)" strokeDasharray="2 3" opacity={0.7} />
-            <line x1={pad.l} x2={w - pad.r} y1={yAt(closes[cross.idx])} y2={yAt(closes[cross.idx])} stroke="var(--muted-foreground)" strokeDasharray="2 3" opacity={0.6} />
-            <rect x={cross.x - 30} y={mainH - 14} width={60} height={14} fill="var(--popover)" stroke="var(--border)" />
+            <line x1={cross.x} x2={cross.x} y1={0} y2={totalH - 4} stroke="var(--chart-axis)" strokeDasharray="2 3" opacity={0.75} />
+            <line x1={pad.l} x2={w - pad.r} y1={yAt(closes[cross.idx])} y2={yAt(closes[cross.idx])} stroke="var(--chart-axis)" strokeDasharray="2 3" opacity={0.6} />
+            <rect x={cross.x - 32} y={mainH - 14} width={64} height={14} fill="var(--chart-tooltip)" stroke="var(--border)" rx={2} />
             <text x={cross.x} y={mainH - 4} fontSize={10} textAnchor="middle" fill="var(--foreground)" fontFamily="ui-monospace, monospace">
               {new Date(data.t[cross.idx] * 1000).toLocaleDateString("de-DE", { month: "short", day: "2-digit" })}
             </text>
