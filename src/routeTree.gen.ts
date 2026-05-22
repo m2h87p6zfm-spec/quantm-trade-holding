@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as KontoRouteImport } from './routes/konto'
 import { Route as KalenderRouteImport } from './routes/kalender'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
+import { Route as ExplainTradeRouteImport } from './routes/explain-trade'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
@@ -84,6 +85,11 @@ const KalenderRoute = KalenderRouteImport.update({
 const HeatmapRoute = HeatmapRouteImport.update({
   id: '/heatmap',
   path: '/heatmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExplainTradeRoute = ExplainTradeRouteImport.update({
+  id: '/explain-trade',
+  path: '/explain-trade',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EinstellungenRoute = EinstellungenRouteImport.update({
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/explain-trade': typeof ExplainTradeRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/explain-trade': typeof ExplainTradeRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
+  '/explain-trade': typeof ExplainTradeRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/backtest'
     | '/einstellungen'
+    | '/explain-trade'
     | '/heatmap'
     | '/kalender'
     | '/konto'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/backtest'
     | '/einstellungen'
+    | '/explain-trade'
     | '/heatmap'
     | '/kalender'
     | '/konto'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/analyse'
     | '/backtest'
     | '/einstellungen'
+    | '/explain-trade'
     | '/heatmap'
     | '/kalender'
     | '/konto'
@@ -348,6 +360,7 @@ export interface RootRouteChildren {
   AnalyseRoute: typeof AnalyseRoute
   BacktestRoute: typeof BacktestRoute
   EinstellungenRoute: typeof EinstellungenRoute
+  ExplainTradeRoute: typeof ExplainTradeRoute
   HeatmapRoute: typeof HeatmapRoute
   KalenderRoute: typeof KalenderRoute
   KontoRoute: typeof KontoRoute
@@ -439,6 +452,13 @@ declare module '@tanstack/react-router' {
       path: '/heatmap'
       fullPath: '/heatmap'
       preLoaderRoute: typeof HeatmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explain-trade': {
+      id: '/explain-trade'
+      path: '/explain-trade'
+      fullPath: '/explain-trade'
+      preLoaderRoute: typeof ExplainTradeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/einstellungen': {
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnalyseRoute: AnalyseRoute,
   BacktestRoute: BacktestRoute,
   EinstellungenRoute: EinstellungenRoute,
+  ExplainTradeRoute: ExplainTradeRoute,
   HeatmapRoute: HeatmapRoute,
   KalenderRoute: KalenderRoute,
   KontoRoute: KontoRoute,
