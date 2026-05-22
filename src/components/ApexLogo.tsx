@@ -16,18 +16,17 @@ export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
     >
       <defs>
         <linearGradient id="apex-peak" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="oklch(0.55 0.18 250)" />
-          <stop offset="55%" stopColor="oklch(0.72 0.20 180)" />
-          <stop offset="100%" stopColor="oklch(0.88 0.18 145)" />
+          <stop offset="0%" stopColor="oklch(0.55 0.01 250)" />
+          <stop offset="100%" stopColor="oklch(0.95 0.01 250)" />
         </linearGradient>
         <linearGradient id="apex-trail" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0%" stopColor="oklch(0.75 0.18 85)" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="oklch(0.92 0.20 90)" />
+          <stop offset="0%" stopColor="oklch(0.75 0.01 250)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="oklch(0.98 0 0)" />
         </linearGradient>
         <radialGradient id="apex-spark" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0%" stopColor="oklch(0.96 0.16 95)" />
-          <stop offset="60%" stopColor="oklch(0.85 0.18 85)" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="oklch(0.85 0.18 85)" stopOpacity="0" />
+          <stop offset="0%" stopColor="oklch(0.98 0 0)" />
+          <stop offset="60%" stopColor="oklch(0.85 0.01 250)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="oklch(0.85 0.01 250)" stopOpacity="0" />
         </radialGradient>
       </defs>
 
@@ -36,8 +35,9 @@ export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
       <path
         d="M 3 27 L 16 7 L 29 27 Z"
         fill="url(#apex-peak)"
-        opacity="0.18"
+        opacity="0.15"
       />
+
       {/* Mittleres Level */}
       <path
         d="M 7.5 24 L 16 11 L 24.5 24 Z"
@@ -69,7 +69,7 @@ export function ApexLogo({ className = "h-4 w-4" }: { className?: string }) {
 
       {/* Spark am Apex — der getroffene Punkt */}
       <circle cx="16" cy="14" r="4" fill="url(#apex-spark)" />
-      <circle cx="16" cy="14" r="1.6" fill="oklch(0.98 0.14 95)" />
+      <circle cx="16" cy="14" r="1.6" fill="oklch(0.98 0 0)" />
     </svg>
   );
 }
