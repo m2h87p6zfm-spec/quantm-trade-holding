@@ -155,29 +155,29 @@ export const AssetChart = memo(function AssetChart({
                   <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="2 6" vertical={false} opacity={0.4} />
+              <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="2 6" vertical={false} />
               <XAxis
                 dataKey="t"
                 type="number"
                 domain={["dataMin", "dataMax"]}
                 tickFormatter={xTickFmt}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
+                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
                 tickLine={false}
                 axisLine={false}
                 minTickGap={48}
               />
               <YAxis
                 domain={[min, max]}
-                tickFormatter={(v) => fmtPrice(v)}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
+                tickFormatter={fmtAxis}
+                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
                 tickLine={false}
                 axisLine={false}
-                width={64}
+                width={72}
                 orientation="right"
               />
-              <ReferenceLine y={first} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" opacity={0.4} />
+              <ReferenceLine y={first} stroke="var(--chart-axis)" strokeDasharray="2 4" strokeOpacity={0.5} />
               <Tooltip
-                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "2 3", strokeOpacity: 0.6 }}
+                cursor={{ stroke: "var(--chart-axis)", strokeDasharray: "2 3", strokeOpacity: 0.8 }}
                 content={(props: any) => (
                   <ChartTooltip
                     active={props.active}
@@ -197,7 +197,7 @@ export const AssetChart = memo(function AssetChart({
                 isAnimationActive
                 animationDuration={420}
                 animationEasing="ease-out"
-                activeDot={{ r: 3, stroke: lineColor, strokeWidth: 1.5, fill: "hsl(var(--background))" }}
+                activeDot={{ r: 3, stroke: lineColor, strokeWidth: 1.5, fill: "var(--background)" }}
                 dot={false}
               />
             </AreaChart>
