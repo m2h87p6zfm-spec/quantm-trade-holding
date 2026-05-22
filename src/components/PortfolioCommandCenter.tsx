@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   Send, Bot, User as UserIcon, Loader2, Sparkles, Search, Plus,
-  Wallet, Wand2, KeyboardIcon,
+  Wallet, Wand2, KeyboardIcon, Camera, Image as ImageIcon, X, Check, AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { usePortfolio, type Position } from "@/lib/portfolio";
