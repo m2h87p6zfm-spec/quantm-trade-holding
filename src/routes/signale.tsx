@@ -53,7 +53,9 @@ function SignalsPage() {
       const ind = computeAll(c.c);
       const sig = scoreIndicators(ind, settings.risk);
       const regime = detectRegime(ind);
-      const report = buildDecision(p.symbol, p.name, ind, sig, regime);
+      const raw = buildDecision(p.symbol, p.name, ind, sig, regime);
+      const stable = stabilizeDecision(p.symbol, raw.decision, raw.confidence);
+      const report = stable.decision === raw.decision ? raw : { ...raw, decision: stable.decision };
       const last = c.c.at(-1) ?? 0;
       const prev = c.c.at(-2) ?? last;
       const change = prev ? ((last - prev) / prev) * 100 : 0;
