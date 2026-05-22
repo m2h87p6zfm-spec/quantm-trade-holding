@@ -20,6 +20,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { useSettings } from "@/lib/settings";
+import { useT, LANGUAGES, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/einstellungen")({
   component: SettingsPage,
