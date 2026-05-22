@@ -18,6 +18,7 @@ function buildQuote(j: any, symbol: string) {
   const price = Number.isFinite(c) ? c : lastClose;
   if (!Number.isFinite(price)) return null;
   const safePc = Number.isFinite(pc) ? pc : price;
+  const num = (x: any) => (Number.isFinite(Number(x)) ? Number(x) : undefined);
   return {
     c: price,
     pc: safePc,
@@ -27,11 +28,15 @@ function buildQuote(j: any, symbol: string) {
     l: Number.isFinite(Number(meta.regularMarketDayLow)) ? Number(meta.regularMarketDayLow) : price,
     o: Number(r.indicators?.quote?.[0]?.open?.[0] ?? price),
     t: Math.floor(Date.now() / 1000),
+    v: num(meta.regularMarketVolume),
+    h52: num(meta.fiftyTwoWeekHigh),
+    l52: num(meta.fiftyTwoWeekLow),
     currency: meta.currency,
     exchange: meta.exchangeName,
     name: meta.longName || meta.shortName || symbol,
   };
 }
+
 
 export const Route = createFileRoute("/api/public/quote")({
   server: {
