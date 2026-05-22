@@ -338,7 +338,7 @@ export function ApexDashboard({
       <SectionCard icon={Landmark} title="💰 Fundamentalanalyse">
         <div className="divide-y divide-border/40">
           {fundamentals.map((f) => (
-            <Row key={f.label} label={f.label} value={f.value} sub={f.sub} signal={f.signal} />
+            <Row key={f.label} label={f.label} value={f.value} sub={f.sub} signal={f.signal} infoKey={f.infoKey} rawValue={f.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">
