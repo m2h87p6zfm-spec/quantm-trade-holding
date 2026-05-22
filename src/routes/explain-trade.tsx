@@ -239,7 +239,7 @@ function SideButton({ active, onClick, kind }: { active: boolean; onClick: () =>
 }
 
 function Result({ input }: { input: TradeInput }) {
-  const range = useMemo3yRange(input.entryDate);
+  const range = compute3yRange(input.entryDate);
   const q = useQuery({
     queryKey: ["explain-candles", input.symbol, range],
     queryFn: () => fetchCandles(input.symbol, "D", range),
@@ -270,7 +270,7 @@ function Result({ input }: { input: TradeInput }) {
   return <ResultCard input={input} rec={rec} name={product?.name ?? input.symbol} />;
 }
 
-function useMemo3yRange(entryDate: string): number {
+function compute3yRange(entryDate: string): number {
   // Pull enough history to cover entry + 200-day window before it.
   const daysSince = Math.max(30, Math.round((Date.now() - Date.parse(entryDate)) / 86400000));
   return Math.min(1825, daysSince + 365);
