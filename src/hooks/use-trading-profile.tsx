@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 export type TradingGoal = "long_term" | "active" | "aggressive" | "learning";
 export type RiskLevel = "low" | "medium" | "high";
 export type UsageFreq = "daily" | "weekly" | "occasional";
-export type Market = "stocks" | "crypto" | "forex" | "commodities" | "mixed";
+export type Market = "stocks" | "etfs" | "crypto" | "forex" | "commodities" | "mixed";
 export type AIStyle = "conservative" | "balanced" | "aggressive";
 export type Region = "us" | "eu" | "global";
 export type SignalFreq = "low" | "medium" | "high";
