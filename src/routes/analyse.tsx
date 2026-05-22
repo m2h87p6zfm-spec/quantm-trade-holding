@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Send } from "lucide-react";
+import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain } from "lucide-react";
+
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis } from "@/lib/useMarketData";
