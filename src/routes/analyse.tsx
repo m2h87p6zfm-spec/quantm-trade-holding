@@ -5,12 +5,9 @@ import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Bra
 
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
-import { useAnalysis } from "@/lib/useMarketData";
+import { useAnalysis, useQuote } from "@/lib/useMarketData";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
-import { DecisionCard } from "@/components/DecisionCard";
-import { IndicatorBreakdown } from "@/components/IndicatorBreakdown";
 import { findProduct, PRODUCTS } from "@/lib/products";
-import { SignalBadge } from "@/components/SignalBadge";
 import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
@@ -22,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { FeedbackButtons } from "@/components/FeedbackButtons";
 import { supabase } from "@/integrations/supabase/client";
 import { buildIndicatorPrompt } from "@/lib/indicator-prompt";
+import { ApexDashboard, ApexLoading } from "@/components/ApexDashboard";
 import type { IndicatorSet } from "@/lib/indicators";
 import type { MarketRegime } from "@/lib/ai-learning";
 
@@ -29,6 +27,7 @@ import type { MarketRegime } from "@/lib/ai-learning";
 
 
 export const Route = createFileRoute("/analyse")({ component: AnalysePage });
+
 
 
 
