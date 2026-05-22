@@ -9,6 +9,7 @@ import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
 import { DisclaimerInline } from "@/components/Disclaimer";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
+import { PortfolioChat } from "@/components/PortfolioChat";
 import { usePortfolioLimit } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/portfolio")({
