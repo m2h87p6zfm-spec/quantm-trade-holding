@@ -21,12 +21,9 @@ const FREQ: { v: UsageFreq; label: string; desc: string }[] = [
   { v: "weekly", label: "Weekly", desc: "Wöchentliche Zusammenfassungen" },
   { v: "occasional", label: "Occasional", desc: "Selten, nur kuratierte Setups" },
 ];
-const MARKETS: { v: Market; label: string }[] = [
-  { v: "stocks", label: "Stocks" },
-  { v: "crypto", label: "Crypto" },
-  { v: "forex", label: "Forex" },
-  { v: "commodities", label: "Commodities" },
-  { v: "mixed", label: "Mixed Portfolio" },
+const MARKETS: { v: Market; label: string; desc?: string }[] = [
+  { v: "stocks", label: "Aktien", desc: "Einzelaktien aus US, EU und DE" },
+  { v: "etfs", label: "ETFs", desc: "Index-, Sektor- und Themen-ETFs" },
 ];
 const STYLES: { v: AIStyle; label: string; desc: string }[] = [
   { v: "conservative", label: "Conservative", desc: "Weniger, hochwertige Signale" },
