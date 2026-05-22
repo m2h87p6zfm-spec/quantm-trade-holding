@@ -180,9 +180,10 @@ export const AssetChart = memo(function AssetChart({
               <ReferenceLine y={first} stroke="hsl(var(--muted-foreground))" strokeDasharray="2 4" opacity={0.4} />
               <Tooltip
                 cursor={{ stroke: "hsl(var(--muted-foreground))", strokeDasharray: "2 3", strokeOpacity: 0.6 }}
-                content={(props) => (
+                content={(props: any) => (
                   <ChartTooltip
-                    {...props}
+                    active={props.active}
+                    payload={props.payload}
                     base={first}
                     currency={currency}
                     tf={tf}
