@@ -229,7 +229,7 @@ const TimeframeBar = memo(function TimeframeBar({
             className={[
               "relative h-7 min-w-[34px] px-2 rounded-md font-mono text-[11px] font-semibold tabular-nums transition-all duration-200",
               active
-                ? "bg-primary/15 text-foreground ring-1 ring-primary/40 shadow-[0_0_12px_-2px_hsl(var(--primary)/0.55)]"
+                ? "bg-primary/15 text-foreground ring-1 ring-primary/40 shadow-[0_0_14px_-2px_color-mix(in_oklab,var(--primary)_55%,transparent)]"
                 : "text-muted-foreground hover:text-foreground hover:bg-accent/40",
             ].join(" ")}
           >
