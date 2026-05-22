@@ -18,6 +18,11 @@ type Extracted = {
   currency?: string;      // EUR / USD / ...
   confidence: number;     // 0..1
   notes?: string;
+  current_price?: number;
+  current_value?: number;
+  invested?: number;
+  pnl_abs?: number;
+  pnl_pct?: number;
 };
 
 const SYSTEM = `Du bist ein universeller Vision-Extraktor für Aktien-, ETF- und Krypto-Portfolios. Du verarbeitest Screenshots aus JEDEM Broker, JEDER Trading-App und JEDEM Depotauszug — egal in welcher Sprache, welchem Layout oder welcher Währung.
@@ -240,6 +245,12 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
               const side = o.side === "SHORT" ? "SHORT" : "LONG";
               const confidence = Math.max(0, Math.min(1, Number(o.confidence) || 0));
               if (!symbol || !Number.isFinite(qty) || qty <= 0 || !Number.isFinite(entry) || entry <= 0) continue;
+              const optNum = (k: string): number | undefined => {
+                const v = Number(o[k]);
+                return Number.isFinite(v) && v > 0 ? v : undefined;
+              };
+              const pnlPct = Number(o.pnl_pct);
+              const pnlAbs = Number(o.pnl_abs);
               out.push({
                 symbol,
                 name: typeof o.name === "string" ? o.name : undefined,
@@ -250,6 +261,11 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
                 currency: typeof o.currency === "string" ? o.currency : undefined,
                 confidence,
                 notes: typeof o.notes === "string" ? o.notes : undefined,
+                current_price: optNum("current_price"),
+                current_value: optNum("current_value"),
+                invested: optNum("invested"),
+                pnl_abs: Number.isFinite(pnlAbs) ? pnlAbs : undefined,
+                pnl_pct: Number.isFinite(pnlPct) ? pnlPct : undefined,
               });
             }
           }
