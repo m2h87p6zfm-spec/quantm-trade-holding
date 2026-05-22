@@ -330,9 +330,13 @@ function IndicatorAccuracy({ analyses }: { analyses: Analysis[] }) {
           const pct = (s.hits / s.total) * 100;
           const border = pct >= 65 ? "border-emerald-500/50" : pct >= 50 ? "border-amber-500/50" : "border-red-500/50";
           const color = pct >= 65 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400";
+          const infoKeyMap: Record<string, string> = { RSI: "rsi", MACD: "macd", "Z-Faktor": "zScore", "Bollinger Bänder": "bollinger", Momentum: "momentum", "SMA-Trend": "smaTrend" };
           return (
             <Card key={s.name} className={`bg-white/[0.03] p-4 border-2 ${border}`}>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">{s.name}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">{s.name}</p>
+                <IndicatorInfoButton infoKey={infoKeyMap[s.name] ?? "generic"} />
+              </div>
               <p className={`text-2xl font-bold tabular-nums mt-1 ${color}`}>{formatNumber(pct, 1)} %</p>
               <Progress value={pct} className="mt-2 h-1.5" />
               <p className="text-xs text-muted-foreground mt-2">{s.total} Analysen</p>
