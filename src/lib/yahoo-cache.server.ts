@@ -25,7 +25,7 @@ function parseJsonFromText(text: string): any {
   return JSON.parse(marked.slice(start).trim());
 }
 
-async function fetchJson(url: string, timeoutMs = 3500): Promise<any> {
+async function fetchJson(url: string, timeoutMs = 2200): Promise<any> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
