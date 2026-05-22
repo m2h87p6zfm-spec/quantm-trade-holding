@@ -24,7 +24,7 @@ export async function insertAnalysisAndOutcome(p: RecordPayload) {
       verdict: p.verdict,
       confidence_score: p.confidence_score,
       price_at_analysis: p.price_at_analysis,
-      indicators: p.indicators,
+      indicators: p.indicators as never,
     })
     .select("id")
     .single();
