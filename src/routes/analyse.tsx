@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock } from "lucide-react";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
@@ -14,7 +15,11 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { LearningProgressBlock } from "@/components/LearningProgressBlock";
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
+import { consumeAnalysisCredit } from "@/lib/credits.functions";
+import { creditLabel } from "@/lib/credits";
+import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
+
 
 
 
