@@ -508,6 +508,11 @@ type Extracted = {
   currency?: string;
   confidence: number;
   notes?: string;
+  current_price?: number;
+  current_value?: number;
+  invested?: number;
+  pnl_abs?: number;
+  pnl_pct?: number;
 };
 
 type DraftRow = Extracted & { id: string; enabled: boolean };
