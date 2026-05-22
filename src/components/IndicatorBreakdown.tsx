@@ -119,6 +119,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "smaTrend", rawValue: { sma50: ind.sma50, sma200: ind.sma200, price: ind.price },
     });
   }
 
