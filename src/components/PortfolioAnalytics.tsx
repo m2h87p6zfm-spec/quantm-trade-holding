@@ -261,7 +261,7 @@ function PortfolioRiskCard({ m }: { m: Metrics }) {
       {m.topHolding && m.topHolding.pct > 30 && (
         <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/[0.06] p-2 text-[10px] text-amber-400/90">
           <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
-          <span>Klumpenrisiko: {m.topHolding.symbol} > 30 % des Portfolios. Diversifikation prüfen.</span>
+          <span>Klumpenrisiko: {m.topHolding.symbol} {">"} 30 % des Portfolios. Diversifikation prüfen.</span>
         </div>
       )}
     </div>
