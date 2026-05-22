@@ -4,27 +4,52 @@ type NewsItem = {
   uuid: string;
   title: string;
   publisher: string;
+  source: "reuters" | "bloomberg" | "yahoo" | "cnbc" | "ft" | "other";
   link: string;
   publishedAt: number;
   symbol: string;
+  tickers: string[];
   sentiment?: "bullish" | "bearish" | "neutral";
   score?: number;
+  breaking?: boolean;
 };
 
+const PUBLISHER_MAP: Array<{ test: RegExp; key: NewsItem["source"] }> = [
+  { test: /reuters/i, key: "reuters" },
+  { test: /bloomberg/i, key: "bloomberg" },
+  { test: /financial times|^ft\b|ft\.com/i, key: "ft" },
+  { test: /cnbc/i, key: "cnbc" },
+  { test: /yahoo/i, key: "yahoo" },
+];
+
+function classifyPublisher(p: string): NewsItem["source"] {
+  for (const m of PUBLISHER_MAP) if (m.test.test(p || "")) return m.key;
+  return "other";
+}
+
+const BREAKING_RX = /\b(breaking|halts?|halted|surges?|plunges?|crashes?|soars?|tumbles?|beat[s]? estimates|misses estimates|downgrades?|upgrades?|guidance cut|profit warning|recall|lawsuit|merger|acquires?|acquisition|bankruptcy|files for|sec probe)\b/i;
+
 async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
-  const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=6&quotesCount=0`;
+  const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=10&quotesCount=0`;
   try {
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 ApexMarkets" } });
     if (!res.ok) return [];
-    const json = (await res.json()) as { news?: Array<{ uuid: string; title: string; publisher: string; link: string; providerPublishTime: number }> };
-    return (json.news ?? []).slice(0, 6).map((n) => ({
-      uuid: n.uuid,
-      title: n.title,
-      publisher: n.publisher,
-      link: n.link,
-      publishedAt: (n.providerPublishTime ?? 0) * 1000,
-      symbol,
-    }));
+    const json = (await res.json()) as { news?: Array<{ uuid: string; title: string; publisher: string; link: string; providerPublishTime: number; relatedTickers?: string[] }> };
+    return (json.news ?? []).slice(0, 10).map((n) => {
+      const source = classifyPublisher(n.publisher);
+      const tickers = Array.from(new Set([symbol, ...(n.relatedTickers ?? []).map((t) => t.toUpperCase())]));
+      return {
+        uuid: n.uuid,
+        title: n.title,
+        publisher: n.publisher,
+        source,
+        link: n.link,
+        publishedAt: (n.providerPublishTime ?? 0) * 1000,
+        symbol,
+        tickers,
+        breaking: BREAKING_RX.test(n.title),
+      } satisfies NewsItem;
+    });
   } catch {
     return [];
   }
@@ -70,13 +95,30 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
         new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } }),
       POST: async ({ request }) => {
         try {
-          const body = (await request.json()) as { symbols?: string[] };
-          const symbols = (body.symbols ?? []).filter((s) => typeof s === "string" && /^[A-Z0-9.\-^]{1,12}$/.test(s)).slice(0, 8);
+          const body = (await request.json()) as { symbols?: string[]; tier1Only?: boolean; sources?: string[] };
+          const symbols = (body.symbols ?? []).filter((s) => typeof s === "string" && /^[A-Z0-9.\-^]{1,12}$/.test(s)).slice(0, 12);
           if (symbols.length === 0) {
             return new Response(JSON.stringify({ items: [] }), { headers: { "Content-Type": "application/json" } });
           }
           const batches = await Promise.all(symbols.map(fetchYahooNews));
-          const flat = batches.flat().sort((a, b) => b.publishedAt - a.publishedAt).slice(0, 24);
+          let flat = batches.flat();
+
+          // Tier-1 filter (default ON)
+          const tier1Only = body.tier1Only !== false;
+          if (tier1Only) flat = flat.filter((i) => i.source !== "other");
+
+          // Source whitelist filter
+          if (Array.isArray(body.sources) && body.sources.length > 0) {
+            const allow = new Set(body.sources);
+            flat = flat.filter((i) => allow.has(i.source));
+          }
+
+          // Dedupe by uuid; sort newest first
+          const seen = new Set<string>();
+          flat = flat.filter((i) => (seen.has(i.uuid) ? false : (seen.add(i.uuid), true)));
+          flat.sort((a, b) => b.publishedAt - a.publishedAt);
+          flat = flat.slice(0, 40);
+
           const enriched = await classifySentiments(flat);
           return new Response(JSON.stringify({ items: enriched }), {
             headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=120", "Access-Control-Allow-Origin": "*" },
