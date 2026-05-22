@@ -407,14 +407,8 @@ function AgentAnalysisView({
           Vollständige Detailansicht →
         </Link>
       </div>
-      <LearningProgressBlock
-        symbol={symbol}
-        scenarioTag={scenarioTag}
-        marketRegime={regime}
-        currentVerdict={sig.verdict}
-        currentConfidence={sig.confidence}
-      />
       <DisclaimerInline />
+
     </div>
   );
 }
