@@ -3,10 +3,10 @@ import type { RiskProfile } from "./analysis";
 
 export type Watchlist = { id: string; name: string; symbols: string[] };
 export type ExperienceLevel = "beginner" | "intermediate" | "pro";
-export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF";
+export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF" | "AUD" | "CAD" | "JPY";
 
 /** Tier-1 news publishers. Keys MUST stay stable — used as storage keys. */
-export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft"] as const;
+export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft", "marketwatch", "investing", "wsj"] as const;
 export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
