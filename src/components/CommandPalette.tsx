@@ -17,7 +17,7 @@ const ROUTES = [
   { label: "Wirtschaftskalender", to: "/kalender", icon: Calendar },
   { label: "Märkte & Sektoren", to: "/maerkte", icon: Activity },
   { label: "Heatmap", to: "/heatmap", icon: Flame },
-  { label: "Trends & Signale", to: "/signale", icon: Sparkles },
+  { label: "Watchlist & Signale", to: "/", icon: Sparkles },
   { label: "Produktkatalog", to: "/produkte", icon: LineChart },
   { label: "Einstellungen", to: "/einstellungen", icon: Settings },
 ] as const;
