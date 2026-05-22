@@ -23,10 +23,19 @@ type Answers = {
   industry?: string;
   workflow?: string;
   tone?: string;
+  newsSources?: string[];
   email?: string;
 };
 
 const STORAGE_KEY = "apex_onboarding";
+
+const NEWS_SOURCE_OPTIONS: { key: "reuters" | "bloomberg" | "ft" | "cnbc" | "yahoo"; label: string; desc: string }[] = [
+  { key: "reuters", label: "Reuters", desc: "Global wire — Markets & Macro" },
+  { key: "bloomberg", label: "Bloomberg", desc: "Institutional flow & earnings" },
+  { key: "ft", label: "Financial Times", desc: "Europe & deep analysis" },
+  { key: "cnbc", label: "CNBC", desc: "US live coverage" },
+  { key: "yahoo", label: "Yahoo Finance", desc: "Retail-focused aggregation" },
+];
 
 function loadAnswers(): Answers {
   if (typeof window === "undefined") return {};
@@ -36,7 +45,22 @@ function saveAnswers(a: Answers) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(a)); } catch { /* noop */ }
 }
 
-const TOTAL_STEPS = 11;
+/** Persist the chosen news sources into the live app settings (ta_settings). */
+function persistNewsSources(selected: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("ta_settings");
+    const cur = raw ? JSON.parse(raw) : {};
+    const allKeys = NEWS_SOURCE_OPTIONS.map((o) => o.key);
+    const map: Record<string, boolean> = {};
+    for (const k of allKeys) map[k] = selected.includes(k);
+    cur.newsSources = { ...(cur.newsSources || {}), ...map };
+    localStorage.setItem("ta_settings", JSON.stringify(cur));
+    window.dispatchEvent(new CustomEvent("ta_settings_change"));
+  } catch { /* noop */ }
+}
+
+const TOTAL_STEPS = 12;
 
 function WelcomePage() {
   const navigate = useNavigate();
