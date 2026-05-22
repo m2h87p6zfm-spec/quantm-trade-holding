@@ -220,10 +220,11 @@ function NewsPage() {
         {!isLoading && visible.length === 0 && enabledSources.length > 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
             {tab === "foryou"
-              ? "Aktuell keine News zu deinen Werten. Wechsle zu „Alle" für globale Schlagzeilen."
-              : "Keine News verfügbar."}
+              ? "Aktuell keine News zu deinen Werten. Wechsle zu \u201EAlle\u201C f\u00fcr globale Schlagzeilen."
+              : "Keine News verf\u00fcgbar."}
           </div>
         )}
+
         {visible.map((it) => (
           <NewsCard key={it.uuid} it={it} portfolio={portfolio} />
         ))}
