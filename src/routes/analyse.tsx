@@ -19,6 +19,7 @@ import { consumeAnalysisCredit } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
 import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
 import { useAuth } from "@/hooks/use-auth";
+import { FeedbackButtons } from "@/components/FeedbackButtons";
 
 
 
