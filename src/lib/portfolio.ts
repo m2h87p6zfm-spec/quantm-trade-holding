@@ -58,11 +58,16 @@ export function usePortfolio() {
 }
 
 export function pnl(pos: Position, price: number) {
-  if (pos.brokerCurrentValue && (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)) {
+  if (
+    pos.brokerCurrentValue &&
+    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
+  ) {
     const value = pos.brokerCurrentValue;
-    const basis = pos.brokerInvested ?? (pos.brokerPnlAbs !== undefined
-      ? value - pos.brokerPnlAbs
-      : value / (1 + (pos.brokerPnlPct ?? 0) / 100));
+    const basis =
+      pos.brokerInvested ??
+      (pos.brokerPnlAbs !== undefined
+        ? value - pos.brokerPnlAbs
+        : value / (1 + (pos.brokerPnlPct ?? 0) / 100));
     const abs = pos.brokerPnlAbs ?? value - basis;
     const pct = pos.brokerPnlPct ?? (basis > 0 ? (abs / basis) * 100 : 0);
     return { abs, pct, value };
@@ -77,10 +82,16 @@ export function pnl(pos: Position, price: number) {
 }
 
 export function costBasis(pos: Position) {
-  if (pos.brokerCurrentValue && (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)) {
-    return pos.brokerInvested ?? (pos.brokerPnlAbs !== undefined
-      ? pos.brokerCurrentValue - pos.brokerPnlAbs
-      : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100));
+  if (
+    pos.brokerCurrentValue &&
+    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
+  ) {
+    return (
+      pos.brokerInvested ??
+      (pos.brokerPnlAbs !== undefined
+        ? pos.brokerCurrentValue - pos.brokerPnlAbs
+        : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100))
+    );
   }
   return pos.entry * pos.qty;
 }

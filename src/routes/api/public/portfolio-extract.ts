@@ -15,9 +15,9 @@ type Extracted = {
   qty: number;
   entry: number;
   side: "LONG" | "SHORT";
-  date?: string;          // dd.mm.yyyy
-  currency?: string;      // EUR / USD / ...
-  confidence: number;     // 0..1
+  date?: string; // dd.mm.yyyy
+  currency?: string; // EUR / USD / ...
+  confidence: number; // 0..1
   notes?: string;
   current_price?: number;
   current_value?: number;
@@ -33,7 +33,9 @@ async function fetchMarketPrice(symbol: string): Promise<number | undefined> {
     const r = j?.chart?.result?.[0];
     const metaPrice = Number(r?.meta?.regularMarketPrice);
     if (Number.isFinite(metaPrice) && metaPrice > 0) return metaPrice;
-    const closes = Array.isArray(r?.indicators?.quote?.[0]?.close) ? r.indicators.quote[0].close : [];
+    const closes = Array.isArray(r?.indicators?.quote?.[0]?.close)
+      ? r.indicators.quote[0].close
+      : [];
     const last = [...closes].reverse().find((x) => Number.isFinite(Number(x)) && Number(x) > 0);
     return last === undefined ? undefined : Number(last);
   } catch {
@@ -131,18 +133,42 @@ const EXTRACT_TOOL = {
             properties: {
               symbol: { type: "string", description: "Ticker-Symbol in Großbuchstaben" },
               name: { type: "string", description: "Optionaler Firmenname" },
-              qty: { type: "number", description: "Anzahl Stücke (darf dezimal sein, z. B. 0.5234)" },
-              entry: { type: "number", description: "Einstandskurs pro Stück (ggf. aus Wert/Kurs/Performance abgeleitet)" },
-              current_value: { type: "number", description: "Falls im Bild sichtbar: aktueller Positionswert (qty × Kurs)" },
-              current_price: { type: "number", description: "Falls im Bild sichtbar: aktueller Kurs pro Stück" },
-              invested: { type: "number", description: "Falls sichtbar: eingesetztes Kapital (qty × Einstandskurs)" },
-              pnl_abs: { type: "number", description: "Falls sichtbar: Gewinn/Verlust in Währung (z. B. €)" },
-              pnl_pct: { type: "number", description: "Falls sichtbar: Performance in % seit Einstand (oft gerundet)" },
+              qty: {
+                type: "number",
+                description: "Anzahl Stücke (darf dezimal sein, z. B. 0.5234)",
+              },
+              entry: {
+                type: "number",
+                description: "Einstandskurs pro Stück (ggf. aus Wert/Kurs/Performance abgeleitet)",
+              },
+              current_value: {
+                type: "number",
+                description: "Falls im Bild sichtbar: aktueller Positionswert (qty × Kurs)",
+              },
+              current_price: {
+                type: "number",
+                description: "Falls im Bild sichtbar: aktueller Kurs pro Stück",
+              },
+              invested: {
+                type: "number",
+                description: "Falls sichtbar: eingesetztes Kapital (qty × Einstandskurs)",
+              },
+              pnl_abs: {
+                type: "number",
+                description: "Falls sichtbar: Gewinn/Verlust in Währung (z. B. €)",
+              },
+              pnl_pct: {
+                type: "number",
+                description: "Falls sichtbar: Performance in % seit Einstand (oft gerundet)",
+              },
               side: { type: "string", enum: ["LONG", "SHORT"] },
               date: { type: "string", description: "Kaufdatum dd.mm.yyyy nur wenn klar erkennbar" },
               currency: { type: "string", description: "Währung, z. B. EUR / USD" },
               confidence: { type: "number", description: "0..1" },
-              notes: { type: "string", description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')" },
+              notes: {
+                type: "string",
+                description: "Kurz: Herkunft der Werte (z. B. 'qty aus Wert/Kurs')",
+              },
             },
             required: ["symbol", "side", "confidence"],
             additionalProperties: false,
@@ -154,7 +180,6 @@ const EXTRACT_TOOL = {
     },
   },
 };
-
 
 const MAX_IMAGES = 5;
 const MAX_BYTES_PER_IMAGE = 1.5 * 1024 * 1024; // optimized client upload
@@ -204,7 +229,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             if (typeof img !== "string" || !img.startsWith("data:image/"))
               return json({ error: "Bild muss als data:image/... base64 übergeben werden." }, 400);
             if (approxBase64Bytes(img) > MAX_BYTES_PER_IMAGE)
-              return json({ error: "Bild zu groß. Bitte Screenshot zuschneiden oder erneut hochladen." }, 413);
+              return json(
+                { error: "Bild zu groß. Bitte Screenshot zuschneiden oder erneut hochladen." },
+                413,
+              );
           }
 
           const controller = new AbortController();
@@ -221,7 +249,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
                 {
                   role: "user",
                   content: [
-                    { type: "text", text: "Extrahiere alle Aktien-Positionen aus den folgenden Bildern." },
+                    {
+                      type: "text",
+                      text: "Extrahiere alle Aktien-Positionen aus den folgenden Bildern.",
+                    },
                     ...images.map((url) => ({ type: "image_url" as const, image_url: { url } })),
                   ],
                 },
@@ -235,7 +266,8 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           if (!upstream.ok) {
             const txt = await upstream.text();
             console.error("portfolio-extract gateway error", upstream.status, txt);
-            if (upstream.status === 429) return json({ error: "Zu viele Anfragen — kurz warten." }, 429);
+            if (upstream.status === 429)
+              return json({ error: "Zu viele Anfragen — kurz warten." }, 429);
             if (upstream.status === 402) return json({ error: "AI-Credits aufgebraucht." }, 402);
             return json({ error: "AI-Dienst nicht erreichbar." }, 502);
           }
@@ -253,13 +285,19 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           const choice = data.choices?.[0];
           const call = choice?.message?.tool_calls?.[0];
           const rawContent = choice?.message?.content?.slice(0, 400);
-          console.log("portfolio-extract: finish=", choice?.finish_reason, "tool=", !!call, "content=", rawContent);
+          console.log(
+            "portfolio-extract: finish=",
+            choice?.finish_reason,
+            "tool=",
+            !!call,
+            "content=",
+            rawContent,
+          );
 
           if (!call?.function?.arguments) {
             return json({
               positions: [] satisfies Extracted[],
-              hint:
-                "Die KI konnte im Bild keine Wertpapier-Positionen erkennen. Bitte einen Screenshot der Depot-Übersicht (Tabellen-/Listenansicht mit Tickern und Werten) verwenden — nicht das Sparplan- oder Chart-Fenster.",
+              hint: "Die KI konnte im Bild keine Wertpapier-Positionen erkennen. Bitte einen Screenshot der Depot-Übersicht (Tabellen-/Listenansicht mit Tickern und Werten) verwenden — nicht das Sparplan- oder Chart-Fenster.",
             });
           }
 
@@ -268,7 +306,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             parsed = JSON.parse(call.function.arguments);
           } catch (e) {
             console.error("portfolio-extract: invalid tool args", e);
-            return json({ positions: [] satisfies Extracted[], hint: "KI-Antwort war unvollständig. Bitte erneut versuchen." });
+            return json({
+              positions: [] satisfies Extracted[],
+              hint: "KI-Antwort war unvollständig. Bitte erneut versuchen.",
+            });
           }
 
           const rawArr = Array.isArray(parsed.positions) ? parsed.positions : [];
@@ -285,7 +326,10 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             }
           }
           for (const p of rawArr) {
-            if (!p || typeof p !== "object") { dropped++; continue; }
+            if (!p || typeof p !== "object") {
+              dropped++;
+              continue;
+            }
             const o = p as Record<string, unknown>;
             const symbol = typeof o.symbol === "string" ? o.symbol.toUpperCase().trim() : "";
             const side = o.side === "SHORT" ? "SHORT" : "LONG";
@@ -301,11 +345,20 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             let currentPrice = optNum("current_price");
             const currentValue = optNum("current_value");
             const brokerInvested = optNum("invested");
-            const entryLooksLikePositionValue = !!(entry && currentValue && entry > 500 && Math.abs(entry - currentValue) / currentValue < 0.08);
+            const entryLooksLikePositionValue = !!(
+              entry &&
+              currentValue &&
+              entry > 500 &&
+              Math.abs(entry - currentValue) / currentValue < 0.08
+            );
             const qtyLooksLikeFallback = !qty || (qty === 1 && entryLooksLikePositionValue);
 
-            if (symbol && currentValue && (!currentPrice || qtyLooksLikeFallback || entryLooksLikePositionValue)) {
-              currentPrice = await marketPricePromises.get(symbol) ?? currentPrice;
+            if (
+              symbol &&
+              currentValue &&
+              (!currentPrice || qtyLooksLikeFallback || entryLooksLikePositionValue)
+            ) {
+              currentPrice = (await marketPricePromises.get(symbol)) ?? currentPrice;
             }
 
             if (currentValue && currentPrice && (!qty || qtyLooksLikeFallback)) {
@@ -313,22 +366,40 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             }
             if (qty && brokerInvested && (!entry || entryLooksLikePositionValue)) {
               entry = brokerInvested / qty;
-            } else if (qty && currentValue && Number.isFinite(pnlAbs) && (!entry || entryLooksLikePositionValue)) {
+            } else if (
+              qty &&
+              currentValue &&
+              Number.isFinite(pnlAbs) &&
+              (!entry || entryLooksLikePositionValue)
+            ) {
               entry = (currentValue - pnlAbs) / qty;
-            } else if (currentPrice && Number.isFinite(pnlPct) && (!entry || entryLooksLikePositionValue)) {
+            } else if (
+              currentPrice &&
+              Number.isFinite(pnlPct) &&
+              (!entry || entryLooksLikePositionValue)
+            ) {
               entry = currentPrice / (1 + pnlPct / 100);
             } else if (currentPrice && !entry) {
               entry = currentPrice;
             }
 
             if (entryLooksLikePositionValue && !currentPrice) {
-              console.warn("portfolio-extract: dropped — Positionswert konnte nicht in Stückkurs umgerechnet werden", { symbol, entry, qty, currentValue });
+              console.warn(
+                "portfolio-extract: dropped — Positionswert konnte nicht in Stückkurs umgerechnet werden",
+                { symbol, entry, qty, currentValue },
+              );
               dropped++;
               continue;
             }
 
             if (!symbol || !qty || qty <= 0 || !entry || entry <= 0) {
-              console.warn("portfolio-extract: dropped position", { symbol, qty, entry, currentValue, currentPrice });
+              console.warn("portfolio-extract: dropped position", {
+                symbol,
+                qty,
+                entry,
+                currentValue,
+                currentPrice,
+              });
               dropped++;
               continue;
             }
@@ -336,13 +407,23 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             // Plausibilitäts-Check: entry darf höchstens 5× vom aktuellen Stückkurs abweichen.
             // Schützt davor, dass die KI den Positionswert (z. B. 7000 €) als Einstand pro Stück übernimmt.
             if (currentPrice && (entry / currentPrice > 5 || currentPrice / entry > 5)) {
-              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", { symbol, entry, currentPrice, qty });
+              console.warn("portfolio-extract: dropped — entry vs current_price unplausibel", {
+                symbol,
+                entry,
+                currentPrice,
+                qty,
+              });
               dropped++;
               continue;
             }
             // Wenn entry · qty deutlich größer ist als der aktuelle Wert, hat die KI Positionswert mit Stückkurs verwechselt.
             if (currentValue && entry * qty > currentValue * 5) {
-              console.warn("portfolio-extract: dropped — entry·qty >> current_value", { symbol, entry, qty, currentValue });
+              console.warn("portfolio-extract: dropped — entry·qty >> current_value", {
+                symbol,
+                entry,
+                qty,
+                currentValue,
+              });
               dropped++;
               continue;
             }
@@ -364,7 +445,14 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
             });
           }
 
-          console.log("portfolio-extract: raw=", rawArr.length, "kept=", out.length, "dropped=", dropped);
+          console.log(
+            "portfolio-extract: raw=",
+            rawArr.length,
+            "kept=",
+            out.length,
+            "dropped=",
+            dropped,
+          );
 
           if (out.length === 0) {
             const hint =
@@ -378,7 +466,13 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
         } catch (e) {
           console.error("portfolio-extract error", e);
           if (e instanceof Error && e.name === "AbortError") {
-            return json({ error: "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen." }, 504);
+            return json(
+              {
+                error:
+                  "Analyse dauert zu lange. Bitte Screenshot zuschneiden und erneut versuchen.",
+              },
+              504,
+            );
           }
           return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
         }
