@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellRing, Plus, Trash2 } from "lucide-react";
+import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
@@ -9,7 +9,6 @@ import { useSettings } from "@/lib/settings";
 import { PRODUCTS } from "@/lib/products";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
-import { Lock } from "lucide-react";
 
 export const Route = createFileRoute("/alerts")({
   component: AlertsPage,
@@ -45,25 +44,58 @@ function AlertRow({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: str
   }, [price, score, a, onTrigger, value]);
 
   const triggered = !!a.triggeredAt;
+  const isAbove = a.kind.endsWith("above");
+  const distance = value != null ? ((value - a.threshold) / a.threshold) * 100 : null;
+  const near = distance != null && Math.abs(distance) < 2;
+
   return (
-    <tr className="border-b border-border/50 hover:bg-muted/30">
-      <td className="px-3 py-3 font-medium">{a.symbol}</td>
-      <td className="px-3 py-3">{label(a.kind)}</td>
-      <td className="px-3 py-3 text-right tabular-nums">{a.threshold}</td>
-      <td className="px-3 py-3 text-right tabular-nums">{value != null ? value.toFixed(2) : "…"}</td>
-      <td className="px-3 py-3">
+    <tr className="group border-b border-border/40 transition-colors hover:bg-muted/20">
+      <td className="px-4 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-primary/15 to-primary/5 text-[11px] font-bold text-primary ring-1 ring-primary/20">
+            {a.symbol.slice(0, 2)}
+          </div>
+          <span className="font-semibold tracking-tight">{a.symbol}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3.5">
+        <span className="inline-flex items-center gap-1.5 text-sm text-foreground/80">
+          {isPrice ? <Activity className="h-3.5 w-3.5 text-cyan-accent" /> : <Sparkles className="h-3.5 w-3.5 text-violet-accent" />}
+          {label(a.kind)}
+        </span>
+      </td>
+      <td className="px-4 py-3.5 text-right tabular-nums font-medium">{a.threshold}</td>
+      <td className="px-4 py-3.5 text-right">
+        <div className="flex flex-col items-end">
+          <span className="tabular-nums font-medium">{value != null ? value.toFixed(2) : "…"}</span>
+          {distance != null && !triggered && (
+            <span className={`text-[10px] tabular-nums ${near ? "text-gold" : "text-muted-foreground"}`}>
+              {distance > 0 ? "+" : ""}{distance.toFixed(1)}%
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3.5">
         {triggered ? (
-          <span className="inline-flex items-center gap-1 rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
             <BellRing className="h-3 w-3" /> Ausgelöst
           </span>
+        ) : near ? (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-semibold text-gold ring-1 ring-gold/30">
+            <Zap className="h-3 w-3" /> Nah dran
+          </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-            <Bell className="h-3 w-3" /> Aktiv
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground ring-1 ring-border/60">
+            <span className={`h-1.5 w-1.5 rounded-full ${isAbove ? "bg-bull" : "bg-bear"} animate-pulse`} /> Aktiv
           </span>
         )}
       </td>
-      <td className="px-3 py-3 text-right">
-        <button onClick={() => onRemove(a.id)} className="text-muted-foreground hover:text-rose-400" aria-label="Löschen">
+      <td className="px-4 py-3.5 text-right">
+        <button
+          onClick={() => onRemove(a.id)}
+          className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-rose-500/10 hover:text-rose-400 group-hover:opacity-100"
+          aria-label="Löschen"
+        >
           <Trash2 className="h-4 w-4" />
         </button>
       </td>
@@ -89,6 +121,7 @@ function AlertsPage() {
 
   const active = useMemo(() => alerts.filter((a) => !a.triggeredAt), [alerts]);
   const history = useMemo(() => alerts.filter((a) => a.triggeredAt).sort((a, b) => (b.triggeredAt! - a.triggeredAt!)), [alerts]);
+  const triggeredCount = history.length;
 
   async function requestPush() {
     if (typeof Notification === "undefined") return toast.error("Browser unterstützt keine Benachrichtigungen.");
@@ -108,67 +141,124 @@ function AlertsPage() {
     toast.success(`Alert für ${symbol.toUpperCase()} erstellt.`);
   }
 
+  const tierLabel = tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Elite";
+  const tierTint = tier === "elite" ? "text-gold ring-gold/30 bg-gold/10" : tier === "pro" ? "text-primary ring-primary/30 bg-primary/10" : "text-muted-foreground ring-border bg-muted/40";
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Bell className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Smart Alerts</h1>
-            <p className="text-sm text-muted-foreground">Werde sofort informiert, wenn Preis- oder Score-Schwellen erreicht werden.</p>
+    <div className="mx-auto max-w-6xl space-y-8 p-6">
+      {/* Hero */}
+      <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-card/40 p-6 md:p-8">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-70"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse 60% 50% at 0% 0%, color-mix(in oklab, var(--primary) 18%, transparent), transparent 60%), radial-gradient(ellipse 50% 40% at 100% 0%, color-mix(in oklab, var(--gold) 12%, transparent), transparent 60%)",
+          }}
+        />
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 ring-1 ring-primary/30">
+              <Bell className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold tracking-tight">Smart Alerts</h1>
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1 ${tierTint}`}>
+                  {tierLabel}
+                </span>
+              </div>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+                Werde in Echtzeit informiert, wenn Preis- oder Setup-Score-Schwellen erreicht werden — direkt im Browser per Push.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`hidden sm:inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium ${atLimit ? "border-bear/40 bg-bear/10 text-bear" : "border-border bg-muted/30 text-muted-foreground"}`}>
-            <Bell className="h-3 w-3" />
-            {count}{Number.isFinite(max) ? ` / ${max}` : ""} · {tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Elite"}
-          </span>
-          <button onClick={requestPush} className="rounded-md border border-input bg-background px-3 py-2 text-sm hover:bg-muted">
+          <button
+            onClick={requestPush}
+            className="inline-flex items-center gap-2 self-start rounded-lg border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition-all hover:bg-primary/20 hover:shadow-[0_0_20px_-4px_color-mix(in_oklab,var(--primary)_50%,transparent)] md:self-auto"
+          >
+            <BellRing className="h-4 w-4" />
             Push aktivieren
           </button>
         </div>
-      </div>
+
+        {/* Stat strip */}
+        <div className="relative mt-6 grid grid-cols-3 gap-3 border-t border-border/40 pt-5">
+          <Stat icon={<Activity className="h-3.5 w-3.5" />} label="Aktiv" value={active.length} tint="text-primary" />
+          <Stat icon={<BellRing className="h-3.5 w-3.5" />} label="Ausgelöst" value={triggeredCount} tint="text-emerald-400" />
+          <Stat
+            icon={<Zap className="h-3.5 w-3.5" />}
+            label="Kontingent"
+            value={Number.isFinite(max) ? `${count} / ${max}` : `${count} / ∞`}
+            tint={atLimit ? "text-bear" : "text-gold"}
+          />
+        </div>
+      </section>
 
       {atLimit && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
-          <div className="flex items-center gap-2 text-gold">
-            <Lock className="h-4 w-4" />
-            <span>Du hast dein Alert-Limit ({max}) erreicht. Upgrade für unlimitierte Smart Alerts.</span>
+        <div className="flex flex-col items-start justify-between gap-3 rounded-xl border border-gold/40 bg-gradient-to-r from-gold/15 to-gold/5 px-5 py-4 text-sm sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2.5 text-gold">
+            <Lock className="h-4 w-4 shrink-0" />
+            <span>Du hast dein Alert-Limit ({max}) erreicht. Upgrade für <strong>unlimitierte</strong> Smart Alerts.</span>
           </div>
-          <Link to="/preise" className="rounded-md bg-gold/20 px-3 py-1.5 text-xs font-semibold text-gold hover:bg-gold/30">Upgrade</Link>
+          <Link to="/preise" className="inline-flex items-center gap-1 rounded-md bg-gold px-3.5 py-1.5 text-xs font-bold text-background hover:bg-gold/90">
+            Upgrade <Sparkles className="h-3 w-3" />
+          </Link>
         </div>
       )}
 
-      <form onSubmit={onAdd} className="rounded-lg border border-border bg-card p-4 grid gap-3 md:grid-cols-[1fr,1fr,140px,auto]">
-        <div>
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Symbol</label>
-          <input list="apex-symbols-alerts" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-          <datalist id="apex-symbols-alerts">{PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}</datalist>
+      {/* Create form */}
+      <section className="rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur">
+        <div className="mb-4 flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Neuen Alert erstellen</h2>
         </div>
-        <div>
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Bedingung</label>
-          <select value={kind} onChange={(e) => setKind(e.target.value as AlertRule["kind"])} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-            <option value="price_above">Preis steigt auf ≥</option>
-            <option value="price_below">Preis fällt auf ≤</option>
-            <option value="score_above">Setup-Score ≥</option>
-            <option value="score_below">Setup-Score ≤</option>
-          </select>
-        </div>
-        <div>
-          <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Schwelle</label>
-          <input type="number" step="any" value={threshold} onChange={(e) => setThreshold(parseFloat(e.target.value) || 0)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums" />
-        </div>
-        <button type="submit" className="self-end inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4" /> Anlegen
-        </button>
-      </form>
+        <form onSubmit={onAdd} className="grid gap-3 md:grid-cols-[1fr_1fr_140px_auto]">
+          <Field label="Symbol">
+            <input
+              list="apex-symbols-alerts"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm font-medium tracking-tight transition-colors focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+            <datalist id="apex-symbols-alerts">{PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}</datalist>
+          </Field>
+          <Field label="Bedingung">
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as AlertRule["kind"])}
+              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm transition-colors focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="price_above">Preis steigt auf ≥</option>
+              <option value="price_below">Preis fällt auf ≤</option>
+              <option value="score_above">Setup-Score ≥</option>
+              <option value="score_below">Setup-Score ≤</option>
+            </select>
+          </Field>
+          <Field label="Schwelle">
+            <input
+              type="number"
+              step="any"
+              value={threshold}
+              onChange={(e) => setThreshold(parseFloat(e.target.value) || 0)}
+              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm tabular-nums transition-colors focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </Field>
+          <button
+            type="submit"
+            className="self-end inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-br from-primary to-primary/80 px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 hover:brightness-110"
+          >
+            <Plus className="h-4 w-4" /> Anlegen
+          </button>
+        </form>
+      </section>
 
-      <Section title={`Aktive Alerts (${active.length})`}>
-        <Table rows={active} onRemove={remove} onTrigger={markTriggered} empty="Keine aktiven Alerts." />
+      <Section title="Aktive Alerts" count={active.length} icon={<Activity className="h-3.5 w-3.5" />}>
+        <Table rows={active} onRemove={remove} onTrigger={markTriggered} empty="Noch keine aktiven Alerts — leg deinen ersten oben an." />
       </Section>
 
       {history.length > 0 && (
-        <Section title="Verlauf (ausgelöst)">
+        <Section title="Verlauf" count={history.length} icon={<History className="h-3.5 w-3.5" />}>
           <Table rows={history} onRemove={remove} onTrigger={markTriggered} empty="" />
         </Section>
       )}
@@ -176,10 +266,35 @@ function AlertsPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Stat({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: React.ReactNode; tint: string }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className={`flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider ${tint}`}>
+        {icon}
+        {label}
+      </div>
+      <div className="text-2xl font-bold tabular-nums tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Section({ title, count, icon, children }: { title: string; count: number; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
+      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        {title}
+        <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-bold text-foreground/70">{count}</span>
+      </h2>
       {children}
     </div>
   );
@@ -187,21 +302,28 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Table({ rows, onRemove, onTrigger, empty }: { rows: AlertRule[]; onRemove: (id: string) => void; onTrigger: (id: string) => void; empty: string }) {
   return (
-    <div className="rounded-lg border border-border bg-card overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card/60 backdrop-blur">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground">
           <tr>
-            <th className="px-3 py-2 text-left">Symbol</th>
-            <th className="px-3 py-2 text-left">Bedingung</th>
-            <th className="px-3 py-2 text-right">Schwelle</th>
-            <th className="px-3 py-2 text-right">Aktuell</th>
-            <th className="px-3 py-2 text-left">Status</th>
-            <th className="px-3 py-2"></th>
+            <th className="px-4 py-3 text-left font-semibold">Symbol</th>
+            <th className="px-4 py-3 text-left font-semibold">Bedingung</th>
+            <th className="px-4 py-3 text-right font-semibold">Schwelle</th>
+            <th className="px-4 py-3 text-right font-semibold">Aktuell</th>
+            <th className="px-4 py-3 text-left font-semibold">Status</th>
+            <th className="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 ? (
-            <tr><td colSpan={6} className="px-3 py-8 text-center text-muted-foreground">{empty}</td></tr>
+            <tr>
+              <td colSpan={6} className="px-4 py-10 text-center">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <Bell className="h-6 w-6 opacity-40" />
+                  <span className="text-sm">{empty}</span>
+                </div>
+              </td>
+            </tr>
           ) : rows.map((a) => <AlertRow key={a.id} a={a} onRemove={onRemove} onTrigger={onTrigger} />)}
         </tbody>
       </table>
