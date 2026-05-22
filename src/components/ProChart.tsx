@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from "react";
+import { Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
 
@@ -348,23 +350,71 @@ export function ProChart({
 
       {/* Legende */}
       <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
-        {overlays.includes("ema20") && <Legend swatch="#38bdf8" label="EMA 20" />}
-        {overlays.includes("ema50") && <Legend swatch="#fbbf24" label="EMA 50" />}
-        {overlays.includes("sma200") && <Legend swatch="#c084fc" label="SMA 200" />}
-        {overlays.includes("bbands") && <Legend swatch="#38bdf8" label="Bollinger 20·2σ" />}
+        {overlays.includes("ema20") && (
+          <Legend
+            swatch="#38bdf8"
+            label="EMA 20"
+            info="Exponentieller gleitender Durchschnitt der letzten 20 Perioden. Reagiert schneller als die einfache SMA — gilt als kurzfristiger Trend-Indikator. Liegt der Kurs darüber, ist das kurzfristige Momentum bullish."
+          />
+        )}
+        {overlays.includes("ema50") && (
+          <Legend
+            swatch="#fbbf24"
+            label="EMA 50"
+            info="Exponentieller 50-Tage-Durchschnitt — der klassische mittelfristige Trend-Filter. Viele Institutionelle nutzen ihn als dynamische Support-/Resistance-Linie. Kreuzungen mit EMA 20 markieren Trendwechsel."
+          />
+        )}
+        {overlays.includes("sma200") && (
+          <Legend
+            swatch="#c084fc"
+            label="SMA 200"
+            info="Einfacher 200-Tage-Durchschnitt — der wichtigste Langfrist-Trendmarker. Kurs über SMA 200 = Bullenmarkt-Bias, darunter = Bärenmarkt-Bias. Der ‚Death Cross‘ (EMA 50 unter SMA 200) gilt als klassisches Verkaufssignal."
+          />
+        )}
+        {overlays.includes("bbands") && (
+          <Legend
+            swatch="#38bdf8"
+            label="Bollinger 20·2σ"
+            info="Bänder rund um die 20-Tage-SMA, ±2 Standardabweichungen breit. Sie messen Volatilität: Enge Bänder = ruhiger Markt (oft vor Ausbruch), weite Bänder = hohe Volatilität. Berührt der Kurs das obere Band, gilt er als kurzfristig überkauft, unteres Band = überverkauft."
+          />
+        )}
         {showZones && zones.length > 0 && (
-          <Legend swatch="#22c55e" label={`${zones.length} Smart-Zones`} />
+          <Legend
+            swatch="#22c55e"
+            label={`${zones.length} Smart-Zones`}
+            info="Algorithmisch erkannte Support- und Resistance-Zonen, basierend auf gehäuften Kursreaktionen und Volumen-Clustern. Diese Bereiche sind oft Entscheidungspunkte für Kauf-/Verkaufsdruck."
+          />
         )}
       </div>
     </div>
   );
 }
 
-function Legend({ swatch, label }: { swatch: string; label: string }) {
+function Legend({ swatch, label, info }: { swatch: string; label: string; info?: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className="inline-block h-[2px] w-3 rounded-sm" style={{ background: swatch }} />
       {label}
+      {info && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Erklärung zu ${label}`}
+              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full text-muted-foreground/60 transition-colors hover:bg-primary/10 hover:text-primary"
+            >
+              <Info className="h-3 w-3" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent side="top" className="w-72 text-xs leading-relaxed">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-block h-[3px] w-4 rounded-sm" style={{ background: swatch }} />
+              <span className="font-semibold text-foreground">{label}</span>
+            </div>
+            <p className="text-muted-foreground">{info}</p>
+          </PopoverContent>
+        </Popover>
+      )}
     </span>
   );
 }

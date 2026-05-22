@@ -62,8 +62,10 @@ export function MarketPulseHeader({ rows }: { rows: CockpitRow[] }) {
           const ready = last != null;
           const positive = change >= 0;
           const visualPositive = t.invert ? !positive : positive;
-          return (
-            <div key={t.symbol} className="rounded-lg border border-border/60 bg-card/60 backdrop-blur px-3 py-2.5 hover:border-primary/40 transition-colors">
+          const isLinkable = !t.symbol.startsWith("^");
+
+          const inner = (
+            <>
               <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
                 <span className="font-semibold">{t.label}</span>
                 {ready && (visualPositive
@@ -83,6 +85,23 @@ export function MarketPulseHeader({ rows }: { rows: CockpitRow[] }) {
                   <div className="h-2 w-10 rounded bg-muted/60 animate-pulse" />
                 </div>
               )}
+            </>
+          );
+
+          const className = "block rounded-lg border border-border/60 bg-card/60 backdrop-blur px-3 py-2.5 transition-colors hover:border-primary/40";
+
+          return isLinkable ? (
+            <Link
+              key={t.symbol}
+              to="/produkte/$symbol"
+              params={{ symbol: t.symbol }}
+              className={`${className} hover:bg-accent/30`}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={t.symbol} className={className}>
+              {inner}
             </div>
           );
         })}
