@@ -40,6 +40,30 @@ async function buildAdaptiveAddendum(userId: string | null): Promise<string> {
   return `\n\n## ADAPTIVE USER PROFILE (aus ${data.feedback_count} Feedback-Signalen)\nBevorzugte Muster (verstärken, falls fachlich passend): ${pos.join(", ") || "—"}\nAbgelehnte Muster (vermeiden, falls möglich, ohne Genauigkeit zu opfern): ${neg.join(", ") || "—"}\nWICHTIG: Nutzerpräferenzen NIE über mathematische Korrektheit, faktische Genauigkeit oder Risikotransparenz stellen.`;
 }
 
+async function buildTradingProfileAddendum(userId: string | null): Promise<string> {
+  if (!userId) return "";
+  const { data } = await supabaseAdmin
+    .from("user_trading_profile")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data || !data.onboarding_completed) return "";
+  const markets = Array.isArray(data.markets) ? (data.markets as string[]) : [];
+  return `\n\n## USER TRADING PROFILE (verbindlich anzuwenden)
+- Trading Goal: ${data.trading_goal ?? "—"}
+- Risk Level: ${data.risk_level ?? "—"} → Mindest-Konfidenz für Signale: ${data.confidence_threshold}%
+- Strategy Mode: ${data.strategy_mode} · Signal Frequency: ${data.signal_frequency}
+- Aktive Märkte: ${markets.join(", ") || "—"} · Region: ${data.region}
+- AI Tone: ${data.ai_tone} · Explanation Depth: ${data.explanation_depth} · Show Reasoning: ${data.show_reasoning ? "ja" : "nein"}
+
+REGELN:
+1. Signale/Empfehlungen NUR für aktive Märkte. Andere Märkte: kurzer Hinweis, dass sie im Profil deaktiviert sind.
+2. Signale UNTER der Mindest-Konfidenz nicht ausgeben oder explizit als "unter Threshold" markieren.
+3. Strategy Mode "conservative" → wenige, hochselektive Setups. "aggressive" → mehr Setups, höhere Frequenz akzeptiert.
+4. AI Tone "simplified" → Fachjargon minimieren, klare Alltagssprache. "professional" → institutionell-präzise.
+5. Explanation Depth "brief" → 3–6 Zeilen pro Antwortsektion. "detailed" → vollständige analytische Tiefe.
+6. Show Reasoning "nein" → kein Chain-of-Thought offenlegen, nur Ergebnis + Begründung. "ja" → strukturierter Reasoning-Block sichtbar.`;
+
 const SYSTEM = `# QUANTUM ANALYST — Elite Institutional Financial Intelligence & Adaptive Reasoning System
 
 ## IDENTITY & MISSION
