@@ -179,10 +179,23 @@ function PortfolioPage() {
             <option value="SHORT">SHORT</option>
           </select>
         </div>
-        <button type="submit" className="self-end inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <button type="submit" disabled={atLimit} className="self-end inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed">
           <Plus className="h-4 w-4" /> Hinzufügen
         </button>
       </form>
+
+      <div className="flex items-center justify-between text-xs text-muted-foreground -mt-2">
+        <span>
+          {positions.length} / {max === Infinity ? "∞" : max} Positionen
+          {tier === "free" && " (Free Plan)"}
+        </span>
+        {atLimit && tier === "free" && (
+          <a href="/preise" className="text-primary hover:underline font-medium">
+            Upgrade auf Pro für unlimitierte Positionen →
+          </a>
+        )}
+      </div>
+
 
       <Summary positions={positions} />
 
