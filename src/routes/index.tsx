@@ -21,7 +21,7 @@ export const Route = createFileRoute("/")({ component: Cockpit });
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
 function Cockpit() {
-  const { settings, toggleWatch } = useSettings();
+  const { settings, addSymbols, removeSymbol } = useSettings();
   const usingDefault = settings.watchlist.length === 0;
   const cockpitSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
   const rows = useCockpitData(cockpitSymbols);
