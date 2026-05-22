@@ -140,6 +140,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "momentum", rawValue: m,
     });
   }
 
