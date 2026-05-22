@@ -600,7 +600,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
         continue;
       }
       try {
-        const url = await fileToDataUrl(f);
+        const url = await optimizeImageFile(f);
         accepted.push({ id: crypto.randomUUID(), file: f, url });
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Lesefehler");
@@ -619,11 +619,15 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     setLoading(true);
     setDrafts([]);
     try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), EXTRACT_TIMEOUT_MS);
       const res = await fetch("/api/public/portfolio-extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({ images: files.map((f) => f.url) }),
       });
+      window.clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? `Fehler ${res.status}`);
 
@@ -635,7 +639,11 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
       }
       setDrafts(positions.map((p) => ({ ...p, id: crypto.randomUUID(), enabled: true })));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
+      if (e instanceof DOMException && e.name === "AbortError") {
+        toast.error("Analyse dauert zu lange. Bitte nutze einen enger zugeschnittenen Screenshot und versuch es erneut.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Unbekannter Fehler");
+      }
     } finally {
       setLoading(false);
     }
@@ -700,7 +708,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
           Broker-App, Depotauszug, Excel-Liste, handschriftliche Notiz — die KI liest Ticker, Stückzahl und Einstandskurs aus.
         </p>
         <p className="mt-1 text-[10px] text-muted-foreground/70">
-          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · je 6 MB
+          Drag & Drop oder Klick · max. {MAX_FILES} Bilder · wird vor dem Senden automatisch optimiert
         </p>
       </div>
 
