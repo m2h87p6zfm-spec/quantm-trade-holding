@@ -36,12 +36,12 @@ export async function fetchQuote(symbol: string): Promise<Quote> {
   return getJson<Quote>(`/api/public/quote?symbol=${encodeURIComponent(symbol)}`);
 }
 
-// ---- Concurrency-Limiter + Retry für Massen-Scans (z. B. Apex Picks mit 600+ Symbols) ----
-// Ohne Limit feuert useQueries hunderte Requests parallel an den Yahoo-Proxy ab,
-// der dann reihenweise mit "reconnecting" antwortet (Rate-Limit/Throttle).
-// Symptom: "75 von 769 erfolgreich". Mit Limit + Backoff laufen die Requests
-// in geordneten Wellen durch und nahezu jedes Symbol liefert verwertbare Kerzen.
-const MAX_PARALLEL = 6;
+// ---- Concurrency-Limiter + Retry + Persistenter LocalStorage-Cache für Massen-Scans ----
+// Tageskerzen sind über Stunden stabil — wir cachen sie clientseitig 12 h,
+// damit ein erneuter Scan praktisch instant ist und den Yahoo-Proxy nicht
+// erneut belastet. So bleibt die Analyse-Qualität gleich, der Scan wird
+// aber dramatisch schneller (cold: ~6 parallele Wellen, warm: instant).
+const MAX_PARALLEL = 10;
 let _active = 0;
 const _queue: Array<() => void> = [];
 function _acquire(): Promise<void> {
@@ -55,27 +55,54 @@ function _release() {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const LS_PREFIX = "yh_candles:";
+const LS_TTL_MS = 12 * 60 * 60 * 1000; // 12 h für Tageskerzen
+
+function lsGet(key: string): Candles | null {
+  if (typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if (!raw) return null;
+    const j = JSON.parse(raw) as { t: number; d: Candles };
+    if (!j?.t || Date.now() - j.t > LS_TTL_MS) return null;
+    return j.d;
+  } catch { return null; }
+}
+function lsSet(key: string, d: Candles) {
+  if (typeof localStorage === "undefined") return;
+  try { localStorage.setItem(LS_PREFIX + key, JSON.stringify({ t: Date.now(), d })); } catch { /* quota */ }
+}
+
 export async function fetchCandles(symbol: string, resolution: "D" | "60" | "W" = "D", days = 365): Promise<Candles> {
   const interval = resolution === "D" ? "1d" : resolution === "W" ? "1wk" : "1h";
   const range = days <= 30 ? "1mo" : days <= 90 ? "3mo" : days <= 200 ? "6mo" : days <= 400 ? "1y" : days <= 800 ? "2y" : "5y";
+  const cacheKey = `${symbol}|${interval}|${range}`;
+
+  // Persistent Client-Cache (nur Tagesauflösung — Intraday muss frisch sein)
+  if (resolution === "D") {
+    const hit = lsGet(cacheKey);
+    if (hit && hit.c?.length) return hit;
+  }
+
   const url = `/api/public/candles?symbol=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`;
 
   await _acquire();
   try {
     let lastErr: unknown = null;
-    // 3 Versuche mit exponentiellem Backoff bei "reconnecting" / 429 / 5xx
-    for (let attempt = 0; attempt < 3; attempt++) {
+    // 2 Versuche reichen — der Server retry'd intern bereits über mehrere Wellen.
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const data = await getJson<Candles>(url);
         if (!data.c?.length) throw new MarketDataReconnectingError();
+        if (resolution === "D") lsSet(cacheKey, data);
         return data;
       } catch (e) {
         lastErr = e;
         const retryable =
           e instanceof MarketDataReconnectingError ||
           (e instanceof FinnhubError && (e.status === 429 || e.status >= 500));
-        if (!retryable || attempt === 2) throw e;
-        await sleep(400 * Math.pow(2, attempt) + Math.random() * 200);
+        if (!retryable || attempt === 1) throw e;
+        await sleep(350 + Math.random() * 250);
       }
     }
     throw lastErr ?? new MarketDataReconnectingError();
