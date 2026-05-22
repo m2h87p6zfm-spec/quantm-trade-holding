@@ -40,6 +40,7 @@ function buildRows(ind: IndicatorSet): Row[] {
       reading,
       tone,
       verdict,
+      infoKey: "rsi", rawValue: v,
     });
   }
 
