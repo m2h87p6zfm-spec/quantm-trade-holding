@@ -167,6 +167,45 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
           }
 
 
+            // Verdichte aktualisiertes Profil in einen Memory-Eintrag,
+            // damit jede künftige Antwort die Präferenzen direkt aus ai_memory liest.
+            const dom = (cat: string, src: Record<string, number>): string | null => {
+              const e = Object.entries(src).filter(([k]) => k.startsWith(`${cat}:`));
+              if (!e.length) return null;
+              e.sort((a, b) => b[1] - a[1]);
+              return e[0][0].split(":")[1];
+            };
+            const depthPref = dom("depth", pos);
+            const riskPref = dom("risk", pos);
+            const tonePref = dom("tone", pos);
+            const lengthPref = dom("length", pos);
+            const complexityPref = dom("complexity", pos);
+            const avoidFails = Object.entries(neg)
+              .filter(([k]) => k.startsWith("fail:"))
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 3)
+              .map(([k]) => k.replace("fail:", ""));
+
+            const noteParts: string[] = [];
+            if (depthPref) noteParts.push(`Begründungstiefe: ${depthPref}`);
+            if (riskPref) noteParts.push(`Risiko-Sprache: ${riskPref}`);
+            if (tonePref) noteParts.push(`Tonalität: ${tonePref}`);
+            if (lengthPref) noteParts.push(`Länge: ${lengthPref}`);
+            if (complexityPref) noteParts.push(`Komplexität: ${complexityPref}`);
+            if (avoidFails.length) noteParts.push(`vermeiden: ${avoidFails.join(", ")}`);
+
+            if (noteParts.length) {
+              const note = `[ARIA-PRÄFERENZEN aus Feedback] ${noteParts.join(" · ")}. Wende diese Präferenzen in jeder folgenden Antwort an.`;
+              await supabaseAdmin.from("ai_memory").insert({
+                user_id,
+                session_id: body.session_id ?? null,
+                role: "assistant",
+                content: note,
+              });
+            }
+          }
+
+
           return new Response(JSON.stringify({ ok: true }), {
             status: 200,
             headers: { "Content-Type": "application/json", ...CORS },
