@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  createChart,
-  CandlestickSeries,
-  LineSeries,
-  HistogramSeries,
-  ColorType,
-  CrosshairMode,
-  LineStyle,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-  type IPriceLine,
+import type {
+  IChartApi,
+  ISeriesApi,
+  UTCTimestamp,
+  IPriceLine,
 } from "lightweight-charts";
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
@@ -100,199 +93,207 @@ export function ProChart({
   const ohlcMapRef = useRef<Map<number, { o: number; h: number; l: number; c: number; v: number }>>(new Map());
   const zonePriceLinesRef = useRef<IPriceLine[]>([]);
 
-  // Build / rebuild whenever structural inputs change
+  // Build / rebuild whenever structural inputs change. Library is dynamically
+  // imported on the client to keep SSR safe.
   useEffect(() => {
     if (!mainRef.current) return;
+    let cancelled = false;
+    let ro: ResizeObserver | undefined;
+    let createdSnapshot: { chart: IChartApi; key: string }[] = [];
     const el = mainRef.current;
-    const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
-    const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
-    const fg = cssVar(el, "--foreground", "#fff");
-    const bull = cssVar(el, "--bull", "#22FF88");
-    const bear = cssVar(el, "--bear", "#FF3B5C");
-    const c1 = cssVar(el, "--chart-1", "#7AA2FF");
-    const c2 = cssVar(el, "--chart-2", "#FFB347");
-    const c3 = cssVar(el, "--chart-3", "#C29BFF");
-    const c4 = cssVar(el, "--chart-4", "#5EE4D1");
 
-    const baseLayout = {
-      background: { type: ColorType.Solid, color: "transparent" },
-      textColor: axis,
-      fontFamily: "ui-monospace, monospace",
-      attributionLogo: false,
-    } as const;
-    const baseGrid = {
-      vertLines: { visible: false },
-      horzLines: { color: grid, style: LineStyle.Dotted },
-    };
-    const baseCrosshair = {
-      mode: CrosshairMode.Magnet,
-      vertLine: { color: axis, width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: fg },
-      horzLine: { color: axis, width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: fg },
-    };
+    (async () => {
+      const lib = await import("lightweight-charts");
+      if (cancelled || !el.isConnected) return;
+      const {
+        createChart, CandlestickSeries, LineSeries, HistogramSeries,
+        ColorType, CrosshairMode, LineStyle,
+      } = lib;
 
-    const created: { chart: IChartApi; key: string }[] = [];
+      const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
+      const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
+      const fg = cssVar(el, "--foreground", "#fff");
+      const bull = cssVar(el, "--bull", "#22FF88");
+      const bear = cssVar(el, "--bear", "#FF3B5C");
+      const c1 = cssVar(el, "--chart-1", "#7AA2FF");
+      const c2 = cssVar(el, "--chart-2", "#FFB347");
+      const c3 = cssVar(el, "--chart-3", "#C29BFF");
+      const c4 = cssVar(el, "--chart-4", "#5EE4D1");
 
-    // === Main ===
-    const main = createChart(el, {
-      width: el.clientWidth, height: mainH,
-      layout: baseLayout,
-      grid: baseGrid,
-      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.08 } },
-      timeScale: { borderVisible: false, timeVisible: false, secondsVisible: false },
-      crosshair: baseCrosshair,
-    });
-    created.push({ chart: main, key: "main" });
+      const baseLayout = {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: axis,
+        fontFamily: "ui-monospace, monospace",
+        attributionLogo: false,
+      } as const;
+      const baseGrid = {
+        vertLines: { visible: false },
+        horzLines: { color: grid, style: LineStyle.Dotted },
+      };
+      const baseCrosshair = {
+        mode: CrosshairMode.Magnet,
+        vertLine: { color: axis, width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: fg },
+        horzLine: { color: axis, width: 1 as const, style: LineStyle.Dashed, labelBackgroundColor: fg },
+      };
 
-    const candles = main.addSeries(CandlestickSeries, {
-      upColor: bull, downColor: bear,
-      borderUpColor: bull, borderDownColor: bear,
-      wickUpColor: bull, wickDownColor: bear,
-      priceLineColor: lastChange >= 0 ? bull : bear,
-      priceLineStyle: LineStyle.Dotted,
-    });
-    candleSeriesRef.current = candles;
+      const created: { chart: IChartApi; key: string }[] = [];
 
-    const candleData = closes.map((c, i) => ({
-      time: data.t[i] as UTCTimestamp,
-      open: opens[i], high: highs[i], low: lows[i], close: c,
-    }));
-    candles.setData(candleData);
-
-    ohlcMapRef.current = new Map(
-      data.t.map((t, i) => [t, { o: opens[i], h: highs[i], l: lows[i], c: closes[i], v: vols[i] }]),
-    );
-
-    // Overlays
-    const addLine = (color: string, vals: number[], width: 1 | 2 = 1, dashed = false) => {
-      const s = main.addSeries(LineSeries, {
-        color, lineWidth: width,
-        lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
-        priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
-      });
-      s.setData(vals.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v }))
-        .filter((p) => Number.isFinite(p.value)));
-    };
-
-    if (overlays.includes("ema20")) addLine(c1, ind.ema20, 2);
-    if (overlays.includes("ema50")) addLine(c2, ind.ema50, 1);
-    if (overlays.includes("sma200")) addLine(c3, ind.sma200, 1, true);
-    if (overlays.includes("bbands")) {
-      const upArr = ind.bb.map((b) => b == null ? NaN : b.upper);
-      const loArr = ind.bb.map((b) => b == null ? NaN : b.lower);
-      addLine(c4, upArr, 1, true);
-      addLine(c4, loArr, 1, true);
-    }
-
-    // Smart zones as price lines on candles
-    zonePriceLinesRef.current = [];
-    for (const z of zones) {
-      const mid = (z.high + z.low) / 2;
-      const color = z.type === "support" ? bull : bear;
-      const pl = candles.createPriceLine({
-        price: mid, color, lineWidth: 1, lineStyle: LineStyle.Dotted,
-        axisLabelVisible: true,
-        title: `${z.type === "support" ? "S" : "R"} ${z.touches}×`,
-      });
-      zonePriceLinesRef.current.push(pl);
-    }
-
-    // Hover wiring
-    main.subscribeCrosshairMove((param) => {
-      if (!param.time) { setHover(null); return; }
-      const rec = ohlcMapRef.current.get(param.time as number);
-      if (!rec) { setHover(null); return; }
-      setHover({ o: rec.o, h: rec.h, l: rec.l, c: rec.c, v: rec.v, t: param.time as number });
-    });
-
-    // === Subcharts ===
-    for (const sub of subcharts) {
-      const target = subRefs.current[sub];
-      if (!target) continue;
-      const subChart = createChart(target, {
-        width: target.clientWidth, height: subH,
+      // === Main ===
+      const main = createChart(el, {
+        width: el.clientWidth || 600, height: mainH,
         layout: baseLayout,
         grid: baseGrid,
-        rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.15, bottom: 0.08 } },
-        timeScale: { borderVisible: false, timeVisible: false, visible: sub === subcharts[subcharts.length - 1] },
+        rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.08 } },
+        timeScale: { borderVisible: false, timeVisible: false, secondsVisible: false },
         crosshair: baseCrosshair,
       });
-      created.push({ chart: subChart, key: sub });
+      created.push({ chart: main, key: "main" });
 
-      if (sub === "volume") {
-        const v = subChart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceLineVisible: false });
-        v.setData(vols.map((vv, i) => ({
-          time: data.t[i] as UTCTimestamp,
-          value: vv,
-          color: closes[i] >= opens[i] ? bull : bear,
-        })));
-      } else if (sub === "rsi") {
-        const r = subChart.addSeries(LineSeries, {
-          color: c1, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
-          priceFormat: { type: "price", precision: 0, minMove: 1 },
-        });
-        r.setData(rsiArr.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v }))
-          .filter((p) => Number.isFinite(p.value)));
-        r.createPriceLine({ price: 70, color: bear, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
-        r.createPriceLine({ price: 30, color: bull, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
-        r.createPriceLine({ price: 50, color: axis, lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: false, title: "" });
-      } else if (sub === "macd") {
-        const hist = subChart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false });
-        hist.setData(macd.hist.map((v, i) => ({
-          time: data.t[i] as UTCTimestamp,
-          value: v,
-          color: v >= 0 ? bull : bear,
-        })));
-        const macdLine = subChart.addSeries(LineSeries, { color: c1, lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-        macdLine.setData(macd.line.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v })));
-        const sigLine = subChart.addSeries(LineSeries, { color: c2, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
-        sigLine.setData(macd.sig.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v })));
-      }
-    }
-
-    chartsRef.current = created;
-
-    // Synchronize time scales across all panes
-    const syncing = { v: false };
-    const charts = created.map((c) => c.chart);
-    const unsubs: Array<() => void> = [];
-    charts.forEach((src) => {
-      const sub = src.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-        if (!range || syncing.v) return;
-        syncing.v = true;
-        charts.forEach((tgt) => { if (tgt !== src) tgt.timeScale().setVisibleLogicalRange(range); });
-        syncing.v = false;
+      const candles = main.addSeries(CandlestickSeries, {
+        upColor: bull, downColor: bear,
+        borderUpColor: bull, borderDownColor: bear,
+        wickUpColor: bull, wickDownColor: bear,
+        priceLineColor: lastChange >= 0 ? bull : bear,
+        priceLineStyle: LineStyle.Dotted,
       });
-      // subscribeVisibleLogicalRangeChange has no explicit unsub return; cleanup via remove() below
-      unsubs.push(() => {});
-      void sub;
-    });
+      candleSeriesRef.current = candles;
 
-    main.timeScale().fitContent();
+      const candleData = closes.map((c, i) => ({
+        time: data.t[i] as UTCTimestamp,
+        open: opens[i], high: highs[i], low: lows[i], close: c,
+      }));
+      candles.setData(candleData);
 
-    // Resize observer (resize all charts on container resize)
-    const ro = new ResizeObserver((entries) => {
-      const cr = entries[0]?.contentRect;
-      if (!cr) return;
-      const w = Math.max(120, cr.width);
-      main.resize(w, mainH);
+      ohlcMapRef.current = new Map(
+        data.t.map((t, i) => [t, { o: opens[i], h: highs[i], l: lows[i], c: closes[i], v: vols[i] }]),
+      );
+
+      const addLine = (color: string, vals: number[], width: 1 | 2 = 1, dashed = false) => {
+        const s = main.addSeries(LineSeries, {
+          color, lineWidth: width,
+          lineStyle: dashed ? LineStyle.Dashed : LineStyle.Solid,
+          priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false,
+        });
+        s.setData(vals.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v }))
+          .filter((p) => Number.isFinite(p.value)));
+      };
+
+      if (overlays.includes("ema20")) addLine(c1, ind.ema20, 2);
+      if (overlays.includes("ema50")) addLine(c2, ind.ema50, 1);
+      if (overlays.includes("sma200")) addLine(c3, ind.sma200, 1, true);
+      if (overlays.includes("bbands")) {
+        const upArr = ind.bb.map((b) => b == null ? NaN : b.upper);
+        const loArr = ind.bb.map((b) => b == null ? NaN : b.lower);
+        addLine(c4, upArr, 1, true);
+        addLine(c4, loArr, 1, true);
+      }
+
+      zonePriceLinesRef.current = [];
+      for (const z of zones) {
+        const mid = (z.high + z.low) / 2;
+        const color = z.type === "support" ? bull : bear;
+        const pl = candles.createPriceLine({
+          price: mid, color, lineWidth: 1, lineStyle: LineStyle.Dotted,
+          axisLabelVisible: true,
+          title: `${z.type === "support" ? "S" : "R"} ${z.touches}×`,
+        });
+        zonePriceLinesRef.current.push(pl);
+      }
+
+      main.subscribeCrosshairMove((param) => {
+        if (!param.time) { setHover(null); return; }
+        const rec = ohlcMapRef.current.get(param.time as number);
+        if (!rec) { setHover(null); return; }
+        setHover({ o: rec.o, h: rec.h, l: rec.l, c: rec.c, v: rec.v, t: param.time as number });
+      });
+
+      // === Subcharts ===
       for (const sub of subcharts) {
         const target = subRefs.current[sub];
-        const c = created.find((x) => x.key === sub);
-        if (target && c) c.chart.resize(w, subH);
+        if (!target) continue;
+        const subChart = createChart(target, {
+          width: target.clientWidth || 600, height: subH,
+          layout: baseLayout,
+          grid: baseGrid,
+          rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.15, bottom: 0.08 } },
+          timeScale: { borderVisible: false, timeVisible: false, visible: sub === subcharts[subcharts.length - 1] },
+          crosshair: baseCrosshair,
+        });
+        created.push({ chart: subChart, key: sub });
+
+        if (sub === "volume") {
+          const v = subChart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceLineVisible: false });
+          v.setData(vols.map((vv, i) => ({
+            time: data.t[i] as UTCTimestamp,
+            value: vv,
+            color: closes[i] >= opens[i] ? bull : bear,
+          })));
+        } else if (sub === "rsi") {
+          const r = subChart.addSeries(LineSeries, {
+            color: c1, lineWidth: 2, priceLineVisible: false, lastValueVisible: false,
+            priceFormat: { type: "price", precision: 0, minMove: 1 },
+          });
+          r.setData(rsiArr.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v }))
+            .filter((p) => Number.isFinite(p.value)));
+          r.createPriceLine({ price: 70, color: bear, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "70" });
+          r.createPriceLine({ price: 30, color: bull, lineWidth: 1, lineStyle: LineStyle.Dashed, axisLabelVisible: true, title: "30" });
+          r.createPriceLine({ price: 50, color: axis, lineWidth: 1, lineStyle: LineStyle.Dotted, axisLabelVisible: false, title: "" });
+        } else if (sub === "macd") {
+          const hist = subChart.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false });
+          hist.setData(macd.hist.map((v, i) => ({
+            time: data.t[i] as UTCTimestamp,
+            value: v,
+            color: v >= 0 ? bull : bear,
+          })));
+          const macdLine = subChart.addSeries(LineSeries, { color: c1, lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+          macdLine.setData(macd.line.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v })));
+          const sigLine = subChart.addSeries(LineSeries, { color: c2, lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false });
+          sigLine.setData(macd.sig.map((v, i) => ({ time: data.t[i] as UTCTimestamp, value: v })));
+        }
       }
-    });
-    if (wrapRef.current) ro.observe(wrapRef.current);
+
+      chartsRef.current = created;
+      createdSnapshot = created;
+
+      // Sync time scales across all panes
+      const syncing = { v: false };
+      const charts = created.map((c) => c.chart);
+      charts.forEach((src) => {
+        src.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+          if (!range || syncing.v) return;
+          syncing.v = true;
+          charts.forEach((tgt) => { if (tgt !== src) tgt.timeScale().setVisibleLogicalRange(range); });
+          syncing.v = false;
+        });
+      });
+
+      main.timeScale().fitContent();
+
+      ro = new ResizeObserver((entries) => {
+        const cr = entries[0]?.contentRect;
+        if (!cr) return;
+        const w = Math.max(120, cr.width);
+        main.resize(w, mainH);
+        for (const sub of subcharts) {
+          const target = subRefs.current[sub];
+          const c = created.find((x) => x.key === sub);
+          if (target && c) c.chart.resize(w, subH);
+        }
+      });
+      if (wrapRef.current) ro.observe(wrapRef.current);
+    })();
 
     return () => {
-      ro.disconnect();
-      unsubs.forEach((fn) => fn());
-      created.forEach((c) => c.chart.remove());
+      cancelled = true;
+      ro?.disconnect();
+      createdSnapshot.forEach((c) => { try { c.chart.remove(); } catch { /* noop */ } });
       chartsRef.current = [];
       candleSeriesRef.current = null;
       zonePriceLinesRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, overlays.join(","), subcharts.join(","), showZones, mainH, subH]);
+
 
   /* ---------------- render ---------------- */
   return (

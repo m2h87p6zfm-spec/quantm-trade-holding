@@ -1,12 +1,5 @@
 import { useEffect, useRef } from "react";
-import {
-  createChart,
-  LineSeries,
-  ColorType,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-} from "lightweight-charts";
+import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 
 function resolveColor(el: HTMLElement, color: string): string {
   const m = color.match(/^var\((--[^)]+)\)$/);
@@ -17,7 +10,7 @@ function resolveColor(el: HTMLElement, color: string): string {
 
 /**
  * Tiny dependency-free sparkline backed by lightweight-charts.
- * Autosizes to its container. Pass any className for sizing.
+ * Library is dynamically imported on the client to keep SSR safe.
  */
 export function MiniSpark({
   data,
@@ -33,49 +26,72 @@ export function MiniSpark({
   const ref = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Line"> | null>(null);
+  const dataRef = useRef<number[]>(data);
+  const colorRef = useRef<string>(color);
+  const strokeRef = useRef<number>(strokeWidth);
+
+  // Keep refs current
+  dataRef.current = data;
+  colorRef.current = color;
+  strokeRef.current = strokeWidth;
 
   useEffect(() => {
     if (!ref.current) return;
-    const chart = createChart(ref.current, {
-      width: ref.current.clientWidth,
-      height: ref.current.clientHeight,
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "transparent",
-        attributionLogo: false,
-      },
-      grid: { vertLines: { visible: false }, horzLines: { visible: false } },
-      rightPriceScale: { visible: false, borderVisible: false },
-      timeScale: { visible: false, borderVisible: false },
-      crosshair: { vertLine: { visible: false }, horzLine: { visible: false } },
-      handleScroll: false,
-      handleScale: false,
-    });
-    chartRef.current = chart;
-    seriesRef.current = chart.addSeries(LineSeries, {
-      color: resolveColor(ref.current, color),
-      lineWidth: strokeWidth as 1 | 2 | 3 | 4,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    });
+    let cancelled = false;
+    let ro: ResizeObserver | undefined;
+    const el = ref.current;
 
-    const ro = new ResizeObserver((entries) => {
-      const cr = entries[0]?.contentRect;
-      if (cr) chart.resize(Math.max(20, cr.width), Math.max(16, cr.height));
-    });
-    ro.observe(ref.current);
+    (async () => {
+      const { createChart, LineSeries, ColorType } = await import("lightweight-charts");
+      if (cancelled || !el.isConnected) return;
+      const chart = createChart(el, {
+        width: el.clientWidth || 100,
+        height: el.clientHeight || 32,
+        layout: {
+          background: { type: ColorType.Solid, color: "transparent" },
+          textColor: "transparent",
+          attributionLogo: false,
+        },
+        grid: { vertLines: { visible: false }, horzLines: { visible: false } },
+        rightPriceScale: { visible: false, borderVisible: false },
+        timeScale: { visible: false, borderVisible: false },
+        crosshair: { vertLine: { visible: false }, horzLine: { visible: false } },
+        handleScroll: false,
+        handleScale: false,
+      });
+      chartRef.current = chart;
+      const series = chart.addSeries(LineSeries, {
+        color: resolveColor(el, colorRef.current),
+        lineWidth: strokeRef.current as 1 | 2 | 3 | 4,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      seriesRef.current = series;
+      series.setData(
+        dataRef.current.map((v, i) => ({
+          time: (1_700_000_000 + i * 86_400) as UTCTimestamp,
+          value: v,
+        })),
+      );
+      chart.timeScale().fitContent();
+
+      ro = new ResizeObserver((entries) => {
+        const cr = entries[0]?.contentRect;
+        if (cr) chart.resize(Math.max(20, cr.width), Math.max(16, cr.height));
+      });
+      ro.observe(el);
+    })();
 
     return () => {
-      ro.disconnect();
-      chart.remove();
+      cancelled = true;
+      ro?.disconnect();
+      chartRef.current?.remove();
       chartRef.current = null;
       seriesRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update color when prop changes
   useEffect(() => {
     if (!ref.current || !seriesRef.current) return;
     seriesRef.current.applyOptions({
@@ -84,14 +100,14 @@ export function MiniSpark({
     });
   }, [color, strokeWidth]);
 
-  // Update data when it changes
   useEffect(() => {
     if (!seriesRef.current || !chartRef.current) return;
-    const points = data.map((v, i) => ({
-      time: (1_700_000_000 + i * 86_400) as UTCTimestamp,
-      value: v,
-    }));
-    seriesRef.current.setData(points);
+    seriesRef.current.setData(
+      data.map((v, i) => ({
+        time: (1_700_000_000 + i * 86_400) as UTCTimestamp,
+        value: v,
+      })),
+    );
     chartRef.current.timeScale().fitContent();
   }, [data]);
 
