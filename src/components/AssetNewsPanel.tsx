@@ -252,7 +252,7 @@ function GatedHint() {
         </p>
       </div>
       <Link
-        to="/account"
+        to="/preise"
         className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
       >
         Pro freischalten
