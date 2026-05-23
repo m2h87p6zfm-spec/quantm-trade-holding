@@ -44,6 +44,12 @@ function AiCommentary({ query, symbol, indicators, regime, cachedText, onDone }:
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (cachedText !== undefined) {
+      setText(cachedText);
+      setDone(true);
+      setError(null);
+      return;
+    }
     if (!query) return;
     const controller = new AbortController();
     abortRef.current?.abort();
@@ -51,6 +57,7 @@ function AiCommentary({ query, symbol, indicators, regime, cachedText, onDone }:
     setText("");
     setError(null);
     setDone(false);
+
 
     (async () => {
       try {
