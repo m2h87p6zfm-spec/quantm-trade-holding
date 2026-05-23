@@ -6,7 +6,6 @@ import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
 import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useSubscription } from "@/hooks/useSubscription";
-import { Link as RLink } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
