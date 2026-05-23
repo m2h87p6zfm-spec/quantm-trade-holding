@@ -987,6 +987,7 @@ function WorldMap({
   world,
   geo,
   selected,
+  selectedEvent,
   hovered,
   layers,
   onHover,
@@ -996,6 +997,7 @@ function WorldMap({
   world: WorldGeo | null;
   geo: { path: ReturnType<typeof geoPath>; projection: ReturnType<typeof geoNaturalEarth1> };
   selected: CountryIntel | null;
+  selectedEvent: GlobalEvent | null;
   hovered: string | null;
   layers: LayerToggles;
   onHover: (n: string | null) => void;
