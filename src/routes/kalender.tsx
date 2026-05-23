@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { upcomingEvents, timeUntil, type EconEvent } from "@/lib/calendar";
-import { Calendar, AlertTriangle, Activity, ChevronRight } from "lucide-react";
+import { Calendar, AlertTriangle, Activity, ChevronRight, X } from "lucide-react";
 
 import { FeatureGate } from "@/lib/featureGate";
 
