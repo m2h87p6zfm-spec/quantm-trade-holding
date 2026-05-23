@@ -66,7 +66,7 @@ function LegalModal({ onClose }: { onClose: () => void }) {
           <section>
             <h3 className="font-semibold text-foreground mb-1">1. Keine Anlageberatung, keine Empfehlung</h3>
             <p>
-              Apex Trades (nachfolgend „die Plattform") ist ein rein <strong>informations- und bildungsbasiertes</strong> Werkzeug.
+              Quantm Trade (nachfolgend „die Plattform") ist ein rein <strong>informations- und bildungsbasiertes</strong> Werkzeug.
               Sämtliche dargestellten Inhalte — einschließlich Kursanalysen, statistischer Signale, Quant-Scores, KI-Ausgaben,
               Broker-Konsens-Anzeigen, „BUY / SELL / HOLD"-Verdikte, Watchlists, Heatmaps, Trade-Setups und Portfolio-Bewertungen —
               stellen <strong>keine Anlageberatung, Vermögensverwaltung, Finanzanalyse i.S.d. § 85 WpHG, Steuerberatung oder
@@ -99,7 +99,7 @@ function LegalModal({ onClose }: { onClose: () => void }) {
           <section>
             <h3 className="font-semibold text-foreground mb-1">4. Haftungsausschluss</h3>
             <p>
-              Apex Trades, deren Betreiber, Entwickler, verbundene Unternehmen, Lizenzgeber und Datenanbieter übernehmen
+              Quantm Trade, deren Betreiber, Entwickler, verbundene Unternehmen, Lizenzgeber und Datenanbieter übernehmen
               <strong> keinerlei Haftung</strong> für direkte, indirekte, mittelbare oder Folgeschäden — insbesondere für
               Vermögensschäden, entgangenen Gewinn, Daten- oder Reputationsverluste —, die aus der Nutzung, dem Vertrauen auf
               dargestellte Informationen oder der Unmöglichkeit der Nutzung entstehen. Dies gilt im weitesten gesetzlich

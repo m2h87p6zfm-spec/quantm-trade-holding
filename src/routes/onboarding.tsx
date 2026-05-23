@@ -4,7 +4,7 @@ import { OnboardingGate } from "@/components/OnboardingGate";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Onboarding — Apex Trades" },
+      { title: "Onboarding — Quantm Trade" },
       { name: "description", content: "Personalisiere deine Apex AI Trading-Plattform." },
     ],
   }),

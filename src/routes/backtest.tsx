@@ -10,7 +10,7 @@ export const Route = createFileRoute("/backtest")({
   component: BacktestPage,
   head: () => ({
     meta: [
-      { title: "Backtest Lab — Apex Trades" },
+      { title: "Backtest Lab — Quantm Trade" },
       { name: "description", content: "Score-basierte Strategien historisch testen mit Equity-Curve, Sharpe und Drawdown." },
     ],
   }),

@@ -19,7 +19,7 @@ export const Route = createFileRoute("/ai-learning")({
   ),
   head: () => ({
     meta: [
-      { title: "AI Learning · Apex Trades" },
+      { title: "AI Learning · Quantm Trade" },
       { name: "description", content: "Sieh, wie der statistische Analyst aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration, Self-Corrections und Performance pro Marktregime." },
     ],
   }),

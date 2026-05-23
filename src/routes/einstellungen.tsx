@@ -26,7 +26,7 @@ export const Route = createFileRoute("/einstellungen")({
   component: SettingsPage,
   head: () => ({
     meta: [
-      { title: "Einstellungen — Apex Trades" },
+      { title: "Einstellungen — Quantm Trade" },
       { name: "description", content: "Personalisiere Risikoprofil, Darstellung, Benachrichtigungen und Trading-Defaults." },
     ],
   }),

@@ -1,4 +1,4 @@
-// Apex Trades Logo — Konzept "Trained Peak":
+// Quantm Trade Logo — Konzept "Trained Peak":
 // Hochkontrast-Silhouette eines Gipfels mit einer Trade-Trajektorie, die
 // den Apex trifft. Optional ein sehr subtiler monochromer "Sweep" entlang
 // der Trade-Linie — läuft NUR beim Hover (immer aktiv) oder einmalig bei
@@ -16,7 +16,7 @@ export function ApexLogo({ className = "h-4 w-4", animate = false }: Props) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`apex-logo group ${animate ? "apex-logo--animate" : ""} ${className}`}
-      aria-label="Apex Trades"
+      aria-label="Quantm Trade"
     >
       <style>{`
         .apex-logo .apex-trail {

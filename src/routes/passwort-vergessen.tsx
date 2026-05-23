@@ -13,7 +13,7 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/passwort-vergessen")({
   head: () => ({
     meta: [
-      { title: "Passwort vergessen — Apex Trades" },
+      { title: "Passwort vergessen — Quantm Trade" },
     ],
   }),
   component: ForgotPage,
@@ -40,7 +40,7 @@ function ForgotPage() {
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8 text-foreground/80 hover:text-foreground">
           <ApexLogo className="h-7 w-7" />
-          <span className="font-semibold tracking-tight">Apex Trades</span>
+          <span className="font-semibold tracking-tight">Quantm Trade</span>
         </Link>
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           {sent ? (

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
   head: () => ({
     meta: [
-      { title: "Portfolio Tracker — Apex Trades" },
+      { title: "Portfolio Tracker — Quantm Trade" },
       {
         name: "description",
         content:

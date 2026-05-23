@@ -13,7 +13,7 @@ const COLLAPSED_SOURCES_COUNT = 8;
 export const Route = createFileRoute("/news")({
   head: () => ({
     meta: [
-      { title: "Professional Newsroom — Apex Trades" },
+      { title: "Professional Newsroom — Quantm Trade" },
       { name: "description", content: "Tier-1 Marktnachrichten von Reuters, Bloomberg, Yahoo Finance, CNBC und Financial Times — gefiltert nach deinem Portfolio." },
     ],
   }),

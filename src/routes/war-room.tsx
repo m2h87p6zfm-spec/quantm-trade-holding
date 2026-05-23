@@ -14,7 +14,7 @@ export const Route = createFileRoute("/war-room")({
   component: WarRoom,
   head: () => ({
     meta: [
-      { title: "War Room — Apex Trades" },
+      { title: "War Room — Quantm Trade" },
       { name: "description", content: "Mehrere Pro-Charts gleichzeitig: Smart-Zones, Sub-Indikatoren und Signal-Status auf einen Blick." },
     ],
   }),
