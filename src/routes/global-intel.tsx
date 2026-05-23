@@ -1226,7 +1226,8 @@ function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
 function NewsDetailModal({ item, onClose }: { item: CountryNewsItem; onClose: () => void }) {
   const meta = (AGENCY_META as Record<string, { label: string }>)[item.source] ?? { label: item.sourceLabel };
   const published = item.publishedAt ? new Date(item.publishedAt).toLocaleString("de-DE") : null;
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
       onClick={onClose}
