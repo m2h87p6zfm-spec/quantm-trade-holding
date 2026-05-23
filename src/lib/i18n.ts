@@ -36,6 +36,9 @@ const DICT: Record<Lang, Dict> = {
     // Nav — System
     "nav.pricing": "Preise & Pläne",
     "nav.catalog": "Produktkatalog",
+    "nav.screener": "Screener",
+    "nav.methodology": "Methodik",
+    "nav.about": "Über uns",
     "nav.settings": "Einstellungen",
     // Sidebar misc
     "side.tagline": "Statistical Trading Agent",
@@ -344,6 +347,9 @@ const DICT: Record<Lang, Dict> = {
     // Nav — System
     "nav.pricing": "Pricing & Plans",
     "nav.catalog": "Product Catalog",
+    "nav.screener": "Screener",
+    "nav.methodology": "Methodology",
+    "nav.about": "About",
     "nav.settings": "Settings",
     // Sidebar misc
     "side.tagline": "Statistical Trading Agent",
