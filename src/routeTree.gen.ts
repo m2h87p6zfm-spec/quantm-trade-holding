@@ -18,6 +18,7 @@ import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PicksRouteImport } from './routes/picks'
 import { Route as PasswortZuruecksetzenRouteImport } from './routes/passwort-zuruecksetzen'
 import { Route as PasswortVergessenRouteImport } from './routes/passwort-vergessen'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as LoginRouteImport } from './routes/login'
@@ -94,6 +95,11 @@ const PasswortZuruecksetzenRoute = PasswortZuruecksetzenRouteImport.update({
 const PasswortVergessenRoute = PasswortVergessenRouteImport.update({
   id: '/passwort-vergessen',
   path: '/passwort-vergessen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewsRoute = NewsRouteImport.update({
@@ -276,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
   '/picks': typeof PicksRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
   '/picks': typeof PicksRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
   '/news': typeof NewsRoute
+  '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
   '/passwort-zuruecksetzen': typeof PasswortZuruecksetzenRoute
   '/picks': typeof PicksRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maerkte'
     | '/news'
+    | '/onboarding'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
     | '/picks'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maerkte'
     | '/news'
+    | '/onboarding'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
     | '/picks'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/maerkte'
     | '/news'
+    | '/onboarding'
     | '/passwort-vergessen'
     | '/passwort-zuruecksetzen'
     | '/picks'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MaerkteRoute: typeof MaerkteRoute
   NewsRoute: typeof NewsRoute
+  OnboardingRoute: typeof OnboardingRoute
   PasswortVergessenRoute: typeof PasswortVergessenRoute
   PasswortZuruecksetzenRoute: typeof PasswortZuruecksetzenRoute
   PicksRoute: typeof PicksRoute
@@ -629,6 +642,13 @@ declare module '@tanstack/react-router' {
       path: '/passwort-vergessen'
       fullPath: '/passwort-vergessen'
       preLoaderRoute: typeof PasswortVergessenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/news': {
@@ -874,6 +894,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MaerkteRoute: MaerkteRoute,
   NewsRoute: NewsRoute,
+  OnboardingRoute: OnboardingRoute,
   PasswortVergessenRoute: PasswortVergessenRoute,
   PasswortZuruecksetzenRoute: PasswortZuruecksetzenRoute,
   PicksRoute: PicksRoute,
