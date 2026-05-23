@@ -38,7 +38,7 @@ type StoredSettings = {
   soundOnAlert: boolean;
   defaultTakeProfit: number;
   defaultStopLoss: number;
-  language: "de" | "en" | "fr" | "es" | "ar";
+  language: "en" | "zh" | "hi" | "es" | "fr" | "ar" | "bn" | "pt" | "ru" | "ur" | "id" | "de" | "ja" | "tr" | "ko";
   hideLowConfidence: boolean;
   experienceLevel: ExperienceLevel;
   notifBreakingNews: boolean;
