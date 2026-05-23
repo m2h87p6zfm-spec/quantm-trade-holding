@@ -35,7 +35,7 @@ export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
 
 
-type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string };
+type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string; cachedText?: string; convId?: string };
 
 function AiCommentary({ query, symbol, indicators, regime, cachedText, onDone }: { query: string; symbol?: string; indicators?: IndicatorSet | null; regime?: MarketRegime; cachedText?: string; onDone?: (text: string) => void }) {
   const [text, setText] = useState("");
