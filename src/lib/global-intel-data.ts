@@ -728,13 +728,182 @@ export const COUNTRIES: CountryIntel[] = [
 export const COUNTRIES_BY_NAME = new Map<string, CountryIntel>(COUNTRIES.map((c) => [c.name, c]));
 
 export const RISK_COLOR: Record<RiskLevel, string> = {
-  low: "#16a34a",
-  medium: "#eab308",
-  high: "#dc2626",
+  // Institutional tones — muted, not traffic-light
+  low: "oklch(0.62 0.09 155)",   // soft green
+  medium: "oklch(0.74 0.10 78)", // soft amber
+  high: "oklch(0.62 0.13 25)",   // soft red
 };
 
 export const RISK_LABEL: Record<RiskLevel, string> = {
   low: "Stable",
-  medium: "Neutral",
-  high: "High Risk",
+  medium: "Watch",
+  high: "Elevated",
+};
+
+export const NEUTRAL_LAND = "oklch(0.30 0.012 260)";
+
+/* ───────── Country coordinates (approx) [lng, lat] ───────── */
+export const COUNTRY_COORDS: Record<string, [number, number]> = {
+  "United States of America": [-98, 39],
+  China: [104, 35],
+  Germany: [10.4, 51.2],
+  Japan: [138, 36],
+  "United Kingdom": [-2, 54],
+  France: [2.3, 46.6],
+  India: [78, 22],
+  Russia: [95, 61],
+  Brazil: [-53, -10],
+  Canada: [-106, 56],
+  "Saudi Arabia": [45, 24],
+  "South Korea": [128, 36.5],
+  Mexico: [-102, 23],
+  Australia: [134, -25],
+  Argentina: [-65, -34],
+  Ukraine: [31.2, 49],
+  Iran: [53, 32],
+  Israel: [34.8, 31.5],
+  Taiwan: [121, 23.7],
+  "North Korea": [127, 40],
+  Yemen: [44, 15.5],
+};
+
+/* ───────── Global Events (clickable dots) ───────── */
+export type EventType = "negative" | "positive" | "watch";
+export type GlobalEvent = {
+  id: string;
+  type: EventType;
+  category: string;
+  title: string;
+  location: string;
+  coords: [number, number];
+  date: string;
+  summary: string;
+  impact: { fx?: string; commodities?: string; equities?: string; regions?: string };
+};
+
+export const EVENTS: GlobalEvent[] = [
+  { id: "ukr-war", type: "negative", category: "Conflict", title: "Ukraine–Russia conflict", location: "Eastern Europe", coords: [31.2, 49], date: "Ongoing", summary: "Sustained war reshapes European energy supply, defence spending and grain exports.", impact: { commodities: "Wheat, gas, oil premium", fx: "EUR risk premium", regions: "EU industry" } },
+  { id: "mideast", type: "negative", category: "Conflict", title: "Middle East tensions", location: "Israel / Gaza", coords: [34.8, 31.5], date: "Ongoing", summary: "Regional escalation risk keeps an oil risk premium and weighs on EM risk assets.", impact: { commodities: "Brent risk premium", fx: "Safe-haven flows" } },
+  { id: "redsea", type: "negative", category: "Supply Chain", title: "Red Sea shipping disruption", location: "Bab el-Mandeb", coords: [43, 13], date: "Ongoing", summary: "Container traffic rerouted around the Cape — longer transit, higher freight rates.", impact: { commodities: "Container rates +", equities: "Shipping, retailers" } },
+  { id: "taiwan", type: "watch", category: "Geopolitics", title: "Taiwan Strait risk", location: "Taiwan", coords: [121, 23.7], date: "Watch", summary: "Strategic chokepoint for global semiconductors — any flare-up = global tech tail risk.", impact: { equities: "Semis, AI supply chain" } },
+  { id: "us-pol", type: "watch", category: "Politics", title: "US policy cycle", location: "Washington, DC", coords: [-77, 38.9], date: "2025–26", summary: "Trade, tariff and tax policy uncertainty — drives USD, Treasury and risk-asset positioning.", impact: { fx: "DXY", equities: "Sector rotation" } },
+  { id: "ai-capex", type: "positive", category: "Capex", title: "AI capex super-cycle", location: "US West Coast", coords: [-122, 37.4], date: "2024–", summary: "Hyperscaler AI investment lifts semis, power, cooling and infrastructure earnings.", impact: { equities: "Semis, utilities, industrials" } },
+  { id: "india-growth", type: "positive", category: "Growth", title: "India structural growth", location: "Mumbai", coords: [72.8, 19], date: "Ongoing", summary: "Fastest-growing major economy — pulls in EM equity inflows; valuations stretched.", impact: { equities: "Nifty/Sensex", fx: "INR" } },
+  { id: "opec", type: "watch", category: "Commodities", title: "OPEC+ production policy", location: "Riyadh", coords: [46.7, 24.7], date: "Recurring", summary: "Saudi/Russia output decisions anchor the Brent floor and shape inflation paths.", impact: { commodities: "Brent crude", fx: "Petro-FX" } },
+  { id: "boj-exit", type: "positive", category: "Policy", title: "BoJ policy normalisation", location: "Tokyo", coords: [139.7, 35.7], date: "2024–", summary: "End of negative rates reshapes global carry trades and JGB demand.", impact: { fx: "USD/JPY carry", equities: "Banks, Nikkei" } },
+  { id: "milei", type: "positive", category: "Reform", title: "Argentina reform program", location: "Buenos Aires", coords: [-58.4, -34.6], date: "2023–", summary: "Aggressive disinflation + liberalisation — Merval rallies in USD, sovereign spreads tighten.", impact: { equities: "Merval", fx: "ARS volatile" } },
+  { id: "de-ind", type: "negative", category: "Economy", title: "German industrial stagnation", location: "Berlin", coords: [13.4, 52.5], date: "Structural", summary: "High energy costs + China exposure keep the eurozone's engine in low gear.", impact: { equities: "Autos, Chemie", fx: "EUR drag" } },
+  { id: "fr-pol", type: "watch", category: "Politics", title: "France fiscal & political risk", location: "Paris", coords: [2.35, 48.85], date: "Ongoing", summary: "Wider OAT–Bund spreads — markets price periphery-like risk into the EU core.", impact: { fx: "EUR", equities: "French banks" } },
+  { id: "cn-prop", type: "negative", category: "Economy", title: "China property deleveraging", location: "Beijing", coords: [116.4, 39.9], date: "2021–", summary: "Structural housing slowdown caps Chinese demand for industrial metals and consumption.", impact: { commodities: "Iron ore, copper", equities: "HSI" } },
+  { id: "kr-chips", type: "positive", category: "Cycle", title: "Memory chip up-cycle", location: "Seoul", coords: [127, 37.5], date: "2024–", summary: "Samsung & SK Hynix benefit from HBM/AI memory demand — proxy for global tech capex.", impact: { equities: "KOSPI, semis" } },
+];
+
+/* ───────── Trade & supply chain flows ───────── */
+export type RouteStatus = "stable" | "tense" | "disrupted";
+export type TradeFlow = {
+  id: string;
+  kind: "trade" | "energy" | "commodity" | "supply";
+  label: string;
+  from: [number, number];
+  to: [number, number];
+  status: RouteStatus;
+  note: string;
+};
+
+export const TRADE_FLOWS: TradeFlow[] = [
+  { id: "us-cn-pacific", kind: "trade", label: "Trans-Pacific trade", from: [-118, 34], to: [121.5, 31.2], status: "tense", note: "Tariff & tech-export controls weigh on flows." },
+  { id: "hormuz-asia", kind: "energy", label: "Gulf → Asia crude", from: [56, 26.5], to: [103.8, 1.3], status: "tense", note: "Strait of Hormuz risk premium on Brent." },
+  { id: "redsea-suez", kind: "supply", label: "Red Sea / Suez", from: [43, 13], to: [32.5, 30], status: "disrupted", note: "Container traffic rerouted around the Cape." },
+  { id: "ru-eu-gas", kind: "energy", label: "RU → EU gas (legacy)", from: [37.6, 55.7], to: [13.4, 52.5], status: "disrupted", note: "Pipeline flows collapsed; EU depends on LNG." },
+  { id: "ru-asia-oil", kind: "energy", label: "RU → India/China crude", from: [60, 60], to: [78, 22], status: "stable", note: "Shadow-fleet routing supports discounted Urals." },
+  { id: "sa-eu", kind: "energy", label: "Saudi → Europe crude", from: [46, 24], to: [2.3, 46.6], status: "stable", note: "Replacing Russian barrels into the EU." },
+  { id: "us-mx-near", kind: "trade", label: "US ↔ Mexico nearshoring", from: [-100, 28], to: [-97, 38], status: "stable", note: "USMCA-driven FDI from China to Mexico." },
+  { id: "br-cn-soy", kind: "commodity", label: "Brazil → China soy/iron", from: [-53, -10], to: [121.5, 31.2], status: "stable", note: "Backbone of Chinese food & steel input demand." },
+  { id: "au-cn-iron", kind: "commodity", label: "Australia → China iron ore", from: [115, -25], to: [121.5, 31.2], status: "stable", note: "Largest single bulk-trade lane globally." },
+  { id: "asia-us-chips", kind: "supply", label: "TW/KR → US semiconductors", from: [125, 30], to: [-122, 37.4], status: "stable", note: "Critical AI/tech supply chain." },
+];
+
+/* ───────── Geopolitical tension lines ───────── */
+export type Tension = {
+  id: string;
+  from: string;
+  to: string;
+  level: RiskLevel;
+  topic: string;
+  impact: string;
+};
+
+export const TENSIONS: Tension[] = [
+  { id: "us-cn", from: "United States of America", to: "China", level: "high", topic: "Trade / chips / Taiwan", impact: "Semis, global risk sentiment" },
+  { id: "us-ru", from: "United States of America", to: "Russia", level: "high", topic: "Sanctions / Ukraine", impact: "Energy, defence, FX" },
+  { id: "ru-uk", from: "Russia", to: "Ukraine", level: "high", topic: "Active conflict", impact: "Grains, gas, EU risk premium" },
+  { id: "cn-in", from: "China", to: "India", level: "medium", topic: "Border friction", impact: "Asian risk sentiment" },
+  { id: "sa-ir", from: "Saudi Arabia", to: "Iran", level: "medium", topic: "Regional rivalry", impact: "Brent risk premium" },
+  { id: "kp-kr", from: "North Korea", to: "South Korea", level: "medium", topic: "Missile tests / posture", impact: "KOSPI tail risk" },
+  { id: "is-ir", from: "Israel", to: "Iran", level: "high", topic: "Direct confrontation risk", impact: "Oil, safe-haven flows" },
+];
+
+/* ───────── Market intelligence feed ───────── */
+export type FeedItem = {
+  id: string;
+  time: string;
+  category: "FX" | "Commodities" | "Equities" | "Macro" | "Geopolitics" | "Supply";
+  title: string;
+  body: string;
+  impact: RiskLevel;
+};
+
+export const MARKET_FEED: FeedItem[] = [
+  { id: "f1", time: "Just now", category: "FX", title: "DXY firm above 105", body: "Sticky US data keeps dollar bid — EM FX and JPY pressured.", impact: "medium" },
+  { id: "f2", time: "12m", category: "Commodities", title: "Brent holds risk premium", body: "Middle-East tail risk + OPEC+ discipline support oil despite weak China demand.", impact: "medium" },
+  { id: "f3", time: "34m", category: "Equities", title: "AI capex narrative intact", body: "Semis lead US equities; rotation into power & infrastructure names continues.", impact: "low" },
+  { id: "f4", time: "1h", category: "Supply", title: "Red Sea reroutes persist", body: "Container freight elevated — watch for second-round goods inflation.", impact: "high" },
+  { id: "f5", time: "2h", category: "Geopolitics", title: "US–China tech controls widen", body: "New export restrictions on advanced equipment — semi supply chain repriced.", impact: "high" },
+  { id: "f6", time: "3h", category: "Macro", title: "BoJ signals patience", body: "Yen weakness persists — global carry trades crowded.", impact: "medium" },
+  { id: "f7", time: "5h", category: "Equities", title: "European banks under pressure", body: "French OAT spreads widen — periphery risk creeps into core.", impact: "medium" },
+];
+
+/* ───────── Country extras (institutional layer) ───────── */
+export type CountryExtras = {
+  influenceScore: number; // 1–10
+  influenceWhy: string;
+  globalRole: string;
+  strengthIndex: {
+    government: "Strong" | "Moderate" | "Weak";
+    policy: "High" | "Medium" | "Low";
+    economy: "Strong" | "Medium" | "Weak";
+    geopoliticalStability: number; // 1–10
+    investorConfidence: "High" | "Medium" | "Low";
+  };
+  transmission: string[];
+};
+
+export const COUNTRY_EXTRAS: Record<string, CountryExtras> = {
+  "United States of America": { influenceScore: 10, influenceWhy: "Reserve currency, deepest capital markets, global rate-setter via the Fed.", globalRole: "Sets global liquidity, risk appetite and the price of money.", strengthIndex: { government: "Strong", policy: "Medium", economy: "Strong", geopoliticalStability: 7, investorConfidence: "High" }, transmission: ["Fed policy → global liquidity and EM capital flows.", "USD strength → commodity prices and EM debt sustainability.", "S&P 500 → global equity risk sentiment."] },
+  China: { influenceScore: 9, influenceWhy: "Marginal buyer of industrial commodities; core node in global manufacturing.", globalRole: "Drives commodity demand and global goods-price disinflation.", strengthIndex: { government: "Strong", policy: "Medium", economy: "Medium", geopoliticalStability: 5, investorConfidence: "Medium" }, transmission: ["Property + credit cycle → iron ore, copper, steel.", "Export prices → global goods CPI.", "CNY fixing → Asian FX complex."] },
+  Germany: { influenceScore: 7, influenceWhy: "Eurozone industrial engine; bellwether for European manufacturing.", globalRole: "Barometer for the European industrial cycle.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Medium", geopoliticalStability: 7, investorConfidence: "Medium" }, transmission: ["DAX → EU equity sentiment.", "Bund yields → EU rate anchor.", "Auto/chem orders → global industrial pulse."] },
+  Japan: { influenceScore: 8, influenceWhy: "World's largest creditor; BoJ shifts move global carry & bond markets.", globalRole: "Global liquidity provider via yen-funded carry trades.", strengthIndex: { government: "Strong", policy: "High", economy: "Medium", geopoliticalStability: 8, investorConfidence: "High" }, transmission: ["BoJ policy → USD/JPY and global bond yields.", "JGB repatriation → Treasury demand.", "Yen strength → global risk-off signal."] },
+  "United Kingdom": { influenceScore: 7, influenceWhy: "Major financial centre; GBP and Gilts react to global risk and BoE policy.", globalRole: "Bridge market between US and EU; financial-services hub.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Medium", geopoliticalStability: 7, investorConfidence: "Medium" }, transmission: ["BoE expectations → GBP.", "Gilt yields → European rate cross-currents.", "London FX volumes → global liquidity."] },
+  France: { influenceScore: 6, influenceWhy: "Second-largest eurozone economy; fiscal & political risk drives EUR risk premium.", globalRole: "Sets eurozone political risk premium.", strengthIndex: { government: "Weak", policy: "Low", economy: "Medium", geopoliticalStability: 6, investorConfidence: "Medium" }, transmission: ["OAT–Bund spread → EU sovereign risk.", "CAC40 → EU luxury/credit beta.", "Politics → EUR risk premium."] },
+  India: { influenceScore: 7, influenceWhy: "Fastest-growing major economy; magnet for EM equity inflows.", globalRole: "EM growth anchor and China-diversification beneficiary.", strengthIndex: { government: "Strong", policy: "High", economy: "Strong", geopoliticalStability: 7, investorConfidence: "High" }, transmission: ["Domestic growth → EM equity flows.", "Oil/gold imports → current-account FX impact.", "Tech services → global IT spend gauge."] },
+  Russia: { influenceScore: 6, influenceWhy: "Top-tier energy and grains exporter; geopolitical tail-risk node.", globalRole: "Marginal supplier of crude, gas and wheat outside Western system.", strengthIndex: { government: "Strong", policy: "Medium", economy: "Medium", geopoliticalStability: 3, investorConfidence: "Low" }, transmission: ["Crude/gas exports → European energy prices.", "Grain exports → global food inflation.", "Geopolitics → safe-haven flows."] },
+  Brazil: { influenceScore: 6, influenceWhy: "Top supplier of iron ore, soy and sugar; high-real-rate EM benchmark.", globalRole: "LatAm sentiment and soft-commodity supplier.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Medium", geopoliticalStability: 6, investorConfidence: "Medium" }, transmission: ["BCB policy → EM carry trades.", "Iron/soy exports → China-linked flow.", "Fiscal news → BRL volatility."] },
+  Canada: { influenceScore: 5, influenceWhy: "G7 commodity exporter; high-beta proxy to the US consumer and oil.", globalRole: "US consumer proxy + crude/uranium supplier.", strengthIndex: { government: "Strong", policy: "High", economy: "Medium", geopoliticalStability: 8, investorConfidence: "High" }, transmission: ["BoC tracks Fed → CAD correlated with oil.", "WCS crude → North-American energy balance.", "Housing → consumer signal."] },
+  "Saudi Arabia": { influenceScore: 8, influenceWhy: "OPEC+ leader and swing producer — single-handedly moves Brent.", globalRole: "Sets the global oil price floor.", strengthIndex: { government: "Strong", policy: "High", economy: "Strong", geopoliticalStability: 6, investorConfidence: "Medium" }, transmission: ["OPEC+ output → Brent crude.", "PIF flows → global private markets.", "Petrodollar recycling → US Treasuries."] },
+  "South Korea": { influenceScore: 7, influenceWhy: "Backbone of global memory & AI semiconductor supply chain.", globalRole: "Leading indicator of global tech demand.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Strong", geopoliticalStability: 6, investorConfidence: "Medium" }, transmission: ["Memory pricing → global tech earnings.", "KRW → Asian risk barometer.", "Exports → global trade pulse."] },
+  Mexico: { influenceScore: 6, influenceWhy: "Nearshoring's top winner; high-real-rate EM carry favourite.", globalRole: "Industrial gateway to the US market.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Medium", geopoliticalStability: 5, investorConfidence: "Medium" }, transmission: ["Banxico → MXN carry.", "USMCA flows → industrial FDI.", "Remittances → US labour proxy."] },
+  Australia: { influenceScore: 6, influenceWhy: "Largest iron ore and major LNG exporter; AUD = China-demand proxy.", globalRole: "Real-time gauge of Chinese industrial demand.", strengthIndex: { government: "Strong", policy: "High", economy: "Strong", geopoliticalStability: 8, investorConfidence: "High" }, transmission: ["Iron ore → AUD.", "LNG exports → Asian energy balance.", "RBA → AUD/USD vs Fed."] },
+  Argentina: { influenceScore: 4, influenceWhy: "Frontier reform story; influences EM risk premium and sovereign spreads.", globalRole: "EM reform bellwether; lithium & soy supplier.", strengthIndex: { government: "Moderate", policy: "Medium", economy: "Weak", geopoliticalStability: 5, investorConfidence: "Medium" }, transmission: ["Disinflation pace → sovereign spreads.", "Lithium → battery supply chain.", "FX reserves → EM contagion risk."] },
+};
+
+export const EVENT_COLOR: Record<EventType, string> = {
+  negative: "oklch(0.62 0.13 25)",
+  positive: "oklch(0.62 0.09 155)",
+  watch: "oklch(0.74 0.10 78)",
+};
+
+export const ROUTE_COLOR: Record<RouteStatus, string> = {
+  stable: "oklch(0.65 0.06 200)",
+  tense: "oklch(0.74 0.10 78)",
+  disrupted: "oklch(0.62 0.13 25)",
 };
