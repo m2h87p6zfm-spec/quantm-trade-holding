@@ -154,9 +154,9 @@ function PortfolioPage() {
           <Wallet className="h-5 w-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Portfolio Tracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("page.portfolio.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Live-P&L · Risk Score · Sektor-Allokation · KI-gestützte Insights
+            {t("page.portfolio.subtitle")}
           </p>
         </div>
         <div className="text-xs text-muted-foreground">
