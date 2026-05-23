@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useQueryClient } from "@tanstack/react-query";
-import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock } from "lucide-react";
+import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock, MessageSquarePlus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
