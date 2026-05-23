@@ -463,14 +463,14 @@ export function OnboardingGate() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            onClick={() => setStep((s) => Math.max(0, s - 1 === 7 ? 6 : s - 1))}
             disabled={step === 0}
           >
             <ChevronLeft className="h-4 w-4 mr-1" /> Zurück
           </Button>
           <div className="font-mono text-[10px] tabular-nums text-muted-foreground">{progressPct}%</div>
           {step < TOTAL_STEPS - 1 ? (
-            <Button size="sm" onClick={() => setStep((s) => s + 1)} disabled={!canNext}>
+            <Button size="sm" onClick={() => setStep((s) => (s + 1 === 7 ? 8 : s + 1))} disabled={!canNext}>
               {step === 0 ? "Loslegen" : "Weiter"} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
