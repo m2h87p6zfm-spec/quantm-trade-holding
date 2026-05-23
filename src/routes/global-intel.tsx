@@ -279,31 +279,52 @@ function WorldMap({
 }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, MAP_W, MAP_H]);
+  const animRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!world || !selected) {
-      setViewBox([0, 0, MAP_W, MAP_H]);
-      return;
+    if (!world) return;
+    let target: [number, number, number, number] = [0, 0, MAP_W, MAP_H];
+    if (selected) {
+      const f = world.features.find((x) => x.properties?.name === selected.name);
+      if (f) {
+        const [[x0, y0], [x1, y1]] = path.bounds(f as any);
+        const padX = (x1 - x0) * 0.6 + 60;
+        const padY = (y1 - y0) * 0.6 + 60;
+        const w = Math.max(160, x1 - x0 + padX * 2);
+        const h = Math.max(120, y1 - y0 + padY * 2);
+        const aspect = MAP_W / MAP_H;
+        let vw = w;
+        let vh = h;
+        if (vw / vh > aspect) vh = vw / aspect;
+        else vw = vh * aspect;
+        const cx = (x0 + x1) / 2;
+        const cy = (y0 + y1) / 2;
+        target = [cx - vw / 2, cy - vh / 2, vw, vh];
+      }
     }
-    const f = world.features.find((x) => x.properties?.name === selected.name);
-    if (!f) {
-      setViewBox([0, 0, MAP_W, MAP_H]);
-      return;
-    }
-    const [[x0, y0], [x1, y1]] = path.bounds(f as any);
-    const padX = (x1 - x0) * 0.6 + 60;
-    const padY = (y1 - y0) * 0.6 + 60;
-    const w = Math.max(160, x1 - x0 + padX * 2);
-    const h = Math.max(120, y1 - y0 + padY * 2);
-    const aspect = MAP_W / MAP_H;
-    let vw = w;
-    let vh = h;
-    if (vw / vh > aspect) vh = vw / aspect;
-    else vw = vh * aspect;
-    const cx = (x0 + x1) / 2;
-    const cy = (y0 + y1) / 2;
-    setViewBox([cx - vw / 2, cy - vh / 2, vw, vh]);
-  }, [selected, world, path]);
+    // animate from current viewBox to target
+    const start = performance.now();
+    const from: [number, number, number, number] = [...viewBox] as any;
+    const dur = 650;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / dur);
+      const k = ease(t);
+      setViewBox([
+        from[0] + (target[0] - from[0]) * k,
+        from[1] + (target[1] - from[1]) * k,
+        from[2] + (target[2] - from[2]) * k,
+        from[3] + (target[3] - from[3]) * k,
+      ]);
+      if (t < 1) animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.iso2, world]);
 
   if (!world) {
     return (
