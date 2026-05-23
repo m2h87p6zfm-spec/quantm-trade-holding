@@ -11,6 +11,7 @@ import { AssetChart } from "@/components/AssetChart";
 import { BrokerAssessment } from "@/components/BrokerAssessment";
 import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
+import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 
 export const Route = createFileRoute("/produkte/$symbol")({
   head: ({ params }) => {
