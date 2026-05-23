@@ -193,16 +193,17 @@ export function OnboardingGate() {
 
   const canNext = (() => {
     if (step === 0) return true;
-    if (step === 1) return !!a.age_range;
-    if (step === 2) return !!a.experience_level;
-    if (step === 3) return !!a.trader_type;
-    if (step === 4) return !!a.preferred_currency;
-    if (step === 5) return !!a.risk_level;
-    if (step === 6) return a.markets.length > 0;
-    if (step === 7) return Object.values(a.notifications).some(Boolean);
-    if (step === 8) return a.trusted_sources.length > 0;
-    if (step === 9) return true; // starter watchlists optional
-    if (step === 10) return a.ai_transparency_ack;
+    if (step === 1) return !!a.language;
+    if (step === 2) return !!a.age_range;
+    if (step === 3) return !!a.experience_level;
+    if (step === 4) return !!a.trader_type;
+    if (step === 5) return !!a.preferred_currency;
+    if (step === 6) return !!a.risk_level;
+    if (step === 7) return a.markets.length > 0;
+    if (step === 8) return Object.values(a.notifications).some(Boolean);
+    if (step === 9) return a.trusted_sources.length > 0;
+    if (step === 10) return true; // starter watchlists optional
+    if (step === 11) return a.ai_transparency_ack;
     return false;
   })();
 
