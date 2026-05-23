@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireUserId } from "@/lib/api-auth.server";
+import { requirePro } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 type SignalRow = {
