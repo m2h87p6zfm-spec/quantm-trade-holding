@@ -415,7 +415,7 @@ type ConditionCard = {
   impact: string;
   tone: ConditionTone;
   trend: Trend;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   intensity: 1 | 2 | 3 | 4 | 5; // soft heat meter (5 bars)
 };
 
