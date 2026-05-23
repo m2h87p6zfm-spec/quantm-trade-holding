@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireUserId } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
-type Pos = { symbol: string; name?: string; qty: number; entry: number; side: "LONG" | "SHORT"; openedAt: number };
+type Pos = {
+  symbol: string;
+  name?: string;
+  qty: number;
+  entry: number;
+  side: "LONG" | "SHORT";
+  openedAt: number;
+  currentPrice?: number | null;
+  currentValue?: number | null;
+  pnlAbs?: number | null;
+  pnlPct?: number | null;
+};
 
 const SYSTEM = `Du bist PORTFOLIO PRO — ein präziser, mathematisch fundierter KI-Assistent für persönliches Aktienportfolio-Management. Du kombinierst einfache Bedienbarkeit mit professionellen Finanzkennzahlen.
 
