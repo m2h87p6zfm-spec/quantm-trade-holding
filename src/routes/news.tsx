@@ -31,15 +31,11 @@ type Item = {
   aiSummary?: string;
 };
 
-async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<Item[]> {
-  const res = await fetch("/api/public/news-sentiment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbols, sources, tier1Only: false, withSummary: true }),
-  });
-  if (!res.ok) throw new Error("News fehlgeschlagen");
-  const json = (await res.json()) as { items: Item[] };
-  return json.items ?? [];
+import { fetchNewsSentiment } from "@/lib/news-sentiment";
+
+async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<{ items: Item[]; gated: boolean }> {
+  const res = await fetchNewsSentiment({ symbols, sources, tier1Only: false, withSummary: true });
+  return { items: res.items as Item[], gated: res.gated };
 }
 
 function timeAgo(ts: number) {
