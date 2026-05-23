@@ -9,6 +9,8 @@ import type { Candles, Quote } from "@/lib/finnhub";
 import type { DecisionReport } from "@/lib/analysis";
 import type { MarketRegime } from "@/lib/ai-learning";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
+import { fetchNewsSentiment } from "@/lib/news-sentiment";
+import { useSubscription } from "@/hooks/useSubscription";
 
 type Signal = "pos" | "neg" | "neu";
 
