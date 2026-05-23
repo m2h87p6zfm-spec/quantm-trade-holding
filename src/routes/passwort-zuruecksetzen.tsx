@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/passwort-zuruecksetzen")({
   head: () => ({
@@ -17,14 +18,13 @@ export const Route = createFileRoute("/passwort-zuruecksetzen")({
 });
 
 function ResetPage() {
+  const t = useT();
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // Supabase legt nach Klick auf den Reset-Link eine "recovery"-Session an.
-  // Wir warten kurz, bis sie geladen ist, bevor wir das Formular aktivieren.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, session) => {
       if (evt === "PASSWORD_RECOVERY" || session) setReady(true);
@@ -36,13 +36,13 @@ function ResetPage() {
   }, []);
 
   const submit = async () => {
-    if (password !== confirm) return toast.error("Passwörter stimmen nicht überein");
-    if (password.length < 8) return toast.error("Mindestens 8 Zeichen");
+    if (password !== confirm) return toast.error(t("reset.mismatch"));
+    if (password.length < 8) return toast.error(t("reset.tooShort"));
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Passwort aktualisiert");
+    toast.success(t("reset.updated"));
     navigate({ to: "/konto" });
   };
 
@@ -56,27 +56,27 @@ function ResetPage() {
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="h-5 w-5 text-primary" />
-            <h1 className="text-lg font-semibold">Neues Passwort setzen</h1>
+            <h1 className="text-lg font-semibold">{t("reset.title")}</h1>
           </div>
           <p className="text-sm text-muted-foreground mb-5">
-            Wähle ein neues, sicheres Passwort (mindestens 8 Zeichen).
+            {t("reset.subtitle")}
           </p>
           {!ready ? (
             <div className="py-6 flex items-center justify-center text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Reset-Link wird geprüft…
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("reset.checking")}
             </div>
           ) : (
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label htmlFor="pwd">Neues Passwort</Label>
+                <Label htmlFor="pwd">{t("reset.new")}</Label>
                 <Input id="pwd" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="pwd2">Passwort bestätigen</Label>
+                <Label htmlFor="pwd2">{t("reset.confirm")}</Label>
                 <Input id="pwd2" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
               </div>
               <Button onClick={submit} disabled={busy || password.length < 8 || password !== confirm} className="w-full">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Passwort speichern"}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("reset.save")}
               </Button>
             </div>
           )}
