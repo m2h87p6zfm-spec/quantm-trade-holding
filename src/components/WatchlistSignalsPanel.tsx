@@ -96,12 +96,12 @@ export function WatchlistSignalsPanel() {
   if (symbols.length === 0) return null;
 
   return (
-    <div className="space-y-6 rounded-2xl bg-[#0A0A0A] p-5 text-white ring-1 ring-[#1F1F1F]" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+    <div className="space-y-8 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-[24px] font-bold leading-tight tracking-tight">Watchlist</h2>
-          <p className="mt-1 text-[13px] text-white/50">
+          <h2 className="text-[28px] font-bold leading-tight tracking-tight">Meine Watchlist</h2>
+          <p className="mt-1.5 text-[13px] text-white/50">
             <span className="tabular-nums">{symbols.length}</span> Werte • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />Live aktualisiert</span>
           </p>
         </div>
@@ -151,41 +151,12 @@ export function WatchlistSignalsPanel() {
         </div>
       </div>
 
-      {/* MARKT-STIMMUNG */}
-      <div className="rounded-xl border border-[#1F1F1F] bg-[#111111] p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-[13px] font-medium text-white/60">Markt-Stimmung</span>
-          <span className="text-[13px] text-white/40 tabular-nums">{rows.length} analysiert</span>
-        </div>
-        <div className="flex h-2 overflow-hidden rounded-full bg-[#1F1F1F]">
-          <div className="h-full bg-[#22FF88] transition-all" style={{ width: `${(counts.LONG / total) * 100}%` }} />
-          <div className="h-full bg-[#8B9EFF] transition-all" style={{ width: `${(counts.NEUTRAL / total) * 100}%` }} />
-          <div className="h-full bg-[#FF3B5C] transition-all" style={{ width: `${(counts.SHORT / total) * 100}%` }} />
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-3 text-[13px]">
-          {([
-            { k: "LONG", label: "Bullish", color: "#22FF88" },
-            { k: "NEUTRAL", label: "Neutral", color: "#8B9EFF" },
-            { k: "SHORT", label: "Bearish", color: "#FF3B5C" },
-          ] as const).map((s) => (
-            <div key={s.k} className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-white/70">
-                <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
-                {s.label}
-              </span>
-              <span className="tabular-nums font-semibold" style={{ color: s.color }}>
-                {counts[s.k]} <span className="text-white/40 font-normal">({((counts[s.k] / total) * 100).toFixed(0)}%)</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* CARD GRID */}
       {loading && <div className="py-12 text-center text-[13px] text-white/40">Lade Decision-Reports…</div>}
       {!loading && filtered.length === 0 && (
         <div className="py-12 text-center text-[13px] text-white/40">Keine Werte erfüllen die Filter.</div>
       )}
+
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((r) => {
@@ -258,7 +229,7 @@ export function WatchlistSignalsPanel() {
                 params={{ symbol: r.p.symbol }}
                 className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition hover:border-[#22FF88]/60 hover:bg-[#22FF88]/5 hover:text-[#22FF88]"
               >
-                Analyse öffnen
+                Detaillierte Analyse
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
