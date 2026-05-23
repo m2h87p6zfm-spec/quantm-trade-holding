@@ -438,6 +438,25 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             webContext = "## WEB CONTEXT\nKeine verifizierten Live-Daten verfügbar — Analyse explizit als modellbasiert kennzeichnen und im Katalysatoren-Block 'Keine signifikanten frischen Katalysatoren in den abgerufenen Quellen' schreiben.";
           }
 
+          // ===== APEX QUANT LAYER =====
+          // Detect a ticker in the latest user message, fetch 1y daily candles +
+          // SPY benchmark, run the full 40-model quant engine and inject the
+          // numerical report as a binding system context block.
+          let quantContext = "";
+          if (lastUser) {
+            const ticker = detectTicker(lastUser.content);
+            if (ticker) {
+              try {
+                const report = await analyzeTicker(ticker);
+                if (report) quantContext = renderApexReport(report);
+              } catch (e) {
+                console.warn("apex quant compute failed", e);
+              }
+            }
+          }
+          if (!quantContext) {
+            quantContext = "## LIVE-QUANT-REPORT\nKein Ticker erkannt oder Marktdaten nicht verfügbar — wenn der Nutzer eine konkrete Aktie meint, einmal nach dem Yahoo-Ticker fragen.";
+          }
 
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -448,15 +467,17 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               stream: true,
-              temperature: 0.9,
+              temperature: 0.6,
               top_p: 0.95,
               reasoning: { effort: "medium" },
               messages: [
                 { role: "system", content: SYSTEM + addendum + profileAddendum + memoryAddendum + feedbackAddendum },
                 { role: "system", content: SELF_OPTIMIZE },
+                { role: "system", content: quantContext },
                 { role: "system", content: webContext },
                 ...messages,
               ],
+            }),
             }),
 
           });
