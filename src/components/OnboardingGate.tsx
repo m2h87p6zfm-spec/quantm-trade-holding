@@ -195,7 +195,7 @@ export function OnboardingGate() {
     return false;
   })();
 
-  const finish = async () => {
+  const finish = () => {
     if (!a.experience_level || !a.trader_type || !a.preferred_currency || !a.risk_level || a.markets.length === 0) return;
     setSaving(true);
     const derived = deriveProfile(a);
@@ -218,8 +218,10 @@ export function OnboardingGate() {
       if (preset) createWatchlistWithSymbols(preset.name, preset.symbols);
     }
 
-    // 3. Persist the full trading profile to Supabase.
-    await completeOnboarding({
+    // 3. Fire-and-forget profile persistence — the hook does an optimistic
+    //    local update so we can navigate immediately without waiting for the
+    //    Supabase round-trip.
+    void completeOnboarding({
       trading_goal: derived.trading_goal,
       risk_level: a.risk_level,
       usage_frequency: derived.usage_freq,
@@ -237,7 +239,8 @@ export function OnboardingGate() {
       notif_weekly: a.notifications.notif_weekly,
       notif_breakout: a.notifications.notif_breakout,
     });
-    setSaving(false);
+
+    // Navigate immediately — AuthGate sees onboarding_completed=true from the optimistic update.
     navigate({ to: "/", replace: true });
   };
 
