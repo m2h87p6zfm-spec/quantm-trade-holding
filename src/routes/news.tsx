@@ -122,6 +122,8 @@ function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>;
 }
 
 function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<string>; onClose: () => void }) {
+  const t = useT();
+  const timeAgo = useTimeAgo();
   return (
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
@@ -134,7 +136,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-          aria-label="Schließen"
+          aria-label={t("news.close")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -146,7 +148,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
           <span>{timeAgo(it.publishedAt)}</span>
           {it.breaking && (
             <span className="inline-flex items-center gap-1 rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">
-              <Zap className="h-2.5 w-2.5" /> Breaking
+              <Zap className="h-2.5 w-2.5" /> {t("news.stat.breaking")}
             </span>
           )}
         </div>
@@ -154,20 +156,20 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
         <h2 className="mt-3 text-xl font-bold leading-tight">{it.title}</h2>
 
         <div className="mt-3 flex flex-wrap items-center gap-1">
-          {it.tickers.slice(0, 10).map((t) => {
-            const owned = portfolio.has(t);
+          {it.tickers.slice(0, 10).map((sym) => {
+            const owned = portfolio.has(sym);
             return (
               <Link
-                key={t}
+                key={sym}
                 to="/produkte/$symbol"
-                params={{ symbol: t }}
+                params={{ symbol: sym }}
                 className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold transition-colors ${
                   owned
                     ? "bg-primary/15 text-primary ring-1 ring-primary/30 hover:bg-primary/25"
                     : "bg-muted text-foreground/80 hover:text-primary"
                 }`}
               >
-                {t}
+                {sym}
               </Link>
             );
           })}
@@ -176,7 +178,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 
         <div className="mt-5 rounded-xl border border-border/60 bg-background/40 p-4">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-primary">
-            <Sparkles className="h-3 w-3" /> Artikel-Zusammenfassung
+            <Sparkles className="h-3 w-3" /> {t("news.summary")}
           </div>
           {it.aiSummary ? (
             <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/90">
@@ -184,7 +186,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Zusammenfassung wird noch generiert — bitte einen Moment Geduld und neu laden.
+              {t("news.summary.pending")}
             </p>
           )}
         </div>
@@ -195,11 +197,11 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
           rel="noopener noreferrer"
           className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
         >
-          Originalartikel öffnen ↗
+          {t("news.openOriginal")}
         </a>
 
         <p className="mt-4 text-[10px] text-muted-foreground/70">
-          Inhalte werden durch KI verdichtet und ersetzen keine Originalrecherche. Quelle: {it.publisher}.
+          {t("news.aiDisclaimer")} {it.publisher}.
         </p>
       </div>
     </div>
