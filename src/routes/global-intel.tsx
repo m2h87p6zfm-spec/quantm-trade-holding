@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { getCountryNews, type CountryNewsItem } from "@/lib/country-news.functions";
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from "d3-geo";
 import { feature } from "topojson-client";
@@ -1226,7 +1227,8 @@ function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
 function NewsDetailModal({ item, onClose }: { item: CountryNewsItem; onClose: () => void }) {
   const meta = (AGENCY_META as Record<string, { label: string }>)[item.source] ?? { label: item.sourceLabel };
   const published = item.publishedAt ? new Date(item.publishedAt).toLocaleString("de-DE") : null;
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -1266,7 +1268,8 @@ function NewsDetailModal({ item, onClose }: { item: CountryNewsItem; onClose: ()
           Quelle: {item.sourceLabel}. Inhalte stammen von vertrauenswürdigen Tier-1 Finanzmedien.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
