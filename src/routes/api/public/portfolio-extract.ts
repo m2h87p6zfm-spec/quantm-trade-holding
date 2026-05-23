@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
+import { requireUserId } from "@/lib/api-auth.server";
 
 /**
  * Extracts portfolio positions from one or more screenshots / photos
