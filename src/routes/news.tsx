@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
 import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -201,6 +202,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 }
 
 function NewsPage() {
+  const t = useT();
   const { settings, update } = useSettings();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
   const [openItem, setOpenItem] = useState<Item | null>(null);
@@ -240,10 +242,10 @@ function NewsPage() {
         <div className="mt-3 flex items-end justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">
-              Tier-1 <span className="text-gradient-primary">News Desk</span>
+              {t("page.news.title")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Reuters · Bloomberg · Yahoo Finance · CNBC · Financial Times — kuratiert nach deinem Portfolio.
+              {t("page.news.subtitle")}
             </p>
           </div>
           <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent/40">

@@ -6,37 +6,39 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { FEATURE_TIERS, tierAllows, type Feature } from "@/lib/featureGate";
+import { useT } from "@/lib/i18n";
 
-type NavItem = { title: string; url: string; icon: typeof Bell; desc?: string; feature?: Feature };
+type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: string; feature?: Feature };
 
 const quantCore: NavItem[] = [
-  { title: "Apex Picks", url: "/picks", icon: Sparkles, desc: "KI-Vorschläge" },
-  { title: "Analyse-Agent", url: "/analyse", icon: Sigma, desc: "Statistik-Engine" },
-  { title: "APEX Track Record", url: "/track-record", icon: ShieldCheck, desc: "Live-Trefferquote" },
-  { title: "Explain My Trade", url: "/explain-trade", icon: Microscope, desc: "Reverse-Backtest", feature: "risk_analytics" },
-  { title: "AI Learning", url: "/ai-learning", icon: Brain, desc: "Selbstlernend", feature: "ai_learning" },
+  { titleKey: "nav.picks", url: "/picks", icon: Sparkles, descKey: "nav.picks.desc" },
+  { titleKey: "nav.analyse", url: "/analyse", icon: Sigma, descKey: "nav.analyse.desc" },
+  { titleKey: "nav.trackRecord", url: "/track-record", icon: ShieldCheck, descKey: "nav.trackRecord.desc" },
+  { titleKey: "nav.explain", url: "/explain-trade", icon: Microscope, descKey: "nav.explain.desc", feature: "risk_analytics" },
+  { titleKey: "nav.aiLearning", url: "/ai-learning", icon: Brain, descKey: "nav.aiLearning.desc", feature: "ai_learning" },
 ];
 
 const markets: NavItem[] = [
-  { title: "Watchlist", url: "/", icon: ListOrdered },
-  { title: "Heatmap", url: "/heatmap", icon: Flame },
-  { title: "News & Sentiment", url: "/news", icon: Newspaper, feature: "news_sentiment" },
-  { title: "Global Macro", url: "/global-intel", icon: Globe2, desc: "Geopolitik-Karte" },
-  { title: "Kalender", url: "/kalender", icon: Calendar, feature: "calendar" },
+  { titleKey: "nav.watchlist", url: "/", icon: ListOrdered },
+  { titleKey: "nav.heatmap", url: "/heatmap", icon: Flame },
+  { titleKey: "nav.news", url: "/news", icon: Newspaper, feature: "news_sentiment" },
+  { titleKey: "nav.global", url: "/global-intel", icon: Globe2, descKey: "nav.global.desc" },
+  { titleKey: "nav.calendar", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
 const trading: NavItem[] = [
-  { title: "Portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
-  { title: "Smart Alerts", url: "/alerts", icon: Bell },
+  { titleKey: "nav.portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
+  { titleKey: "nav.alerts", url: "/alerts", icon: Bell },
 ];
 
 const system: NavItem[] = [
-  { title: "Preise & Pläne", url: "/preise", icon: CreditCard },
-  { title: "Produktkatalog", url: "/produkte", icon: LineChart },
-  { title: "Einstellungen", url: "/einstellungen", icon: SettingsIcon },
+  { titleKey: "nav.pricing", url: "/preise", icon: CreditCard },
+  { titleKey: "nav.catalog", url: "/produkte", icon: LineChart },
+  { titleKey: "nav.settings", url: "/einstellungen", icon: SettingsIcon },
 ];
 
 export function AppSidebar() {
+  const t = useT();
   const path = useRouterState({ select: (r) => r.location.pathname });
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -55,7 +57,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-tight">
               <span className="text-lg font-bold tracking-tight">Apex <span className="text-gradient-gold">Trades</span></span>
-              <span className="text-[11px] text-muted-foreground">Statistical Trading Agent</span>
+              <span className="text-[11px] text-muted-foreground">{t("side.tagline")}</span>
             </div>
           )}
         </div>
@@ -63,10 +65,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {/* Quant Core — der Grundbaustein der App, visuell hervorgehoben */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/80">
-            <TrendingUp className="mr-1.5 h-3 w-3" /> Quant Core
+            <TrendingUp className="mr-1.5 h-3 w-3" /> {t("side.quantCore")}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className={collapsed ? "" : "mx-1 rounded-lg border border-primary/20 bg-gradient-to-br from-primary/[0.06] via-transparent to-violet-accent/[0.05] p-1"}>
@@ -74,12 +75,13 @@ export function AppSidebar() {
                 {quantCore.map((item) => {
                   const active = isActive(item.url);
                   const locked = isLocked(item);
+                  const title = t(item.titleKey);
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
-                        tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}
+                        tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}
                         className={active ? "bg-primary/15 text-primary hover:bg-primary/20 data-[active=true]:bg-primary/15" : "hover:bg-primary/[0.08]"}
                       >
                         <Link to={item.url} className="flex items-center gap-2.5">
@@ -87,10 +89,10 @@ export function AppSidebar() {
                           {!collapsed && (
                             <div className="flex min-w-0 flex-1 flex-col leading-tight">
                               <span className="truncate text-sm font-medium flex items-center gap-1.5">
-                                {item.title}
+                                {title}
                                 {locked && <Lock className="h-3 w-3 text-gold/80" />}
                               </span>
-                              <span className="truncate text-[10px] text-muted-foreground">{item.desc}</span>
+                              {item.descKey && <span className="truncate text-[10px] text-muted-foreground">{t(item.descKey)}</span>}
                             </div>
                           )}
                         </Link>
@@ -104,17 +106,18 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Märkte</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.markets")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {markets.map((item) => {
                 const locked = isLocked(item);
+                const title = t(item.titleKey);
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
-                        <span className="flex-1">{item.title}</span>
+                        <span className="flex-1">{title}</span>
                         {locked && <Lock className="h-3 w-3 text-gold/80" />}
                       </Link>
                     </SidebarMenuButton>
@@ -126,17 +129,18 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Trading</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.trading")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {trading.map((item) => {
                 const locked = isLocked(item);
+                const title = t(item.titleKey);
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${item.title} (Upgrade nötig)` : item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
-                        <span className="flex-1">{item.title}</span>
+                        <span className="flex-1">{title}</span>
                         {locked && <Lock className="h-3 w-3 text-gold/80" />}
                       </Link>
                     </SidebarMenuButton>
@@ -149,19 +153,22 @@ export function AppSidebar() {
 
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">System</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.system")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {system.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {system.map((item) => {
+                const title = t(item.titleKey);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span>{title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -169,10 +176,10 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="mx-2 mt-2 rounded-lg border border-primary/15 bg-gradient-to-br from-primary/[0.08] to-violet-accent/[0.06] p-3">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-              <Sigma className="h-3 w-3" /> Quant Engine
+              <Sigma className="h-3 w-3" /> {t("side.engineTitle")}
             </div>
             <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-              Jedes Signal basiert auf statistischen Modellen — Z-Score, RSI, MACD, Bollinger & Sharpe.
+              {t("side.engineDesc")}
             </p>
           </div>
         )}
@@ -186,6 +193,7 @@ export function AppSidebar() {
 }
 
 function AuthSection({ collapsed }: { collapsed: boolean }) {
+  const t = useT();
   const { user, loading, signOut } = useAuth();
 
   if (loading) {
@@ -197,12 +205,12 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
       return (
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Anmelden">
+            <SidebarMenuButton asChild tooltip={t("side.signIn")}>
               <Link to="/login"><LogIn className="h-4 w-4" /></Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Upgrade">
+            <SidebarMenuButton asChild tooltip={t("side.upgrade")}>
               <Link to="/preise"><CreditCard className="h-4 w-4 text-gold" /></Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -212,16 +220,16 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
     return (
       <div className="space-y-2 p-1">
         <div className="rounded-lg border border-gold/30 bg-gradient-to-br from-gold/10 via-primary/[0.04] to-transparent p-3">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-gold">Pro freischalten</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-gold">{t("side.proUnlock")}</div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            Voller Zugriff auf Apex Picks, Watchlist-Signale, AI Learning & Smart Alerts.
+            {t("side.proCopy")}
           </p>
           <Button asChild size="sm" className="mt-2 h-8 w-full text-xs">
-            <Link to="/preise"><CreditCard className="mr-1.5 h-3.5 w-3.5" /> Pläne ansehen</Link>
+            <Link to="/preise"><CreditCard className="mr-1.5 h-3.5 w-3.5" /> {t("side.viewPlans")}</Link>
           </Button>
         </div>
         <Button asChild size="sm" variant="outline" className="h-8 w-full text-xs">
-          <Link to="/login"><LogIn className="mr-1.5 h-3.5 w-3.5" /> Anmelden / Registrieren</Link>
+          <Link to="/login"><LogIn className="mr-1.5 h-3.5 w-3.5" /> {t("side.signInRegister")}</Link>
         </Button>
       </div>
     );
@@ -231,7 +239,7 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Konto">
+          <SidebarMenuButton asChild tooltip={t("side.account")}>
             <Link to="/konto"><UserIcon className="h-4 w-4" /></Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -247,11 +255,11 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
         </div>
         <div className="flex min-w-0 flex-col leading-tight">
           <span className="truncate text-xs font-medium">{user.email}</span>
-          <span className="text-[10px] text-muted-foreground">Konto verwalten</span>
+          <span className="text-[10px] text-muted-foreground">{t("side.manageAccount")}</span>
         </div>
       </Link>
       <Button onClick={() => signOut()} size="sm" variant="ghost" className="h-7 w-full justify-start text-xs text-muted-foreground hover:text-foreground">
-        <LogOut className="mr-1.5 h-3.5 w-3.5" /> Abmelden
+        <LogOut className="mr-1.5 h-3.5 w-3.5" /> {t("side.signOut")}
       </Button>
     </div>
   );

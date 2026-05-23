@@ -10,6 +10,7 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
@@ -134,6 +135,7 @@ function PositionRow({
 }
 
 function PortfolioPage() {
+  const t = useT();
   const { positions, remove } = usePortfolio();
   const { max, tier } = usePortfolioLimit(positions.length);
 
@@ -152,9 +154,9 @@ function PortfolioPage() {
           <Wallet className="h-5 w-5 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">Portfolio Tracker</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("page.portfolio.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Live-P&L · Risk Score · Sektor-Allokation · KI-gestützte Insights
+            {t("page.portfolio.subtitle")}
           </p>
         </div>
         <div className="text-xs text-muted-foreground">

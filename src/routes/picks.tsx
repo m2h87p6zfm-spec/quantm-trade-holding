@@ -11,6 +11,7 @@ import { useSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { recordApexAnalysis } from "@/lib/track-record.functions";
+import { useT } from "@/lib/i18n";
 
 function regimeLabel(r: MarketRegime) {
   return { bull: "Bullisch", bear: "Bärisch", chop: "Seitwärts", high_vol: "Hochvolatil", low_vol: "Ruhig" }[r];
@@ -35,6 +36,7 @@ type Sector = (typeof SECTORS)[number];
 type Region = (typeof REGIONS)[number];
 
 function PicksPage() {
+  const t = useT();
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
@@ -192,12 +194,10 @@ function PicksPage() {
               <Sparkles className="h-3 w-3" /> APEX AI Picks
             </div>
             <h1 className="mt-3 font-display text-2xl md:text-3xl font-bold tracking-tight">
-              Die Top-Kandidaten mit der höchsten Aufwärts-Wahrscheinlichkeit
+              {t("page.picks.title")}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Die KI scannt das gesamte Universum aus Aktien & ETFs, bewertet jeden Wert mit Z-Score, RSI, MACD,
-              Trend, Momentum & Sharpe — und sortiert sie nach risikoadjustierter Buy-Konfidenz. Belegt, regimen-bewusst,
-              nach institutioneller Logik.
+              {t("page.picks.subtitle")}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 text-right">

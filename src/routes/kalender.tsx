@@ -4,6 +4,7 @@ import { upcomingEvents, timeUntil, type EconEvent } from "@/lib/calendar";
 import { Calendar, AlertTriangle, Activity, ChevronRight, X } from "lucide-react";
 
 import { FeatureGate } from "@/lib/featureGate";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalender")({
   component: () => (
@@ -30,6 +31,7 @@ function fmtDate(iso: string) {
 }
 
 function CalendarPage() {
+  const t = useT();
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState<"all" | EconEvent["impact"]>("all");
   const [openEvent, setOpenEvent] = useState<EconEvent | null>(null);
@@ -50,10 +52,10 @@ function CalendarPage() {
           <Calendar className="h-3 w-3 text-primary" /> Macro Calendar
         </div>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Wirtschafts­<span className="text-gradient-gold">kalender</span>
+          {t("page.calendar.title")}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Kuratierte Makro-Events mit Marktwirkung. Hochrisiko-Termine bewegen Indizes, Zinsen und Vola.
+          {t("page.calendar.subtitle")}
         </p>
 
         <div className="mt-4 inline-flex rounded-lg border border-border bg-card p-1">
