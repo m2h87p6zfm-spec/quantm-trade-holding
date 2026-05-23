@@ -2,7 +2,18 @@ import { createFileRoute } from "@tanstack/react-router";
 import { requireUserId } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
-type Pos = { symbol: string; name?: string; qty: number; entry: number; side: "LONG" | "SHORT"; openedAt: number };
+type Pos = {
+  symbol: string;
+  name?: string;
+  qty: number;
+  entry: number;
+  side: "LONG" | "SHORT";
+  openedAt: number;
+  currentPrice?: number | null;
+  currentValue?: number | null;
+  pnlAbs?: number | null;
+  pnlPct?: number | null;
+};
 
 const SYSTEM = `Du bist PORTFOLIO PRO — ein präziser, mathematisch fundierter KI-Assistent für persönliches Aktienportfolio-Management. Du kombinierst einfache Bedienbarkeit mit professionellen Finanzkennzahlen.
 
@@ -179,11 +190,63 @@ function buildPortfolioContext(positions: Pos[]): string {
   if (!positions || positions.length === 0) {
     return "## AKTUELLES PORTFOLIO\nDas Portfolio ist leer.";
   }
-  const lines = positions.map((p) => {
-    const d = new Date(p.openedAt).toLocaleDateString("de-DE");
-    return `- ${p.symbol}${p.name ? ` (${p.name})` : ""}: ${p.qty} Stk · Einstand €${p.entry.toFixed(2)} · ${p.side} · seit ${d}`;
+  const fmt = (n: number | null | undefined, suffix = "") =>
+    typeof n === "number" && isFinite(n) ? `${n >= 0 ? "+" : ""}${n.toFixed(2)}${suffix}` : "n/a";
+  const fmtAbs = (n: number | null | undefined) =>
+    typeof n === "number" && isFinite(n) ? n.toFixed(2) : "n/a";
+
+  const enriched = positions.map((p) => {
+    const sign = p.side === "SHORT" ? -1 : 1;
+    const last = typeof p.currentPrice === "number" ? p.currentPrice : null;
+    const pnlAbs =
+      typeof p.pnlAbs === "number"
+        ? p.pnlAbs
+        : last !== null
+          ? sign * (last - p.entry) * p.qty
+          : null;
+    const pnlPct =
+      typeof p.pnlPct === "number"
+        ? p.pnlPct
+        : last !== null && p.entry > 0
+          ? sign * ((last - p.entry) / p.entry) * 100
+          : null;
+    const value =
+      typeof p.currentValue === "number"
+        ? p.currentValue
+        : last !== null
+          ? last * p.qty
+          : p.entry * p.qty;
+    return { ...p, last, pnlAbs, pnlPct, value };
   });
-  return `## AKTUELLES PORTFOLIO (im Speicher des Nutzers)\n${lines.join("\n")}`;
+
+  // Sort by performance descending (best → worst) so the model sees the ranking explicitly.
+  const ranked = [...enriched].sort((a, b) => (b.pnlPct ?? -Infinity) - (a.pnlPct ?? -Infinity));
+  const totalValue = enriched.reduce((s, p) => s + (p.value || 0), 0);
+  const totalCost = enriched.reduce((s, p) => s + p.entry * p.qty, 0);
+  const totalPl = enriched.reduce((s, p) => s + (p.pnlAbs ?? 0), 0);
+  const totalPlPct = totalCost > 0 ? (totalPl / totalCost) * 100 : null;
+
+  const lines = ranked.map((p, i) => {
+    const d = new Date(p.openedAt).toLocaleDateString("de-DE");
+    return `${i + 1}. ${p.symbol}${p.name ? ` (${p.name})` : ""} · ${p.side} · ${p.qty} Stk · Einstand €${p.entry.toFixed(2)} · Kurs €${fmtAbs(p.last)} · Wert €${fmtAbs(p.value)} · P&L ${fmt(p.pnlAbs, " €")} (${fmt(p.pnlPct, " %")}) · seit ${d}`;
+  });
+
+  const best = ranked[0];
+  const worst = ranked[ranked.length - 1];
+  const rankingSummary =
+    ranked.length >= 2 && best && worst
+      ? `\nBESTE Position (höchste %-Rendite): ${best.symbol} ${fmt(best.pnlPct, " %")}.\nSCHLECHTESTE Position: ${worst.symbol} ${fmt(worst.pnlPct, " %")}.`
+      : "";
+
+  return [
+    "## AKTUELLES PORTFOLIO (Live-Daten — verwende diese Zahlen, NICHT rate selbst)",
+    `Gesamt-Einstand: €${totalCost.toFixed(2)} · Gesamtwert: €${totalValue.toFixed(2)} · P&L: ${fmt(totalPl, " €")} (${fmt(totalPlPct, " %")})`,
+    "Positionen sortiert nach %-Performance (beste zuerst):",
+    ...lines,
+    rankingSummary,
+    "",
+    "REGEL: Wenn der Nutzer nach der besten/schlechtesten Aktie, dem Ranking oder der Performance fragt, antworte ausschließlich auf Basis der obigen P&L-%-Werte. Erfinde keine Zahlen. Falls 'n/a' steht, sag ehrlich dass für diese Position kein Live-Kurs verfügbar ist.",
+  ].join("\n");
 }
 
 export const Route = createFileRoute("/api/public/portfolio-chat")({
