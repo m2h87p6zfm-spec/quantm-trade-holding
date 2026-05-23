@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Coins } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { getAnalysisCreditStatus } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
 
@@ -11,9 +12,20 @@ export function AnalysisCreditBadge() {
   const getStatus = useServerFn(getAnalysisCreditStatus);
   const { data } = useQuery({
     queryKey: ["analysis-credits", user?.id ?? "anon"],
-    queryFn: () => getStatus(),
+    queryFn: async () => {
+      // Ensure a fresh session/token exists before calling the protected fn,
+      // otherwise the server middleware throws "Unauthorized" during auth hydration.
+      const { data: s } = await supabase.auth.getSession();
+      if (!s.session?.access_token) return null;
+      try {
+        return await getStatus();
+      } catch {
+        return null;
+      }
+    },
     enabled: !!user,
     staleTime: 30_000,
+    retry: false,
   });
 
   if (!user) {
