@@ -228,6 +228,43 @@ function ExplainTradePage() {
 
       {result && <ResultView result={result} onReset={reset} />}
 
+      {/* Trading-Chat (isoliert vom Analyse-Agent) */}
+      <section className="space-y-2 pt-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold tracking-tight">Trading-Chat zu deinem Trade</h2>
+          <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+            eigene Historie
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Stell Folgefragen, vergleiche mit früheren Trades, lerne aus Mustern. Jede Antwort folgt der 5-Punkt-Struktur und erklärt Fachbegriffe automatisch.
+        </p>
+        <TradeChatPanel
+          seedOnFirstMessage={
+            result
+              ? {
+                  title: `${result.name} (${result.symbol})`,
+                  symbol: result.symbol,
+                  summary: {
+                    name: result.name,
+                    symbol: result.symbol,
+                    buyDate: result.resolvedDate,
+                    sellDate: result.sellResolvedDate,
+                    shares: result.shares,
+                    entryClose: result.entryClose,
+                    referenceClose: result.sellClose ?? result.currentClose,
+                    pnlPct: result.pnlPct,
+                    pnlAbs: result.pnlAbs,
+                    benchmarks: result.benchmarks,
+                    sold: result.sold,
+                  },
+                  analysisMarkdown: result.analysis,
+                }
+              : null
+          }
+        />
+      </section>
+
       <DisclaimerInline />
     </div>
   );
