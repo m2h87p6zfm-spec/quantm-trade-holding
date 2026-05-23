@@ -728,10 +728,20 @@ function AnalysePage() {
                 }`}
               >
                 {m.symbol ? (
-                  <AgentResponse symbol={m.symbol} userQuery={m.query ?? ""} />
+                  <AgentResponse
+                    symbol={m.symbol}
+                    userQuery={m.query ?? ""}
+                    cachedText={m.cachedText}
+                    onDone={(t) => { if (m.convId && !m.cachedText) persistAssistantMsg(m.convId, t); }}
+                  />
                 ) : m.query ? (
-                  <AiCommentary query={m.query} />
+                  <AiCommentary
+                    query={m.query}
+                    cachedText={m.cachedText}
+                    onDone={(t) => { if (m.convId && !m.cachedText) persistAssistantMsg(m.convId, t); }}
+                  />
                 ) : (
+
                   <div
                     className="text-sm leading-relaxed whitespace-pre-line"
                     dangerouslySetInnerHTML={{
