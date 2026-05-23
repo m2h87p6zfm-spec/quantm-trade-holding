@@ -208,7 +208,7 @@ export function WatchlistSignalsPanel() {
         })}
       </div>
 
-      <SignalChat />
+
 
       <div className="rounded-lg border border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
         <p><span className="font-semibold text-foreground">Smart Money Filter:</span> Momentum ohne Volumen-Confirm, High-Beta-Longs in Bärenmärkten und Counter-Trend-Setups werden gedämpft. Trend- und Sharpe-Bestätigung heben die Konfidenz.</p>
