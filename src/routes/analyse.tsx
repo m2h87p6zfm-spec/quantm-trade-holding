@@ -2,6 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { useQueryClient } from "@tanstack/react-query";
 import { Send, Sparkles, Bot, User, TrendingUp, Search, Activity, LineChart, Brain, Coins, Lock, MessageSquarePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -153,7 +156,7 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
     <div className="rounded-lg border border-primary/20 bg-primary/[0.04] p-3 text-sm leading-relaxed">
       <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">APEX · KI-Einschätzung</div>
       <div className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-strong:text-foreground prose-strong:font-semibold prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-table:my-2 prose-th:border prose-th:border-border prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{text}</ReactMarkdown>
       </div>
       {!done && <span className="ml-0.5 inline-block h-3 w-1 animate-pulse bg-primary align-middle" />}
     </div>
@@ -753,7 +756,7 @@ function AnalysePage() {
                 ) : (
 
                   <div className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed prose-p:my-2 prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-strong:text-foreground prose-strong:font-semibold prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-muted prose-pre:text-xs prose-table:my-2 prose-th:border prose-th:border-border prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{m.text}</ReactMarkdown>
                   </div>
                 )}
                 {m.role === "agent" && i > 0 && (
