@@ -22,6 +22,8 @@ const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "J
 
 function Cockpit() {
   const { settings } = useSettings();
+  const t = useT();
+
   const [manageOpen, setManageOpen] = useState(false);
   const usingDefault = settings.watchlist.length === 0 && settings.portfolioSymbols.length === 0;
 
