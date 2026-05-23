@@ -274,59 +274,77 @@ function PortfolioPage() {
         </div>
       </div>
 
-      {/* Unified Command Center: manual add + AI assistant */}
-      <PortfolioCommandCenter />
-
-      {/* Summary Stats */}
+      {/* 1. Summary stats — sofortiger Überblick */}
       <Summary positions={positions} rowMap={rowMap} />
 
-      {/* Analytics: Risk Score, Sectors, Risk, AI Insight */}
-      <PortfolioAnalytics positions={positions} rowMap={rowMap} />
-
-      {/* Holdings Table */}
+      {/* 2. Holdings — die Positionen sind das Herzstück, also gleich nach oben */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="border-b border-border px-5 py-3 flex items-center justify-between">
+        <div className="border-b border-border px-4 md:px-5 py-3 flex items-center justify-between">
           <div className="text-sm font-semibold">Holdings</div>
           <div className="text-[11px] text-muted-foreground">
             {positions.length} {positions.length === 1 ? "Position" : "Positionen"}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[920px]">
-            <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left">Asset</th>
-                <th className="px-3 py-2 text-left">Side</th>
-                <th className="px-3 py-2 text-right">Menge</th>
-                <th className="px-3 py-2 text-right">Einstand</th>
-                <th className="px-3 py-2 text-right">Aktuell</th>
-                <th className="px-3 py-2 text-right">Wert</th>
-                <th className="px-3 py-2 text-right">P&L</th>
-                <th className="px-3 py-2 text-left">Quant-Signal</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {positions.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-3 py-16 text-center text-muted-foreground">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                    <div className="text-sm">Noch keine Positionen.</div>
-                    <div className="text-xs mt-1">
-                      Suche oben nach einer Aktie und füge sie hinzu — alle Analytics werden
-                      automatisch berechnet.
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                positions.map((p) => (
-                  <PositionRow key={p.id} pos={p} row={rowMap.get(p.symbol)} onRemove={remove} />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+
+        {positions.length === 0 ? (
+          <div className="px-4 py-16 text-center text-muted-foreground">
+            <Wallet className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <div className="text-sm">Noch keine Positionen.</div>
+            <div className="text-xs mt-1">
+              Füge unten eine Aktie hinzu — alle Analytics werden automatisch berechnet.
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Mobile: Cards */}
+            <div className="md:hidden grid gap-2 p-3">
+              {positions.map((p) => (
+                <PositionCard
+                  key={p.id}
+                  pos={p}
+                  row={rowMap.get(p.symbol)}
+                  onRemove={remove}
+                />
+              ))}
+            </div>
+
+            {/* Desktop: Tabelle */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[920px]">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Asset</th>
+                    <th className="px-3 py-2 text-left">Side</th>
+                    <th className="px-3 py-2 text-right">Menge</th>
+                    <th className="px-3 py-2 text-right">Einstand</th>
+                    <th className="px-3 py-2 text-right">Aktuell</th>
+                    <th className="px-3 py-2 text-right">Wert</th>
+                    <th className="px-3 py-2 text-right">P&L</th>
+                    <th className="px-3 py-2 text-left">Quant-Signal</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {positions.map((p) => (
+                    <PositionRow
+                      key={p.id}
+                      pos={p}
+                      row={rowMap.get(p.symbol)}
+                      onRemove={remove}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* 3. Analytics — Risiko, Sektoren, KI-Insights */}
+      <PortfolioAnalytics positions={positions} rowMap={rowMap} />
+
+      {/* 4. Command Center — Hinzufügen / KI-Assistent (am Ende, da seltener gebraucht) */}
+      <PortfolioCommandCenter />
 
       <DisclaimerInline />
     </div>
