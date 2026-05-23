@@ -217,6 +217,8 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           });
 
         try {
+          const auth = await requireUserId(request);
+          if (auth instanceof Response) return auth;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) return json({ error: "AI gateway nicht konfiguriert." }, 500);
 
