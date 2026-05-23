@@ -193,7 +193,7 @@ function GlobalIntelPage() {
 
       {/* Main grid: map + side panel + feed */}
       <main className="mx-auto max-w-[1700px] px-4 py-5 sm:px-8">
-        <GlobalMarketConditions />
+        <StrategicBriefing />
 
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-5">
@@ -214,6 +214,16 @@ function GlobalIntelPage() {
                 </div>
               )}
 
+              {selectedEvent && (
+                <div className="pointer-events-none absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-amber-400/30 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90 backdrop-blur-md">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                  </span>
+                  Propagation · {selectedEvent.title}
+                </div>
+              )}
+
               <div className="relative aspect-[1000/520] w-full">
                 {error && (
                   <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
@@ -225,6 +235,7 @@ function GlobalIntelPage() {
                     world={world}
                     geo={path}
                     selected={selected}
+                    selectedEvent={selectedEvent}
                     hovered={hovered}
                     layers={layers}
                     onHover={setHovered}
@@ -251,18 +262,27 @@ function GlobalIntelPage() {
 
           </div>
 
-          {/* Right column: country panel + intel feed */}
+          {/* Right column: flashpoints always on top, then context (country/event), then feed */}
           <aside className="space-y-5 xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
-            <CountryPanel
-              country={selected}
-              onClose={() => setSelected(null)}
-            />
+            {!selected && !selectedEvent && (
+              <ActiveFlashpoints
+                onSelectEvent={(e) => setSelectedEvent(e)}
+                onSelectCountry={(c) => setSelected(c)}
+              />
+            )}
+            {selected && (
+              <CountryPanel
+                country={selected}
+                onClose={() => setSelected(null)}
+              />
+            )}
             {selectedEvent && (
               <EventPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
             )}
             <IntelFeed />
           </aside>
         </div>
+
       </main>
     </div>
   );
