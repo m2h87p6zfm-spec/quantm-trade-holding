@@ -21,7 +21,9 @@ import { toast } from "sonner";
 import { usePortfolio, type Position } from "@/lib/portfolio";
 import { PRODUCTS, findProduct } from "@/lib/products";
 import { useQuote } from "@/lib/useMarketData";
+import { useCockpitData } from "@/lib/cockpit";
 import { usePortfolioLimit } from "@/lib/featureGate";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ---------- shared types ---------- */
 
