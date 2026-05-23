@@ -226,9 +226,9 @@ export function WatchlistSignalsPanel() {
 
               {/* Metrics chips */}
               <div className="mt-4 flex flex-wrap gap-1.5">
-                <Chip label="Z" value={r.ind.zScore.toFixed(2)} />
-                <Chip label="RSI" value={r.ind.rsi.toFixed(0)} />
-                <Chip label="Vol" value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
+                <Chip label={t("watchlist.metric.z")} value={r.ind.zScore.toFixed(2)} />
+                <Chip label={t("watchlist.metric.rsi")} value={r.ind.rsi.toFixed(0)} />
+                <Chip label={t("watchlist.metric.vol")} value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
               </div>
 
               {/* Footer button */}
