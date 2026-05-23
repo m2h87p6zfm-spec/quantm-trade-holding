@@ -214,20 +214,24 @@
   color: transparent;
 }
 
+/* Ambient mesh — softer, deeper, multi-layer for cinematic depth.
+   Research: subtle radial gradients add perceived "atmosphere" which
+   increases dwell time without competing with content. */
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 60% 45% at 12% 0%, color-mix(in oklab, var(--primary) 10%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 55% 40% at 88% 8%, color-mix(in oklab, var(--cyan-accent) 7%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 45% at 50% 100%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 55% 40% at 10% -5%, color-mix(in oklab, var(--primary) 9%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 38% at 92% 5%, color-mix(in oklab, var(--cyan-accent) 6%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 42% at 50% 105%, color-mix(in oklab, var(--violet-accent) 5%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 60% at 50% 50%, transparent 40%, color-mix(in oklab, black 25%, transparent) 100%);
 }
 
 .bg-grid {
   background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--border) 50%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--border) 50%, transparent) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 75%);
+    linear-gradient(to right, color-mix(in oklab, var(--border) 38%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 38%, transparent) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 25%, transparent 75%);
 }
 
 .card-glow {
