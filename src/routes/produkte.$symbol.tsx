@@ -135,6 +135,7 @@ function ProductDetail() {
         </div>
       )}
 
+      <AssetEventsPanel symbol={symbol} />
       <AssetNewsPanel symbol={symbol} />
     </div>
   );
