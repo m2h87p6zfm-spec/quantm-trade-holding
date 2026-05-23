@@ -47,6 +47,7 @@ import {
   Newspaper,
   Radio,
   Route as RouteIcon,
+  Search,
   ShieldCheck,
   Sparkles,
   TrendingDown,
