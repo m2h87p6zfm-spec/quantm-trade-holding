@@ -21,6 +21,7 @@ const markets: NavItem[] = [
   { title: "Watchlist", url: "/", icon: ListOrdered },
   { title: "Heatmap", url: "/heatmap", icon: Flame },
   { title: "News & Sentiment", url: "/news", icon: Newspaper, feature: "news_sentiment" },
+  { title: "Global Macro", url: "/global-intel", icon: Globe2, desc: "Geopolitik-Karte" },
   { title: "Kalender", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
