@@ -1499,6 +1499,7 @@ function CountryPanel({
 
 function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => void }) {
   const color = EVENT_COLOR[event.type];
+  const chain = EVENT_CHAINS[event.id];
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.12_0.018_260)] backdrop-blur">
       <div
@@ -1510,27 +1511,141 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
         <div className="min-w-0">
           <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
-            {event.category} · {event.date}
+            {event.category} · {event.date} · {event.location}
           </div>
-          <div className="mt-1 font-display text-base font-bold tracking-tight">{event.title}</div>
-          <div className="text-[11px] text-muted-foreground">{event.location}</div>
+          <div className="mt-1 font-display text-base font-bold leading-tight tracking-tight">
+            {event.title}
+          </div>
+          <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-amber-400/30 bg-amber-400/[0.06] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-400" />
+            </span>
+            Propagating on map
+          </div>
         </div>
         <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-white/10" onClick={onClose}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <div className="space-y-2 p-4">
-        <p className="text-xs leading-relaxed text-foreground/85">{event.summary}</p>
-        <div className="grid grid-cols-2 gap-1.5">
-          {event.impact.fx && <ImpactTag label="FX" value={event.impact.fx} />}
-          {event.impact.commodities && <ImpactTag label="Commodities" value={event.impact.commodities} />}
-          {event.impact.equities && <ImpactTag label="Equities" value={event.impact.equities} />}
-          {event.impact.regions && <ImpactTag label="Regions" value={event.impact.regions} />}
+
+      <div className="space-y-3.5 p-4">
+        {/* A. What happened */}
+        <div>
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+            What happened
+          </div>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/90">{event.summary}</p>
         </div>
+
+        {/* B. Why it matters */}
+        {chain && (
+          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+              Why it matters globally
+            </div>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/90">{chain.global}</p>
+          </div>
+        )}
+
+        {/* C. Who is affected */}
+        {chain && chain.who.length > 0 && (
+          <div>
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+              Who is affected
+            </div>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {chain.who.map((name) => {
+                const c = COUNTRIES_BY_NAME.get(name);
+                return (
+                  <span
+                    key={name}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[11px] text-foreground/85"
+                  >
+                    {c?.flag ?? "🌐"} {name}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* D. Direct impact */}
+        {chain && chain.direct.length > 0 && (
+          <div>
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+              Direct market impact
+            </div>
+            <ul className="mt-1.5 space-y-1.5">
+              {chain.direct.map((d) => {
+                const c = TONE_COLOR[d.tone];
+                return (
+                  <li
+                    key={d.label}
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5"
+                  >
+                    <span
+                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: c }}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-semibold" style={{ color: c }}>
+                        {d.label}
+                      </div>
+                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* E. Secondary effects */}
+        {chain && chain.secondary.length > 0 && (
+          <div>
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+              Secondary &amp; cross-asset effects
+            </div>
+            <ul className="mt-1.5 space-y-1.5">
+              {chain.secondary.map((d) => {
+                const c = TONE_COLOR[d.tone];
+                return (
+                  <li
+                    key={d.label}
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5"
+                  >
+                    <span
+                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: c }}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-semibold" style={{ color: c }}>
+                        {d.label}
+                      </div>
+                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {/* Legacy impact tags as quick reference if no chain available */}
+        {!chain && (
+          <div className="grid grid-cols-2 gap-1.5">
+            {event.impact.fx && <ImpactTag label="FX" value={event.impact.fx} />}
+            {event.impact.commodities && <ImpactTag label="Commodities" value={event.impact.commodities} />}
+            {event.impact.equities && <ImpactTag label="Equities" value={event.impact.equities} />}
+            {event.impact.regions && <ImpactTag label="Regions" value={event.impact.regions} />}
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 function ImpactTag({ label, value }: { label: string; value: string }) {
   return (
