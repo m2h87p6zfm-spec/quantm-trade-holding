@@ -76,15 +76,15 @@ function Cockpit() {
     <div className="min-h-screen bg-[#0A0A0A] pb-16 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       <TickerBand />
 
-      <div className="mx-auto max-w-7xl space-y-12 px-6 pt-10">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:space-y-12 sm:px-6 sm:pt-10">
         {/* Hero strip */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+        <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1F1F1F] bg-[#111111] px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] animate-pulse" />
               {t("cockpit.live")}
             </div>
-            <h1 className="mt-3 text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
+            <h1 className="mt-3 text-[24px] sm:text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
             <p className="mt-1 text-[13px] text-white/40 tabular-nums">
               {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
             </p>
@@ -93,9 +93,9 @@ function Cockpit() {
             <WatchlistSwitcher />
             <button
               onClick={() => setManageOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white"
             >
-              <ListPlus className="h-3.5 w-3.5" /> {t("cockpit.manage")}
+              <ListPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
             </button>
             <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white">
               <Search className="h-3.5 w-3.5" /> {t("cockpit.catalog")}
