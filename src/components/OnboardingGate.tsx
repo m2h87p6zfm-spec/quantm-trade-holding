@@ -293,7 +293,7 @@ export function OnboardingGate() {
         </div>
 
         {/* Body */}
-        <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px]">
+        <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
           {step === 0 && <WelcomeStep />}
           {step === 1 && (
             <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
