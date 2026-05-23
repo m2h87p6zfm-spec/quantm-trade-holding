@@ -770,9 +770,13 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
     try {
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), EXTRACT_TIMEOUT_MS);
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const res = await fetch("/api/public/portfolio-extract", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         signal: controller.signal,
         body: JSON.stringify({ images: files.map((f) => f.url) }),
       });
