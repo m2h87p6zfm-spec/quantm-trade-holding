@@ -58,7 +58,7 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
-  Waves,
+  
   X,
   Zap,
 } from "lucide-react";
