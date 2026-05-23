@@ -6,7 +6,23 @@ export type ExperienceLevel = "beginner" | "intermediate" | "pro";
 export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF" | "AUD" | "CAD" | "JPY";
 
 /** Tier-1 news publishers. Keys MUST stay stable — used as storage keys. */
-export const NEWS_SOURCES = ["reuters", "bloomberg", "yahoo", "cnbc", "ft", "marketwatch", "investing", "wsj"] as const;
+export const NEWS_SOURCES = [
+  // Tier-1 global wires & financial press
+  "reuters", "bloomberg", "wsj", "ft", "economist", "nytimes", "washingtonpost", "guardian", "barrons",
+  // US business & markets
+  "cnbc", "marketwatch", "yahoo", "investing", "forbes", "fortune", "businessinsider", "axios",
+  "seekingalpha", "benzinga", "motleyfool", "thestreet", "zerohedge",
+  // Tech & enterprise
+  "theinformation", "techcrunch", "theverge", "wired",
+  // Crypto
+  "coindesk", "cointelegraph", "theblock", "decrypt",
+  // Asia
+  "nikkei", "scmp", "reutersasia", "bloombergasia",
+  // Europe / DACH / FR
+  "handelsblatt", "manager", "faz", "boerse", "lesechos",
+  // Macro / policy
+  "politico", "semafor",
+] as const;
 export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
