@@ -214,6 +214,7 @@ export function OnboardingGate() {
 
     // 1. Persist to settings (localStorage → instantly reflected across the app).
     update({
+      ...(a.language ? { language: a.language } : {}),
       currency: CURRENCY_TO_BASE[a.preferred_currency],
       experienceLevel:
         a.experience_level === "advanced" ? "pro" : a.experience_level === "beginner" ? "beginner" : "intermediate",
