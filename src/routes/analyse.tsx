@@ -148,13 +148,13 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card/60 p-3 text-xs text-muted-foreground">
         <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-primary" />
-        APEX denkt nach …
+        Quantm denkt nach …
       </div>
     );
   }
   return (
     <div className="rounded-lg border border-primary/20 bg-primary/[0.04] p-3 text-sm leading-relaxed">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">APEX · KI-Einschätzung</div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-primary">Quantm · KI-Einschätzung</div>
       <div className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-headings:mt-3 prose-headings:mb-1 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-strong:text-foreground prose-strong:font-semibold prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-table:my-2 prose-th:border prose-th:border-border prose-th:px-2 prose-th:py-1 prose-td:border prose-td:border-border prose-td:px-2 prose-td:py-1">
         <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>{text}</ReactMarkdown>
       </div>
@@ -400,7 +400,7 @@ function AgentAnalysisView({
       },
     }).catch(() => {});
 
-    // APEX Track Record speichern (anonym, öffentlich abrufbar)
+    // Quantm Track Record speichern (anonym, öffentlich abrufbar)
     const product = findProduct(symbol);
     const verdictMap: Record<string, "KAUF" | "HALTEN" | "VERKAUFEN"> = {
       LONG: "KAUF",
@@ -603,7 +603,7 @@ function AnalysePage() {
       const isFinance = FINANCE_HINTS.some((k) => lower.includes(k));
       if (!isFinance) {
         const cannedText =
-          "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
+          "Ich bin **Quantm**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
           "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
           "• *Analysiere NVDA*\n" +
           "• *Wie steht der DAX?*\n" +
@@ -707,7 +707,7 @@ function AnalysePage() {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight">APEX <span className="text-muted-foreground font-normal text-base">· by Quantm Trade</span></h1>
+            <h1 className="text-2xl font-bold tracking-tight">QUANTM <span className="text-muted-foreground font-normal text-base">· by Quantm Trade</span></h1>
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
               LIVE

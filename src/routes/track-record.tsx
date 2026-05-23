@@ -18,14 +18,14 @@ import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 export const Route = createFileRoute("/track-record")({
   head: () => ({
     meta: [
-      { title: "APEX Track Record — Beweisbare Genauigkeit der APEX-Analysen" },
+      { title: "Quantm Track Record — Beweisbare Genauigkeit der Quantm-Analysen" },
       {
         name: "description",
         content:
-          "Vollständig transparenter Track Record: Alle abgeschlossenen APEX-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 30/60/90 Tagen — live aus der Datenbank berechnet.",
+          "Vollständig transparenter Track Record: Alle abgeschlossenen Quantm-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 30/60/90 Tagen — live aus der Datenbank berechnet.",
       },
-      { property: "og:title", content: "APEX Track Record" },
-      { property: "og:description", content: "Echte Trefferquote aller APEX-Analysen — transparent und live." },
+      { property: "og:title", content: "Quantm Track Record" },
+      { property: "og:description", content: "Echte Trefferquote aller Quantm-Analysen — transparent und live." },
     ],
   }),
   component: TrackRecordPage,
@@ -65,7 +65,7 @@ function TrackRecordPage() {
       <div className="min-h-screen bg-[#0d0d0d] text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full border-4 border-cyan-500/30 border-t-cyan-400 animate-spin" />
-          <p className="text-sm text-muted-foreground tracking-widest uppercase">APEX lädt Track Record-Daten…</p>
+          <p className="text-sm text-muted-foreground tracking-widest uppercase">Quantm lädt Track Record-Daten…</p>
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ function PublicHeader() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <ApexLogo className="h-7 w-7" />
-          <span className="font-semibold tracking-tight">APEX Markets</span>
+          <span className="font-semibold tracking-tight">Quantm Trade</span>
         </Link>
         <nav className="flex items-center gap-2 md:gap-3 text-sm">
           <Link to="/analyse" className="text-muted-foreground hover:text-foreground transition">Analyse</Link>
@@ -159,7 +159,7 @@ function PublicHeader() {
 function PublicFooter() {
   return (
     <footer className="border-t border-white/5 py-6 text-center text-xs text-muted-foreground">
-      © {new Date().getFullYear()} APEX Markets. Keine Anlageberatung.
+      © {new Date().getFullYear()} Quantm Trade. Keine Anlageberatung.
     </footer>
   );
 }
@@ -176,7 +176,7 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
           <span className="text-xs uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
         </div>
         <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight max-w-4xl">
-          APEX hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
+          Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
           <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
         </h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
@@ -195,7 +195,7 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
           </KpiCard>
         </div>
         <p className="text-xs text-muted-foreground mt-8 max-w-3xl">
-          Alle Daten basieren auf abgeschlossenen APEX-Analysen mit einem Bewertungszeitraum von mindestens 30 Tagen. Keine Anlageberatung.
+          Alle Daten basieren auf abgeschlossenen Quantm-Analysen mit einem Bewertungszeitraum von mindestens 30 Tagen. Keine Anlageberatung.
         </p>
       </div>
     </section>
@@ -399,7 +399,7 @@ function PerformanceChart({ analyses }: { analyses: Analysis[] }) {
         </div>
         {buyAcc != null && (
           <p className="text-sm text-muted-foreground mt-3">
-            APEX KAUF-Signale hatten in den letzten 90 Tagen eine Trefferquote von{" "}
+            Quantm KAUF-Signale hatten in den letzten 90 Tagen eine Trefferquote von{" "}
             <span className="text-emerald-400 font-semibold">{formatNumber(buyAcc, 1)} %</span> — das entspricht {buyHits} von {last90.length} Vorhersagen.
           </p>
         )}
@@ -420,13 +420,13 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
   );
 
   const rows = [
-    { label: "🏆 APEX KAUF-Signale", r90: apex90, r1y: apex1y, hl: true },
+    { label: "🏆 Quantm KAUF-Signale", r90: apex90, r1y: apex1y, hl: true },
     ...Object.entries(benchmarks).map(([label, b]) => ({ label: `📊 ${label}`, r90: b.return90d, r1y: b.return1y, hl: false })),
   ];
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">APEX vs. Markt</h2>
+      <h2 className="text-xl font-semibold mb-4">Quantm vs. Markt</h2>
       <Card className="bg-white/[0.03] border-white/10 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/[0.04] text-xs uppercase tracking-widest text-muted-foreground">
@@ -448,7 +448,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
         </table>
       </Card>
       <p className="text-xs text-muted-foreground mt-2">
-        Renditen basieren auf hypothetischen Investments zum Zeitpunkt des jeweiligen APEX-Signals. Transaktionskosten nicht berücksichtigt.
+        Renditen basieren auf hypothetischen Investments zum Zeitpunkt des jeweiligen Quantm-Signals. Transaktionskosten nicht berücksichtigt.
       </p>
     </section>
   );
@@ -647,7 +647,7 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
   return (
     <section className="grid md:grid-cols-2 gap-6">
       <Card className="bg-white/[0.03] border-emerald-500/20 p-5">
-        <h3 className="font-semibold flex items-center gap-2 mb-4"><Trophy className="h-4 w-4 text-emerald-400" /> Beste APEX Vorhersagen</h3>
+        <h3 className="font-semibold flex items-center gap-2 mb-4"><Trophy className="h-4 w-4 text-emerald-400" /> Beste Quantm Vorhersagen</h3>
         <ul className="space-y-3">
           {best.length === 0 && <li className="text-sm text-muted-foreground">Noch keine Daten.</li>}
           {best.map(({ a, score }) => (
@@ -662,7 +662,7 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
         </ul>
       </Card>
       <Card className="bg-white/[0.03] border-red-500/20 p-5">
-        <h3 className="font-semibold flex items-center gap-2 mb-4"><AlertTriangle className="h-4 w-4 text-red-400" /> Wo APEX falsch lag</h3>
+        <h3 className="font-semibold flex items-center gap-2 mb-4"><AlertTriangle className="h-4 w-4 text-red-400" /> Wo Quantm falsch lag</h3>
         <ul className="space-y-3">
           {worst.length === 0 && <li className="text-sm text-muted-foreground">Noch keine Daten.</li>}
           {worst.map(({ a, score }) => (
@@ -685,13 +685,13 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
 function Methodology() {
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Wie bewertet APEX?</h2>
+      <h2 className="text-xl font-semibold mb-4">Wie bewertet Quantm?</h2>
       <Card className="bg-white/[0.03] border-white/10 p-2">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="indikatoren">
             <AccordionTrigger className="px-4">Welche Indikatoren fließen ein?</AccordionTrigger>
             <AccordionContent className="px-4 text-sm text-muted-foreground">
-              APEX kombiniert RSI(14), MACD(12/26/9), Z-Score(20), Bollinger Bänder(20,2), 10-Tage-Momentum, SMA20/50/200-Trendstruktur sowie annualisierte Volatilität, Sharpe Ratio und Beta. Jeder Indikator wird abhängig vom erkannten Markt-Regime (Bull/Bär/Seitwärts/Hochvolatil) unterschiedlich gewichtet.
+              Quantm kombiniert RSI(14), MACD(12/26/9), Z-Score(20), Bollinger Bänder(20,2), 10-Tage-Momentum, SMA20/50/200-Trendstruktur sowie annualisierte Volatilität, Sharpe Ratio und Beta. Jeder Indikator wird abhängig vom erkannten Markt-Regime (Bull/Bär/Seitwärts/Hochvolatil) unterschiedlich gewichtet.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="confidence">
@@ -723,11 +723,11 @@ function Methodology() {
 function CTA() {
   return (
     <section className="text-center py-12 border-t border-white/10">
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Du siehst was APEX kann.</h2>
+      <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Du siehst was Quantm kann.</h2>
       <p className="text-muted-foreground mt-2">Jetzt selbst analysieren.</p>
       <div className="flex justify-center gap-3 mt-6">
         <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-400 text-black"><Link to="/login">Kostenlos starten</Link></Button>
-        <Button asChild size="lg" variant="outline"><Link to="/analyse">APEX Demo ansehen</Link></Button>
+        <Button asChild size="lg" variant="outline"><Link to="/analyse">Quantm Demo ansehen</Link></Button>
       </div>
     </section>
   );

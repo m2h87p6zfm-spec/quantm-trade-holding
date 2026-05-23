@@ -233,7 +233,7 @@ function AgentPage() {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold">Apex AI Analyst</h1>
+            <h1 className="text-xl font-bold">Quantm AI Analyst</h1>
             <p className="text-xs text-muted-foreground">Institutioneller Markt-Stratege — gestützt auf Lovable AI.</p>
           </div>
           <button
@@ -270,7 +270,7 @@ function AgentPage() {
               />
             );
           })}
-          {loading && <div className="text-xs text-muted-foreground animate-pulse">Apex denkt nach…</div>}
+          {loading && <div className="text-xs text-muted-foreground animate-pulse">Quantm denkt nach…</div>}
         </div>
 
         <form onSubmit={onSubmit} className="mt-3 flex gap-2">

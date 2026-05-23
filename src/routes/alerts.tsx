@@ -49,7 +49,7 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
         icon: "🔔",
       });
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(`Apex Alert: ${a.symbol}`, { body: `${label(a.kind)} ${a.threshold}` });
+        new Notification(`Quantm Alert: ${a.symbol}`, { body: `${label(a.kind)} ${a.threshold}` });
       }
     }
   }, [price, score, a, onTrigger, value]);

@@ -91,7 +91,7 @@ function WelcomePage() {
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-8">
         <div className="flex items-center gap-2 text-sm font-medium tracking-tight">
           <ApexLogo className="h-5 w-5" />
-          <span>Apex Intelligence</span>
+          <span>Quantm Intelligence</span>
         </div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           {String(step).padStart(2, "0")} / {String(TOTAL_STEPS).padStart(2, "0")}
@@ -234,7 +234,7 @@ function ScreenWelcome({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col items-center text-center">
       <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground backdrop-blur">
-        <Sparkles className="h-3 w-3 text-primary" /> Apex Intelligence
+        <Sparkles className="h-3 w-3 text-primary" /> Quantm Intelligence
       </div>
       <h1 className="max-w-2xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
         Welcome to the next generation of <span className="text-gradient-primary">AI assistance</span>.

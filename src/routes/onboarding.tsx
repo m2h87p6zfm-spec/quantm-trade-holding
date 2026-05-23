@@ -5,7 +5,7 @@ export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
       { title: "Onboarding — Quantm Trade" },
-      { name: "description", content: "Personalisiere deine Apex AI Trading-Plattform." },
+      { name: "description", content: "Personalisiere deine Quantm Trade AI-Plattform." },
     ],
   }),
   component: OnboardingPage,

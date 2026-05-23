@@ -186,7 +186,7 @@ function AuthHeaderButton() {
   const displayName = (meta.full_name as string) || (meta.name as string) || user.email?.split("@")[0] || "Konto";
   const avatarUrl = (meta.avatar_url as string) || (meta.picture as string) || undefined;
   const initials = displayName.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "A";
-  const tierLabel = tier === "elite" ? "Apex Elite" : tier === "pro" ? "Apex Pro" : "Free";
+  const tierLabel = tier === "elite" ? "Quantm Elite" : tier === "pro" ? "Quantm Pro" : "Free";
 
   return (
     <DropdownMenu>
