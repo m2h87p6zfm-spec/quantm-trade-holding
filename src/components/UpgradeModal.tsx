@@ -5,23 +5,10 @@ import { Link } from "@tanstack/react-router";
 import { Sparkles, Check, X } from "lucide-react";
 import type { UpgradePromptDetail } from "@/lib/portfolio-limits";
 import { limitLabel, getPortfolioLimit } from "@/lib/portfolio-limits";
-
-const REASON_COPY: Record<UpgradePromptDetail["reason"], { title: string; sub: string }> = {
-  portfolio_limit: {
-    title: "Erweitere dein Portfolio",
-    sub: "Du hast das Limit deines aktuellen Plans erreicht. Upgrade, um weitere Werte zu verfolgen.",
-  },
-  news_sources: {
-    title: "Schalte alle Premium-Quellen frei",
-    sub: "Reuters, Bloomberg, FT und mehr — ungefiltert, in Echtzeit.",
-  },
-  ai_summaries: {
-    title: "AI-Alpha-Summaries freischalten",
-    sub: "Bekomme zu jeder Schlagzeile eine 1-Satz-Erklärung, was sie für deine Position bedeutet.",
-  },
-};
+import { useT } from "@/lib/i18n";
 
 export function UpgradeModal() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<UpgradePromptDetail | null>(null);
 
@@ -37,7 +24,12 @@ export function UpgradeModal() {
 
   if (!detail) return null;
 
-  const copy = REASON_COPY[detail.reason];
+  const copyMap: Record<UpgradePromptDetail["reason"], { title: string; sub: string }> = {
+    portfolio_limit: { title: t("upgrade.portfolio.title"), sub: t("upgrade.portfolio.sub") },
+    news_sources: { title: t("upgrade.news.title"), sub: t("upgrade.news.sub") },
+    ai_summaries: { title: t("upgrade.ai.title"), sub: t("upgrade.ai.sub") },
+  };
+  const copy = copyMap[detail.reason];
   const currentLimit = detail.limit ?? getPortfolioLimit(detail.currentTier);
   const nextTier = detail.currentTier === "free" ? "Pro" : "Elite";
   const nextLimit = detail.currentTier === "free" ? 20 : Infinity;
@@ -49,12 +41,12 @@ export function UpgradeModal() {
           <button
             onClick={() => setOpen(false)}
             className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label="Schließen"
+            aria-label={t("upgrade.close")}
           >
             <X className="h-4 w-4" />
           </button>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-primary">
-            <Sparkles className="h-3 w-3" /> Upgrade auf {nextTier}
+            <Sparkles className="h-3 w-3" /> {t("upgrade.badge", { tier: nextTier })}
           </div>
           <DialogHeader className="mt-4 text-left">
             <DialogTitle className="text-2xl">{copy.title}</DialogTitle>
@@ -64,26 +56,26 @@ export function UpgradeModal() {
           {detail.reason === "portfolio_limit" && (
             <div className="mt-4 rounded-lg border border-border/60 bg-card/60 p-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Dein Plan</span>
+                <span className="text-muted-foreground">{t("upgrade.yourPlan")}</span>
                 <span className="font-mono font-semibold uppercase">{detail.currentTier}</span>
               </div>
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-muted-foreground">Limit</span>
+                <span className="text-muted-foreground">{t("upgrade.limit")}</span>
                 <span className="font-mono">{detail.currentCount ?? 0} / {limitLabel(currentLimit)}</span>
               </div>
               <div className="mt-1 flex items-center justify-between text-primary">
-                <span>Nach Upgrade</span>
-                <span className="font-mono font-semibold">bis zu {limitLabel(nextLimit)}</span>
+                <span>{t("upgrade.afterUpgrade")}</span>
+                <span className="font-mono font-semibold">{t("upgrade.upTo", { n: limitLabel(nextLimit) })}</span>
               </div>
             </div>
           )}
 
           <ul className="mt-4 space-y-2 text-sm">
             {[
-              detail.currentTier === "free" ? "Bis zu 20 Werte im Portfolio (Pro)" : "Unbegrenzt viele Werte (Elite)",
-              "Alle Tier-1-Quellen: Reuters, Bloomberg, FT, CNBC, Yahoo",
-              "AI-Alpha-Summary für jede portfolio-relevante Schlagzeile",
-              "Breaking-News-Pushes für deine Holdings",
+              detail.currentTier === "free" ? t("upgrade.line.pro") : t("upgrade.line.elite"),
+              t("upgrade.line.sources"),
+              t("upgrade.line.summary"),
+              t("upgrade.line.push"),
             ].map((line) => (
               <li key={line} className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-bull" />
@@ -95,10 +87,10 @@ export function UpgradeModal() {
 
         <DialogFooter className="border-t border-border bg-card/40 px-6 py-4">
           <div className="flex w-full items-center justify-between gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>Später</Button>
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>{t("upgrade.later")}</Button>
             <Button asChild size="sm" className="bg-gradient-to-r from-primary to-primary/80">
               <Link to="/preise" onClick={() => setOpen(false)}>
-                <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Pläne ansehen
+                <Sparkles className="mr-1.5 h-3.5 w-3.5" /> {t("upgrade.view")}
               </Link>
             </Button>
           </div>
