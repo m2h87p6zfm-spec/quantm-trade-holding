@@ -107,14 +107,14 @@ function Cockpit() {
         {/* BEREICH 1 — Markt-Überblick (kompakt) */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-white/60">Markt-Überblick</h2>
-            <span className="text-[12px] text-white/30 tabular-nums">{rows.length} analysiert</span>
+            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-white/60">{t("cockpit.section.market")}</h2>
+            <span className="text-[12px] text-white/30 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Sentiment */}
             <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">Markt-Stimmung</span>
+                <span className="text-[13px] font-medium text-white/60">{t("cockpit.sentiment.title")}</span>
               </div>
               <div className="flex h-2 overflow-hidden rounded-full bg-[#1F1F1F]">
                 <div className="h-full bg-[#22FF88]" style={{ width: `${(longCount / sentimentTotal) * 100}%` }} />
@@ -123,9 +123,9 @@ function Cockpit() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 text-[13px]">
                 {[
-                  { k: "Bullish", v: longCount, c: "#22FF88" },
-                  { k: "Neutral", v: neutralCount, c: "rgba(255,255,255,0.5)" },
-                  { k: "Bearish", v: shortCount, c: "#FF3B5C" },
+                  { k: t("cockpit.sentiment.bullish"), v: longCount, c: "#22FF88" },
+                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, c: "rgba(255,255,255,0.5)" },
+                  { k: t("cockpit.sentiment.bearish"), v: shortCount, c: "#FF3B5C" },
                 ].map((s) => (
                   <div key={s.k} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-white/70">
@@ -143,10 +143,11 @@ function Cockpit() {
             {/* Indizes */}
             <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">Wichtige Indizes</span>
+                <span className="text-[13px] font-medium text-white/60">{t("cockpit.indices.title")}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {indices.map((i) => {
+
                   const up = (i.change ?? 0) >= 0;
                   return (
                     <div key={i.symbol} className="flex items-center justify-between">
