@@ -26,10 +26,12 @@ const ACCENT = {
 
 export function WatchlistSignalsPanel() {
   const { settings } = useSettings();
+  const t = useT();
   const [sortKey, setSortKey] = useState<SortKey>("confidence");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [query, setQuery] = useState("");
   const symbols = settings.watchlist;
+  const locale = settings.language === "de" ? "de-DE" : "en-US";
 
   const candleQs = useQueries({
     queries: symbols.map((symbol) => ({
@@ -44,7 +46,8 @@ export function WatchlistSignalsPanel() {
 
   const rows = useMemo(() => {
     return symbols.map((symbol, i) => {
-      const p = findProduct(symbol) ?? { symbol, name: "Freier Ticker" };
+      const p = findProduct(symbol) ?? { symbol, name: t("watchlist.card.unknown") };
+
       const c = candleQs[i].data;
       if (!c) return null;
       const ind = computeAll(c.c);
