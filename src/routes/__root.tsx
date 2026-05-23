@@ -110,9 +110,10 @@ function AppShell() {
   const isAuthScreen =
     pathname === "/login" ||
     pathname === "/passwort-vergessen" ||
-    pathname === "/passwort-zuruecksetzen";
+    pathname === "/passwort-zuruecksetzen" ||
+    pathname === "/onboarding";
 
-  // Public auth screens render standalone — no sidebar, header, or app chrome.
+  // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   if (!user || isAuthScreen) {
     return <Outlet />;
   }
