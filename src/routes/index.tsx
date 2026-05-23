@@ -19,10 +19,8 @@ export const Route = createFileRoute("/")({ component: Cockpit });
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
 function Cockpit() {
-  const { settings, addSymbols, removeSymbol } = useSettings();
-  const { tier } = useSubscription();
+  const { settings, removeSymbol } = useSettings();
   const [manageOpen, setManageOpen] = useState(false);
-  const [editPortfolioOpen, setEditPortfolioOpen] = useState(false);
   const usingDefault = settings.watchlist.length === 0 && settings.portfolioSymbols.length === 0;
 
   const portfolioSymbols = settings.portfolioSymbols;
@@ -38,7 +36,7 @@ function Cockpit() {
     : Array.from(new Set([...portfolioSymbols, ...marketWatchSymbols]));
   const rows = useCockpitData(cockpitSymbols);
   const rowMap = new Map(rows.map((r) => [r.symbol, r]));
-  const portfolioLimit = getPortfolioLimit(tier);
+
 
   const longCount = rows.filter((r) => r.sig.verdict === "LONG").length;
   const shortCount = rows.filter((r) => r.sig.verdict === "SHORT").length;
