@@ -76,24 +76,32 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
 
   const ctx = `Symbol ${symbol}. Analyst bullish ${analyst.bull}%, retail bullish ${retail.bull}%, institutionell bullish ${institutional.bull}%. Gesamt: ${overall.label}.`;
 
+  const net = overallBull - overallBear; // -100..100
+
   return (
     <section className="rounded-xl border border-border/70 bg-gradient-to-br from-card/90 to-card/40 p-5 backdrop-blur">
-      <header className="mb-4 flex items-center justify-between gap-2">
+      <header className="mb-4 flex items-start justify-between gap-2">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Market Consensus</div>
-          <div className="mt-0.5 flex items-center gap-2">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2">
             <h2 className="text-lg font-semibold">Stimmungsbild · {symbol}</h2>
             <VerdictPill tone={overall.tone} label={overall.label} />
+            <span className={`font-mono text-xs tabular-nums ${net > 0 ? "text-bull" : net < 0 ? "text-bear" : "text-muted-foreground"}`}>
+              Net {net > 0 ? "+" : ""}{net}
+            </span>
           </div>
         </div>
         <ExplainAiButton topic="Market Consensus" context={ctx} />
       </header>
 
-      {/* Overall gauge */}
-      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="md:col-span-1 rounded-lg border border-border/60 bg-background/40 p-4">
+      {/* Shared legend */}
+      <Legend />
+
+      {/* Overall gauge + aggregate */}
+      <div className="mb-5 mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="rounded-lg border border-border/60 bg-background/40 p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Sentiment Gauge</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Bull-Score (0–100)</span>
             <ExplainAiButton topic="Sentiment Gauge" variant="icon" context={ctx} />
           </div>
           <Gauge value={gaugeValue} />
@@ -106,7 +114,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
 
         <div className="md:col-span-2 rounded-lg border border-border/60 bg-background/40 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Aggregate · Bullish / Neutral / Bearish</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Aggregierte Verteilung</span>
             <ExplainAiButton topic="Bullish vs. Bearish Verteilung" variant="icon" context={ctx} />
           </div>
           <StackedBar bull={overallBull} neutral={overallNeutral} bear={overallBear} />
@@ -115,6 +123,9 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
             <Pct label="Neutral" value={overallNeutral} tone="neutral" icon={<Minus className="h-3.5 w-3.5" />} />
             <Pct label="Bearish" value={overallBear} tone="bear" icon={<TrendingDown className="h-3.5 w-3.5" />} />
           </div>
+          <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
+            Net-Score = Bullish − Bearish. Positiv = überwiegend optimistische Stimmung, negativ = pessimistisch.
+          </p>
         </div>
       </div>
 
@@ -122,7 +133,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <GroupCard
           icon={<LineChartIcon className="h-3.5 w-3.5" />}
-          title="Analyst Sentiment"
+          title="Analysten"
           subtitle="Sell-Side · Research"
           s={analyst}
           topic="Analyst Sentiment"
@@ -130,15 +141,15 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
         />
         <GroupCard
           icon={<Users className="h-3.5 w-3.5" />}
-          title="Retail Sentiment"
-          subtitle="Privat-Trader · Social"
+          title="Privatanleger"
+          subtitle="Retail · Social"
           s={retail}
           topic="Retail Sentiment"
           ctx={`Retail-Stimmung für ${symbol}: bullish ${retail.bull}%, neutral ${retail.neutral}%, bearish ${retail.bear}%.`}
         />
         <GroupCard
           icon={<Building2 className="h-3.5 w-3.5" />}
-          title="Institutional Sentiment"
+          title="Institutionelle"
           subtitle="Funds · Banks · Quant"
           s={institutional}
           topic="Institutional Sentiment"
@@ -153,13 +164,24 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
   );
 }
 
+function Legend() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-bull" /> Bullish (positiv)</span>
+      <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted-foreground/50" /> Neutral</span>
+      <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-bear" /> Bearish (negativ)</span>
+    </div>
+  );
+}
+
 function GroupCard({
   icon, title, subtitle, s, topic, ctx,
 }: { icon: React.ReactNode; title: string; subtitle: string; s: Sentiment; topic: string; ctx: string }) {
   const v = verdictFor(s);
+  const net = s.bull - s.bear;
   return (
     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
           <span className="text-muted-foreground">{icon}</span>
           {title}
@@ -170,24 +192,26 @@ function GroupCard({
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{subtitle}</span>
         <VerdictPill tone={v.tone} label={v.label} small />
       </div>
-      <ConfidenceBar label="Bullish" value={s.bull} tone="bull" />
-      <ConfidenceBar label="Neutral" value={s.neutral} tone="neutral" />
-      <ConfidenceBar label="Bearish" value={s.bear} tone="bear" />
-    </div>
-  );
-}
 
-function ConfidenceBar({ label, value, tone }: { label: string; value: number; tone: "bull" | "bear" | "neutral" }) {
-  const color = tone === "bull" ? "bg-bull" : tone === "bear" ? "bg-bear" : "bg-muted-foreground/60";
-  const text = tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-muted-foreground";
-  return (
-    <div className="mb-1.5 last:mb-0">
-      <div className="mb-0.5 flex items-center justify-between text-[10px] uppercase tracking-wider">
-        <span className="text-muted-foreground">{label}</span>
-        <span className={`font-mono tabular-nums ${text}`}>{value}%</span>
+      {/* Stacked horizontal split bar */}
+      <StackedBar bull={s.bull} neutral={s.neutral} bear={s.bear} />
+
+      {/* Inline % labels */}
+      <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] font-mono tabular-nums">
+        <span className="text-bull">▲ {s.bull}%</span>
+        <span className="text-center text-muted-foreground">● {s.neutral}%</span>
+        <span className="text-right text-bear">▼ {s.bear}%</span>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-muted/40">
-        <div className={`h-full ${color} transition-all`} style={{ width: `${value}%` }} />
+
+      {/* Diverging net bar (-100..+100) */}
+      <div className="mt-3">
+        <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span>Net-Sentiment</span>
+          <span className={`font-mono tabular-nums ${net > 0 ? "text-bull" : net < 0 ? "text-bear" : "text-muted-foreground"}`}>
+            {net > 0 ? "+" : ""}{net}
+          </span>
+        </div>
+        <DivergingBar net={net} />
       </div>
     </div>
   );
@@ -196,17 +220,42 @@ function ConfidenceBar({ label, value, tone }: { label: string; value: number; t
 function StackedBar({ bull, neutral, bear }: { bull: number; neutral: number; bear: number }) {
   return (
     <div className="flex h-3 w-full overflow-hidden rounded-full border border-border/40 bg-muted/30">
-      <div className="bg-bull transition-all" style={{ width: `${bull}%` }} title={`Bullish ${bull}%`} />
-      <div className="bg-muted-foreground/40 transition-all" style={{ width: `${neutral}%` }} title={`Neutral ${neutral}%`} />
-      <div className="bg-bear transition-all" style={{ width: `${bear}%` }} title={`Bearish ${bear}%`} />
+      {bull > 0 && <div className="bg-bull transition-all" style={{ width: `${bull}%` }} title={`Bullish ${bull}%`} />}
+      {neutral > 0 && <div className="bg-muted-foreground/50 transition-all" style={{ width: `${neutral}%` }} title={`Neutral ${neutral}%`} />}
+      {bear > 0 && <div className="bg-bear transition-all" style={{ width: `${bear}%` }} title={`Bearish ${bear}%`} />}
+    </div>
+  );
+}
+
+function DivergingBar({ net }: { net: number }) {
+  // net in -100..100; render symmetrical bar around centerline
+  const clamped = Math.max(-100, Math.min(100, net));
+  const halfPct = Math.abs(clamped) / 2; // half of 200% scale -> share of total width
+  const isBull = clamped >= 0;
+  return (
+    <div className="relative h-2 w-full rounded-full bg-muted/30">
+      {/* Center axis */}
+      <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border" />
+      {/* Fill from center */}
+      <div
+        className={`absolute top-0 h-full rounded-full ${isBull ? "bg-bull" : "bg-bear"}`}
+        style={{
+          left: isBull ? "50%" : `${50 - halfPct}%`,
+          width: `${halfPct}%`,
+        }}
+      />
+      <div className="absolute -bottom-3.5 left-0 text-[9px] text-muted-foreground">−100</div>
+      <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground">0</div>
+      <div className="absolute -bottom-3.5 right-0 text-[9px] text-muted-foreground">+100</div>
     </div>
   );
 }
 
 function Pct({ label, value, tone, icon }: { label: string; value: number; tone: "bull" | "bear" | "neutral"; icon: React.ReactNode }) {
   const text = tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-muted-foreground";
+  const ring = tone === "bull" ? "border-bull/30" : tone === "bear" ? "border-bear/30" : "border-border/50";
   return (
-    <div className="rounded-md border border-border/40 bg-card/40 p-2">
+    <div className={`rounded-md border ${ring} bg-card/40 p-2`}>
       <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
         <span className="flex items-center gap-1">{icon}{label}</span>
       </div>
