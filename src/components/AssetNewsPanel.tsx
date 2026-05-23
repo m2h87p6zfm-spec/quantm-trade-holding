@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 type Category = "all" | "earnings" | "analyst" | "insider" | "macro" | "other";
 
-const CATEGORY_RX: Record<Exclude<Category, "all">, RegExp> = {
+const CATEGORY_RX: Record<Exclude<Category, "all" | "other">, RegExp> = {
   earnings: /\b(earnings|q[1-4]|quarter|results|revenue|eps|beat|miss|guidance|profit|loss|outlook)\b/i,
   analyst: /\b(upgrade|downgrade|price target|rating|analyst|buy|sell|hold|overweight|underweight|raises?|cuts?)\b/i,
   insider: /\b(insider|ceo|cfo|board|stake|shares?\s+(?:bought|sold)|filing|13[dfg]|sec filing)\b/i,
