@@ -855,6 +855,71 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "trade_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          symbol: string | null
+          title: string
+          trade_summary: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          symbol?: string | null
+          title?: string
+          trade_summary?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          symbol?: string | null
+          title?: string
+          trade_summary?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_portfolio_positions: {
         Row: {
           broker_currency: string | null
