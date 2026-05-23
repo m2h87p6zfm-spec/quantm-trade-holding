@@ -191,7 +191,7 @@ export function WatchlistSignalsPanel() {
               {/* Price */}
               <div className="mt-5">
                 <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
-                  {r.last.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
                   <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
