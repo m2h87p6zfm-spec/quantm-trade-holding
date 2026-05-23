@@ -200,6 +200,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 function NewsPage() {
   const t = useT();
   const { settings, update } = useSettings();
+  const { isPro, loading: subLoading } = useSubscription();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
   const [openItem, setOpenItem] = useState<Item | null>(null);
   const enabledSources = useMemo(
@@ -215,10 +216,11 @@ function NewsPage() {
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,
-    enabled: enabledSources.length > 0,
+    enabled: !subLoading && isPro && enabledSources.length > 0,
   });
 
-  const items = data ?? [];
+  const items = data?.items ?? [];
+  const gated = data?.gated ?? (!subLoading && !isPro);
   const forYou = items.filter((it) => it.tickers.some((t) => portfolio.has(t)));
   const visible = tab === "foryou" ? forYou : items;
 
