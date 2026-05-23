@@ -10,6 +10,7 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
