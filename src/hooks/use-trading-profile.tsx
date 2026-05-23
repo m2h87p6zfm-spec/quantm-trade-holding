@@ -87,34 +87,41 @@ type TradingProfileContextValue = {
 const TradingProfileContext = createContext<TradingProfileContextValue | undefined>(undefined);
 
 export function TradingProfileProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<TradingProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
     if (!user) {
       setProfile(null);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const { data } = await supabase
-      .from("user_trading_profile")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (!data) {
-      const { data: inserted } = await supabase
+    try {
+      const { data } = await supabase
         .from("user_trading_profile")
-        .insert({ user_id: user.id })
         .select("*")
-        .single();
-      setProfile((inserted as TradingProfile) ?? null);
-    } else {
-      setProfile(data as TradingProfile);
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!data) {
+        const { data: inserted } = await supabase
+          .from("user_trading_profile")
+          .upsert({ user_id: user.id }, { onConflict: "user_id" })
+          .select("*")
+          .single();
+        setProfile((inserted as TradingProfile) ?? null);
+      } else {
+        setProfile(data as TradingProfile);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [user]);
+  }, [authLoading, user]);
 
   useEffect(() => {
     load();
