@@ -362,21 +362,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 7 && (
-            <Question title="Which markets interest you?" hint="Mehrfachauswahl. Nur diese Klassen werden in Feeds und Empfehlungen priorisiert.">
-              <Grid cols={3}>
-                {MARKETS.map((g) => (
-                  <Choice
-                    key={g.v}
-                    active={a.markets.includes(g.v)}
-                    onClick={() => setA((s) => ({ ...s, markets: s.markets.includes(g.v) ? s.markets.filter((x) => x !== g.v) : [...s.markets, g.v] }))}
-                    label={g.label}
-                    desc={g.desc}
-                  />
-                ))}
-              </Grid>
-            </Question>
-          )}
+          {/* step === 7 (Markets) entfernt — wir bieten ausschließlich Aktien & ETFs an */}
           {step === 8 && (
             <Question title="What updates would you like to receive?" hint="Du kannst das jederzeit in den Einstellungen anpassen.">
               <div className="space-y-2">
