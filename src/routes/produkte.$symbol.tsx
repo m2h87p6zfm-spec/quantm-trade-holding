@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Star, StarOff } from "lucide-react";
+import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
@@ -13,6 +13,7 @@ import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/produkte/$symbol")({
   head: ({ params }) => {
