@@ -365,6 +365,21 @@ const QUICK_PROMPTS = [
 
 function AiPanel() {
   const { positions, add, remove } = usePortfolio();
+  const symbols = useMemo(
+    () => Array.from(new Set(positions.map((p) => p.symbol))),
+    [positions],
+  );
+  const rows = useCockpitData(symbols);
+  const priceMap = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const r of rows) if (typeof r.last === "number") m.set(r.symbol, r.last);
+    return m;
+  }, [rows]);
+  const priceMapRef = useRef(priceMap);
+  useEffect(() => {
+    priceMapRef.current = priceMap;
+  }, [priceMap]);
+
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "assistant",
