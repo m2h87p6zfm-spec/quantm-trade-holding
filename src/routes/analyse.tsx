@@ -239,10 +239,15 @@ function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: stri
   const record = useServerFn(recordPrediction);
   const queryClient = useQueryClient();
 
-  const [credit, setCredit] = useState<CreditState>({ phase: "checking" });
+  const isCached = cachedText !== undefined;
+  const [credit, setCredit] = useState<CreditState>(isCached ? { phase: "ok" } : { phase: "checking" });
 
-  // Credit pro Symbol-Analyse verbrauchen (1× pro Mount)
+  // Credit pro Symbol-Analyse verbrauchen (1× pro Mount) — bei gecachten Antworten überspringen
   useEffect(() => {
+    if (isCached) {
+      setCredit({ phase: "ok" });
+      return;
+    }
     if (!user) {
       setCredit({ phase: "anon" });
       return;
@@ -261,7 +266,7 @@ function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: stri
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, user?.id]);
+  }, [symbol, user?.id, isCached]);
 
   const productName = product?.name ?? symbol;
 
@@ -377,6 +382,7 @@ function AgentAnalysisView({
 
   const recordTrack = useServerFn(recordApexAnalysis);
   useEffect(() => {
+    if (cachedText !== undefined) return; // gecachte Antwort — keine Neuaufzeichnung
     if (!user) return;
     record({
       data: {
@@ -421,7 +427,7 @@ function AgentAnalysisView({
       }).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, scenarioTag, regime, sig.verdict, user?.id]);
+  }, [symbol, scenarioTag, regime, sig.verdict, user?.id, cachedText]);
 
   return (
     <div className="space-y-4">
