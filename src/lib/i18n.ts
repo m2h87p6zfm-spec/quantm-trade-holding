@@ -32,6 +32,7 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Trading
     "nav.portfolio": "Portfolio",
     "nav.alerts": "Smart Alerts",
+    "nav.more": "Mehr",
     // Nav — System
     "nav.pricing": "Preise & Pläne",
     "nav.catalog": "Produktkatalog",
@@ -339,6 +340,7 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Trading
     "nav.portfolio": "Portfolio",
     "nav.alerts": "Smart Alerts",
+    "nav.more": "More",
     // Nav — System
     "nav.pricing": "Pricing & Plans",
     "nav.catalog": "Product Catalog",

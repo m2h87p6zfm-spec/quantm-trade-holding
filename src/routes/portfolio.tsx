@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check } from "lucide-react";
+import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Microscope } from "lucide-react";
 import { usePortfolio, pnl, costBasis, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
 import { findProduct } from "@/lib/products";
@@ -122,15 +122,124 @@ function PositionRow({
         </div>
       </td>
       <td className="px-3 py-3 text-right">
-        <button
-          onClick={() => onRemove(pos.id)}
-          className="text-muted-foreground hover:text-rose-400 transition-colors"
-          aria-label="Löschen"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center justify-end gap-1">
+          <Link
+            to="/explain-trade"
+            className="rounded-md p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            aria-label="Explain trade"
+            title="Explain Trade"
+          >
+            <Microscope className="h-4 w-4" />
+          </Link>
+          <button
+            onClick={() => onRemove(pos.id)}
+            className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10 transition-colors"
+            aria-label="Löschen"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </td>
     </tr>
+  );
+}
+
+function PositionCard({
+  pos,
+  row,
+  onRemove,
+}: {
+  pos: Position;
+  row?: CockpitRow;
+  onRemove: (id: string) => void;
+}) {
+  const q = useQuote(pos.symbol, 30_000);
+  const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
+  const prod = findProduct(pos.symbol);
+  const p = price ? pnl(pos, price) : null;
+  const up = (p?.abs ?? 0) >= 0;
+  const sig = deriveSignalState(pos, row);
+  const sigStyles =
+    sig.kind === "conflict"
+      ? "bg-bear/15 text-bear border-bear/40"
+      : sig.kind === "aligned"
+        ? "bg-bull/15 text-bull border-bull/40"
+        : sig.kind === "neutral"
+          ? "bg-muted text-muted-foreground border-border"
+          : "bg-muted/40 text-muted-foreground border-border animate-pulse";
+
+  return (
+    <div
+      className={`rounded-xl border border-border bg-card p-3 ${sig.kind === "conflict" ? "ring-1 ring-bear/30" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold tracking-tight">{pos.symbol}</span>
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${pos.side === "LONG" ? "bg-emerald-500/15 text-emerald-400" : "bg-rose-500/15 text-rose-400"}`}
+            >
+              {pos.side}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground truncate">{prod?.name ?? "—"}</div>
+        </div>
+        <div className="text-right shrink-0">
+          <div className="tabular-nums text-sm font-medium">{price ? price.toFixed(2) : "…"}</div>
+          <div
+            className={`tabular-nums text-xs font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}
+          >
+            {p ? `${up ? "+" : ""}${p.pct.toFixed(2)}%` : "—"}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
+        <div>
+          <div className="text-muted-foreground">Menge</div>
+          <div className="tabular-nums">{pos.qty}</div>
+        </div>
+        <div>
+          <div className="text-muted-foreground">Einstand</div>
+          <div className="tabular-nums">{pos.entry.toFixed(2)}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-muted-foreground">P&amp;L</div>
+          <div className={`tabular-nums font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}>
+            {p ? `${up ? "+" : ""}${p.abs.toFixed(2)}` : "—"}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span
+          className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-semibold ${sigStyles}`}
+        >
+          {sig.kind === "conflict" && <AlertTriangle className="h-3 w-3" />}
+          {sig.kind === "aligned" && <Check className="h-3 w-3" />}
+          {sig.label}
+        </span>
+        <div className="flex items-center gap-1">
+          <Link
+            to="/explain-trade"
+            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-foreground/80 hover:text-primary hover:border-primary/40"
+          >
+            <Microscope className="h-3.5 w-3.5" />
+            Explain
+          </Link>
+          <button
+            onClick={() => onRemove(pos.id)}
+            className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10"
+            aria-label="Löschen"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      {sig.detail && (
+        <div className="mt-2 text-[10px] text-muted-foreground leading-snug">{sig.detail}</div>
+      )}
+    </div>
   );
 }
 
@@ -165,59 +274,77 @@ function PortfolioPage() {
         </div>
       </div>
 
-      {/* Unified Command Center: manual add + AI assistant */}
-      <PortfolioCommandCenter />
-
-      {/* Summary Stats */}
+      {/* 1. Summary stats — sofortiger Überblick */}
       <Summary positions={positions} rowMap={rowMap} />
 
-      {/* Analytics: Risk Score, Sectors, Risk, AI Insight */}
-      <PortfolioAnalytics positions={positions} rowMap={rowMap} />
-
-      {/* Holdings Table */}
+      {/* 2. Holdings — die Positionen sind das Herzstück, also gleich nach oben */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="border-b border-border px-5 py-3 flex items-center justify-between">
+        <div className="border-b border-border px-4 md:px-5 py-3 flex items-center justify-between">
           <div className="text-sm font-semibold">Holdings</div>
           <div className="text-[11px] text-muted-foreground">
             {positions.length} {positions.length === 1 ? "Position" : "Positionen"}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[920px]">
-            <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-left">Asset</th>
-                <th className="px-3 py-2 text-left">Side</th>
-                <th className="px-3 py-2 text-right">Menge</th>
-                <th className="px-3 py-2 text-right">Einstand</th>
-                <th className="px-3 py-2 text-right">Aktuell</th>
-                <th className="px-3 py-2 text-right">Wert</th>
-                <th className="px-3 py-2 text-right">P&L</th>
-                <th className="px-3 py-2 text-left">Quant-Signal</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {positions.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-3 py-16 text-center text-muted-foreground">
-                    <Wallet className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                    <div className="text-sm">Noch keine Positionen.</div>
-                    <div className="text-xs mt-1">
-                      Suche oben nach einer Aktie und füge sie hinzu — alle Analytics werden
-                      automatisch berechnet.
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                positions.map((p) => (
-                  <PositionRow key={p.id} pos={p} row={rowMap.get(p.symbol)} onRemove={remove} />
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+
+        {positions.length === 0 ? (
+          <div className="px-4 py-16 text-center text-muted-foreground">
+            <Wallet className="h-8 w-8 mx-auto mb-2 opacity-40" />
+            <div className="text-sm">Noch keine Positionen.</div>
+            <div className="text-xs mt-1">
+              Füge unten eine Aktie hinzu — alle Analytics werden automatisch berechnet.
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Mobile: Cards */}
+            <div className="md:hidden grid gap-2 p-3">
+              {positions.map((p) => (
+                <PositionCard
+                  key={p.id}
+                  pos={p}
+                  row={rowMap.get(p.symbol)}
+                  onRemove={remove}
+                />
+              ))}
+            </div>
+
+            {/* Desktop: Tabelle */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm min-w-[920px]">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Asset</th>
+                    <th className="px-3 py-2 text-left">Side</th>
+                    <th className="px-3 py-2 text-right">Menge</th>
+                    <th className="px-3 py-2 text-right">Einstand</th>
+                    <th className="px-3 py-2 text-right">Aktuell</th>
+                    <th className="px-3 py-2 text-right">Wert</th>
+                    <th className="px-3 py-2 text-right">P&L</th>
+                    <th className="px-3 py-2 text-left">Quant-Signal</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {positions.map((p) => (
+                    <PositionRow
+                      key={p.id}
+                      pos={p}
+                      row={rowMap.get(p.symbol)}
+                      onRemove={remove}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* 3. Analytics — Risiko, Sektoren, KI-Insights */}
+      <PortfolioAnalytics positions={positions} rowMap={rowMap} />
+
+      {/* 4. Command Center — Hinzufügen / KI-Assistent (am Ende, da seltener gebraucht) */}
+      <PortfolioCommandCenter />
 
       <DisclaimerInline />
     </div>
