@@ -133,7 +133,8 @@ type Answers = {
 };
 
 const initialAnswers: Answers = {
-  markets: [],
+  // Markets-Step entfernt — wir bieten ohnehin nur Aktien & ETFs an, daher beide standardmäßig aktiv.
+  markets: ["stocks", "etfs"],
   notifications: { notif_realtime: true, notif_breakout: true, notif_daily: true, notif_weekly: false },
   trusted_sources: ["reuters", "bloomberg", "yahoo"],
   starter_watchlists: [],
