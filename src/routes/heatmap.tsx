@@ -72,6 +72,7 @@ function HeatCell({ cell, big }: { cell: Cell; big?: boolean }) {
 }
 
 function HeatmapPage() {
+  const t = useT();
   const [range, setRange] = useState<Range>("D");
   const [mode, setMode] = useState<Mode>("sector");
 
