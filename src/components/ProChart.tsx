@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  createChart,
-  CandlestickSeries,
-  LineSeries,
-  HistogramSeries,
-  ColorType,
-  CrosshairMode,
-  LineStyle,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
-  type IPriceLine,
+import type {
+  IChartApi,
+  ISeriesApi,
+  UTCTimestamp,
+  IPriceLine,
 } from "lightweight-charts";
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
