@@ -135,6 +135,7 @@ function PositionRow({
 }
 
 function PortfolioPage() {
+  const t = useT();
   const { positions, remove } = usePortfolio();
   const { max, tier } = usePortfolioLimit(positions.length);
 
