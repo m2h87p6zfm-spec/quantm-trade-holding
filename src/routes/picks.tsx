@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { recordApexAnalysis } from "@/lib/trackrecord.functions";
 import { useT } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
 
 function regimeLabel(r: MarketRegime) {
   return { bull: "Bullisch", bear: "Bärisch", chop: "Seitwärts", high_vol: "Hochvolatil", low_vol: "Ruhig" }[r];
@@ -37,6 +38,7 @@ type Region = (typeof REGIONS)[number];
 
 function PicksPage() {
   const t = useT();
+  const { user } = useAuth();
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
@@ -141,6 +143,7 @@ function PicksPage() {
   const recordedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (loading || picks.length === 0) return;
+    if (!user) return; // requires auth — skip for guests
     const today = new Date().toISOString().slice(0, 10);
     let stored: Record<string, string> = {};
     try { stored = JSON.parse(localStorage.getItem("apex_picks_recorded") || "{}"); } catch { /* ignore */ }
@@ -175,7 +178,7 @@ function PicksPage() {
       }).catch(() => { /* fire-and-forget */ });
     }
     try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
-  }, [loading, picks]);
+  }, [loading, picks, user]);
 
   const podium = picks.slice(0, 3);
   const rest = picks.slice(3);
