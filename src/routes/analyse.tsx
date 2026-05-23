@@ -754,7 +754,9 @@ function AnalysePage() {
           Tipp: Du kannst Ticker (NVDA, SAP) oder volle Namen verwenden.
         </p>
       </form>
+      </div>
     </div>
   );
 }
+
 
