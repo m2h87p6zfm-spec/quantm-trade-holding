@@ -77,13 +77,23 @@ function ExplainTradePage() {
 
   const mutation = useMutation({
     mutationFn: async (input: { symbol: string; name: string; buyDate: string; shares: number; sellDate: string | null; sector?: string }) => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
       const r = await fetch("/api/public/explain-trade", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(input),
       });
-      const j = (await r.json()) as AnalysisResult | { error: string };
-      if (!r.ok || "error" in j) throw new Error("error" in j ? j.error : "Fehler bei der Analyse");
+      const j = (await r.json()) as AnalysisResult | { error: string; code?: string };
+      if (!r.ok || "error" in j) {
+        if (r.status === 401) throw new Error("Bitte melde dich neu an — deine Sitzung ist abgelaufen.");
+        if (r.status === 402) throw new Error("Diese Funktion ist Pro/Elite-exklusiv. Bitte upgrade dein Abo.");
+        throw new Error("error" in j ? j.error : "Fehler bei der Analyse");
+      }
       return j as AnalysisResult;
     },
   });
