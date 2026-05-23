@@ -145,9 +145,23 @@ function Cockpit() {
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-[13px] font-medium text-white/60">{t("cockpit.indices.title")}</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              {/* Mobile: horizontal scroll chips */}
+              <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {indices.map((i) => {
-
+                  const up = (i.change ?? 0) >= 0;
+                  return (
+                    <div key={i.symbol} className="flex shrink-0 flex-col gap-1 rounded-xl border border-[#1F1F1F] bg-[#0A0A0A] px-3 py-2 min-w-[120px]">
+                      <span className="text-[11px] text-white/50">{i.label}</span>
+                      <span className={`font-mono text-[14px] font-semibold tabular-nums ${i.change == null ? "text-white/30" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                        {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Desktop: grid */}
+              <div className="hidden sm:grid grid-cols-2 gap-x-6 gap-y-3">
+                {indices.map((i) => {
                   const up = (i.change ?? 0) >= 0;
                   return (
                     <div key={i.symbol} className="flex items-center justify-between">
