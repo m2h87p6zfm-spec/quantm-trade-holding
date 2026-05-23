@@ -17,7 +17,7 @@ export default defineConfig({
       // variable name. This avoids client/SSR ID mismatches that surface as
       // "Invalid server function ID" when the same module is reached via
       // different absolute paths between bundles.
-      generateFunctionId: ({ filename, functionName }) => {
+      generateFunctionId: ({ filename, functionName }: { filename: string; functionName: string }) => {
         const base = path
           .basename(filename)
           .replace(/\.[cm]?[jt]sx?$/i, "")
