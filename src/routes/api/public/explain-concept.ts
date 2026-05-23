@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireUserId } from "@/lib/api-auth.server";
 
 const SYSTEM = `Du bist ein freundlicher Finanz-Tutor für absolute Anfänger.
 Erkläre Trading-/Analyse-Konzepte in EINFACHER, klarer deutscher Sprache.
