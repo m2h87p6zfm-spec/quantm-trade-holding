@@ -164,7 +164,7 @@ export const Route = createFileRoute("/api/public/signal-chat")({
         }),
       POST: async ({ request }) => {
         try {
-          const auth = await requireUserId(request);
+          const auth = await requirePro(request);
           if (auth instanceof Response) return auth;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) {

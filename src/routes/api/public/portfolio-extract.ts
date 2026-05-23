@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
-import { requireUserId } from "@/lib/api-auth.server";
+import { requirePro } from "@/lib/api-auth.server";
 
 /**
  * Extracts portfolio positions from one or more screenshots / photos
@@ -217,7 +217,7 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
           });
 
         try {
-          const auth = await requireUserId(request);
+          const auth = await requirePro(request);
           if (auth instanceof Response) return auth;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) return json({ error: "AI gateway nicht konfiguriert." }, 500);
