@@ -27,6 +27,7 @@ import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
 import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
 
@@ -150,7 +151,7 @@ function AppShell() {
                 <AuthHeaderButton />
               </div>
             </header>
-            <main className="flex-1 overflow-x-hidden bg-mesh relative">
+            <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
               <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
               <div className="relative z-10">
                 <Outlet />
@@ -159,6 +160,7 @@ function AppShell() {
             <DisclaimerBanner />
           </div>
         </div>
+        <MobileBottomNav />
       </div>
       <QuickPanel />
       <UpgradeModal />
