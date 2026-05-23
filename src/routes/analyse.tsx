@@ -515,16 +515,41 @@ function AnalysePage() {
     setActiveConvId(id);
     const { data, error } = await supabase
       .from("agent_messages")
-      .select("role,content")
+      .select("role,content,created_at")
       .eq("conversation_id", id)
       .order("created_at", { ascending: true });
     if (error || !data) return;
+    const rows = data as { role: string; content: string }[];
     const replay: Msg[] = [initial[0]];
-    for (const m of data as { role: string; content: string }[]) {
-      if (m.role !== "user") continue;
-      const sym = extractSymbol(m.content);
-      replay.push({ role: "user", text: m.content });
-      replay.push({ role: "agent", text: "", symbol: sym ?? undefined, query: m.content });
+    for (let i = 0; i < rows.length; i++) {
+      const m = rows[i];
+      if (m.role === "user") {
+        replay.push({ role: "user", text: m.content });
+        // Look ahead for the matching assistant reply
+        const next = rows[i + 1];
+        if (next && next.role === "assistant") {
+          const sym = extractSymbol(m.content);
+          replay.push({
+            role: "agent",
+            text: next.content,
+            symbol: sym ?? undefined,
+            query: m.content,
+            cachedText: next.content,
+            convId: id,
+          });
+          i++; // consume the assistant row
+        } else {
+          // No stored assistant text → fall back to live re-run
+          const sym = extractSymbol(m.content);
+          replay.push({
+            role: "agent",
+            text: "",
+            symbol: sym ?? undefined,
+            query: m.content,
+            convId: id,
+          });
+        }
+      }
     }
     setMessages(replay);
   };
@@ -536,7 +561,17 @@ function AnalysePage() {
     if (activeConvId === id) newChat();
   };
 
-  const sendQuery = (text: string) => {
+  async function persistAssistantMsg(convId: string, text: string) {
+    if (!user || !text?.trim()) return;
+    await supabase.from("agent_messages").insert({
+      conversation_id: convId, user_id: user.id, role: "assistant", content: text.slice(0, 20000),
+    });
+    await supabase.from("agent_conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", convId);
+  }
+
+  const sendQuery = async (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
 
@@ -554,34 +589,36 @@ function AnalysePage() {
       ];
       const isFinance = FINANCE_HINTS.some((k) => lower.includes(k));
       if (!isFinance) {
-        const canned: Msg = {
-          role: "agent",
-          text:
-            "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
-            "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
-            "• *Analysiere NVDA*\n" +
-            "• *Wie steht der DAX?*\n" +
-            "• *Soll ich Tesla kaufen?*\n" +
-            "• *Bewerte Apple*",
-        };
+        const cannedText =
+          "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
+          "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
+          "• *Analysiere NVDA*\n" +
+          "• *Wie steht der DAX?*\n" +
+          "• *Soll ich Tesla kaufen?*\n" +
+          "• *Bewerte Apple*";
+        const canned: Msg = { role: "agent", text: cannedText };
         setMessages((m) => [...m, userMsg, canned]);
         setInput("");
-        // Auch off-topic in History speichern
         if (user) {
-          ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
+          const cid = await ensureConv(text);
+          if (cid) {
+            await persistUserMsg(cid, text);
+            await persistAssistantMsg(cid, cannedText);
+          }
         }
         return;
       }
     }
 
-    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
-    setMessages((m) => [...m, userMsg, reply]);
     setInput("");
+    const cid = user ? await ensureConv(text) : null;
+    if (cid) await persistUserMsg(cid, text);
 
-    if (user) {
-      ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
-    }
+    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text, convId: cid ?? undefined };
+    setMessages((m) => [...m, userMsg, reply]);
   };
+
+
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
