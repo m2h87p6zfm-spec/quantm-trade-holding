@@ -441,19 +441,37 @@ function AiPanel() {
     try {
       const payload = {
         messages: next,
-        positions: positionsRef.current.map((p) => ({
-          symbol: p.symbol,
-          name: findProduct(p.symbol)?.name,
-          qty: p.qty,
-          entry: p.entry,
-          side: p.side,
-          openedAt: p.openedAt,
-        })),
+        positions: positionsRef.current.map((p) => {
+          const last = priceMapRef.current.get(p.symbol);
+          const sign = p.side === "SHORT" ? -1 : 1;
+          const plAbs = typeof last === "number" ? sign * (last - p.entry) * p.qty : null;
+          const plPct =
+            typeof last === "number" && p.entry > 0
+              ? sign * ((last - p.entry) / p.entry) * 100
+              : null;
+          return {
+            symbol: p.symbol,
+            name: findProduct(p.symbol)?.name,
+            qty: p.qty,
+            entry: p.entry,
+            side: p.side,
+            openedAt: p.openedAt,
+            currentPrice: last ?? null,
+            currentValue: typeof last === "number" ? last * p.qty : null,
+            pnlAbs: plAbs,
+            pnlPct: plPct,
+          };
+        }),
       };
+
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
       const res = await fetch("/api/public/portfolio-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
 
