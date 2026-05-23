@@ -12,7 +12,27 @@ import { BrokerAssessment } from "@/components/BrokerAssessment";
 import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 
-export const Route = createFileRoute("/produkte/$symbol")({ component: ProductDetail });
+export const Route = createFileRoute("/produkte/$symbol")({
+  head: ({ params }) => {
+    const symbol = params.symbol;
+    const product = findProduct(symbol);
+    const name = product?.name ?? symbol;
+    const sector = product?.sector ?? "Aktie";
+    const title = `${symbol} · ${name} — Quant-Analyse & Signal | Quantm Trade`;
+    const description = `Live ${name} (${symbol}) Quant-Analyse: RSI, MACD, Bollinger, Z-Score und Wall-Street-Broker-Konsens. Sektor: ${sector}. Aktualisiert minütlich.`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+    };
+  },
+  component: ProductDetail,
+});
 
 function ProductDetail() {
   const { symbol } = Route.useParams();

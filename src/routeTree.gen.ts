@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as TrackRecordRouteImport } from './routes/track-record'
+import { Route as StatusRouteImport } from './routes/status'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignaleRouteImport } from './routes/signale'
+import { Route as ScreenerRouteImport } from './routes/screener'
 import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as PicksRouteImport } from './routes/picks'
@@ -20,6 +23,7 @@ import { Route as PasswortZuruecksetzenRouteImport } from './routes/passwort-zur
 import { Route as PasswortVergessenRouteImport } from './routes/passwort-vergessen'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NewsRouteImport } from './routes/news'
+import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KontoRouteImport } from './routes/konto'
@@ -34,6 +38,7 @@ import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AiLearningRouteImport } from './routes/ai-learning'
 import { Route as AgentRouteImport } from './routes/agent'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
@@ -68,9 +73,24 @@ const TrackRecordRoute = TrackRecordRouteImport.update({
   path: '/track-record',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScreenerRoute = ScreenerRouteImport.update({
+  id: '/screener',
+  path: '/screener',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PreiseRoute = PreiseRouteImport.update({
@@ -106,6 +126,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const NewsRoute = NewsRouteImport.update({
   id: '/news',
   path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MethodologyRoute = MethodologyRouteImport.update({
+  id: '/methodology',
+  path: '/methodology',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaerkteRoute = MaerkteRouteImport.update({
@@ -176,6 +201,11 @@ const AiLearningRoute = AiLearningRouteImport.update({
 const AgentRoute = AgentRouteImport.update({
   id: '/agent',
   path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -274,6 +304,7 @@ const ApiPublicHooksTrackOutcomesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
@@ -288,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
@@ -295,7 +327,10 @@ export interface FileRoutesByFullPath {
   '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
+  '/screener': typeof ScreenerRoute
   '/signale': typeof SignaleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
@@ -319,6 +354,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
@@ -333,6 +369,7 @@ export interface FileRoutesByTo {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
@@ -340,7 +377,10 @@ export interface FileRoutesByTo {
   '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
+  '/screener': typeof ScreenerRoute
   '/signale': typeof SignaleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
@@ -365,6 +405,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
@@ -379,6 +420,7 @@ export interface FileRoutesById {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
   '/passwort-vergessen': typeof PasswortVergessenRoute
@@ -386,7 +428,10 @@ export interface FileRoutesById {
   '/picks': typeof PicksRoute
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
+  '/screener': typeof ScreenerRoute
   '/signale': typeof SignaleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
@@ -412,6 +457,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
@@ -426,6 +472,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/methodology'
     | '/news'
     | '/onboarding'
     | '/passwort-vergessen'
@@ -433,7 +480,10 @@ export interface FileRouteTypes {
     | '/picks'
     | '/portfolio'
     | '/preise'
+    | '/screener'
     | '/signale'
+    | '/sitemap.xml'
+    | '/status'
     | '/track-record'
     | '/war-room'
     | '/welcome'
@@ -457,6 +507,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
@@ -471,6 +522,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/methodology'
     | '/news'
     | '/onboarding'
     | '/passwort-vergessen'
@@ -478,7 +530,10 @@ export interface FileRouteTypes {
     | '/picks'
     | '/portfolio'
     | '/preise'
+    | '/screener'
     | '/signale'
+    | '/sitemap.xml'
+    | '/status'
     | '/track-record'
     | '/war-room'
     | '/welcome'
@@ -502,6 +557,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
@@ -516,6 +572,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/methodology'
     | '/news'
     | '/onboarding'
     | '/passwort-vergessen'
@@ -523,7 +580,10 @@ export interface FileRouteTypes {
     | '/picks'
     | '/portfolio'
     | '/preise'
+    | '/screener'
     | '/signale'
+    | '/sitemap.xml'
+    | '/status'
     | '/track-record'
     | '/war-room'
     | '/welcome'
@@ -548,6 +608,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AgentRoute: typeof AgentRoute
   AiLearningRoute: typeof AiLearningRoute
   AlertsRoute: typeof AlertsRoute
@@ -562,6 +623,7 @@ export interface RootRouteChildren {
   KontoRoute: typeof KontoRoute
   LoginRoute: typeof LoginRoute
   MaerkteRoute: typeof MaerkteRoute
+  MethodologyRoute: typeof MethodologyRoute
   NewsRoute: typeof NewsRoute
   OnboardingRoute: typeof OnboardingRoute
   PasswortVergessenRoute: typeof PasswortVergessenRoute
@@ -569,7 +631,10 @@ export interface RootRouteChildren {
   PicksRoute: typeof PicksRoute
   PortfolioRoute: typeof PortfolioRoute
   PreiseRoute: typeof PreiseRoute
+  ScreenerRoute: typeof ScreenerRoute
   SignaleRoute: typeof SignaleRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StatusRoute: typeof StatusRoute
   TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
@@ -615,11 +680,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackRecordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signale': {
       id: '/signale'
       path: '/signale'
       fullPath: '/signale'
       preLoaderRoute: typeof SignaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/screener': {
+      id: '/screener'
+      path: '/screener'
+      fullPath: '/screener'
+      preLoaderRoute: typeof ScreenerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/preise': {
@@ -669,6 +755,13 @@ declare module '@tanstack/react-router' {
       path: '/news'
       fullPath: '/news'
       preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/methodology': {
+      id: '/methodology'
+      path: '/methodology'
+      fullPath: '/methodology'
+      preLoaderRoute: typeof MethodologyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maerkte': {
@@ -767,6 +860,13 @@ declare module '@tanstack/react-router' {
       path: '/agent'
       fullPath: '/agent'
       preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -900,6 +1000,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AgentRoute: AgentRoute,
   AiLearningRoute: AiLearningRoute,
   AlertsRoute: AlertsRoute,
@@ -914,6 +1015,7 @@ const rootRouteChildren: RootRouteChildren = {
   KontoRoute: KontoRoute,
   LoginRoute: LoginRoute,
   MaerkteRoute: MaerkteRoute,
+  MethodologyRoute: MethodologyRoute,
   NewsRoute: NewsRoute,
   OnboardingRoute: OnboardingRoute,
   PasswortVergessenRoute: PasswortVergessenRoute,
@@ -921,7 +1023,10 @@ const rootRouteChildren: RootRouteChildren = {
   PicksRoute: PicksRoute,
   PortfolioRoute: PortfolioRoute,
   PreiseRoute: PreiseRoute,
+  ScreenerRoute: ScreenerRoute,
   SignaleRoute: SignaleRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StatusRoute: StatusRoute,
   TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
