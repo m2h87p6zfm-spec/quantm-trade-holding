@@ -10,7 +10,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { OnboardingGate } from "@/components/OnboardingGate";
+
 import { DunningBanner } from "@/components/DunningBanner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -110,9 +110,10 @@ function AppShell() {
   const isAuthScreen =
     pathname === "/login" ||
     pathname === "/passwort-vergessen" ||
-    pathname === "/passwort-zuruecksetzen";
+    pathname === "/passwort-zuruecksetzen" ||
+    pathname === "/onboarding";
 
-  // Public auth screens render standalone — no sidebar, header, or app chrome.
+  // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   if (!user || isAuthScreen) {
     return <Outlet />;
   }
@@ -156,7 +157,6 @@ function AppShell() {
         </div>
       </div>
       <QuickPanel />
-      <OnboardingGate />
       <UpgradeModal />
     </SidebarProvider>
   );

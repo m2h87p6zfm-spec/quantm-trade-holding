@@ -1,0 +1,20 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { OnboardingGate } from "@/components/OnboardingGate";
+
+export const Route = createFileRoute("/onboarding")({
+  head: () => ({
+    meta: [
+      { title: "Onboarding — Apex Trades" },
+      { name: "description", content: "Personalisiere deine Apex AI Trading-Plattform." },
+    ],
+  }),
+  component: OnboardingPage,
+});
+
+function OnboardingPage() {
+  return (
+    <div className="min-h-screen w-full bg-background">
+      <OnboardingGate />
+    </div>
+  );
+}
