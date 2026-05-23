@@ -27,13 +27,14 @@ type Item = {
   sentiment?: "bullish" | "bearish" | "neutral";
   score?: number;
   breaking?: boolean;
+  aiSummary?: string;
 };
 
 async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<Item[]> {
   const res = await fetch("/api/public/news-sentiment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbols, sources, tier1Only: true }),
+    body: JSON.stringify({ symbols, sources, tier1Only: false, withSummary: true }),
   });
   if (!res.ok) throw new Error("News fehlgeschlagen");
   const json = (await res.json()) as { items: Item[] };
