@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { getCountryNews, type CountryNewsItem } from "@/lib/country-news.functions";
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from "d3-geo";
 import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
@@ -1152,25 +1155,15 @@ function LiveNews({ country }: { country: CountryIntel }) {
     [settings.newsSources],
   );
 
-  const items = useMemo(() => {
-    if (trusted.length === 0) return [];
-    return country.newsKeywords.slice(0, 3).map((kw, i) => {
-      const sourceKey = trusted[i % trusted.length];
-      const meta = (AGENCY_META as any)[sourceKey] ?? { label: sourceKey };
-      return {
-        id: `${country.iso2}-${i}`,
-        source: sourceKey,
-        label: meta.label,
-        headline: `${country.flag} ${kw}: ${
-          country.risk === "high"
-            ? "Risks escalating — markets watching volatility."
-            : country.risk === "medium"
-              ? "Mixed signals — analysts await next data points."
-              : "Sentiment stable — focus on fundamentals."
-        }`,
-      };
-    });
-  }, [country, trusted]);
+  const fetchNews = useServerFn(getCountryNews);
+  const query = useQuery({
+    queryKey: ["country-news", country.iso2, trusted.sort().join(",")],
+    queryFn: () => fetchNews({ data: { country: country.name, sources: trusted, limit: 3 } }),
+    enabled: trusted.length > 0,
+    staleTime: 10 * 60 * 1000, // 10 min
+    gcTime: 30 * 60 * 1000,
+    retry: 1,
+  });
 
   if (trusted.length === 0) {
     return (
@@ -1181,25 +1174,71 @@ function LiveNews({ country }: { country: CountryIntel }) {
     );
   }
 
+  if (query.isLoading) {
+    return (
+      <div className="space-y-2">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+            <div className="h-2 w-20 rounded bg-white/10" />
+            <div className="mt-2 h-3 w-full rounded bg-white/10" />
+            <div className="mt-1.5 h-3 w-4/5 rounded bg-white/10" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const error = query.data?.error ?? (query.isError ? "Failed to load live news." : null);
+  if (error) {
+    return (
+      <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        {error}
+      </div>
+    );
+  }
+
+  const items = query.data?.items ?? [];
+  if (items.length === 0) {
+    return (
+      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-xs text-muted-foreground">
+        No fresh stories from your trusted sources for {country.name} in the past week.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
-      {items.map((n) => (
-        <div
-          key={n.id}
-          className="group rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition hover:border-white/15"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
-              {n.label}
-            </Badge>
-            <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-emerald-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-              Live
-            </span>
-          </div>
-          <div className="mt-1.5 text-xs leading-relaxed text-foreground/90">{n.headline}</div>
-        </div>
-      ))}
+      {items.map((n: CountryNewsItem) => {
+        const meta = (AGENCY_META as Record<string, { label: string }>)[n.source] ?? { label: n.sourceLabel };
+        return (
+          <a
+            key={n.id}
+            href={n.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group block rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition hover:border-primary/30 hover:bg-white/[0.04]"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+                {meta.label}
+              </Badge>
+              <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-emerald-400">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                Live · 7d
+              </span>
+            </div>
+            <div className="mt-1.5 text-xs font-semibold leading-snug text-foreground group-hover:text-primary">
+              {n.title}
+            </div>
+            {n.snippet && (
+              <div className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                {n.snippet}
+              </div>
+            )}
+          </a>
+        );
+      })}
     </div>
   );
 }
