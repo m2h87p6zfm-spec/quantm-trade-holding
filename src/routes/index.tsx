@@ -1,25 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Star, X, TrendingUp, TrendingDown, Activity, Zap, Plus, Search, ListPlus, Briefcase, Sparkles } from "lucide-react";
+import { ListPlus, Search, Sparkles } from "lucide-react";
 import { useSettings, MARKET_WATCH_DEFAULTS } from "@/lib/settings";
-import { SignalBadge } from "@/components/SignalBadge";
-import { Sparkline } from "@/components/Sparkline";
-import { findProduct } from "@/lib/products";
 import { TickerBand } from "@/components/TickerBand";
-import { MarketPulseHeader } from "@/components/MarketPulseHeader";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { AlphaScoreGauge } from "@/components/AlphaScoreGauge";
 import { SignalOfDay } from "@/components/SignalOfDay";
-import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
+import { useCockpitData } from "@/lib/cockpit";
 import { MarketAiInsight } from "@/components/MarketAiInsight";
-import { SymbolSearch } from "@/components/SymbolSearch";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
-import { EditPortfolioDialog } from "@/components/EditPortfolioDialog";
-import { useSubscription } from "@/hooks/useSubscription";
-import { getPortfolioLimit, limitLabel } from "@/lib/portfolio-limits";
-import { formatCompact } from "@/lib/format";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
+
 
 
 export const Route = createFileRoute("/")({ component: Cockpit });
