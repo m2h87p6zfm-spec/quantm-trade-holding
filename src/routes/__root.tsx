@@ -27,6 +27,7 @@ import { SubscriptionProvider, useSubscription } from "@/hooks/useSubscription";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide-react";
 import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
 
