@@ -38,6 +38,7 @@ type Region = (typeof REGIONS)[number];
 
 function PicksPage() {
   const t = useT();
+  const { user } = useAuth();
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
