@@ -133,7 +133,8 @@ type Answers = {
 };
 
 const initialAnswers: Answers = {
-  markets: [],
+  // Markets-Step entfernt — wir bieten ohnehin nur Aktien & ETFs an, daher beide standardmäßig aktiv.
+  markets: ["stocks", "etfs"],
   notifications: { notif_realtime: true, notif_breakout: true, notif_daily: true, notif_weekly: false },
   trusted_sources: ["reuters", "bloomberg", "yahoo"],
   starter_watchlists: [],
@@ -186,7 +187,7 @@ export function OnboardingGate() {
     if (step === 4) return !!a.trader_type;
     if (step === 5) return !!a.preferred_currency;
     if (step === 6) return !!a.risk_level;
-    if (step === 7) return a.markets.length > 0;
+    if (step === 7) return true; // Markets-Step übersprungen (Defaults gesetzt)
     if (step === 8) return Object.values(a.notifications).some(Boolean);
     if (step === 9) return a.trusted_sources.length > 0;
     if (step === 10) return true; // starter watchlists optional
@@ -361,21 +362,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 7 && (
-            <Question title="Which markets interest you?" hint="Mehrfachauswahl. Nur diese Klassen werden in Feeds und Empfehlungen priorisiert.">
-              <Grid cols={3}>
-                {MARKETS.map((g) => (
-                  <Choice
-                    key={g.v}
-                    active={a.markets.includes(g.v)}
-                    onClick={() => setA((s) => ({ ...s, markets: s.markets.includes(g.v) ? s.markets.filter((x) => x !== g.v) : [...s.markets, g.v] }))}
-                    label={g.label}
-                    desc={g.desc}
-                  />
-                ))}
-              </Grid>
-            </Question>
-          )}
+          {/* step === 7 (Markets) entfernt — wir bieten ausschließlich Aktien & ETFs an */}
           {step === 8 && (
             <Question title="What updates would you like to receive?" hint="Du kannst das jederzeit in den Einstellungen anpassen.">
               <div className="space-y-2">
@@ -476,14 +463,14 @@ export function OnboardingGate() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            onClick={() => setStep((s) => Math.max(0, s - 1 === 7 ? 6 : s - 1))}
             disabled={step === 0}
           >
             <ChevronLeft className="h-4 w-4 mr-1" /> Zurück
           </Button>
           <div className="font-mono text-[10px] tabular-nums text-muted-foreground">{progressPct}%</div>
           {step < TOTAL_STEPS - 1 ? (
-            <Button size="sm" onClick={() => setStep((s) => s + 1)} disabled={!canNext}>
+            <Button size="sm" onClick={() => setStep((s) => (s + 1 === 7 ? 8 : s + 1))} disabled={!canNext}>
               {step === 0 ? "Loslegen" : "Weiter"} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
