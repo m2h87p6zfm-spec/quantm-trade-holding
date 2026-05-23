@@ -10,7 +10,7 @@ import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { recordApexAnalysis } from "@/lib/track-record.functions";
+import { recordApexAnalysis } from "@/lib/trackRecord.functions";
 import { useT } from "@/lib/i18n";
 
 function regimeLabel(r: MarketRegime) {
