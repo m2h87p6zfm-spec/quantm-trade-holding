@@ -31,6 +31,7 @@ function fmtDate(iso: string) {
 }
 
 function CalendarPage() {
+  const t = useT();
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState<"all" | EconEvent["impact"]>("all");
   const [openEvent, setOpenEvent] = useState<EconEvent | null>(null);
