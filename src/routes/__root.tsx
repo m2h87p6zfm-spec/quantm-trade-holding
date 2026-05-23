@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, Link, useNavigate } from "@tanstack/react-router";
+import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
+import { AuthGate } from "@/components/AuthGate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DisclaimerBanner } from "@/components/Disclaimer";
