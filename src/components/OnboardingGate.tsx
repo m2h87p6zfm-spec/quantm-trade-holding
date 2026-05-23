@@ -34,7 +34,27 @@ import {
   Lock,
   CircuitBoard,
   Loader2,
+  Languages,
 } from "lucide-react";
+
+type LangCode = "en" | "zh" | "hi" | "es" | "fr" | "ar" | "bn" | "pt" | "ru" | "ur" | "id" | "de" | "ja" | "tr" | "ko";
+const LANGUAGES: { v: LangCode; label: string; native: string }[] = [
+  { v: "en", label: "English", native: "English" },
+  { v: "zh", label: "Mandarin Chinese", native: "中文" },
+  { v: "hi", label: "Hindi", native: "हिन्दी" },
+  { v: "es", label: "Spanish", native: "Español" },
+  { v: "fr", label: "French", native: "Français" },
+  { v: "ar", label: "Arabic", native: "العربية" },
+  { v: "bn", label: "Bengali", native: "বাংলা" },
+  { v: "pt", label: "Portuguese", native: "Português" },
+  { v: "ru", label: "Russian", native: "Русский" },
+  { v: "ur", label: "Urdu", native: "اردو" },
+  { v: "id", label: "Indonesian", native: "Bahasa Indonesia" },
+  { v: "de", label: "German", native: "Deutsch" },
+  { v: "ja", label: "Japanese", native: "日本語" },
+  { v: "tr", label: "Turkish", native: "Türkçe" },
+  { v: "ko", label: "Korean", native: "한국어" },
+];
 
 /* ─────────────────── Option catalogs ─────────────────── */
 
