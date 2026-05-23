@@ -426,7 +426,7 @@ function AgentAnalysisView({
         quote={quote}
         regime={regime}
       />
-      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
+      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} cachedText={cachedText} onDone={onDone} />
       <div className="pt-1">
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">
           Vollständige Detailansicht →
