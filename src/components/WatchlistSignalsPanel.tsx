@@ -107,9 +107,9 @@ export function WatchlistSignalsPanel() {
       {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-bold leading-tight tracking-tight">Meine Watchlist</h2>
+          <h2 className="text-[28px] font-bold leading-tight tracking-tight">{t("watchlist.title")}</h2>
           <p className="mt-1.5 text-[13px] text-white/50">
-            <span className="tabular-nums">{symbols.length}</span> Werte • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />Live aktualisiert</span>
+            <span className="tabular-nums">{t("watchlist.subtitle.values", { n: symbols.length })}</span> • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />{t("watchlist.subtitle.live")}</span>
           </p>
         </div>
 
@@ -119,17 +119,17 @@ export function WatchlistSignalsPanel() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Suchen…"
+              placeholder={t("watchlist.search")}
               className="h-9 w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
             />
           </div>
 
           <div className="flex items-center gap-1 rounded-lg border border-[#1F1F1F] bg-[#111111] p-1">
             {([
-              { k: "all", label: "Alle" },
-              { k: "LONG", label: "Long" },
-              { k: "SHORT", label: "Short" },
-              { k: "NEUTRAL", label: "Neutral" },
+              { k: "all", label: t("watchlist.filter.all") },
+              { k: "LONG", label: t("watchlist.filter.long") },
+              { k: "SHORT", label: t("watchlist.filter.short") },
+              { k: "NEUTRAL", label: t("watchlist.filter.neutral") },
             ] as { k: FilterKey; label: string }[]).map((f) => {
               const active = filter === f.k;
               const tone = f.k === "LONG" ? "text-[#22FF88]" : f.k === "SHORT" ? "text-[#FF3B5C]" : f.k === "NEUTRAL" ? "text-[#8B9EFF]" : "text-white";
@@ -150,19 +150,20 @@ export function WatchlistSignalsPanel() {
             onChange={(e) => setSortKey(e.target.value as SortKey)}
             className="h-9 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
           >
-            <option value="confidence">Konfidenz</option>
-            <option value="perf1d">Performance 1T</option>
-            <option value="perf30d">Performance 30T</option>
-            <option value="volatility">Volatilität</option>
+            <option value="confidence">{t("watchlist.sort.confidence")}</option>
+            <option value="perf1d">{t("watchlist.sort.perf1d")}</option>
+            <option value="perf30d">{t("watchlist.sort.perf30d")}</option>
+            <option value="volatility">{t("watchlist.sort.volatility")}</option>
           </select>
         </div>
       </div>
 
       {/* CARD GRID */}
-      {loading && <div className="py-12 text-center text-[13px] text-white/40">Lade Decision-Reports…</div>}
+      {loading && <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.loading")}</div>}
       {!loading && filtered.length === 0 && (
-        <div className="py-12 text-center text-[13px] text-white/40">Keine Werte erfüllen die Filter.</div>
+        <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.empty")}</div>
       )}
+
 
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
