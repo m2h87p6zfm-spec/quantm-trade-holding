@@ -9,6 +9,8 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision, stabilizeDecision, type Decision } from "@/lib/analysis";
 import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
+import { useT } from "@/lib/i18n";
+
 
 type SortKey = "confidence" | "perf1d" | "perf30d" | "volatility";
 type FilterKey = "all" | "LONG" | "SHORT" | "NEUTRAL";
@@ -24,10 +26,12 @@ const ACCENT = {
 
 export function WatchlistSignalsPanel() {
   const { settings } = useSettings();
+  const t = useT();
   const [sortKey, setSortKey] = useState<SortKey>("confidence");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [query, setQuery] = useState("");
   const symbols = settings.watchlist;
+  const locale = settings.language === "de" ? "de-DE" : "en-US";
 
   const candleQs = useQueries({
     queries: symbols.map((symbol) => ({
@@ -42,7 +46,10 @@ export function WatchlistSignalsPanel() {
 
   const rows = useMemo(() => {
     return symbols.map((symbol, i) => {
-      const p = findProduct(symbol) ?? { symbol, name: "Freier Ticker" };
+      const fallbackName = settings.language === "de" ? "Freier Ticker" : "Free ticker";
+      const p = findProduct(symbol) ?? { symbol, name: fallbackName };
+
+
       const c = candleQs[i].data;
       if (!c) return null;
       const ind = computeAll(c.c);
@@ -67,7 +74,7 @@ export function WatchlistSignalsPanel() {
       spark: number[]; perf30: number;
       signal: "LONG" | "SHORT" | "NEUTRAL"; confidence: number;
     }>;
-  }, [candleQs, symbols, settings.risk]);
+  }, [candleQs, symbols, settings.risk, settings.language]);
 
   const counts = useMemo(() => {
     const c = { LONG: 0, SHORT: 0, NEUTRAL: 0 };
@@ -100,9 +107,9 @@ export function WatchlistSignalsPanel() {
       {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-bold leading-tight tracking-tight">Meine Watchlist</h2>
+          <h2 className="text-[28px] font-bold leading-tight tracking-tight">{t("watchlist.title")}</h2>
           <p className="mt-1.5 text-[13px] text-white/50">
-            <span className="tabular-nums">{symbols.length}</span> Werte • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />Live aktualisiert</span>
+            <span className="tabular-nums">{t("watchlist.subtitle.values", { n: symbols.length })}</span> • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />{t("watchlist.subtitle.live")}</span>
           </p>
         </div>
 
@@ -112,17 +119,17 @@ export function WatchlistSignalsPanel() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Suchen…"
+              placeholder={t("watchlist.search")}
               className="h-9 w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
             />
           </div>
 
           <div className="flex items-center gap-1 rounded-lg border border-[#1F1F1F] bg-[#111111] p-1">
             {([
-              { k: "all", label: "Alle" },
-              { k: "LONG", label: "Long" },
-              { k: "SHORT", label: "Short" },
-              { k: "NEUTRAL", label: "Neutral" },
+              { k: "all", label: t("watchlist.filter.all") },
+              { k: "LONG", label: t("watchlist.filter.long") },
+              { k: "SHORT", label: t("watchlist.filter.short") },
+              { k: "NEUTRAL", label: t("watchlist.filter.neutral") },
             ] as { k: FilterKey; label: string }[]).map((f) => {
               const active = filter === f.k;
               const tone = f.k === "LONG" ? "text-[#22FF88]" : f.k === "SHORT" ? "text-[#FF3B5C]" : f.k === "NEUTRAL" ? "text-[#8B9EFF]" : "text-white";
@@ -143,19 +150,20 @@ export function WatchlistSignalsPanel() {
             onChange={(e) => setSortKey(e.target.value as SortKey)}
             className="h-9 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
           >
-            <option value="confidence">Konfidenz</option>
-            <option value="perf1d">Performance 1T</option>
-            <option value="perf30d">Performance 30T</option>
-            <option value="volatility">Volatilität</option>
+            <option value="confidence">{t("watchlist.sort.confidence")}</option>
+            <option value="perf1d">{t("watchlist.sort.perf1d")}</option>
+            <option value="perf30d">{t("watchlist.sort.perf30d")}</option>
+            <option value="volatility">{t("watchlist.sort.volatility")}</option>
           </select>
         </div>
       </div>
 
       {/* CARD GRID */}
-      {loading && <div className="py-12 text-center text-[13px] text-white/40">Lade Decision-Reports…</div>}
+      {loading && <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.loading")}</div>}
       {!loading && filtered.length === 0 && (
-        <div className="py-12 text-center text-[13px] text-white/40">Keine Werte erfüllen die Filter.</div>
+        <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.empty")}</div>
       )}
+
 
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -183,7 +191,7 @@ export function WatchlistSignalsPanel() {
               {/* Price */}
               <div className="mt-5">
                 <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
-                  {r.last.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
                 <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
                   <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
@@ -218,9 +226,9 @@ export function WatchlistSignalsPanel() {
 
               {/* Metrics chips */}
               <div className="mt-4 flex flex-wrap gap-1.5">
-                <Chip label="Z" value={r.ind.zScore.toFixed(2)} />
-                <Chip label="RSI" value={r.ind.rsi.toFixed(0)} />
-                <Chip label="Vol" value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
+                <Chip label={t("watchlist.metric.z")} value={r.ind.zScore.toFixed(2)} />
+                <Chip label={t("watchlist.metric.rsi")} value={r.ind.rsi.toFixed(0)} />
+                <Chip label={t("watchlist.metric.vol")} value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
               </div>
 
               {/* Footer button */}
@@ -229,7 +237,7 @@ export function WatchlistSignalsPanel() {
                 params={{ symbol: r.p.symbol }}
                 className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition hover:border-[#22FF88]/60 hover:bg-[#22FF88]/5 hover:text-[#22FF88]"
               >
-                Detaillierte Analyse
+                {t("watchlist.card.analyse")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>

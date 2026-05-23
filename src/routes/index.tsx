@@ -11,6 +11,8 @@ import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
+import { useT } from "@/lib/i18n";
+
 
 
 
@@ -20,6 +22,8 @@ const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "J
 
 function Cockpit() {
   const { settings } = useSettings();
+  const t = useT();
+
   const [manageOpen, setManageOpen] = useState(false);
   const usingDefault = settings.watchlist.length === 0 && settings.portfolioSymbols.length === 0;
 
@@ -78,11 +82,11 @@ function Cockpit() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1F1F1F] bg-[#111111] px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] animate-pulse" />
-              Live · Cockpit
+              {t("cockpit.live")}
             </div>
-            <h1 className="mt-3 text-[32px] font-bold tracking-tight">{usingDefault ? "Markt-Cockpit" : "Watchlist"}</h1>
+            <h1 className="mt-3 text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
             <p className="mt-1 text-[13px] text-white/40 tabular-nums">
-              {loading ? `Sync ${loaded}/${total}` : `${loaded} Werte aktiv`}
+              {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -91,25 +95,26 @@ function Cockpit() {
               onClick={() => setManageOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white"
             >
-              <ListPlus className="h-3.5 w-3.5" /> Verwalten
+              <ListPlus className="h-3.5 w-3.5" /> {t("cockpit.manage")}
             </button>
             <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white">
-              <Search className="h-3.5 w-3.5" /> Katalog
+              <Search className="h-3.5 w-3.5" /> {t("cockpit.catalog")}
             </Link>
           </div>
         </div>
 
+
         {/* BEREICH 1 — Markt-Überblick (kompakt) */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-white/60">Markt-Überblick</h2>
-            <span className="text-[12px] text-white/30 tabular-nums">{rows.length} analysiert</span>
+            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-white/60">{t("cockpit.section.market")}</h2>
+            <span className="text-[12px] text-white/30 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Sentiment */}
             <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">Markt-Stimmung</span>
+                <span className="text-[13px] font-medium text-white/60">{t("cockpit.sentiment.title")}</span>
               </div>
               <div className="flex h-2 overflow-hidden rounded-full bg-[#1F1F1F]">
                 <div className="h-full bg-[#22FF88]" style={{ width: `${(longCount / sentimentTotal) * 100}%` }} />
@@ -118,9 +123,9 @@ function Cockpit() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3 text-[13px]">
                 {[
-                  { k: "Bullish", v: longCount, c: "#22FF88" },
-                  { k: "Neutral", v: neutralCount, c: "rgba(255,255,255,0.5)" },
-                  { k: "Bearish", v: shortCount, c: "#FF3B5C" },
+                  { k: t("cockpit.sentiment.bullish"), v: longCount, c: "#22FF88" },
+                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, c: "rgba(255,255,255,0.5)" },
+                  { k: t("cockpit.sentiment.bearish"), v: shortCount, c: "#FF3B5C" },
                 ].map((s) => (
                   <div key={s.k} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-white/70">
@@ -138,10 +143,11 @@ function Cockpit() {
             {/* Indizes */}
             <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">Wichtige Indizes</span>
+                <span className="text-[13px] font-medium text-white/60">{t("cockpit.indices.title")}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {indices.map((i) => {
+
                   const up = (i.change ?? 0) >= 0;
                   return (
                     <div key={i.symbol} className="flex items-center justify-between">
@@ -166,9 +172,9 @@ function Cockpit() {
         <section>
           <details className="group rounded-2xl border border-[#1F1F1F] bg-[#111111]/40 [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/60 transition hover:text-white">
-              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#8B9EFF]" /> Quant-Signale &amp; Smart Money</span>
-              <span className="text-[11px] font-normal tracking-normal text-white/40 group-open:hidden">Einblenden ↓</span>
-              <span className="hidden text-[11px] font-normal tracking-normal text-white/40 group-open:inline">Einklappen ↑</span>
+              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#8B9EFF]" /> {t("cockpit.insights.title")}</span>
+              <span className="text-[11px] font-normal tracking-normal text-white/40 group-open:hidden">{t("cockpit.insights.expand")}</span>
+              <span className="hidden text-[11px] font-normal tracking-normal text-white/40 group-open:inline">{t("cockpit.insights.collapse")}</span>
             </summary>
             <div className="space-y-8 border-t border-[#1F1F1F] p-5">
               {featured && (
@@ -177,7 +183,7 @@ function Cockpit() {
                     <SignalOfDay symbol={featured.symbol} ind={featured.ind} sig={featured.sig} closes={featured.closes} />
                   </div>
                   <div className="lg:col-span-4">
-                    <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
+                    <AlphaScoreGauge score={featured.alpha} label={t("cockpit.setupScore", { symbol: featured.symbol })} />
                   </div>
                 </div>
               )}

@@ -164,6 +164,45 @@ const DICT: Record<Lang, Dict> = {
     "news.sentiment.bullish": "Bullish",
     "news.sentiment.bearish": "Bearish",
     "news.sentiment.neutral": "Neutral",
+    // Cockpit / Watchlist page
+    "cockpit.live": "Live · Cockpit",
+    "cockpit.title.market": "Markt-Cockpit",
+    "cockpit.title.watchlist": "Watchlist",
+    "cockpit.sync": "Sync {loaded}/{total}",
+    "cockpit.activeValues": "{n} Werte aktiv",
+    "cockpit.manage": "Verwalten",
+    "cockpit.catalog": "Katalog",
+    "cockpit.section.market": "Markt-Überblick",
+    "cockpit.section.analyzed": "{n} analysiert",
+    "cockpit.sentiment.title": "Markt-Stimmung",
+    "cockpit.sentiment.bullish": "Bullish",
+    "cockpit.sentiment.neutral": "Neutral",
+    "cockpit.sentiment.bearish": "Bearish",
+    "cockpit.indices.title": "Wichtige Indizes",
+    "cockpit.insights.title": "Quant-Signale & Smart Money",
+    "cockpit.insights.expand": "Einblenden ↓",
+    "cockpit.insights.collapse": "Einklappen ↑",
+    "cockpit.setupScore": "Setup-Score · {symbol}",
+    // Watchlist panel
+    "watchlist.title": "Meine Watchlist",
+    "watchlist.subtitle.values": "{n} Werte",
+    "watchlist.subtitle.live": "Live aktualisiert",
+    "watchlist.search": "Suchen…",
+    "watchlist.filter.all": "Alle",
+    "watchlist.filter.long": "Long",
+    "watchlist.filter.short": "Short",
+    "watchlist.filter.neutral": "Neutral",
+    "watchlist.sort.confidence": "Konfidenz",
+    "watchlist.sort.perf1d": "Performance 1T",
+    "watchlist.sort.perf30d": "Performance 30T",
+    "watchlist.sort.volatility": "Volatilität",
+    "watchlist.loading": "Lade Decision-Reports…",
+    "watchlist.empty": "Keine Werte erfüllen die Filter.",
+    "watchlist.card.analyse": "Detaillierte Analyse",
+    "watchlist.card.unknown": "Freier Ticker",
+    "watchlist.metric.z": "Z",
+    "watchlist.metric.rsi": "RSI",
+    "watchlist.metric.vol": "Vol",
   },
   en: {
     // Nav — Quant Core
@@ -319,14 +358,58 @@ const DICT: Record<Lang, Dict> = {
     "news.sentiment.bullish": "Bullish",
     "news.sentiment.bearish": "Bearish",
     "news.sentiment.neutral": "Neutral",
+    // Cockpit / Watchlist page
+    "cockpit.live": "Live · Cockpit",
+    "cockpit.title.market": "Market Cockpit",
+    "cockpit.title.watchlist": "Watchlist",
+    "cockpit.sync": "Sync {loaded}/{total}",
+    "cockpit.activeValues": "{n} symbols active",
+    "cockpit.manage": "Manage",
+    "cockpit.catalog": "Catalog",
+    "cockpit.section.market": "Market Overview",
+    "cockpit.section.analyzed": "{n} analysed",
+    "cockpit.sentiment.title": "Market Sentiment",
+    "cockpit.sentiment.bullish": "Bullish",
+    "cockpit.sentiment.neutral": "Neutral",
+    "cockpit.sentiment.bearish": "Bearish",
+    "cockpit.indices.title": "Key Indices",
+    "cockpit.insights.title": "Quant Signals & Smart Money",
+    "cockpit.insights.expand": "Expand ↓",
+    "cockpit.insights.collapse": "Collapse ↑",
+    "cockpit.setupScore": "Setup Score · {symbol}",
+    // Watchlist panel
+    "watchlist.title": "My Watchlist",
+    "watchlist.subtitle.values": "{n} symbols",
+    "watchlist.subtitle.live": "Live updated",
+    "watchlist.search": "Search…",
+    "watchlist.filter.all": "All",
+    "watchlist.filter.long": "Long",
+    "watchlist.filter.short": "Short",
+    "watchlist.filter.neutral": "Neutral",
+    "watchlist.sort.confidence": "Confidence",
+    "watchlist.sort.perf1d": "Performance 1D",
+    "watchlist.sort.perf30d": "Performance 30D",
+    "watchlist.sort.volatility": "Volatility",
+    "watchlist.loading": "Loading decision reports…",
+    "watchlist.empty": "No symbols match the filters.",
+    "watchlist.card.analyse": "Detailed analysis",
+    "watchlist.card.unknown": "Free ticker",
+    "watchlist.metric.z": "Z",
+    "watchlist.metric.rsi": "RSI",
+    "watchlist.metric.vol": "Vol",
   },
 };
 
 export function useT() {
   const { settings } = useSettings();
   const lang = (settings.language as Lang) in DICT ? (settings.language as Lang) : "en";
-  return (key: string): string => DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+  return (key: string, vars?: Record<string, string | number>): string => {
+    const raw = DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+    if (!vars) return raw;
+    return raw.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? String(vars[k]) : `{${k}}`));
+  };
 }
+
 
 export function useLang(): Lang {
   const { settings } = useSettings();
