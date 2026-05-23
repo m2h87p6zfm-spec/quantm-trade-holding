@@ -1114,6 +1114,8 @@ function WorldMap({
         strokeOpacity={0.35}
       />
 
+      {/* Propagation context — derived from selectedEvent */}
+      {(() => null)()}
       {/* Countries — institutional baseline; every country visible */}
       <g>
         {world.features.map((f, i) => {
@@ -1121,20 +1123,32 @@ function WorldMap({
           const intel = COUNTRIES_BY_NAME.get(name);
           const isSelected = selected?.name === name;
           const isHovered = hovered === name;
+          const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
+          const isAffected = !!chain?.who.includes(name);
+          const propagationActive = !!chain;
           const tint = intel ? RISK_COLOR[intel.risk] : null;
           const d = geo.path(f as any) ?? "";
-          // Always visible: neutral base + subtle risk tint overlay only for tracked countries
+          // While propagation is active: dim non-affected countries, glow affected ones.
+          const baseOpacity = propagationActive
+            ? isAffected
+              ? 1
+              : 0.35
+            : isSelected
+              ? 0.95
+              : isHovered
+                ? 0.85
+                : 0.78;
           return (
             <g key={i}>
               <path
                 d={d}
                 fill={NEUTRAL_LAND}
-                fillOpacity={isSelected ? 0.95 : isHovered ? 0.85 : 0.78}
-                stroke={isSelected ? "oklch(0.96 0 0)" : "oklch(0.18 0.015 260)"}
-                strokeWidth={isSelected ? 0.8 : 0.3}
+                fillOpacity={baseOpacity}
+                stroke={isSelected || isAffected ? "oklch(0.96 0 0)" : "oklch(0.18 0.015 260)"}
+                strokeWidth={isSelected || isAffected ? 0.8 : 0.3}
                 style={{
                   cursor: intel ? "pointer" : "default",
-                  transition: "fill-opacity 220ms ease, stroke-width 220ms ease",
+                  transition: "fill-opacity 320ms ease, stroke-width 220ms ease",
                 }}
                 onMouseEnter={() => onHover(name)}
                 onMouseLeave={() => onHover(null)}
@@ -1146,10 +1160,28 @@ function WorldMap({
                 <path
                   d={d}
                   fill={tint}
-                  fillOpacity={isSelected ? 0.34 : isHovered ? 0.26 : 0.18}
+                  fillOpacity={isAffected ? 0.45 : isSelected ? 0.34 : isHovered ? 0.26 : propagationActive ? 0.08 : 0.18}
                   stroke="none"
                   pointerEvents="none"
                 />
+              )}
+              {isAffected && (
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="oklch(0.85 0.12 78)"
+                  strokeOpacity={0.85}
+                  strokeWidth={0.6}
+                  pointerEvents="none"
+                  style={{ filter: "url(#softGlow)" }}
+                >
+                  <animate
+                    attributeName="stroke-opacity"
+                    values="0.35;0.95;0.35"
+                    dur="2.4s"
+                    repeatCount="indefinite"
+                  />
+                </path>
               )}
             </g>
           );
@@ -1163,19 +1195,30 @@ function WorldMap({
             const color = ROUTE_COLOR[f.status];
             const d = curvedPath(f.from, f.to);
             const dashed = f.status === "disrupted";
+            const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
+            const propagationActive = !!chain;
+            const isLit = !!chain?.routes.includes(f.id);
+            const opacity = propagationActive ? (isLit ? 0.95 : 0.18) : 0.55;
+            const width = propagationActive && isLit ? 1.6 : 0.9;
             return (
               <g key={f.id}>
                 <path
                   d={d}
                   fill="none"
-                  stroke={color}
-                  strokeOpacity={0.55}
-                  strokeWidth={0.9}
+                  stroke={isLit ? "oklch(0.85 0.12 78)" : color}
+                  strokeOpacity={opacity}
+                  strokeWidth={width}
                   strokeDasharray={dashed ? "3 3" : undefined}
                   filter="url(#softGlow)"
+                  style={{ transition: "stroke-opacity 320ms ease, stroke-width 320ms ease" }}
                 >
                   <title>{f.label} — {f.status} · {f.note}</title>
                 </path>
+                {isLit && (
+                  <circle r={2.2} fill="oklch(0.92 0.10 78)">
+                    <animateMotion dur="3.2s" repeatCount="indefinite" path={d} />
+                  </circle>
+                )}
               </g>
             );
           })}
@@ -1197,7 +1240,7 @@ function WorldMap({
                 d={d}
                 fill="none"
                 stroke={color}
-                strokeOpacity={t.level === "high" ? 0.55 : 0.4}
+                strokeOpacity={selectedEvent ? 0.2 : t.level === "high" ? 0.55 : 0.4}
                 strokeWidth={t.level === "high" ? 0.9 : 0.7}
                 strokeDasharray="1 3"
               >
@@ -1214,10 +1257,15 @@ function WorldMap({
           {EVENTS.map((e) => {
             const [x, y] = project(e.coords[0], e.coords[1]);
             const color = EVENT_COLOR[e.type];
+            const isActive = selectedEvent?.id === e.id;
             return (
               <g key={e.id} style={{ cursor: "pointer" }} onClick={() => onSelectEvent(e)}>
-                <circle cx={x} cy={y} r={4.6} fill={color} fillOpacity={0.18} />
-                <circle cx={x} cy={y} r={2.4} fill={color} stroke="oklch(0.10 0.014 260)" strokeWidth={0.6}>
+                <circle cx={x} cy={y} r={isActive ? 8 : 4.6} fill={color} fillOpacity={isActive ? 0.28 : 0.18}>
+                  {isActive && (
+                    <animate attributeName="r" values="6;14;6" dur="2.4s" repeatCount="indefinite" />
+                  )}
+                </circle>
+                <circle cx={x} cy={y} r={isActive ? 3.2 : 2.4} fill={color} stroke="oklch(0.10 0.014 260)" strokeWidth={0.6}>
                   <title>{e.title} — {e.location}</title>
                 </circle>
               </g>
@@ -1228,6 +1276,7 @@ function WorldMap({
     </svg>
   );
 }
+
 
 /* ───────────────────── Country Panel ───────────────────── */
 
