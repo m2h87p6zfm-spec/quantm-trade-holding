@@ -4,6 +4,20 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { Loader2 } from "lucide-react";
 
+function ApexLoadingScreen() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+      <div className="text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-card shadow-lg shadow-primary/10">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Apex Trades</p>
+        <p className="mt-1 text-sm text-muted-foreground">Trading-Cockpit wird vorbereitet …</p>
+      </div>
+    </main>
+  );
+}
+
 /** Routes that must remain reachable without a session. */
 const PUBLIC_PATHS = new Set<string>([
   "/login",
@@ -49,28 +63,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, [user, authLoading, profile, profileLoading, pathname, navigate]);
 
   if (authLoading || (user && profileLoading)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
+    return <ApexLoadingScreen />;
   }
 
   if (!user && !isPublic(pathname)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
+    return <ApexLoadingScreen />;
   }
 
   // Block protected content from flashing while we redirect to /onboarding.
   if (user && profile && !profile.onboarding_completed && pathname !== "/onboarding") {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" />
-      </div>
-    );
+    return <ApexLoadingScreen />;
   }
 
   return <>{children}</>;
