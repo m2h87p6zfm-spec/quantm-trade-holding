@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
-import { Newspaper, TrendingUp, TrendingDown, Minus, ExternalLink, RefreshCw, Zap, Sparkles, Filter } from "lucide-react";
+import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -27,13 +27,14 @@ type Item = {
   sentiment?: "bullish" | "bearish" | "neutral";
   score?: number;
   breaking?: boolean;
+  aiSummary?: string;
 };
 
 async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<Item[]> {
   const res = await fetch("/api/public/news-sentiment", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbols, sources, tier1Only: true }),
+    body: JSON.stringify({ symbols, sources, tier1Only: false, withSummary: true }),
   });
   if (!res.ok) throw new Error("News fehlgeschlagen");
   const json = (await res.json()) as { items: Item[] };
@@ -58,13 +59,12 @@ function SentimentBadge({ s, c }: { s?: Item["sentiment"]; c?: number }) {
   return <span className={`${base} bg-muted text-muted-foreground ring-1 ring-border`}><Minus className="h-3 w-3" /> Neutral</span>;
 }
 
-function NewsCard({ it, portfolio }: { it: Item; portfolio: Set<string> }) {
+function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>; onOpen: (it: Item) => void }) {
   return (
-    <a
-      href={it.link}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block rounded-xl border border-border bg-card/60 p-4 backdrop-blur transition hover:border-primary/50 hover:shadow-lg"
+    <button
+      type="button"
+      onClick={() => onOpen(it)}
+      className="group block w-full rounded-xl border border-border bg-card/60 p-4 text-left backdrop-blur transition hover:border-primary/50 hover:shadow-lg"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -80,6 +80,11 @@ function NewsCard({ it, portfolio }: { it: Item; portfolio: Set<string> }) {
             )}
           </div>
           <h3 className="mt-1.5 text-sm font-semibold leading-snug group-hover:text-primary">{it.title}</h3>
+          {it.aiSummary && (
+            <p className="mt-2 line-clamp-3 text-[12.5px] leading-relaxed text-foreground/75">
+              {it.aiSummary}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-1">
             {it.tickers.slice(0, 6).map((t) => {
               const owned = portfolio.has(t);
@@ -104,16 +109,92 @@ function NewsCard({ it, portfolio }: { it: Item; portfolio: Set<string> }) {
         </div>
         <div className="flex shrink-0 flex-col items-end gap-2">
           <SentimentBadge s={it.sentiment} c={it.score} />
-          <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary" />
         </div>
       </div>
-    </a>
+    </button>
+  );
+}
+
+function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<string>; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative mt-12 w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+          aria-label="Schließen"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          <AgencyLogo source={it.source} />
+          <span className="font-medium text-foreground/80">{it.publisher}</span>
+          <span>·</span>
+          <span>{timeAgo(it.publishedAt)}</span>
+          {it.breaking && (
+            <span className="inline-flex items-center gap-1 rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">
+              <Zap className="h-2.5 w-2.5" /> Breaking
+            </span>
+          )}
+        </div>
+
+        <h2 className="mt-3 text-xl font-bold leading-tight">{it.title}</h2>
+
+        <div className="mt-3 flex flex-wrap items-center gap-1">
+          {it.tickers.slice(0, 10).map((t) => {
+            const owned = portfolio.has(t);
+            return (
+              <Link
+                key={t}
+                to="/produkte/$symbol"
+                params={{ symbol: t }}
+                className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold transition-colors ${
+                  owned
+                    ? "bg-primary/15 text-primary ring-1 ring-primary/30 hover:bg-primary/25"
+                    : "bg-muted text-foreground/80 hover:text-primary"
+                }`}
+              >
+                {t}
+              </Link>
+            );
+          })}
+          <SentimentBadge s={it.sentiment} c={it.score} />
+        </div>
+
+        <div className="mt-5 rounded-xl border border-border/60 bg-background/40 p-4">
+          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-primary">
+            <Sparkles className="h-3 w-3" /> Artikel-Zusammenfassung
+          </div>
+          {it.aiSummary ? (
+            <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/90">
+              {it.aiSummary}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Zusammenfassung wird noch generiert — bitte einen Moment Geduld und neu laden.
+            </p>
+          )}
+        </div>
+
+        <p className="mt-4 text-[10px] text-muted-foreground/70">
+          Inhalte werden durch KI verdichtet und ersetzen keine Originalrecherche. Quelle: {it.publisher}.
+        </p>
+      </div>
+    </div>
   );
 }
 
 function NewsPage() {
   const { settings, update } = useSettings();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
+  const [openItem, setOpenItem] = useState<Item | null>(null);
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
     [settings.newsSources]
@@ -226,9 +307,10 @@ function NewsPage() {
         )}
 
         {visible.map((it) => (
-          <NewsCard key={it.uuid} it={it} portfolio={portfolio} />
+          <NewsCard key={it.uuid} it={it} portfolio={portfolio} onOpen={setOpenItem} />
         ))}
       </div>
+      {openItem && <ArticleModal it={openItem} portfolio={portfolio} onClose={() => setOpenItem(null)} />}
     </div>
   );
 }

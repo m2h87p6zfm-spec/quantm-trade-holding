@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import type { NewsSource } from "@/lib/settings";
+
 type NewsItem = {
   uuid: string;
   title: string;
   publisher: string;
-  source: "reuters" | "bloomberg" | "yahoo" | "cnbc" | "ft" | "other";
+  source: NewsSource | "other";
   link: string;
   publishedAt: number;
   symbol: string;
@@ -16,11 +18,52 @@ type NewsItem = {
 };
 
 const PUBLISHER_MAP: Array<{ test: RegExp; key: NewsItem["source"] }> = [
+  // Tier-1 wires
   { test: /reuters/i, key: "reuters" },
   { test: /bloomberg/i, key: "bloomberg" },
+  { test: /wall street journal|wsj\.com|^wsj\b/i, key: "wsj" },
   { test: /financial times|^ft\b|ft\.com/i, key: "ft" },
+  { test: /the economist|economist\.com/i, key: "economist" },
+  { test: /new york times|nytimes|nyt\b/i, key: "nytimes" },
+  { test: /washington post|washingtonpost/i, key: "washingtonpost" },
+  { test: /the guardian|guardian\.com|theguardian/i, key: "guardian" },
+  { test: /barron'?s|barrons/i, key: "barrons" },
+  // US business
   { test: /cnbc/i, key: "cnbc" },
+  { test: /marketwatch/i, key: "marketwatch" },
   { test: /yahoo/i, key: "yahoo" },
+  { test: /investing\.com/i, key: "investing" },
+  { test: /forbes/i, key: "forbes" },
+  { test: /fortune/i, key: "fortune" },
+  { test: /business insider|insider\.com|businessinsider/i, key: "businessinsider" },
+  { test: /axios/i, key: "axios" },
+  { test: /seeking alpha|seekingalpha/i, key: "seekingalpha" },
+  { test: /benzinga/i, key: "benzinga" },
+  { test: /motley fool|fool\.com/i, key: "motleyfool" },
+  { test: /thestreet|the street/i, key: "thestreet" },
+  { test: /zerohedge|zero hedge/i, key: "zerohedge" },
+  // Tech
+  { test: /the information|theinformation/i, key: "theinformation" },
+  { test: /techcrunch/i, key: "techcrunch" },
+  { test: /the verge|theverge/i, key: "theverge" },
+  { test: /\bwired\b/i, key: "wired" },
+  // Crypto
+  { test: /coindesk/i, key: "coindesk" },
+  { test: /cointelegraph/i, key: "cointelegraph" },
+  { test: /the block|theblock/i, key: "theblock" },
+  { test: /decrypt/i, key: "decrypt" },
+  // Asia
+  { test: /nikkei/i, key: "nikkei" },
+  { test: /south china morning post|scmp/i, key: "scmp" },
+  // Europe / DACH / FR
+  { test: /handelsblatt/i, key: "handelsblatt" },
+  { test: /manager.?magazin/i, key: "manager" },
+  { test: /faz\.net|frankfurter allgemeine/i, key: "faz" },
+  { test: /börse online|boerse.online/i, key: "boerse" },
+  { test: /les ?échos|lesechos/i, key: "lesechos" },
+  // Macro
+  { test: /politico/i, key: "politico" },
+  { test: /semafor/i, key: "semafor" },
 ];
 
 function classifyPublisher(p: string): NewsItem["source"] {
@@ -90,14 +133,11 @@ async function classifySentiments(items: NewsItem[]): Promise<NewsItem[]> {
 }
 
 
-async function generateSummaries(items: NewsItem[], portfolio: string[]): Promise<NewsItem[]> {
+async function generateSummariesAll(items: NewsItem[]): Promise<NewsItem[]> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey || items.length === 0) return items;
-  const portSet = new Set(portfolio.map((s) => s.toUpperCase()));
-  const target = items.slice(0, 20).filter((it) => it.tickers.some((t) => portSet.has(t)));
-  if (target.length === 0) return items;
-  const primarySym = (it: NewsItem) => it.tickers.find((t) => portSet.has(t)) ?? it.symbol;
-  const numbered = target.map((it, i) => `${i + 1}. [${primarySym(it)}] ${it.title}`).join("\n");
+  const target = items.slice(0, 30);
+  const numbered = target.map((it, i) => `${i + 1}. [${it.symbol}] (${it.publisher}) ${it.title}`).join("\n");
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -108,9 +148,9 @@ async function generateSummaries(items: NewsItem[], portfolio: string[]): Promis
           {
             role: "system",
             content:
-              'Du erklärst für jede Schlagzeile in EINEM kurzen deutschen Satz (max. 22 Wörter), warum sie für die genannte Position relevant ist. Antwort STRIKT als JSON-Objekt: {"items":[{"i":1,"s":"…"}, …]}. Kein Markdown, keine Floskeln, keine Disclaimer.',
+              'Du fasst Finanz-Schlagzeilen in 3–4 prägnanten deutschen Sätzen zusammen (max. 90 Wörter), so dass der Leser den Inhalt VOLLSTÄNDIG erfasst — ohne den Originalartikel öffnen zu müssen. Erkläre: Was ist passiert? Warum ist es relevant für das Ticker-Symbol? Welche Marktwirkung ist plausibel? Keine Floskeln, keine Disclaimer, kein Markdown. Antwort STRIKT als JSON: {"items":[{"i":1,"s":"…"}, …]}.',
           },
-          { role: "user", content: `Erkläre je Schlagzeile die Portfolio-Relevanz für das jeweilige Ticker-Symbol:\n${numbered}` },
+          { role: "user", content: `Fasse jede Schlagzeile zusammen:\n${numbered}` },
         ],
         response_format: { type: "json_object" },
       }),
@@ -146,8 +186,9 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
           const batches = await Promise.all(symbols.map(fetchYahooNews));
           let flat = batches.flat();
 
-          const tier1Only = body.tier1Only !== false;
-          if (tier1Only) flat = flat.filter((i) => i.source !== "other");
+          // tier1Only standardmäßig AUS — wir akzeptieren alle bekannten Publisher
+          // aus dem erweiterten NEWS_SOURCES-Set. Whitelist über "sources" möglich.
+          if (body.tier1Only === true) flat = flat.filter((i) => i.source !== "other");
 
           if (Array.isArray(body.sources) && body.sources.length > 0) {
             const allow = new Set(body.sources);
@@ -160,9 +201,10 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
           flat = flat.slice(0, 40);
 
           let enriched = await classifySentiments(flat);
-          if (body.withSummary) {
-            const portfolio = Array.isArray(body.portfolio) && body.portfolio.length > 0 ? body.portfolio : symbols;
-            enriched = await generateSummaries(enriched, portfolio);
+          // Volltext-Zusammenfassungen für alle Items, damit die Karten im UI
+          // den Inhalt direkt anzeigen können (kein Klick auf Originalquelle nötig).
+          if (body.withSummary !== false) {
+            enriched = await generateSummariesAll(enriched);
           }
 
           return new Response(JSON.stringify({ items: enriched }), {
