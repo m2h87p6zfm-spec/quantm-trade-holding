@@ -66,7 +66,7 @@ import {
 export const Route = createFileRoute("/global-intel")({
   head: () => ({
     meta: [
-      { title: "Global Market Intelligence War Room — Apex Trades" },
+      { title: "Global Market Intelligence War Room — Quantm Trade" },
       {
         name: "description",
         content:

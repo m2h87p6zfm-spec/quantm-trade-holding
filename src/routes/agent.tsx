@@ -10,7 +10,7 @@ export const Route = createFileRoute("/agent")({
   component: AgentPage,
   head: () => ({
     meta: [
-      { title: "AI Analyst — Apex Trades" },
+      { title: "AI Analyst — Quantm Trade" },
       { name: "description", content: "AI-gestützter Markt-Stratege: stelle Fragen zu Charts, Setups, Sektor-Rotation und Risiken." },
     ],
   }),

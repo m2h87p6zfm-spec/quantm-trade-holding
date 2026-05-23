@@ -30,7 +30,7 @@ export const Route = createFileRoute("/explain-trade")({
       <ExplainTradePage />
     </FeatureGate>
   ),
-  head: () => ({ meta: [{ title: "Explain My Trade — Apex Trades" }] }),
+  head: () => ({ meta: [{ title: "Explain My Trade — Quantm Trade" }] }),
 });
 
 type Source = { title: string; url: string; description: string; source: string };

@@ -8,7 +8,7 @@ export const Route = createFileRoute("/handelsprofil")({
   component: TradingProfilePage,
   head: () => ({
     meta: [
-      { title: "Handelsprofil — Apex Trades" },
+      { title: "Handelsprofil — Quantm Trade" },
       { name: "description", content: "Trading-Präferenzen, Märkte, Benachrichtigungen und AI-Personalisierung." },
     ],
   }),

@@ -63,10 +63,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Apex Trades — Statistischer Trading Agent" },
+      { title: "Quantm Trade — Statistischer Trading Agent" },
       { name: "description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
-      { property: "og:title", content: "Apex Trades — Statistischer Trading Agent" },
-      { name: "twitter:title", content: "Apex Trades — Statistischer Trading Agent" },
+      { property: "og:title", content: "Quantm Trade — Statistischer Trading Agent" },
+      { name: "twitter:title", content: "Quantm Trade — Statistischer Trading Agent" },
       { property: "og:description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
       { name: "twitter:description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png" },

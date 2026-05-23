@@ -18,7 +18,7 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
-      { title: "Preise — Apex Trades" },
+      { title: "Preise — Quantm Trade" },
       { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat." },
     ],
   }),

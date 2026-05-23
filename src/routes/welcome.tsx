@@ -8,7 +8,7 @@ import { ApexLogo } from "@/components/ApexLogo";
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
-      { title: "Welcome — Apex Trades" },
+      { title: "Welcome — Quantm Trade" },
       { name: "description", content: "Personalized intelligence starts with understanding your workflow." },
     ],
   }),

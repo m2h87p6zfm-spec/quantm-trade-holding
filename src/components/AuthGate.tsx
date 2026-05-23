@@ -11,7 +11,7 @@ function ApexLoadingScreen() {
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-card shadow-lg shadow-primary/10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Apex Trades</p>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Quantm Trade</p>
         <p className="mt-1 text-sm text-muted-foreground">Trading-Cockpit wird vorbereitet …</p>
       </div>
     </main>
