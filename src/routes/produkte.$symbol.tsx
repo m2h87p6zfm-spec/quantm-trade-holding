@@ -133,6 +133,8 @@ function ProductDetail() {
           </div>
         </div>
       )}
+
+      <AssetNewsPanel symbol={symbol} />
     </div>
   );
 }
