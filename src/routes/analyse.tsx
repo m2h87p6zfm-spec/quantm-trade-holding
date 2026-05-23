@@ -432,21 +432,97 @@ function AgentAnalysisView({
 
 
 
+type AnalyseConv = { id: string; title: string; updated_at: string };
+const ANALYSE_TITLE_PREFIX = "Analyse: ";
+
 function AnalysePage() {
+  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [sessionId] = useState(() => `analyse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   const initial: Msg[] = [
     { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX*, oder *Soll ich Tesla kaufen*." },
   ];
   const [messages, setMessages] = useState(initial);
+  const [conversations, setConversations] = useState<AnalyseConv[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+
+  // Load this user's analyse conversations
+  useEffect(() => {
+    if (!user) { setConversations([]); return; }
+    let alive = true;
+    supabase
+      .from("agent_conversations")
+      .select("id,title,updated_at")
+      .like("title", `${ANALYSE_TITLE_PREFIX}%`)
+      .order("updated_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (alive && data) setConversations(data as AnalyseConv[]);
+      });
+    return () => { alive = false; };
+  }, [user]);
+
+  async function ensureConv(firstText: string): Promise<string | null> {
+    if (activeConvId) return activeConvId;
+    if (!user) return null;
+    const title = `${ANALYSE_TITLE_PREFIX}${firstText.slice(0, 50)}`;
+    const { data, error } = await supabase
+      .from("agent_conversations")
+      .insert({ user_id: user.id, title })
+      .select("id,title,updated_at")
+      .single();
+    if (error || !data) return null;
+    setActiveConvId(data.id);
+    setConversations((prev) => [data as AnalyseConv, ...prev]);
+    return data.id;
+  }
+
+  async function persistUserMsg(convId: string, text: string) {
+    if (!user) return;
+    await supabase.from("agent_messages").insert({
+      conversation_id: convId, user_id: user.id, role: "user", content: text,
+    });
+    await supabase.from("agent_conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", convId);
+  }
+
+  const newChat = () => {
+    setActiveConvId(null);
+    setMessages(initial);
+    setInput("");
+  };
+
+  const openConv = async (id: string) => {
+    setActiveConvId(id);
+    const { data, error } = await supabase
+      .from("agent_messages")
+      .select("role,content")
+      .eq("conversation_id", id)
+      .order("created_at", { ascending: true });
+    if (error || !data) return;
+    const replay: Msg[] = [initial[0]];
+    for (const m of data as { role: string; content: string }[]) {
+      if (m.role !== "user") continue;
+      const sym = extractSymbol(m.content);
+      replay.push({ role: "user", text: m.content });
+      replay.push({ role: "agent", text: "", symbol: sym ?? undefined, query: m.content });
+    }
+    setMessages(replay);
+  };
+
+  const deleteConv = async (id: string) => {
+    const { error } = await supabase.from("agent_conversations").delete().eq("id", id);
+    if (error) { toast.error("Löschen fehlgeschlagen"); return; }
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+    if (activeConvId === id) newChat();
+  };
 
   const sendQuery = (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
 
     // Off-Topic-Guard: keine Aktie erkannt UND keine Finanz-Stichwörter
-    // → sofort freundlich antworten statt minutenlang auf den KI-Stream zu
-    //   warten (das System-Prompt ist auf Asset-Analyse ausgelegt).
     if (!sym) {
       const lower = text.toLowerCase();
       const FINANCE_HINTS = [
@@ -472,6 +548,10 @@ function AnalysePage() {
         };
         setMessages((m) => [...m, userMsg, canned]);
         setInput("");
+        // Auch off-topic in History speichern
+        if (user) {
+          ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
+        }
         return;
       }
     }
@@ -479,6 +559,10 @@ function AnalysePage() {
     const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
     setMessages((m) => [...m, userMsg, reply]);
     setInput("");
+
+    if (user) {
+      ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
+    }
   };
 
   const submit = (e: React.FormEvent) => {
@@ -495,6 +579,7 @@ function AnalysePage() {
   ];
 
   const showSuggestions = messages.length <= 1;
+
 
   return (
     <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-4xl flex-col p-6">
