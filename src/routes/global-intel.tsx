@@ -1209,7 +1209,7 @@ function LiveNews({ country }: { country: CountryIntel }) {
 
   return (
     <div className="space-y-2">
-      {items.map((n) => {
+      {items.map((n: CountryNewsItem) => {
         const meta = (AGENCY_META as Record<string, { label: string }>)[n.source] ?? { label: n.sourceLabel };
         return (
           <a
