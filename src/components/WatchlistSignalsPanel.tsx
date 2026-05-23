@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, ArrowRight } from "lucide-react";
-import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts";
+import { MiniSpark } from "@/components/MiniSpark";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { findProduct } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
@@ -202,12 +202,7 @@ export function WatchlistSignalsPanel() {
                   </div>
                 </div>
                 <div className="hidden xs:block h-10 w-16 shrink-0">
-                  <ResponsiveContainer>
-                    <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
-                      <YAxis hide domain={["dataMin", "dataMax"]} />
-                      <Line type="monotone" dataKey="v" stroke={up ? "#22FF88" : "#FF3B5C"} strokeWidth={1.5} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <MiniSpark data={r.spark} color={up ? "#22FF88" : "#FF3B5C"} strokeWidth={2} className="h-full w-full" />
                 </div>
               </div>
 
@@ -234,12 +229,7 @@ export function WatchlistSignalsPanel() {
                 </div>
 
                 <div className="mt-4 h-[90px] -mx-1">
-                  <ResponsiveContainer>
-                    <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
-                      <YAxis hide domain={["dataMin", "dataMax"]} />
-                      <Line type="monotone" dataKey="v" stroke={up ? "#22FF88" : "#FF3B5C"} strokeWidth={2} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <MiniSpark data={r.spark} color={up ? "#22FF88" : "#FF3B5C"} strokeWidth={2} className="h-full w-full" />
                 </div>
 
                 <div className="mt-4">
