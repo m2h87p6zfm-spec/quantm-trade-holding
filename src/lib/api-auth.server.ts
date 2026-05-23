@@ -1,4 +1,59 @@
 import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+const PRO_PRICES = new Set([
+  "apex_pro_monthly",
+  "apex_pro_yearly",
+  "apex_elite_monthly",
+  "apex_elite_yearly",
+]);
+const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
+
+/**
+ * Returns true if the user currently has an active Pro or Elite subscription
+ * in any environment (sandbox or live). Server-side source of truth for
+ * paywalled endpoints — the frontend tier gate is UX only.
+ */
+export async function userHasPro(userId: string): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from("subscriptions")
+    .select("status, price_id, current_period_end")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  if (!data) return false;
+  const now = Date.now();
+  return data.some((row) => {
+    if (!row.price_id || !PRO_PRICES.has(row.price_id)) return false;
+    if (ACTIVE_STATUSES.has(row.status)) return true;
+    if (row.status === "canceled" && row.current_period_end) {
+      return new Date(row.current_period_end).getTime() > now;
+    }
+    return false;
+  });
+}
+
+/**
+ * Authenticates the caller AND verifies they have an active Pro/Elite plan.
+ * Returns userId on success, or a 401/402 Response.
+ * Usage:
+ *   const auth = await requirePro(request);
+ *   if (auth instanceof Response) return auth;
+ *   const userId = auth;
+ */
+export async function requirePro(request: Request): Promise<string | Response> {
+  const auth = await requireUserId(request);
+  if (auth instanceof Response) return auth;
+  const ok = await userHasPro(auth);
+  if (!ok) {
+    return new Response(
+      JSON.stringify({ error: "Upgrade required", code: "tier_required" }),
+      { status: 402, headers: JSON_HEADERS },
+    );
+  }
+  return auth;
+}
+
 
 const JSON_HEADERS = {
   "Content-Type": "application/json",
