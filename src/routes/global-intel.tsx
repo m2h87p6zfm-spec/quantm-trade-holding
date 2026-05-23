@@ -231,43 +231,15 @@ function GlobalIntelPage() {
               <MapLegend />
             </section>
 
-            {/* Tracked countries strip */}
-            <section className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-                  <Sparkles className="h-3 w-3 text-primary" /> Tracked countries
-                </div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {COUNTRIES.length} markets
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {COUNTRIES.map((c) => {
-                  const isSel = selected?.iso2 === c.iso2;
-                  return (
-                    <button
-                      key={c.iso2}
-                      onClick={() => {
-                        setSelected(c);
-                        setSelectedEvent(null);
-                      }}
-                      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
-                        isSel
-                          ? "border-primary/60 bg-primary/15 text-primary"
-                          : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
-                      }`}
-                    >
-                      <span aria-hidden>{c.flag}</span>
-                      <span className="font-medium">{c.name}</span>
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: RISK_COLOR[c.risk] }}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            {/* Tracked countries — searchable */}
+            <CountryFinder
+              selected={selected}
+              onSelect={(c) => {
+                setSelected(c);
+                setSelectedEvent(null);
+              }}
+            />
+
           </div>
 
           {/* Right column: country panel + intel feed */}
