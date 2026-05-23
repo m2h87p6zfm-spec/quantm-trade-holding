@@ -33,7 +33,12 @@ interface Sentiment {
   neutral: number;
 }
 
-function deriveSentiment(symbol: string, bias: number, salt: number): Sentiment {
+function safeNum(n: number, fallback = 0): number {
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function deriveSentiment(symbol: string, biasRaw: number, salt: number): Sentiment {
+  const bias = Math.max(-1, Math.min(1, safeNum(biasRaw, 0)));
   // bias in [-1, 1] — positive => more bullish
   const r1 = seeded(hash(symbol) + salt);
   const r2 = seeded(hash(symbol) + salt + 7);
