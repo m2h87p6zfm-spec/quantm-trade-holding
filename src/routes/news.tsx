@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
-import { Newspaper, TrendingUp, TrendingDown, Minus, ExternalLink, RefreshCw, Zap, Sparkles, Filter } from "lucide-react";
+import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
