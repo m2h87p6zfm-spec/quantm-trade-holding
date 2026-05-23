@@ -567,8 +567,12 @@ function AnalysePage() {
     if (activeConvId === id) newChat();
   };
 
+  const persistedRef = useRef<Set<string>>(new Set());
   async function persistAssistantMsg(convId: string, text: string) {
     if (!user || !text?.trim()) return;
+    const key = `${convId}::${text.slice(0, 80)}`;
+    if (persistedRef.current.has(key)) return; // doppelte Streams ignorieren
+    persistedRef.current.add(key);
     await supabase.from("agent_messages").insert({
       conversation_id: convId, user_id: user.id, role: "assistant", content: text.slice(0, 20000),
     });
