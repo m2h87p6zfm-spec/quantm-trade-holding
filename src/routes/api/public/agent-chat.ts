@@ -539,10 +539,33 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           if (userId && lastUser) {
             void persistMemory(userId, "user", lastUser.content, sessionId);
           }
-          if (sessionId && lastUser) {
+
+          // Only persist into chat_messages when sessionId is a real UUID
+          // (the chat_messages.session_id column is uuid-typed).
+          const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          const validSessionId = sessionId && UUID_RE.test(sessionId) ? sessionId : null;
+
+          // Ensure a chat_sessions row exists so the user can read messages via RLS.
+          if (validSessionId && userId) {
+            void supabaseAdmin
+              .from("chat_sessions")
+              .upsert(
+                {
+                  id: validSessionId,
+                  user_id: userId,
+                  title: (lastUser?.content ?? "Neuer Chat").slice(0, 60),
+                },
+                { onConflict: "id" },
+              )
+              .then(({ error }) => {
+                if (error) console.warn("chat_sessions upsert failed", error.message);
+              });
+          }
+
+          if (validSessionId && lastUser) {
             void supabaseAdmin
               .from("chat_messages")
-              .insert({ session_id: sessionId, role: "user", content: lastUser.content })
+              .insert({ session_id: validSessionId, role: "user", content: lastUser.content })
               .then(({ error }) => {
                 if (error) console.warn("chat_messages user insert failed", error.message);
               });
