@@ -427,7 +427,7 @@ function AgentAnalysisView({
       }).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, scenarioTag, regime, sig.verdict, user?.id]);
+  }, [symbol, scenarioTag, regime, sig.verdict, user?.id, cachedText]);
 
   return (
     <div className="space-y-4">
