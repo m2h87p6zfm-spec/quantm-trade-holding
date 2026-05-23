@@ -157,7 +157,6 @@ function AppShell() {
         </div>
       </div>
       <QuickPanel />
-      <OnboardingGate />
       <UpgradeModal />
     </SidebarProvider>
   );
