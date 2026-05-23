@@ -253,7 +253,7 @@ export function OnboardingGate() {
     navigate({ to: "/", replace: true });
   };
 
-  const stepIcon = [Sparkles, Calendar, GraduationCap, Briefcase, Coins, ShieldCheck, Globe2, Bell, Newspaper, Wallet, CircuitBoard][step];
+  const stepIcon = [Sparkles, Languages, Calendar, GraduationCap, Briefcase, Coins, ShieldCheck, Globe2, Bell, Newspaper, Wallet, CircuitBoard][step];
   const StepIcon = stepIcon ?? Sparkles;
   const progressPct = Math.round((step / (TOTAL_STEPS - 1)) * 100);
 
