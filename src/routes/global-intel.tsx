@@ -47,6 +47,7 @@ import {
   Newspaper,
   Radio,
   Route as RouteIcon,
+  Search,
   ShieldCheck,
   Sparkles,
   TrendingDown,
@@ -230,43 +231,15 @@ function GlobalIntelPage() {
               <MapLegend />
             </section>
 
-            {/* Tracked countries strip */}
-            <section className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-                  <Sparkles className="h-3 w-3 text-primary" /> Tracked countries
-                </div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {COUNTRIES.length} markets
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {COUNTRIES.map((c) => {
-                  const isSel = selected?.iso2 === c.iso2;
-                  return (
-                    <button
-                      key={c.iso2}
-                      onClick={() => {
-                        setSelected(c);
-                        setSelectedEvent(null);
-                      }}
-                      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
-                        isSel
-                          ? "border-primary/60 bg-primary/15 text-primary"
-                          : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
-                      }`}
-                    >
-                      <span aria-hidden>{c.flag}</span>
-                      <span className="font-medium">{c.name}</span>
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: RISK_COLOR[c.risk] }}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            {/* Tracked countries — searchable */}
+            <CountryFinder
+              selected={selected}
+              onSelect={(c) => {
+                setSelected(c);
+                setSelectedEvent(null);
+              }}
+            />
+
           </div>
 
           {/* Right column: country panel + intel feed */}
@@ -1240,5 +1213,200 @@ function LiveNews({ country }: { country: CountryIntel }) {
         );
       })}
     </div>
+  );
+}
+
+/* ───────────────────── Country Finder (search + filter) ───────────────────── */
+
+type RiskFilter = "all" | "low" | "medium" | "high";
+
+function CountryFinder({
+  selected,
+  onSelect,
+}: {
+  selected: CountryIntel | null;
+  onSelect: (c: CountryIntel) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [risk, setRisk] = useState<RiskFilter>("all");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Global "/" shortcut to focus search
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "/") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || (t as HTMLElement).isContentEditable)) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return COUNTRIES.filter((c) => {
+      if (risk !== "all" && c.risk !== risk) return false;
+      if (!q) return true;
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.iso2.toLowerCase().includes(q) ||
+        c.newsKeywords?.some((k) => k.toLowerCase().includes(q))
+      );
+    });
+  }, [query, risk]);
+
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [query, risk]);
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const pick = filtered[activeIdx] ?? filtered[0];
+      if (pick) {
+        onSelect(pick);
+        inputRef.current?.blur();
+      }
+    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(filtered.length - 1, i + 1));
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(0, i - 1));
+    } else if (e.key === "Escape") {
+      if (query) {
+        e.preventDefault();
+        setQuery("");
+      } else {
+        inputRef.current?.blur();
+      }
+    }
+  }
+
+  const riskFilters: { key: RiskFilter; label: string; tint?: string }[] = [
+    { key: "all", label: "All" },
+    { key: "low", label: "Low", tint: RISK_COLOR.low },
+    { key: "medium", label: "Med", tint: RISK_COLOR.medium },
+    { key: "high", label: "High", tint: RISK_COLOR.high },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+          <Sparkles className="h-3 w-3 text-primary" /> Tracked countries
+        </div>
+        <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {filtered.length} / {COUNTRIES.length}
+        </div>
+      </div>
+
+      {/* Search + risk filters */}
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Search country, code, region…"
+            aria-label="Search countries"
+            className="w-full rounded-lg border border-white/10 bg-white/[0.03] py-2 pl-8 pr-16 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:bg-white/[0.05] focus:outline-none focus:ring-1 focus:ring-primary/30"
+          />
+          <div className="pointer-events-none absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+            {query ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  inputRef.current?.focus();
+                }}
+                className="pointer-events-auto rounded p-0.5 text-muted-foreground hover:bg-white/10 hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            ) : (
+              <kbd className="rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">/</kbd>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5">
+          {riskFilters.map((r) => {
+            const active = risk === r.key;
+            return (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => setRisk(r.key)}
+                className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition ${
+                  active ? "bg-white/10 text-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-pressed={active}
+              >
+                {r.tint && <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: r.tint }} />}
+                {r.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Results */}
+      {filtered.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-white/10 px-3 py-6 text-center text-xs text-muted-foreground">
+          No countries match <span className="font-semibold text-foreground">"{query}"</span>
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {filtered.map((c, i) => {
+            const isSel = selected?.iso2 === c.iso2;
+            const isActive = i === activeIdx && query.length > 0;
+            return (
+              <button
+                key={c.iso2}
+                onClick={() => onSelect(c)}
+                onMouseEnter={() => setActiveIdx(i)}
+                className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
+                  isSel
+                    ? "border-primary/60 bg-primary/15 text-primary"
+                    : isActive
+                      ? "border-primary/40 bg-primary/[0.08] text-foreground"
+                      : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
+                }`}
+              >
+                <span aria-hidden>{c.flag}</span>
+                <span className="font-medium">
+                  {query ? <Highlight text={c.name} query={query} /> : c.name}
+                </span>
+                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">{c.iso2}</span>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RISK_COLOR[c.risk] }} />
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim();
+  if (!q) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span className="rounded bg-primary/25 px-0.5 text-primary">{text.slice(idx, idx + q.length)}</span>
+      {text.slice(idx + q.length)}
+    </>
   );
 }
