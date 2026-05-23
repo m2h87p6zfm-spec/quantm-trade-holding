@@ -9,7 +9,6 @@ import {
   type IChartApi,
   type ISeriesApi,
   type UTCTimestamp,
-  type Time,
 } from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
 import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
@@ -106,6 +105,7 @@ export const AssetChart = memo(function AssetChart({
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
   const baseLineRef = useRef<ReturnType<NonNullable<typeof seriesRef.current>["createPriceLine"]> | null>(null);
+  const volMapRef = useRef<Map<number, number>>(new Map());
 
   const [hover, setHover] = useState<{ time: number; close: number; volume: number } | null>(null);
 
@@ -143,13 +143,10 @@ export const AssetChart = memo(function AssetChart({
 
     chart.subscribeCrosshairMove((param) => {
       if (!param.time || !seriesRef.current) { setHover(null); return; }
-      const d = param.seriesData.get(seriesRef.current) as { value: number; customValues?: { volume?: number } } | undefined;
+      const d = param.seriesData.get(seriesRef.current) as { value: number } | undefined;
       if (!d) { setHover(null); return; }
-      setHover({
-        time: param.time as number,
-        close: d.value,
-        volume: d.customValues?.volume ?? 0,
-      });
+      const t = param.time as number;
+      setHover({ time: t, close: d.value, volume: volMapRef.current.get(t) ?? 0 });
     });
 
     const ro = new ResizeObserver((entries) => {
@@ -204,8 +201,8 @@ export const AssetChart = memo(function AssetChart({
     const points = data.map((d) => ({
       time: d.time as UTCTimestamp,
       value: d.close,
-      customValues: { volume: d.volume },
     }));
+    volMapRef.current = new Map(data.map((d) => [d.time, d.volume]));
     seriesRef.current.setData(points);
 
     // Baseline reference (start-of-period)
