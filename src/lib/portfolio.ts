@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { recordApexAnalysis } from "@/lib/track-record.functions";
+import { recordApexAnalysis } from "@/lib/trackRecord.functions";
 import { findProduct } from "@/lib/products";
 
 export type Position = {

@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-import { getTrackRecord, type TrackRecordPayload } from "@/lib/track-record.functions";
+import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackRecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
