@@ -178,7 +178,7 @@ function PicksPage() {
       }).catch(() => { /* fire-and-forget */ });
     }
     try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
-  }, [loading, picks]);
+  }, [loading, picks, user]);
 
   const podium = picks.slice(0, 3);
   const rest = picks.slice(3);
