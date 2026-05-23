@@ -35,15 +35,21 @@ export const Route = createFileRoute("/analyse")({ component: AnalysePage });
 
 
 
-type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string };
+type Msg = { role: "user" | "agent"; text: string; symbol?: string; query?: string; cachedText?: string; convId?: string };
 
-function AiCommentary({ query, symbol, indicators, regime }: { query: string; symbol?: string; indicators?: IndicatorSet | null; regime?: MarketRegime }) {
+function AiCommentary({ query, symbol, indicators, regime, cachedText, onDone }: { query: string; symbol?: string; indicators?: IndicatorSet | null; regime?: MarketRegime; cachedText?: string; onDone?: (text: string) => void }) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    if (cachedText !== undefined) {
+      setText(cachedText);
+      setDone(true);
+      setError(null);
+      return;
+    }
     if (!query) return;
     const controller = new AbortController();
     abortRef.current?.abort();
@@ -51,6 +57,7 @@ function AiCommentary({ query, symbol, indicators, regime }: { query: string; sy
     setText("");
     setError(null);
     setDone(false);
+
 
     (async () => {
       try {
@@ -119,6 +126,7 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
           }
         }
         setDone(true);
+        if (onDone && acc) onDone(acc);
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
         setError((e as Error).message);
@@ -126,7 +134,9 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
     })();
 
     return () => controller.abort();
-  }, [query, symbol, indicators, regime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, symbol, indicators, regime, cachedText]);
+
 
   if (error) {
     return <div className="rounded-lg border border-bear/30 bg-bear/5 p-3 text-xs text-bear">KI-Kommentar fehlgeschlagen: {error}</div>;
@@ -219,7 +229,7 @@ type CreditState =
   | { phase: "blocked"; tier: string; limit: number; used: number }
   | { phase: "ok" };
 
-function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: string }) {
+function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: string; userQuery: string; cachedText?: string; onDone?: (t: string) => void }) {
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
   const quoteQ = useQuote(symbol);
@@ -326,7 +336,10 @@ function AgentResponse({ symbol, userQuery }: { symbol: string; userQuery: strin
       user={user}
       record={record}
       userQuery={userQuery}
+      cachedText={cachedText}
+      onDone={onDone}
     />
+
   );
 }
 
@@ -343,6 +356,8 @@ function AgentAnalysisView({
   user,
   record,
   userQuery,
+  cachedText,
+  onDone,
 }: {
   symbol: string;
   name: string;
@@ -356,7 +371,10 @@ function AgentAnalysisView({
   user: ReturnType<typeof useAuth>["user"];
   record: (args: { data: Record<string, unknown> }) => Promise<unknown>;
   userQuery: string;
+  cachedText?: string;
+  onDone?: (t: string) => void;
 }) {
+
   const recordTrack = useServerFn(recordApexAnalysis);
   useEffect(() => {
     if (!user) return;
@@ -416,7 +434,7 @@ function AgentAnalysisView({
         quote={quote}
         regime={regime}
       />
-      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} />
+      <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} cachedText={cachedText} onDone={onDone} />
       <div className="pt-1">
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">
           Vollständige Detailansicht →
@@ -497,16 +515,41 @@ function AnalysePage() {
     setActiveConvId(id);
     const { data, error } = await supabase
       .from("agent_messages")
-      .select("role,content")
+      .select("role,content,created_at")
       .eq("conversation_id", id)
       .order("created_at", { ascending: true });
     if (error || !data) return;
+    const rows = data as { role: string; content: string }[];
     const replay: Msg[] = [initial[0]];
-    for (const m of data as { role: string; content: string }[]) {
-      if (m.role !== "user") continue;
-      const sym = extractSymbol(m.content);
-      replay.push({ role: "user", text: m.content });
-      replay.push({ role: "agent", text: "", symbol: sym ?? undefined, query: m.content });
+    for (let i = 0; i < rows.length; i++) {
+      const m = rows[i];
+      if (m.role === "user") {
+        replay.push({ role: "user", text: m.content });
+        // Look ahead for the matching assistant reply
+        const next = rows[i + 1];
+        if (next && next.role === "assistant") {
+          const sym = extractSymbol(m.content);
+          replay.push({
+            role: "agent",
+            text: next.content,
+            symbol: sym ?? undefined,
+            query: m.content,
+            cachedText: next.content,
+            convId: id,
+          });
+          i++; // consume the assistant row
+        } else {
+          // No stored assistant text → fall back to live re-run
+          const sym = extractSymbol(m.content);
+          replay.push({
+            role: "agent",
+            text: "",
+            symbol: sym ?? undefined,
+            query: m.content,
+            convId: id,
+          });
+        }
+      }
     }
     setMessages(replay);
   };
@@ -518,7 +561,17 @@ function AnalysePage() {
     if (activeConvId === id) newChat();
   };
 
-  const sendQuery = (text: string) => {
+  async function persistAssistantMsg(convId: string, text: string) {
+    if (!user || !text?.trim()) return;
+    await supabase.from("agent_messages").insert({
+      conversation_id: convId, user_id: user.id, role: "assistant", content: text.slice(0, 20000),
+    });
+    await supabase.from("agent_conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", convId);
+  }
+
+  const sendQuery = async (text: string) => {
     const sym = extractSymbol(text);
     const userMsg: Msg = { role: "user", text };
 
@@ -536,34 +589,36 @@ function AnalysePage() {
       ];
       const isFinance = FINANCE_HINTS.some((k) => lower.includes(k));
       if (!isFinance) {
-        const canned: Msg = {
-          role: "agent",
-          text:
-            "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
-            "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
-            "• *Analysiere NVDA*\n" +
-            "• *Wie steht der DAX?*\n" +
-            "• *Soll ich Tesla kaufen?*\n" +
-            "• *Bewerte Apple*",
-        };
+        const cannedText =
+          "Ich bin **APEX**, dein Analyse-Agent für Aktien, ETFs und Märkte — *dich selbst* kann ich leider nicht analysieren ✨. " +
+          "Nenne mir ein Asset oder eine Marktfrage, dann lege ich los. Beispiele:\n\n" +
+          "• *Analysiere NVDA*\n" +
+          "• *Wie steht der DAX?*\n" +
+          "• *Soll ich Tesla kaufen?*\n" +
+          "• *Bewerte Apple*";
+        const canned: Msg = { role: "agent", text: cannedText };
         setMessages((m) => [...m, userMsg, canned]);
         setInput("");
-        // Auch off-topic in History speichern
         if (user) {
-          ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
+          const cid = await ensureConv(text);
+          if (cid) {
+            await persistUserMsg(cid, text);
+            await persistAssistantMsg(cid, cannedText);
+          }
         }
         return;
       }
     }
 
-    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text };
-    setMessages((m) => [...m, userMsg, reply]);
     setInput("");
+    const cid = user ? await ensureConv(text) : null;
+    if (cid) await persistUserMsg(cid, text);
 
-    if (user) {
-      ensureConv(text).then((cid) => { if (cid) persistUserMsg(cid, text); });
-    }
+    const reply: Msg = { role: "agent", text: "", symbol: sym ?? undefined, query: text, convId: cid ?? undefined };
+    setMessages((m) => [...m, userMsg, reply]);
   };
+
+
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -673,10 +728,20 @@ function AnalysePage() {
                 }`}
               >
                 {m.symbol ? (
-                  <AgentResponse symbol={m.symbol} userQuery={m.query ?? ""} />
+                  <AgentResponse
+                    symbol={m.symbol}
+                    userQuery={m.query ?? ""}
+                    cachedText={m.cachedText}
+                    onDone={(t) => { if (m.convId && !m.cachedText) persistAssistantMsg(m.convId, t); }}
+                  />
                 ) : m.query ? (
-                  <AiCommentary query={m.query} />
+                  <AiCommentary
+                    query={m.query}
+                    cachedText={m.cachedText}
+                    onDone={(t) => { if (m.convId && !m.cachedText) persistAssistantMsg(m.convId, t); }}
+                  />
                 ) : (
+
                   <div
                     className="text-sm leading-relaxed whitespace-pre-line"
                     dangerouslySetInnerHTML={{
