@@ -227,6 +227,7 @@ export function OnboardingGate() {
       notif_breakout: a.notifications.notif_breakout,
     });
     setSaving(false);
+    navigate({ to: "/", replace: true });
   };
 
   const stepIcon = [Sparkles, Calendar, GraduationCap, Briefcase, Coins, ShieldCheck, Globe2, Bell, Newspaper, Wallet, CircuitBoard][step];
