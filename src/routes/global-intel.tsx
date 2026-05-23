@@ -402,233 +402,562 @@ function MovingMarketsBar() {
   );
 }
 
-/* ───────── Global Market Conditions ───────── */
+/* ───────── Strategic Briefing (cause → effect → markets) ───────── */
 
-type ConditionTone = "ok" | "warn" | "bad" | "info";
-type Trend = "up" | "down" | "flat" | "wave";
-
-type ConditionCard = {
-  key: string;
-  title: string;
-  status: string;
-  why: string;
-  impact: string;
-  tone: ConditionTone;
-  trend: Trend;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  intensity: 1 | 2 | 3 | 4 | 5; // soft heat meter (5 bars)
-};
-
-const TONE_COLOR: Record<ConditionTone, string> = {
+type Tone = "ok" | "warn" | "bad" | "info";
+const TONE_COLOR: Record<Tone, string> = {
   ok: "oklch(0.74 0.12 155)",
   warn: "oklch(0.80 0.12 78)",
   bad: "oklch(0.68 0.15 25)",
   info: "oklch(0.74 0.10 240)",
 };
 
-function TrendIndicator({ trend, color }: { trend: Trend; color: string }) {
-  if (trend === "up") return <ArrowUpRight className="h-4 w-4" style={{ color }} />;
-  if (trend === "down") return <ArrowDownRight className="h-4 w-4" style={{ color }} />;
-  if (trend === "wave") return <Waves className="h-4 w-4" style={{ color }} />;
-  return <Minus className="h-4 w-4" style={{ color }} />;
+type BriefingCard = {
+  key: string;
+  kicker: string;
+  title: string;
+  headline: string;
+  cause: string;
+  consequence: string;
+  affected: { label: string; tone: Tone }[];
+  watch: string;
+  tone: Tone;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+};
+
+function buildBriefing(): BriefingCard[] {
+  const s = GLOBAL_SUMMARY;
+  // 1) Driving markets today — derived from sentiment + USD posture
+  const drivingTone: Tone =
+    s.sentiment === "risk-on" ? "ok" : s.sentiment === "risk-off" ? "bad" : "warn";
+  const driving: BriefingCard = {
+    key: "driving",
+    kicker: "Driving markets today",
+    title: "Macro regime",
+    headline:
+      s.sentiment === "risk-on"
+        ? "Risk appetite is back — growth & cyclicals lead"
+        : s.sentiment === "risk-off"
+          ? "Defensive tone — capital rotates to safety"
+          : "Mixed tape — no single narrative dominates",
+    cause:
+      s.sentiment === "risk-off"
+        ? "Tighter liquidity, geopolitical headlines and slowing growth are pushing money out of risk."
+        : s.sentiment === "risk-on"
+          ? "Liquidity is supportive and policy fears are easing — investors chase returns again."
+          : "Conflicting signals on growth, inflation and policy — leadership is rotating intraday.",
+    consequence:
+      s.sentiment === "risk-off"
+        ? "Equities and EM weaken, USD/gold/treasuries bid, credit spreads widen."
+        : s.sentiment === "risk-on"
+          ? "Equities and credit rally, USD softens, cyclicals & EM outperform."
+          : "Range trading; sector rotations matter more than index direction.",
+    affected:
+      s.sentiment === "risk-off"
+        ? [
+            { label: "Equities ↓", tone: "bad" },
+            { label: "USD ↑", tone: "ok" },
+            { label: "Gold ↑", tone: "ok" },
+            { label: "EM ↓", tone: "bad" },
+          ]
+        : s.sentiment === "risk-on"
+          ? [
+              { label: "Equities ↑", tone: "ok" },
+              { label: "Credit ↑", tone: "ok" },
+              { label: "USD ↓", tone: "warn" },
+              { label: "EM ↑", tone: "ok" },
+            ]
+          : [
+              { label: "Equities ↔", tone: "info" },
+              { label: "USD ↔", tone: "info" },
+              { label: "Vol ↑", tone: "warn" },
+            ],
+    watch: "VIX · DXY · 10Y yields · gold",
+    tone: drivingTone,
+    icon: Compass,
+  };
+
+  // 2) Where capital is moving — liquidity tells the story
+  const liqTone: Tone = s.trend === "expanding" ? "ok" : s.trend === "recession" ? "bad" : "info";
+  const liquidity: BriefingCard = {
+    key: "capital",
+    kicker: "Where capital is moving",
+    title: "Global liquidity flow",
+    headline:
+      s.trend === "expanding"
+        ? "Liquidity expanding — money flows into risk"
+        : s.trend === "recession"
+          ? "Liquidity tightening — flight to quality"
+          : "Liquidity stable — neutral cross-flows",
+    cause:
+      s.trend === "expanding"
+        ? "Central-bank stance is easier and credit creation is accelerating across major economies."
+        : s.trend === "recession"
+          ? "Rates stay restrictive and funding conditions are tight — refinancing risk is rising."
+          : "Policy is on hold globally — credit and FX flows are balanced.",
+    consequence:
+      s.trend === "expanding"
+        ? "Risk assets attract inflows, EM & crypto get tailwind, USD softens."
+        : s.trend === "recession"
+          ? "Capital rotates into treasuries, JPY, CHF and gold; EM debt under pressure."
+          : "Sector flows dominate over macro flows — pair-trade environment.",
+    affected:
+      s.trend === "expanding"
+        ? [
+            { label: "Tech ↑", tone: "ok" },
+            { label: "EM ↑", tone: "ok" },
+            { label: "Crypto ↑", tone: "ok" },
+          ]
+        : s.trend === "recession"
+          ? [
+              { label: "Treasuries ↑", tone: "ok" },
+              { label: "JPY ↑", tone: "ok" },
+              { label: "High-yield ↓", tone: "bad" },
+            ]
+          : [{ label: "Bonds ↔", tone: "info" }, { label: "Credit ↔", tone: "info" }],
+    watch: "HY spreads · DXY · 2Y yields · M2 growth",
+    tone: liqTone,
+    icon: Droplets,
+  };
+
+  // 3) Biggest geopolitical risk — pick highest-impact negative event
+  const topRisk =
+    EVENTS.find((e) => e.id === "mideast") ??
+    EVENTS.find((e) => e.type === "negative") ??
+    EVENTS[0];
+  const risk: BriefingCard = {
+    key: "risk",
+    kicker: "Biggest geopolitical risk",
+    title: topRisk.title,
+    headline: topRisk.summary,
+    cause: `Active in ${topRisk.location}. ${topRisk.category} pressure is being priced into oil, FX and risk assets.`,
+    consequence:
+      "Oil risk premium rises → inflation pressure → tighter policy outlook → equities under stress, safe-havens bid.",
+    affected: [
+      { label: "Brent ↑", tone: "bad" },
+      { label: "Airlines ↓", tone: "bad" },
+      { label: "Energy ↑", tone: "ok" },
+      { label: "Gold ↑", tone: "ok" },
+    ],
+    watch: "Brent · USD/JPY · gold · defence & energy equities",
+    tone: "bad",
+    icon: Flame,
+  };
+
+  // 4) Biggest growth opportunity — pick highest-conviction positive
+  const topOpp =
+    EVENTS.find((e) => e.id === "ai-capex") ??
+    EVENTS.find((e) => e.type === "positive") ??
+    EVENTS[0];
+  const opportunity: BriefingCard = {
+    key: "opp",
+    kicker: "Biggest growth opportunity",
+    title: topOpp.title,
+    headline: topOpp.summary,
+    cause: `Centred in ${topOpp.location}. Structural ${topOpp.category.toLowerCase()} demand is reshaping global investment flows.`,
+    consequence:
+      "Capex spreads from semis to power, cooling, grid & industrials → broad earnings tailwind for the AI value chain.",
+    affected: [
+      { label: "Semis ↑", tone: "ok" },
+      { label: "Utilities ↑", tone: "ok" },
+      { label: "Industrials ↑", tone: "ok" },
+      { label: "Copper ↑", tone: "ok" },
+    ],
+    watch: "NVDA · SMH · grid/utility ETFs · copper",
+    tone: "ok",
+    icon: Sparkles,
+  };
+
+  return [driving, liquidity, risk, opportunity];
 }
 
-function HeatMeter({ value, color }: { value: 1 | 2 | 3 | 4 | 5; color: string }) {
+function ToneChip({ label, tone }: { label: string; tone: Tone }) {
+  const color = TONE_COLOR[tone];
   return (
-    <div className="flex items-center gap-0.5" aria-label={`Intensity ${value} of 5`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          className="h-2.5 w-1 rounded-sm transition-colors"
-          style={{
-            backgroundColor: i <= value ? color : "oklch(0.28 0.012 260)",
-            opacity: i <= value ? 0.85 : 1,
-          }}
-        />
-      ))}
-    </div>
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-[10px] font-semibold"
+      style={{
+        color,
+        backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)`,
+        boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 30%, transparent)`,
+      }}
+    >
+      {label}
+    </span>
   );
 }
 
-function ConditionCardView({ c }: { c: ConditionCard }) {
+function BriefingCardView({ c }: { c: BriefingCard }) {
   const color = TONE_COLOR[c.tone];
   const Icon = c.icon;
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-transparent p-4 backdrop-blur-md transition hover:border-white/15 hover:from-white/[0.05]">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-transparent p-4 backdrop-blur-md transition hover:border-white/15 hover:from-white/[0.05]">
       <span
         className="absolute inset-x-0 top-0 h-px"
         style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
       />
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
-            style={{ backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 35%, transparent)` }}
-          >
-            <Icon className="h-4 w-4" style={{ color }} />
+      <div className="flex items-center gap-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color }} />
+        {c.kicker}
+      </div>
+      <div className="mt-2 flex items-start gap-2.5">
+        <div
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1"
+          style={{
+            backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)`,
+            boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 35%, transparent)`,
+          }}
+        >
+          <Icon className="h-4 w-4" style={{ color }} />
+        </div>
+        <div className="min-w-0">
+          <div className="font-display text-[15px] font-semibold leading-tight tracking-tight text-foreground">
+            {c.title}
           </div>
-          <div>
-            <div className="font-display text-[15px] font-semibold leading-tight tracking-tight text-foreground">
-              {c.title}
-            </div>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium tabular-nums" style={{ color }}>
-              <TrendIndicator trend={c.trend} color={color} />
-              {c.status}
-            </div>
+          <div className="mt-0.5 text-[12px] font-medium leading-snug" style={{ color }}>
+            {c.headline}
           </div>
         </div>
-        <HeatMeter value={c.intensity} color={color} />
       </div>
 
-      <p className="mt-3 text-[12.5px] leading-relaxed text-foreground/80">
-        {c.why}
-      </p>
-
-      <div className="mt-3 flex items-center gap-1.5 border-t border-white/[0.06] pt-2.5 text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground">
-        <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color }} />
-        <span>Impact</span>
-        <span className="text-foreground/70 normal-case tracking-normal">· {c.impact}</span>
+      <div className="mt-3 space-y-2 text-[12px] leading-relaxed">
+        <div>
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+            Why
+          </span>
+          <p className="mt-0.5 text-foreground/80">{c.cause}</p>
+        </div>
+        <div>
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+            Market consequence
+          </span>
+          <p className="mt-0.5 text-foreground/80">{c.consequence}</p>
+        </div>
       </div>
-    </div>
+
+      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/[0.06] pt-3">
+        {c.affected.map((a) => (
+          <ToneChip key={a.label} label={a.label} tone={a.tone} />
+        ))}
+      </div>
+
+      <div className="mt-2.5 flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground">
+        <Eye className="h-3 w-3" />
+        <span>Watch</span>
+        <span className="text-foreground/70 normal-case tracking-normal">· {c.watch}</span>
+      </div>
+    </article>
   );
 }
 
-function GlobalMarketConditions() {
-  const s = GLOBAL_SUMMARY;
-
-  const sentimentCard: ConditionCard = (() => {
-    if (s.sentiment === "risk-on") {
-      return {
-        key: "mood", title: "Investor Mood",
-        status: "Risk-on appetite", tone: "ok", trend: "up", icon: HeartPulse, intensity: 4,
-        why: "Capital is flowing into growth assets — equities, credit and cyclical sectors are bid.",
-        impact: "Lifts equities, high-yield credit and EM assets.",
-      };
-    }
-    if (s.sentiment === "risk-off") {
-      return {
-        key: "mood", title: "Investor Mood",
-        status: "Risk-off, defensive", tone: "bad", trend: "down", icon: HeartPulse, intensity: 4,
-        why: "Investors are de-risking — flows are rotating into safe havens and quality.",
-        impact: "Pressures equities and EM, supports gold, treasuries and JPY.",
-      };
-    }
-    return {
-      key: "mood", title: "Investor Mood",
-      status: "Mixed appetite", tone: "warn", trend: "wave", icon: HeartPulse, intensity: 3,
-      why: "Markets are cautious with mixed risk appetite globally — no clear leadership.",
-      impact: "Choppy equities, range-bound credit, defensive sectors outperform.",
-    };
-  })();
-
-  const liquidityCard: ConditionCard = (() => {
-    if (s.trend === "expanding") {
-      return {
-        key: "liq", title: "Money Flow",
-        status: "Liquidity expanding", tone: "ok", trend: "up", icon: Droplets, intensity: 4,
-        why: "Central banks and credit markets are pumping liquidity — risk assets benefit.",
-        impact: "Tailwind for equities, credit and crypto.",
-      };
-    }
-    if (s.trend === "recession") {
-      return {
-        key: "liq", title: "Money Flow",
-        status: "Liquidity tightening", tone: "bad", trend: "down", icon: Droplets, intensity: 4,
-        why: "Funding conditions are tightening — financial stress can build quickly.",
-        impact: "Headwind for risk assets, supports the USD and quality bonds.",
-      };
-    }
-    return {
-      key: "liq", title: "Money Flow",
-      status: "Stable liquidity", tone: "info", trend: "flat", icon: Droplets, intensity: 3,
-      why: "Central bank conditions are currently stable with normal market liquidity.",
-      impact: "Neutral for equities, credit spreads contained.",
-    };
-  })();
-
-  const usdCard: ConditionCard = (() => {
-    if (s.usd === "strong") {
-      return {
-        key: "usd", title: "US Dollar Pressure",
-        status: "Strong USD", tone: "warn", trend: "up", icon: Banknote, intensity: 4,
-        why: "A stronger USD is putting pressure on commodities and international markets.",
-        impact: "Headwind for commodities, EM debt and non-US equities.",
-      };
-    }
-    if (s.usd === "weak") {
-      return {
-        key: "usd", title: "US Dollar Pressure",
-        status: "Weakening USD", tone: "ok", trend: "down", icon: Banknote, intensity: 3,
-        why: "A softer USD eases conditions for commodities, EM and global trade.",
-        impact: "Tailwind for gold, oil, copper and EM assets.",
-      };
-    }
-    return {
-      key: "usd", title: "US Dollar Pressure",
-      status: "Neutral USD", tone: "info", trend: "flat", icon: Banknote, intensity: 2,
-      why: "The dollar is range-bound — limited cross-asset pressure from FX.",
-      impact: "Minimal FX drag on commodities and EM.",
-    };
-  })();
-
-  const directionCard: ConditionCard = (() => {
-    if (s.mood === "bullish") {
-      return {
-        key: "dir", title: "Global Market Direction",
-        status: "Bullish bias", tone: "ok", trend: "up", icon: Compass, intensity: 4,
-        why: "Macro signals lean constructive — growth + liquidity outweigh policy risk.",
-        impact: "Trend-followers add risk; breadth improves across equities.",
-      };
-    }
-    if (s.mood === "bearish") {
-      return {
-        key: "dir", title: "Global Market Direction",
-        status: "Bearish bias", tone: "bad", trend: "down", icon: Compass, intensity: 4,
-        why: "Macro signals are deteriorating — growth and earnings risk dominates.",
-        impact: "Defensive positioning; volatility hedges in demand.",
-      };
-    }
-    return {
-      key: "dir", title: "Global Market Direction",
-      status: "Direction unclear", tone: "warn", trend: "wave", icon: Compass, intensity: 3,
-      why: "Markets currently lack a clear long-term direction due to mixed macro signals.",
-      impact: "Range trading; rotations matter more than beta.",
-    };
-  })();
-
-  const cards: ConditionCard[] = [sentimentCard, liquidityCard, usdCard, directionCard];
-
+function StrategicBriefing() {
+  const cards = useMemo(buildBriefing, []);
   return (
-    <section aria-label="Global Market Conditions">
+    <section aria-label="Global strategic briefing">
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             <Globe2 className="h-3 w-3 text-primary" />
-            Global Market Conditions
+            Global Strategic Briefing
           </div>
           <h2 className="mt-1 font-display text-lg font-semibold tracking-tight text-foreground/95">
-            How the world is trading right now
+            What's moving the world — and why it matters for your portfolio
           </h2>
         </div>
         <div className="hidden items-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:flex">
           <Sparkles className="h-3 w-3 text-primary" />
-          Plain-English macro
+          Cause · Consequence · Markets
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((c) => (
-          <ConditionCardView key={c.key} c={c} />
+          <BriefingCardView key={c.key} c={c} />
         ))}
       </div>
-
-      {GLOBAL_SUMMARY.headline && (
-        <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-[12.5px] text-foreground/80 backdrop-blur">
-          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-          <span>{GLOBAL_SUMMARY.headline}</span>
-        </div>
-      )}
     </section>
+  );
+}
+
+/* ───────── Event cause→effect chains (drives EventPanel + map propagation) ───────── */
+
+type EventChain = {
+  who: string[];               // countries affected (must match COUNTRY_COORDS keys)
+  routes: string[];            // TradeFlow ids that light up
+  direct: { label: string; tone: Tone; note: string }[];
+  secondary: { label: string; tone: Tone; note: string }[];
+  global: string;              // one-line global consequence
+};
+
+const EVENT_CHAINS: Record<string, EventChain> = {
+  "ukr-war": {
+    who: ["Russia", "Ukraine", "Germany", "France", "United Kingdom"],
+    routes: ["ru-eu-gas", "ru-asia-oil"],
+    direct: [
+      { label: "Brent / TTF gas", tone: "bad", note: "Energy risk premium stays elevated in Europe." },
+      { label: "EU wheat", tone: "bad", note: "Black-Sea grain corridor disruption keeps food prices firm." },
+      { label: "EUR", tone: "bad", note: "Geopolitical risk premium weighs on the euro." },
+    ],
+    secondary: [
+      { label: "Defence equities", tone: "ok", note: "Sustained re-arming cycle across NATO." },
+      { label: "EU industry", tone: "bad", note: "Higher energy costs erode margins for autos & chemicals." },
+      { label: "USD", tone: "ok", note: "Safe-haven flows support the dollar." },
+    ],
+    global: "Reshapes European energy mix, lifts global food inflation and accelerates defence spending worldwide.",
+  },
+  mideast: {
+    who: ["Israel", "Iran", "Saudi Arabia", "United States of America"],
+    routes: ["hormuz-asia", "sa-eu"],
+    direct: [
+      { label: "Brent crude", tone: "bad", note: "Risk premium re-rates higher on any escalation." },
+      { label: "Gold", tone: "ok", note: "Safe-haven bid intensifies." },
+      { label: "USD / CHF / JPY", tone: "ok", note: "Funding currencies catch a safe-haven bid." },
+    ],
+    secondary: [
+      { label: "Airlines", tone: "bad", note: "Fuel costs + rerouted flight paths squeeze margins." },
+      { label: "Energy majors", tone: "ok", note: "Higher Brent flows to upstream earnings." },
+      { label: "EM equities", tone: "bad", note: "Higher oil + USD strength tightens EM conditions." },
+    ],
+    global: "Oil shock pathway → global inflation pulse → tighter policy expectations → risk-off across equities.",
+  },
+  redsea: {
+    who: ["Yemen", "Saudi Arabia", "Germany", "China"],
+    routes: ["redsea-suez", "asia-us-chips"],
+    direct: [
+      { label: "Container freight", tone: "bad", note: "Shanghai-to-Europe rates stay structurally higher." },
+      { label: "Goods inflation", tone: "bad", note: "Second-round pressure on retail prices." },
+    ],
+    secondary: [
+      { label: "Shipping equities", tone: "ok", note: "Maersk, Hapag-Lloyd capture freight upside." },
+      { label: "EU retailers", tone: "bad", note: "Longer transit + higher costs hit margins." },
+      { label: "Inventories", tone: "warn", note: "Just-in-time supply chains build buffer stock." },
+    ],
+    global: "Persistent reroute around Cape of Good Hope raises global trade friction by ~10–15 days.",
+  },
+  taiwan: {
+    who: ["Taiwan", "China", "United States of America", "South Korea", "Japan"],
+    routes: ["asia-us-chips", "us-cn-pacific"],
+    direct: [
+      { label: "Semis (TSM, NVDA)", tone: "bad", note: "Tail risk priced into AI / chip supply chain." },
+      { label: "Tech volatility", tone: "warn", note: "VIX + SOX vol expand on any flare-up." },
+    ],
+    secondary: [
+      { label: "JPY / KRW", tone: "warn", note: "Asian FX wobble on regional escalation risk." },
+      { label: "Defence equities", tone: "ok", note: "Pacific posture lifts US/JP/KR defence names." },
+    ],
+    global: "Any disruption to Taiwan = global tech earnings shock; no near-term substitute for TSMC's leading-edge nodes.",
+  },
+  "us-pol": {
+    who: ["United States of America", "Mexico", "China"],
+    routes: ["us-cn-pacific", "us-mx-near"],
+    direct: [
+      { label: "USD", tone: "warn", note: "Tariff & tax-policy noise drives DXY swings." },
+      { label: "Treasuries", tone: "warn", note: "Fiscal trajectory under scrutiny — term premium widens." },
+    ],
+    secondary: [
+      { label: "EM FX", tone: "bad", note: "USD strength tightens EM conditions." },
+      { label: "Mexican peso", tone: "warn", note: "Tariff threats whip MXN both ways." },
+    ],
+    global: "US policy uncertainty is now the single biggest swing factor for global capital flows.",
+  },
+  "ai-capex": {
+    who: ["United States of America", "Taiwan", "South Korea", "Japan"],
+    routes: ["asia-us-chips"],
+    direct: [
+      { label: "Semis", tone: "ok", note: "Hyperscaler orders drive multi-year capex visibility." },
+      { label: "Utilities", tone: "ok", note: "Data-centre power demand re-rates regulated utilities." },
+    ],
+    secondary: [
+      { label: "Copper", tone: "ok", note: "Grid + cooling buildouts lift base-metal demand." },
+      { label: "Industrials", tone: "ok", note: "HVAC, generators, switchgear all in the AI supply chain." },
+      { label: "REITs (data)", tone: "ok", note: "Hyperscale leasing supports cash flows." },
+    ],
+    global: "Largest capex super-cycle since the dotcom era — spreads from chips into the real economy.",
+  },
+  "india-growth": {
+    who: ["India"],
+    routes: [],
+    direct: [
+      { label: "Nifty / Sensex", tone: "ok", note: "Domestic-demand earnings compounding." },
+      { label: "INR", tone: "warn", note: "Strong inflows offset by oil import bill." },
+    ],
+    secondary: [
+      { label: "EM equity flows", tone: "ok", note: "India is the largest non-China EM allocation." },
+      { label: "Consumer staples", tone: "ok", note: "Premiumisation theme intact." },
+    ],
+    global: "India is the marginal global growth contributor as China decelerates.",
+  },
+  opec: {
+    who: ["Saudi Arabia", "Russia", "United States of America"],
+    routes: ["hormuz-asia", "sa-eu"],
+    direct: [
+      { label: "Brent", tone: "warn", note: "Quotas anchor the floor; cuts squeeze refiners." },
+      { label: "Petro-FX", tone: "warn", note: "NOK, CAD, MXN move with crude." },
+    ],
+    secondary: [
+      { label: "Inflation path", tone: "warn", note: "Oil floor keeps headline CPI sticky." },
+      { label: "Airlines / chemicals", tone: "bad", note: "Higher input costs erode margins." },
+    ],
+    global: "OPEC+ is the swing actor for global inflation — every cut feeds into central-bank thinking.",
+  },
+  "boj-exit": {
+    who: ["Japan", "United States of America"],
+    routes: [],
+    direct: [
+      { label: "USD/JPY", tone: "warn", note: "Carry unwind risk — sudden moves possible." },
+      { label: "JGBs", tone: "warn", note: "Higher Japanese yields = repatriation flows." },
+    ],
+    secondary: [
+      { label: "US treasuries", tone: "warn", note: "Marginal Japanese demand weakens." },
+      { label: "Nikkei banks", tone: "ok", note: "Higher rates lift bank NIMs." },
+    ],
+    global: "BoJ shift could reprice the world's cheapest funding currency — global carry trades at risk.",
+  },
+  milei: {
+    who: ["Argentina"],
+    routes: [],
+    direct: [
+      { label: "Merval (USD)", tone: "ok", note: "Reform optimism + disinflation lift equities." },
+      { label: "ARG sovereign", tone: "ok", note: "Spreads tighten as IMF deal anchors policy." },
+    ],
+    secondary: [
+      { label: "EM reform trade", tone: "ok", note: "Sets template for frontier reform stories." },
+      { label: "Lithium", tone: "ok", note: "Capacity unlock supports battery supply chain." },
+    ],
+    global: "Reform-bellwether for emerging markets — success here resets the EM playbook.",
+  },
+  "de-ind": {
+    who: ["Germany", "France"],
+    routes: ["ru-eu-gas"],
+    direct: [
+      { label: "DAX autos / chems", tone: "bad", note: "Energy cost gap vs US erodes competitiveness." },
+      { label: "EUR", tone: "bad", note: "Soft industrial pulse weighs on the euro." },
+    ],
+    secondary: [
+      { label: "EU industrial proxies", tone: "bad", note: "Bellwether weakness spreads across the bloc." },
+      { label: "Bunds", tone: "ok", note: "Growth fears bid quality fixed income." },
+    ],
+    global: "Europe's industrial engine is stalling — drags eurozone trend growth lower.",
+  },
+  "fr-pol": {
+    who: ["France", "Germany"],
+    routes: [],
+    direct: [
+      { label: "OAT–Bund spread", tone: "bad", note: "Widening reflects political risk premium." },
+      { label: "French banks", tone: "bad", note: "Sovereign exposure pressures BNP, SocGen, CASA." },
+    ],
+    secondary: [
+      { label: "EUR", tone: "bad", note: "Core eurozone political risk filters into the currency." },
+      { label: "Periphery spreads", tone: "warn", note: "Italian / Spanish bonds drift with French risk." },
+    ],
+    global: "Eurozone-core fiscal credibility under question — repricing of the EUR risk premium.",
+  },
+  "cn-prop": {
+    who: ["China", "Australia", "Brazil"],
+    routes: ["au-cn-iron", "br-cn-soy"],
+    direct: [
+      { label: "Iron ore / copper", tone: "bad", note: "Structural demand drag from housing slowdown." },
+      { label: "AUD", tone: "bad", note: "Commodity-linked currency feels the China pulse." },
+    ],
+    secondary: [
+      { label: "EM equities", tone: "bad", note: "China beta drags EM index returns." },
+      { label: "Global goods CPI", tone: "ok", note: "Cheaper Chinese exports = global disinflation." },
+    ],
+    global: "China's property unwind is the single biggest source of global goods disinflation.",
+  },
+  "kr-chips": {
+    who: ["South Korea", "Taiwan", "United States of America"],
+    routes: ["asia-us-chips"],
+    direct: [
+      { label: "Memory (Samsung, SK Hynix)", tone: "ok", note: "HBM / AI memory cycle drives earnings beats." },
+      { label: "KOSPI", tone: "ok", note: "Tech-heavy index benefits from up-cycle." },
+    ],
+    secondary: [
+      { label: "Equipment names", tone: "ok", note: "Cap-ex flows to ASML, Applied Materials, TEL." },
+      { label: "KRW", tone: "warn", note: "Export upside vs USD strength tug-of-war." },
+    ],
+    global: "Korean memory cycle is a real-time gauge for global AI / cloud capex.",
+  },
+};
+
+/* ───────── Always-on Active Flashpoints (right panel default) ───────── */
+
+function ActiveFlashpoints({
+  onSelectEvent,
+  onSelectCountry,
+}: {
+  onSelectEvent: (e: GlobalEvent) => void;
+  onSelectCountry: (c: CountryIntel) => void;
+}) {
+  const risk = EVENTS.find((e) => e.id === "mideast") ?? EVENTS.find((e) => e.type === "negative")!;
+  const opp = EVENTS.find((e) => e.id === "ai-capex") ?? EVENTS.find((e) => e.type === "positive")!;
+  const disruption = EVENTS.find((e) => e.id === "redsea") ?? EVENTS.find((e) => e.category === "Supply Chain")!;
+  const watch = EVENTS.find((e) => e.id === "taiwan") ?? EVENTS.find((e) => e.type === "watch")!;
+
+  const rows: { event: GlobalEvent; tone: Tone; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { event: risk, tone: "bad", label: "Top geopolitical risk", icon: Flame },
+    { event: opp, tone: "ok", label: "Top growth opportunity", icon: Sparkles },
+    { event: disruption, tone: "warn", label: "Largest supply disruption", icon: RouteIcon },
+    { event: watch, tone: "info", label: "Strategic watch", icon: Eye },
+  ];
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.016_260)] backdrop-blur">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+        <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <AlertTriangle className="h-3 w-3 text-amber-400" />
+          Active Global Flashpoints
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">live</span>
+      </div>
+      <ul className="divide-y divide-white/[0.05]">
+        {rows.map(({ event, tone, label, icon: Icon }) => {
+          const color = TONE_COLOR[tone];
+          const chain = EVENT_CHAINS[event.id];
+          return (
+            <li key={event.id}>
+              <button
+                type="button"
+                onClick={() => onSelectEvent(event)}
+                className="block w-full px-4 py-3 text-left transition hover:bg-white/[0.03] focus:bg-white/[0.04] focus:outline-none"
+              >
+                <div className="flex items-center gap-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.18em]" style={{ color }}>
+                  <Icon className="h-3 w-3" />
+                  {label}
+                </div>
+                <div className="mt-1 text-[13px] font-semibold leading-snug text-foreground">
+                  {event.title}
+                </div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{event.location}</div>
+                {chain && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {chain.direct.slice(0, 3).map((d) => (
+                      <ToneChip key={d.label} label={d.label} tone={d.tone} />
+                    ))}
+                  </div>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="border-t border-white/[0.06] px-4 py-2.5 text-[10.5px] text-muted-foreground">
+        Tap any flashpoint to see the full cause → effect chain and watch it propagate on the map.
+        <span className="ml-1 text-foreground/70">
+          Or pick a country (e.g.{" "}
+          <button
+            className="story-link text-primary"
+            onClick={() => {
+              const us = COUNTRIES.find((c) => c.iso2 === "US");
+              if (us) onSelectCountry(us);
+            }}
+          >
+            United States
+          </button>
+          ) for its macro profile.
+        </span>
+      </div>
+    </div>
   );
 }
 
