@@ -247,7 +247,7 @@ export function OnboardingGate() {
   return (
     <Dialog open onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden"
+        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden flex flex-col max-h-[92vh]"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
