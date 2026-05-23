@@ -229,7 +229,7 @@ export function WatchlistSignalsPanel() {
                 params={{ symbol: r.p.symbol }}
                 className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition hover:border-[#22FF88]/60 hover:bg-[#22FF88]/5 hover:text-[#22FF88]"
               >
-                Analyse öffnen
+                Detaillierte Analyse
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
