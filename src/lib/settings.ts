@@ -59,10 +59,12 @@ const DEFAULT_LIST: Watchlist = {
   symbols: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"],
 };
 
-const DEFAULT_SOURCES: Record<NewsSource, boolean> = {
-  reuters: true, bloomberg: true, yahoo: true, cnbc: true, ft: true,
-  marketwatch: false, investing: false, wsj: false,
-};
+const DEFAULT_SOURCES: Record<NewsSource, boolean> = Object.fromEntries(
+  NEWS_SOURCES.map((k) => [
+    k,
+    ["reuters", "bloomberg", "wsj", "ft", "cnbc", "yahoo", "nytimes", "barrons", "marketwatch", "economist"].includes(k),
+  ]),
+) as Record<NewsSource, boolean>;
 
 /** Market Watch defaults — appended below the user's portfolio. */
 export const MARKET_WATCH_DEFAULTS = ["SPY", "QQQ", "DIA", "IWM"] as const;
