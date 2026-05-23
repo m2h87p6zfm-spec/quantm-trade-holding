@@ -157,12 +157,17 @@ export function OnboardingGate() {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading, completeOnboarding } = useTradingProfile();
   const { update, createWatchlistWithSymbols } = useSettings();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [a, setA] = useState<Answers>(initialAnswers);
   const [saving, setSaving] = useState(false);
 
   if (authLoading || loading || !user || !profile) return null;
-  if (profile.onboarding_completed) return null;
+  if (profile.onboarding_completed) {
+    // Already done — bounce to the personalized watchlist/cockpit.
+    if (typeof window !== "undefined") navigate({ to: "/", replace: true });
+    return null;
+  }
 
   const canNext = (() => {
     if (step === 0) return true;
