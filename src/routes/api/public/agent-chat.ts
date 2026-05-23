@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createClient } from "@supabase/supabase-js";
+import { analyzeTicker, detectTicker } from "@/lib/quant-fetch.server";
+import { renderApexReport } from "@/lib/quant.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 
