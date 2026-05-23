@@ -5,19 +5,19 @@ import { createCheckoutSession } from "@/utils/payments.functions";
 interface Props {
   priceId: string;
   quantity?: number;
+  /** @deprecated userId/email are now derived from the verified session on the server. Ignored. */
   customerEmail?: string;
+  /** @deprecated userId/email are now derived from the verified session on the server. Ignored. */
   userId?: string;
   returnUrl?: string;
 }
 
-export function StripeEmbeddedCheckout({ priceId, quantity, customerEmail, userId, returnUrl }: Props) {
+export function StripeEmbeddedCheckout({ priceId, quantity, returnUrl }: Props) {
   const fetchClientSecret = async (): Promise<string> => {
     const secret = await createCheckoutSession({
       data: {
         priceId,
         quantity,
-        customerEmail,
-        userId,
         returnUrl: returnUrl || `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         environment: getStripeEnvironment(),
       },

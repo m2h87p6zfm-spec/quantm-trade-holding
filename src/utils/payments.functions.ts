@@ -37,11 +37,10 @@ async function resolveOrCreateCustomer(
 }
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: {
     priceId: string;
     quantity?: number;
-    customerEmail?: string;
-    userId?: string;
     returnUrl: string;
     environment: StripeEnv;
   }) => {
@@ -51,20 +50,21 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     }
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const stripe = createStripeClient(data.environment);
+    // userId comes from the verified Supabase session — never trust the client payload.
+    const userId = context.userId;
+    const customerEmail = context.claims?.email as string | undefined;
 
     const prices = await stripe.prices.list({ lookup_keys: [data.priceId] });
     if (!prices.data.length) throw new Error("Price not found");
     const stripePrice = prices.data[0];
     const isRecurring = stripePrice.type === "recurring";
 
-    const customerId = (data.customerEmail || data.userId)
-      ? await resolveOrCreateCustomer(stripe, {
-          email: data.customerEmail,
-          userId: data.userId,
-        })
-      : undefined;
+    const customerId = await resolveOrCreateCustomer(stripe, {
+      email: customerEmail,
+      userId,
+    });
 
     let productDescription: string | undefined;
     if (!isRecurring) {
@@ -81,12 +81,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       ui_mode: "embedded_page",
       return_url: data.returnUrl,
       managed_payments: { enabled: true },
-      ...(customerId && { customer: customerId }),
+      customer: customerId,
       ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
-      ...(data.userId && {
-        metadata: { userId: data.userId, managed_payments: "true" },
-        ...(isRecurring && { subscription_data: { metadata: { userId: data.userId } } }),
-      }),
+      metadata: { userId, managed_payments: "true" },
+      ...(isRecurring && { subscription_data: { metadata: { userId } } }),
     } as Stripe.Checkout.SessionCreateParams);
 
     return session.client_secret;

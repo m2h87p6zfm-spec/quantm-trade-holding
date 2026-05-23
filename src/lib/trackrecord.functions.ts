@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const recordSchema = z.object({
   ticker: z.string().min(1).max(20),
@@ -13,6 +14,7 @@ const recordSchema = z.object({
 });
 
 export const recordApexAnalysis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data) => recordSchema.parse(data))
   .handler(async ({ data }) => {
     const { insertAnalysisAndOutcome } = await import("@/lib/track-record.server");

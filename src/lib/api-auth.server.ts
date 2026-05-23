@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const PRO_PRICES = new Set([
@@ -109,8 +110,15 @@ export function requireCronSecret(request: Request): Response | null {
       headers: JSON_HEADERS,
     });
   }
-  const got = request.headers.get("x-cron-secret");
-  if (got !== expected) {
+  const got = request.headers.get("x-cron-secret") ?? "";
+  // Timing-safe comparison to prevent prefix-leak side-channel attacks.
+  const expectedBuf = Buffer.from(expected, "utf8");
+  const gotBuf = Buffer.from(got, "utf8");
+  let ok = expectedBuf.length === gotBuf.length;
+  if (ok) {
+    ok = timingSafeEqual(expectedBuf, gotBuf);
+  }
+  if (!ok) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403,
       headers: JSON_HEADERS,
