@@ -7,7 +7,7 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision, stabilizeDecision, whyNow, type Decision } from "@/lib/analysis";
 import { detectRegime, regimeLabel, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
-import { SignalChat } from "@/components/SignalChat";
+
 
 type SortKey = "confidence" | "zscore" | "rsi" | "volatility";
 
