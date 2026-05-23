@@ -74,7 +74,7 @@ export function WatchlistSignalsPanel() {
       spark: number[]; perf30: number;
       signal: "LONG" | "SHORT" | "NEUTRAL"; confidence: number;
     }>;
-  }, [candleQs, symbols, settings.risk]);
+  }, [candleQs, symbols, settings.risk, settings.language]);
 
   const counts = useMemo(() => {
     const c = { LONG: 0, SHORT: 0, NEUTRAL: 0 };
