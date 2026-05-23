@@ -103,28 +103,30 @@ export function WatchlistSignalsPanel() {
   if (symbols.length === 0) return null;
 
   return (
-    <div className="space-y-8 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+    <div className="space-y-5 sm:space-y-8 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* HEADER */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
         <div>
-          <h2 className="text-[28px] font-bold leading-tight tracking-tight">{t("watchlist.title")}</h2>
+          <h2 className="text-[22px] sm:text-[28px] font-bold leading-tight tracking-tight">{t("watchlist.title")}</h2>
           <p className="mt-1.5 text-[13px] text-white/50">
             <span className="tabular-nums">{t("watchlist.subtitle.values", { n: symbols.length })}</span> • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />{t("watchlist.subtitle.live")}</span>
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          {/* Search — full width on mobile */}
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("watchlist.search")}
-              className="h-9 w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
+              className="h-11 sm:h-9 w-full sm:w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[14px] sm:text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
             />
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-[#1F1F1F] bg-[#111111] p-1">
+          {/* Filter chips — horizontal scroll on mobile */}
+          <div className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:rounded-lg sm:border sm:border-[#1F1F1F] sm:bg-[#111111] sm:p-1 sm:px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {([
               { k: "all", label: t("watchlist.filter.all") },
               { k: "LONG", label: t("watchlist.filter.long") },
@@ -137,7 +139,7 @@ export function WatchlistSignalsPanel() {
                 <button
                   key={f.k}
                   onClick={() => setFilter(f.k)}
-                  className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition ${active ? `bg-white/5 ${tone}` : "text-white/60 hover:text-white"}`}
+                  className={`shrink-0 rounded-full sm:rounded-md border border-[#1F1F1F] bg-[#111111] px-4 py-2 sm:border-0 sm:bg-transparent sm:px-3 sm:py-1.5 text-[13px] font-medium transition ${active ? `bg-white/5 ${tone} border-white/15 sm:border-0` : "text-white/60 hover:text-white"}`}
                 >
                   {f.label}
                 </button>
@@ -148,7 +150,7 @@ export function WatchlistSignalsPanel() {
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="h-9 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
+            className="h-11 sm:h-9 w-full sm:w-auto rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[14px] sm:text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
           >
             <option value="confidence">{t("watchlist.sort.confidence")}</option>
             <option value="perf1d">{t("watchlist.sort.perf1d")}</option>
@@ -164,83 +166,101 @@ export function WatchlistSignalsPanel() {
         <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.empty")}</div>
       )}
 
-
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filtered.map((r) => {
           const a = ACCENT[r.signal];
           const up = r.change >= 0;
           const strong = r.confidence >= 70;
           const initials = r.p.symbol.slice(0, 2);
           return (
-            <div
+            <Link
               key={r.p.symbol}
-              className={`group relative flex flex-col rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/15 ${strong ? a.glow : ""}`}
+              to="/produkte/$symbol"
+              params={{ symbol: r.p.symbol }}
+              className={`group relative flex flex-col rounded-2xl border border-[#1F1F1F] bg-[#111111] p-4 sm:p-5 transition-all duration-200 active:scale-[0.99] hover:-translate-y-0.5 hover:border-white/15 ${strong ? a.glow : ""}`}
             >
-              {/* Top bar */}
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[11px] font-bold text-white ring-1 ring-white/10">
+              {/* MOBILE: compact horizontal row */}
+              <div className="flex items-center gap-3 sm:hidden">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[12px] font-bold text-white ring-1 ring-white/10">
                   {initials}
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[18px] font-bold leading-tight">{r.p.symbol}</div>
-                  <div className="truncate text-[13px] text-white/40">{r.p.name}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-[16px] font-bold leading-tight">{r.p.symbol}</div>
+                    <div className="font-mono text-[18px] font-bold leading-none tabular-nums">
+                      {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${a.bg} ${a.border} border ${a.text}`}>
+                      <span className="h-1 w-1 rounded-full" style={{ background: a.stroke }} />
+                      {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
+                    </span>
+                    <span className={`font-mono text-[13px] font-semibold tabular-nums ${up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                      {up ? "+" : ""}{r.change.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="hidden xs:block h-10 w-16 shrink-0">
+                  <ResponsiveContainer>
+                    <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
+                      <YAxis hide domain={["dataMin", "dataMax"]} />
+                      <Line type="monotone" dataKey="v" stroke={up ? "#22FF88" : "#FF3B5C"} strokeWidth={1.5} dot={false} isAnimationActive={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* Price */}
-              <div className="mt-5">
-                <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
-                  {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {/* DESKTOP: full card */}
+              <div className="hidden sm:flex sm:flex-col">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[11px] font-bold text-white ring-1 ring-white/10">
+                    {initials}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[18px] font-bold leading-tight">{r.p.symbol}</div>
+                    <div className="truncate text-[13px] text-white/40">{r.p.name}</div>
+                  </div>
                 </div>
-                <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
-                  <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
-                  <span className="font-mono text-white/50">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
+
+                <div className="mt-5">
+                  <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
+                    {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
+                    <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
+                    <span className="font-mono text-white/50">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 h-[90px] -mx-1">
+                  <ResponsiveContainer>
+                    <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
+                      <YAxis hide domain={["dataMin", "dataMax"]} />
+                      <Line type="monotone" dataKey="v" stroke={up ? "#22FF88" : "#FF3B5C"} strokeWidth={2} dot={false} isAnimationActive={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="mt-4">
+                  <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-bold tracking-wide ${a.bg} ${a.border} ${a.text}`}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.stroke, boxShadow: `0 0 8px ${a.stroke}` }} />
+                    {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  <Chip label={t("watchlist.metric.z")} value={r.ind.zScore.toFixed(2)} />
+                  <Chip label={t("watchlist.metric.rsi")} value={r.ind.rsi.toFixed(0)} />
+                  <Chip label={t("watchlist.metric.vol")} value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
+                </div>
+
+                <div className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition group-hover:border-[#22FF88]/60 group-hover:bg-[#22FF88]/5 group-hover:text-[#22FF88]">
+                  {t("watchlist.card.analyse")}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </div>
               </div>
-
-              {/* Sparkline */}
-              <div className="mt-4 h-[90px] -mx-1">
-                <ResponsiveContainer>
-                  <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
-                    <YAxis hide domain={["dataMin", "dataMax"]} />
-                    <Line
-                      type="monotone"
-                      dataKey="v"
-                      stroke={up ? "#22FF88" : "#FF3B5C"}
-                      strokeWidth={2}
-                      dot={false}
-                      isAnimationActive={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Signal Pill */}
-              <div className="mt-4">
-                <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-bold tracking-wide ${a.bg} ${a.border} ${a.text}`}>
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.stroke, boxShadow: `0 0 8px ${a.stroke}` }} />
-                  {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
-                </div>
-              </div>
-
-              {/* Metrics chips */}
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                <Chip label={t("watchlist.metric.z")} value={r.ind.zScore.toFixed(2)} />
-                <Chip label={t("watchlist.metric.rsi")} value={r.ind.rsi.toFixed(0)} />
-                <Chip label={t("watchlist.metric.vol")} value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
-              </div>
-
-              {/* Footer button */}
-              <Link
-                to="/produkte/$symbol"
-                params={{ symbol: r.p.symbol }}
-                className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition hover:border-[#22FF88]/60 hover:bg-[#22FF88]/5 hover:text-[#22FF88]"
-              >
-                {t("watchlist.card.analyse")}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-            </div>
+            </Link>
           );
         })}
       </div>
