@@ -336,7 +336,10 @@ function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: stri
       user={user}
       record={record}
       userQuery={userQuery}
+      cachedText={cachedText}
+      onDone={onDone}
     />
+
   );
 }
 
