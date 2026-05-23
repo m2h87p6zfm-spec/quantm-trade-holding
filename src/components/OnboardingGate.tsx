@@ -309,6 +309,21 @@ export function OnboardingGate() {
         <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px]">
           {step === 0 && <WelcomeStep />}
           {step === 1 && (
+            <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
+              <Grid cols={3}>
+                {LANGUAGES.map((g) => (
+                  <Choice
+                    key={g.v}
+                    active={a.language === g.v}
+                    onClick={() => setA((s) => ({ ...s, language: g.v }))}
+                    label={g.native}
+                    desc={g.label}
+                  />
+                ))}
+              </Grid>
+            </Question>
+          )}
+          {step === 2 && (
             <Question title="What age range are you in?" hint="Wir nutzen das ausschließlich zur Personalisierung — niemals an Dritte weitergegeben.">
               <Grid cols={5}>
                 {AGES.map((g) => (
@@ -317,7 +332,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 2 && (
+          {step === 3 && (
             <Question title="How experienced are you with financial markets?" hint="Bestimmt Tiefe der AI-Erklärungen und Komplexität des Dashboards.">
               <Grid cols={3}>
                 {EXPERIENCE.map((g) => (
@@ -326,7 +341,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 3 && (
+          {step === 4 && (
             <Question title="What type of trader are you?" hint="Priorisiert deine Signal-Feeds, Charts und Insights.">
               <Grid cols={2}>
                 {TRADER_TYPES.map((g) => (
@@ -335,7 +350,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 4 && (
+          {step === 5 && (
             <Question title="What currency should the platform use?" hint="Wird überall im Dashboard, Watchlist, Portfolio und in AI-Insights angewendet.">
               <Grid cols={4}>
                 {CURRENCIES.map((g) => (
@@ -350,7 +365,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 5 && (
+          {step === 6 && (
             <Question title="What level of risk are you comfortable with?" hint="Steuert AI-Konfidenz-Threshold und Signal-Aggressivität.">
               <Grid cols={3}>
                 {RISKS.map((g) => (
@@ -359,7 +374,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 6 && (
+          {step === 7 && (
             <Question title="Which markets interest you?" hint="Mehrfachauswahl. Nur diese Klassen werden in Feeds und Empfehlungen priorisiert.">
               <Grid cols={3}>
                 {MARKETS.map((g) => (
@@ -374,7 +389,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 7 && (
+          {step === 8 && (
             <Question title="What updates would you like to receive?" hint="Du kannst das jederzeit in den Einstellungen anpassen.">
               <div className="space-y-2">
                 {NOTIFS.map((n) => {
@@ -400,7 +415,7 @@ export function OnboardingGate() {
               </div>
             </Question>
           )}
-          {step === 8 && (
+          {step === 9 && (
             <Question
               title="Choose Your Trusted Financial Sources"
               hint="Diese Publisher dominieren deinen Haupt-News-Feed. Wichtige Headlines anderer Quellen erscheinen separat in der Sidebar."
@@ -433,7 +448,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 9 && (
+          {step === 10 && (
             <Question
               title="Starter watchlists"
               hint="Optional. Ausgewählte Listen werden direkt in deiner Watchlist verfügbar."
@@ -466,7 +481,7 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 10 && <SummaryStep a={a} ack={a.ai_transparency_ack} setAck={(v) => setA((s) => ({ ...s, ai_transparency_ack: v }))} />}
+          {step === 11 && <SummaryStep a={a} ack={a.ai_transparency_ack} setAck={(v) => setA((s) => ({ ...s, ai_transparency_ack: v }))} />}
         </div>
 
         {/* Footer */}
