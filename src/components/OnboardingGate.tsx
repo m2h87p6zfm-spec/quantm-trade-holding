@@ -37,23 +37,10 @@ import {
   Languages,
 } from "lucide-react";
 
-type LangCode = "en" | "zh" | "hi" | "es" | "fr" | "ar" | "bn" | "pt" | "ru" | "ur" | "id" | "de" | "ja" | "tr" | "ko";
+type LangCode = "de" | "en";
 const LANGUAGES: { v: LangCode; label: string; native: string }[] = [
-  { v: "en", label: "English", native: "English" },
-  { v: "zh", label: "Mandarin Chinese", native: "中文" },
-  { v: "hi", label: "Hindi", native: "हिन्दी" },
-  { v: "es", label: "Spanish", native: "Español" },
-  { v: "fr", label: "French", native: "Français" },
-  { v: "ar", label: "Arabic", native: "العربية" },
-  { v: "bn", label: "Bengali", native: "বাংলা" },
-  { v: "pt", label: "Portuguese", native: "Português" },
-  { v: "ru", label: "Russian", native: "Русский" },
-  { v: "ur", label: "Urdu", native: "اردو" },
-  { v: "id", label: "Indonesian", native: "Bahasa Indonesia" },
   { v: "de", label: "German", native: "Deutsch" },
-  { v: "ja", label: "Japanese", native: "日本語" },
-  { v: "tr", label: "Turkish", native: "Türkçe" },
-  { v: "ko", label: "Korean", native: "한국어" },
+  { v: "en", label: "English", native: "English" },
 ];
 
 /* ─────────────────── Option catalogs ─────────────────── */
@@ -260,7 +247,7 @@ export function OnboardingGate() {
   return (
     <Dialog open onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden"
+        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden flex flex-col max-h-[92vh]"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -306,7 +293,7 @@ export function OnboardingGate() {
         </div>
 
         {/* Body */}
-        <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px]">
+        <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
           {step === 0 && <WelcomeStep />}
           {step === 1 && (
             <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
