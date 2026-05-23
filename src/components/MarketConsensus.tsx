@@ -59,12 +59,17 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
   // Derive bias from indicators if present, otherwise neutral
   let bias = 0;
   if (indicators) {
-    const rsiBias = (indicators.rsi - 50) / 50; // -1..1
-    const momBias = Math.max(-1, Math.min(1, indicators.momentum * 5));
-    const macdBias = Math.max(-1, Math.min(1, indicators.macd.histogram * 4));
-    const trendBias = Math.max(-1, Math.min(1, (indicators.sma20 - indicators.sma50) / Math.max(1, indicators.sma50) * 20));
-    bias = (rsiBias * 0.25 + momBias * 0.3 + macdBias * 0.25 + trendBias * 0.2);
-    bias = Math.max(-1, Math.min(1, bias));
+    const rsi = safeNum(indicators.rsi, 50);
+    const mom = safeNum(indicators.momentum, 0);
+    const hist = safeNum(indicators.macd?.histogram, 0);
+    const s20 = safeNum(indicators.sma20, 0);
+    const s50 = safeNum(indicators.sma50, 0);
+    const rsiBias = (rsi - 50) / 50;
+    const momBias = Math.max(-1, Math.min(1, mom * 5));
+    const macdBias = Math.max(-1, Math.min(1, hist * 4));
+    const trendBias = s50 > 0 ? Math.max(-1, Math.min(1, ((s20 - s50) / s50) * 20)) : 0;
+    bias = rsiBias * 0.25 + momBias * 0.3 + macdBias * 0.25 + trendBias * 0.2;
+    bias = Math.max(-1, Math.min(1, safeNum(bias, 0)));
   }
 
   const analyst = deriveSentiment(symbol, bias * 0.9, 11);
