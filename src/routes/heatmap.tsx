@@ -137,11 +137,10 @@ function HeatmapPage() {
           <Flame className="h-3 w-3 text-bear" /> Marktpuls
         </div>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
-          Live <span className="text-gradient-bull">Heatmap</span>
+          {t("page.heatmap.title")}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Visuelle Momentaufnahme von {products.length} Top-Symbolen über {range === "D" ? "1 Tag" : range === "W" ? "1 Woche" : "1 Monat"}.
-          Sektor-Modus aggregiert die Bewegung pro Branche.
+          {t("page.heatmap.subtitle")}
         </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
