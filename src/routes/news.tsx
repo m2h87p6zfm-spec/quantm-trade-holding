@@ -307,9 +307,10 @@ function NewsPage() {
         )}
 
         {visible.map((it) => (
-          <NewsCard key={it.uuid} it={it} portfolio={portfolio} />
+          <NewsCard key={it.uuid} it={it} portfolio={portfolio} onOpen={setOpenItem} />
         ))}
       </div>
+      {openItem && <ArticleModal it={openItem} portfolio={portfolio} onClose={() => setOpenItem(null)} />}
     </div>
   );
 }
