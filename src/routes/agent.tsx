@@ -127,10 +127,15 @@ function AgentPage() {
     };
 
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
       const res = await fetch("/api/public/agent-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next }),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ messages: next, sessionId }),
         signal: controller.signal,
       });
       if (!res.ok || !res.body) {
