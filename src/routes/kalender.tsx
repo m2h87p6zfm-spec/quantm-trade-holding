@@ -4,6 +4,7 @@ import { upcomingEvents, timeUntil, type EconEvent } from "@/lib/calendar";
 import { Calendar, AlertTriangle, Activity, ChevronRight, X } from "lucide-react";
 
 import { FeatureGate } from "@/lib/featureGate";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalender")({
   component: () => (
