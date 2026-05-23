@@ -1,14 +1,9 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import {
-  createChart,
-  AreaSeries,
-  ColorType,
-  CrosshairMode,
-  LineStyle,
-  type IChartApi,
-  type ISeriesApi,
-  type UTCTimestamp,
+import type {
+  IChartApi,
+  ISeriesApi,
+  UTCTimestamp,
 } from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
 import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
