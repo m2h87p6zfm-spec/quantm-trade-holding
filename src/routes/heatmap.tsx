@@ -4,6 +4,7 @@ import { fetchCandles } from "@/lib/finnhub";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { Flame, TrendingUp, TrendingDown, Activity, Zap, LayoutGrid, Boxes } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/heatmap")({ component: HeatmapPage });
 
