@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireUserId } from "@/lib/api-auth.server";
 
 import type { NewsSource } from "@/lib/settings";
 
