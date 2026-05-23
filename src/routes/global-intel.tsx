@@ -909,7 +909,49 @@ function ImpactTag({ label, value }: { label: string; value: string }) {
 
 /* ───────────────────── Intel feed ───────────────────── */
 
+const FEED_CATEGORY_EXPLAINER: Record<FeedItem["category"], { what: string; why: string; watch: string }> = {
+  FX: {
+    what: "FX steht für Foreign Exchange — also den Devisenmarkt. Hier werden Währungen wie USD, EUR oder JPY gehandelt.",
+    why: "Ein starker US-Dollar verteuert Rohstoffe für andere Länder, drückt Schwellenländer-Aktien und belastet US-Exporteure.",
+    watch: "DXY (Dollar-Index), EUR/USD, USD/JPY — und Kapitalflüsse in Schwellenländer.",
+  },
+  Commodities: {
+    what: "Rohstoffe wie Öl (Brent/WTI), Gas, Industrie- und Edelmetalle. Ihr Preis spiegelt globale Nachfrage und Risiken wider.",
+    why: "Steigende Öl- und Gaspreise treiben die Inflation und zwingen Notenbanken zu höheren Zinsen — schlecht für Aktien & Bonds.",
+    watch: "Brent, WTI, Erdgas (TTF), Kupfer als Konjunkturbarometer, Gold als Krisenindikator.",
+  },
+  Equities: {
+    what: "Aktienmärkte — also börsennotierte Unternehmen weltweit (S&P 500, Nasdaq, DAX, Nikkei …).",
+    why: "Aktienkurse zeigen die Erwartung künftiger Gewinne. Sektorrotationen verraten, woran der Markt gerade glaubt.",
+    watch: "Marktbreite, führende Sektoren (Tech, Banken, Energie), Volatilität (VIX).",
+  },
+  Macro: {
+    what: "Makro-Daten sind übergeordnete Wirtschaftsindikatoren: Inflation, Wachstum, Arbeitsmarkt, Notenbankpolitik.",
+    why: "Makro bestimmt das Regime — ob Geld günstig oder teuer ist, ob Wachstum oder Rezession dominiert.",
+    watch: "CPI/PCE, Arbeitsmarktdaten, BIP, Notenbank-Statements (Fed, EZB, BoJ).",
+  },
+  Geopolitics: {
+    what: "Geopolitische Spannungen: Kriege, Sanktionen, Handelskonflikte, politische Risiken.",
+    why: "Solche Ereignisse verändern Lieferketten, Energiepreise und das Vertrauen der Anleger oft schlagartig.",
+    watch: "Sicherheitslagen, Öl- und Gaspreise, Safe-Haven-Flüsse (Gold, USD, CHF, JPY).",
+  },
+  Supply: {
+    what: "Lieferketten und Logistik: Frachtraten, Häfen, kritische Routen wie Suez oder Bab el-Mandeb.",
+    why: "Gestörte Lieferketten erzeugen Engpässe und treiben Güterpreise — das speist Inflation und belastet Industriegewinne.",
+    watch: "Containerraten (z. B. Shanghai Containerized Freight Index), Lagerbestände, Sektor: Logistik & Einzelhandel.",
+  },
+};
+
+const FEED_IMPACT_INFO: Record<FeedItem["impact"], { label: string; desc: string }> = {
+  high: { label: "Hoher Impact", desc: "Kann Indizes, Währungen oder Rohstoffe deutlich bewegen — beobachte Positionen aktiv." },
+  medium: { label: "Mittlerer Impact", desc: "Wichtig für Sektoren oder einzelne Assets — relevant für Trading-Entscheidungen." },
+  low: { label: "Niedriger Impact", desc: "Hintergrund-Kontext — relevant fürs Verständnis, selten direkter Auslöser." },
+};
+
+/* ───────────────────── Intel feed ───────────────────── */
+
 function IntelFeed() {
+  const [openFeed, setOpenFeed] = useState<FeedItem | null>(null);
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.11_0.016_260)]">
       <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
@@ -926,24 +968,100 @@ function IntelFeed() {
           {MARKET_FEED.map((f) => {
             const c = RISK_COLOR[f.impact];
             return (
-              <li key={f.id} className="px-4 py-3 transition hover:bg-white/[0.02]">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
-                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
-                      {f.category}
-                    </Badge>
+              <li key={f.id}>
+                <button
+                  type="button"
+                  onClick={() => setOpenFeed(f)}
+                  className="block w-full cursor-pointer px-4 py-3 text-left transition hover:bg-white/[0.03] focus:bg-white/[0.04] focus:outline-none"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
+                      <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+                        {f.category}
+                      </Badge>
+                    </div>
+                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{f.time}</span>
                   </div>
-                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{f.time}</span>
-                </div>
-                <div className="mt-1.5 text-[12px] font-semibold leading-tight">{f.title}</div>
-                <div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{f.body}</div>
+                  <div className="mt-1.5 text-[12px] font-semibold leading-tight">{f.title}</div>
+                  <div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{f.body}</div>
+                  <div className="mt-1.5 text-[10px] font-medium text-primary/80">Details ansehen →</div>
+                </button>
               </li>
             );
           })}
         </ul>
       </ScrollArea>
+      {openFeed && <FeedDetailModal item={openFeed} onClose={() => setOpenFeed(null)} />}
     </div>
+  );
+}
+
+function FeedDetailModal({ item, onClose }: { item: FeedItem; onClose: () => void }) {
+  if (typeof document === "undefined") return null;
+  const info = FEED_CATEGORY_EXPLAINER[item.category];
+  const impact = FEED_IMPACT_INFO[item.impact];
+  const dotColor = RISK_COLOR[item.impact];
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative mt-12 w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+          aria-label="Schließen"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: dotColor }} />
+          <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+            {item.category}
+          </Badge>
+          <span>·</span>
+          <span className="font-mono">{item.time}</span>
+          <span>·</span>
+          <span className="font-medium text-foreground/80">{impact.label}</span>
+        </div>
+
+        <h2 className="mt-3 text-xl font-bold leading-tight">{item.title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-foreground/85">{item.body}</p>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-border bg-background/40 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Was bedeutet „{item.category}"?</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-foreground/85">{info.what}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-background/40 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Warum es für Märkte zählt</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-foreground/85">{info.why}</p>
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
+          <div className="mb-1 text-[10px] uppercase tracking-widest text-primary">Worauf du achten solltest</div>
+          <p className="text-sm leading-relaxed text-foreground/85">{info.watch}</p>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-border/60 bg-background/40 p-3">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Impact-Stufe</div>
+          <p className="mt-1 text-[13px] leading-relaxed text-foreground/85">
+            <span className="font-semibold" style={{ color: dotColor }}>{impact.label}.</span> {impact.desc}
+          </p>
+        </div>
+
+        <p className="mt-4 text-[10px] text-muted-foreground/70">
+          Kurz-Briefing für Einsteiger. Keine Anlageempfehlung — dient zur Einordnung des Marktumfelds.
+        </p>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
