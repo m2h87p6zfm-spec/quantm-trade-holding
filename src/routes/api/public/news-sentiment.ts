@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import type { NewsSource } from "@/lib/settings";
+
 type NewsItem = {
   uuid: string;
   title: string;
   publisher: string;
-  source: "reuters" | "bloomberg" | "yahoo" | "cnbc" | "ft" | "other";
+  source: NewsSource | "other";
   link: string;
   publishedAt: number;
   symbol: string;
@@ -16,11 +18,52 @@ type NewsItem = {
 };
 
 const PUBLISHER_MAP: Array<{ test: RegExp; key: NewsItem["source"] }> = [
+  // Tier-1 wires
   { test: /reuters/i, key: "reuters" },
   { test: /bloomberg/i, key: "bloomberg" },
+  { test: /wall street journal|wsj\.com|^wsj\b/i, key: "wsj" },
   { test: /financial times|^ft\b|ft\.com/i, key: "ft" },
+  { test: /the economist|economist\.com/i, key: "economist" },
+  { test: /new york times|nytimes|nyt\b/i, key: "nytimes" },
+  { test: /washington post|washingtonpost/i, key: "washingtonpost" },
+  { test: /the guardian|guardian\.com|theguardian/i, key: "guardian" },
+  { test: /barron'?s|barrons/i, key: "barrons" },
+  // US business
   { test: /cnbc/i, key: "cnbc" },
+  { test: /marketwatch/i, key: "marketwatch" },
   { test: /yahoo/i, key: "yahoo" },
+  { test: /investing\.com/i, key: "investing" },
+  { test: /forbes/i, key: "forbes" },
+  { test: /fortune/i, key: "fortune" },
+  { test: /business insider|insider\.com|businessinsider/i, key: "businessinsider" },
+  { test: /axios/i, key: "axios" },
+  { test: /seeking alpha|seekingalpha/i, key: "seekingalpha" },
+  { test: /benzinga/i, key: "benzinga" },
+  { test: /motley fool|fool\.com/i, key: "motleyfool" },
+  { test: /thestreet|the street/i, key: "thestreet" },
+  { test: /zerohedge|zero hedge/i, key: "zerohedge" },
+  // Tech
+  { test: /the information|theinformation/i, key: "theinformation" },
+  { test: /techcrunch/i, key: "techcrunch" },
+  { test: /the verge|theverge/i, key: "theverge" },
+  { test: /\bwired\b/i, key: "wired" },
+  // Crypto
+  { test: /coindesk/i, key: "coindesk" },
+  { test: /cointelegraph/i, key: "cointelegraph" },
+  { test: /the block|theblock/i, key: "theblock" },
+  { test: /decrypt/i, key: "decrypt" },
+  // Asia
+  { test: /nikkei/i, key: "nikkei" },
+  { test: /south china morning post|scmp/i, key: "scmp" },
+  // Europe / DACH / FR
+  { test: /handelsblatt/i, key: "handelsblatt" },
+  { test: /manager.?magazin/i, key: "manager" },
+  { test: /faz\.net|frankfurter allgemeine/i, key: "faz" },
+  { test: /börse online|boerse.online/i, key: "boerse" },
+  { test: /les ?échos|lesechos/i, key: "lesechos" },
+  // Macro
+  { test: /politico/i, key: "politico" },
+  { test: /semafor/i, key: "semafor" },
 ];
 
 function classifyPublisher(p: string): NewsItem["source"] {
