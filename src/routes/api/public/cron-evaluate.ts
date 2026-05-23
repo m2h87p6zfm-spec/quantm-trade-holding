@@ -172,8 +172,14 @@ async function runEvaluation(): Promise<Response> {
 export const Route = createFileRoute("/api/public/cron-evaluate")({
   server: {
     handlers: {
-      POST: () => runEvaluation(),
-      GET: () => runEvaluation(),
+      POST: ({ request }) => {
+        const denied = requireCronSecret(request);
+        return denied ?? runEvaluation();
+      },
+      GET: ({ request }) => {
+        const denied = requireCronSecret(request);
+        return denied ?? runEvaluation();
+      },
     },
   },
 });
