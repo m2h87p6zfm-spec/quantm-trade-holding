@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({
   symbol: z.string().min(1).max(16),
@@ -29,6 +30,7 @@ Typische Yahoo-Fehlerursachen die du prüfen darfst:
 Format: reine Markdown-Liste, keine Einleitung, kein Disclaimer am Ende.`;
 
 export const diagnoseFeedError = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => Input.parse(d))
   .handler(async ({ data }) => {
     const apiKey = process.env.LOVABLE_API_KEY;

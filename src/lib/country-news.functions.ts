@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * Map of supported news source keys (matching settings.NEWS_SOURCES)
@@ -74,6 +75,7 @@ function shorten(text: string, max = 180): string {
 }
 
 export const getCountryNews = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => Input.parse(input))
   .handler(async ({ data }): Promise<{ items: CountryNewsItem[]; error: string | null }> => {
     const apiKey = process.env.FIRECRAWL_API_KEY;

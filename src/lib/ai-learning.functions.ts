@@ -60,6 +60,7 @@ export const recordPrediction = createServerFn({ method: "POST" })
 // getLearningContext — frühere Predictions + Hit-Rate + neueste Learning Events
 // ============================================================
 export const getLearningContext = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => ContextSchema.parse(data))
   .handler(async ({ data }) => {
     // 1. Globale ähnliche Predictions (gleicher Scenario+Regime), join mit Outcomes
@@ -118,6 +119,7 @@ export const getLearningContext = createServerFn({ method: "POST" })
 // getPerformanceMetrics — Accuracy, Calibration, Trend, Heatmap
 // ============================================================
 export const getPerformanceMetrics = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => MetricsSchema.parse(data))
   .handler(async ({ data }) => {
     const since = new Date(Date.now() - data.window * 24 * 60 * 60 * 1000).toISOString();
