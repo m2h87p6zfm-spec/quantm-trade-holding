@@ -65,6 +65,7 @@ function SentimentBadge({ s, c }: { s?: Item["sentiment"]; c?: number }) {
 }
 
 function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>; onOpen: (it: Item) => void }) {
+  const timeAgo = useTimeAgo();
   return (
     <button
       type="button"
