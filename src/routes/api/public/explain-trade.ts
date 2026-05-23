@@ -5,7 +5,7 @@ import { requirePro } from "@/lib/api-auth.server";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 } as const;
 
 type Candles = { c: number[]; t: number[] };
