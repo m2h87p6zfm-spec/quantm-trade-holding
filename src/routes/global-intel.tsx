@@ -36,13 +36,17 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
+  Banknote,
   Building2,
   CircleDot,
   Coins,
+  Compass,
+  Droplets,
   Eye,
   Flame,
   Gauge,
   Globe2,
+  HeartPulse,
   Landmark,
   Layers,
   Minus,
@@ -54,6 +58,7 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
+  Waves,
   X,
   Zap,
 } from "lucide-react";
@@ -182,13 +187,15 @@ function GlobalIntelPage() {
             </div>
           </div>
 
-          <GlobalSummaryStrip />
+          <MovingMarketsBar />
         </div>
       </header>
 
       {/* Main grid: map + side panel + feed */}
       <main className="mx-auto max-w-[1700px] px-4 py-5 sm:px-8">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <GlobalMarketConditions />
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-5">
             {/* Map */}
             <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
@@ -348,53 +355,280 @@ function LineSwatch({ color, dashed }: { color: string; dashed?: boolean }) {
   );
 }
 
-function GlobalSummaryStrip() {
-  const s = GLOBAL_SUMMARY;
-  type Tone = "ok" | "warn" | "bad" | "info";
-  const items: { label: string; value: string; tone: Tone }[] = [
-    { label: "Risk Sentiment", value: s.sentiment === "risk-on" ? "Risk-On" : s.sentiment === "risk-off" ? "Risk-Off" : "Mixed", tone: s.sentiment === "risk-on" ? "ok" : s.sentiment === "risk-off" ? "bad" : "warn" },
-    { label: "Liquidity", value: s.trend === "expanding" ? "Expanding" : s.trend === "recession" ? "Tightening" : "Stable", tone: s.trend === "expanding" ? "ok" : s.trend === "recession" ? "bad" : "warn" },
-    { label: "Volatility", value: s.volatility === "low" ? "Low" : s.volatility === "high" ? "High" : "Medium", tone: s.volatility === "low" ? "ok" : s.volatility === "high" ? "bad" : "warn" },
-    { label: "USD Strength", value: s.usd === "strong" ? "Strong" : s.usd === "weak" ? "Weak" : "Neutral", tone: "info" },
-    { label: "Trend Bias", value: s.mood === "bullish" ? "Bullish" : s.mood === "bearish" ? "Bearish" : "Uncertain", tone: s.mood === "bullish" ? "ok" : s.mood === "bearish" ? "bad" : "warn" },
-  ];
-  const tc = (t: Tone) =>
-    t === "ok"
-      ? "oklch(0.72 0.10 155)"
-      : t === "bad"
-        ? "oklch(0.66 0.13 25)"
-        : t === "warn"
-          ? "oklch(0.78 0.10 78)"
-          : "oklch(0.74 0.08 240)";
+/* ───────── Moving Markets bar ───────── */
+
+function MovingMarketsBar() {
+  // Pick a tight, scannable subset — institutional, no spam.
+  const items = MARKET_FEED.slice(0, 6);
+  // Duplicate for seamless marquee loop.
+  const loop = [...items, ...items];
   return (
-    <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-      {items.map((it) => {
-        const c = tc(it.tone);
-        return (
+    <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.07] bg-black/30 backdrop-blur">
+      <div className="flex items-stretch">
+        <div className="flex shrink-0 items-center gap-1.5 border-r border-white/[0.07] bg-primary/10 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+          <Activity className="h-3 w-3" />
+          What's moving markets
+        </div>
+        <div className="relative flex-1 overflow-hidden">
           <div
-            key={it.label}
-            className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent px-3.5 py-3 backdrop-blur transition hover:border-white/20"
+            className="flex animate-ticker whitespace-nowrap py-2 will-change-transform"
+            style={{ animationDuration: "75s" }}
           >
-            <span
-              className="absolute inset-x-0 top-0 h-px"
-              style={{ background: `linear-gradient(90deg, transparent, ${c}, transparent)` }}
-            />
-            <div className="flex items-center justify-between">
-              <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
-                {it.label}
-              </div>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
+            {loop.map((it, i) => {
+              const tone =
+                it.impact === "high"
+                  ? "text-[oklch(0.78_0.12_25)]"
+                  : it.impact === "medium"
+                    ? "text-[oklch(0.82_0.10_78)]"
+                    : "text-emerald-400/90";
+              return (
+                <span
+                  key={`${it.id}-${i}`}
+                  className="mx-5 inline-flex items-center gap-2 text-[12px] text-foreground/85"
+                >
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${tone.replace("text-", "bg-")}`} />
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {it.category}
+                  </span>
+                  <span className="font-medium text-foreground/95">{it.title}</span>
+                  <span className="text-muted-foreground">— {it.body}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Global Market Conditions ───────── */
+
+type ConditionTone = "ok" | "warn" | "bad" | "info";
+type Trend = "up" | "down" | "flat" | "wave";
+
+type ConditionCard = {
+  key: string;
+  title: string;
+  status: string;
+  why: string;
+  impact: string;
+  tone: ConditionTone;
+  trend: Trend;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  intensity: 1 | 2 | 3 | 4 | 5; // soft heat meter (5 bars)
+};
+
+const TONE_COLOR: Record<ConditionTone, string> = {
+  ok: "oklch(0.74 0.12 155)",
+  warn: "oklch(0.80 0.12 78)",
+  bad: "oklch(0.68 0.15 25)",
+  info: "oklch(0.74 0.10 240)",
+};
+
+function TrendIndicator({ trend, color }: { trend: Trend; color: string }) {
+  if (trend === "up") return <ArrowUpRight className="h-4 w-4" style={{ color }} />;
+  if (trend === "down") return <ArrowDownRight className="h-4 w-4" style={{ color }} />;
+  if (trend === "wave") return <Waves className="h-4 w-4" style={{ color }} />;
+  return <Minus className="h-4 w-4" style={{ color }} />;
+}
+
+function HeatMeter({ value, color }: { value: 1 | 2 | 3 | 4 | 5; color: string }) {
+  return (
+    <div className="flex items-center gap-0.5" aria-label={`Intensity ${value} of 5`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          className="h-2.5 w-1 rounded-sm transition-colors"
+          style={{
+            backgroundColor: i <= value ? color : "oklch(0.28 0.012 260)",
+            opacity: i <= value ? 0.85 : 1,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ConditionCardView({ c }: { c: ConditionCard }) {
+  const color = TONE_COLOR[c.tone];
+  const Icon = c.icon;
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-transparent p-4 backdrop-blur-md transition hover:border-white/15 hover:from-white/[0.05]">
+      <span
+        className="absolute inset-x-0 top-0 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
+            style={{ backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)`, boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 35%, transparent)` }}
+          >
+            <Icon className="h-4 w-4" style={{ color }} />
+          </div>
+          <div>
+            <div className="font-display text-[15px] font-semibold leading-tight tracking-tight text-foreground">
+              {c.title}
             </div>
-            <div
-              className="mt-1.5 font-display text-base font-bold tabular-nums tracking-tight"
-              style={{ color: c }}
-            >
-              {it.value}
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11px] font-medium tabular-nums" style={{ color }}>
+              <TrendIndicator trend={c.trend} color={color} />
+              {c.status}
             </div>
           </div>
-        );
-      })}
+        </div>
+        <HeatMeter value={c.intensity} color={color} />
+      </div>
+
+      <p className="mt-3 text-[12.5px] leading-relaxed text-foreground/80">
+        {c.why}
+      </p>
+
+      <div className="mt-3 flex items-center gap-1.5 border-t border-white/[0.06] pt-2.5 text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span className="h-1 w-1 rounded-full" style={{ backgroundColor: color }} />
+        <span>Impact</span>
+        <span className="text-foreground/70 normal-case tracking-normal">· {c.impact}</span>
+      </div>
     </div>
+  );
+}
+
+function GlobalMarketConditions() {
+  const s = GLOBAL_SUMMARY;
+
+  const sentimentCard: ConditionCard = (() => {
+    if (s.sentiment === "risk-on") {
+      return {
+        key: "mood", title: "Investor Mood",
+        status: "Risk-on appetite", tone: "ok", trend: "up", icon: HeartPulse, intensity: 4,
+        why: "Capital is flowing into growth assets — equities, credit and cyclical sectors are bid.",
+        impact: "Lifts equities, high-yield credit and EM assets.",
+      };
+    }
+    if (s.sentiment === "risk-off") {
+      return {
+        key: "mood", title: "Investor Mood",
+        status: "Risk-off, defensive", tone: "bad", trend: "down", icon: HeartPulse, intensity: 4,
+        why: "Investors are de-risking — flows are rotating into safe havens and quality.",
+        impact: "Pressures equities and EM, supports gold, treasuries and JPY.",
+      };
+    }
+    return {
+      key: "mood", title: "Investor Mood",
+      status: "Mixed appetite", tone: "warn", trend: "wave", icon: HeartPulse, intensity: 3,
+      why: "Markets are cautious with mixed risk appetite globally — no clear leadership.",
+      impact: "Choppy equities, range-bound credit, defensive sectors outperform.",
+    };
+  })();
+
+  const liquidityCard: ConditionCard = (() => {
+    if (s.trend === "expanding") {
+      return {
+        key: "liq", title: "Money Flow",
+        status: "Liquidity expanding", tone: "ok", trend: "up", icon: Droplets, intensity: 4,
+        why: "Central banks and credit markets are pumping liquidity — risk assets benefit.",
+        impact: "Tailwind for equities, credit and crypto.",
+      };
+    }
+    if (s.trend === "recession") {
+      return {
+        key: "liq", title: "Money Flow",
+        status: "Liquidity tightening", tone: "bad", trend: "down", icon: Droplets, intensity: 4,
+        why: "Funding conditions are tightening — financial stress can build quickly.",
+        impact: "Headwind for risk assets, supports the USD and quality bonds.",
+      };
+    }
+    return {
+      key: "liq", title: "Money Flow",
+      status: "Stable liquidity", tone: "info", trend: "flat", icon: Droplets, intensity: 3,
+      why: "Central bank conditions are currently stable with normal market liquidity.",
+      impact: "Neutral for equities, credit spreads contained.",
+    };
+  })();
+
+  const usdCard: ConditionCard = (() => {
+    if (s.usd === "strong") {
+      return {
+        key: "usd", title: "US Dollar Pressure",
+        status: "Strong USD", tone: "warn", trend: "up", icon: Banknote, intensity: 4,
+        why: "A stronger USD is putting pressure on commodities and international markets.",
+        impact: "Headwind for commodities, EM debt and non-US equities.",
+      };
+    }
+    if (s.usd === "weak") {
+      return {
+        key: "usd", title: "US Dollar Pressure",
+        status: "Weakening USD", tone: "ok", trend: "down", icon: Banknote, intensity: 3,
+        why: "A softer USD eases conditions for commodities, EM and global trade.",
+        impact: "Tailwind for gold, oil, copper and EM assets.",
+      };
+    }
+    return {
+      key: "usd", title: "US Dollar Pressure",
+      status: "Neutral USD", tone: "info", trend: "flat", icon: Banknote, intensity: 2,
+      why: "The dollar is range-bound — limited cross-asset pressure from FX.",
+      impact: "Minimal FX drag on commodities and EM.",
+    };
+  })();
+
+  const directionCard: ConditionCard = (() => {
+    if (s.mood === "bullish") {
+      return {
+        key: "dir", title: "Global Market Direction",
+        status: "Bullish bias", tone: "ok", trend: "up", icon: Compass, intensity: 4,
+        why: "Macro signals lean constructive — growth + liquidity outweigh policy risk.",
+        impact: "Trend-followers add risk; breadth improves across equities.",
+      };
+    }
+    if (s.mood === "bearish") {
+      return {
+        key: "dir", title: "Global Market Direction",
+        status: "Bearish bias", tone: "bad", trend: "down", icon: Compass, intensity: 4,
+        why: "Macro signals are deteriorating — growth and earnings risk dominates.",
+        impact: "Defensive positioning; volatility hedges in demand.",
+      };
+    }
+    return {
+      key: "dir", title: "Global Market Direction",
+      status: "Direction unclear", tone: "warn", trend: "wave", icon: Compass, intensity: 3,
+      why: "Markets currently lack a clear long-term direction due to mixed macro signals.",
+      impact: "Range trading; rotations matter more than beta.",
+    };
+  })();
+
+  const cards: ConditionCard[] = [sentimentCard, liquidityCard, usdCard, directionCard];
+
+  return (
+    <section aria-label="Global Market Conditions">
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            <Globe2 className="h-3 w-3 text-primary" />
+            Global Market Conditions
+          </div>
+          <h2 className="mt-1 font-display text-lg font-semibold tracking-tight text-foreground/95">
+            How the world is trading right now
+          </h2>
+        </div>
+        <div className="hidden items-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:flex">
+          <Sparkles className="h-3 w-3 text-primary" />
+          Plain-English macro
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((c) => (
+          <ConditionCardView key={c.key} c={c} />
+        ))}
+      </div>
+
+      {GLOBAL_SUMMARY.headline && (
+        <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-[12.5px] text-foreground/80 backdrop-blur">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+          <span>{GLOBAL_SUMMARY.headline}</span>
+        </div>
+      )}
+    </section>
   );
 }
 
