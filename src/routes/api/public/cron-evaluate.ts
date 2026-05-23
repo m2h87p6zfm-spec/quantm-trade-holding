@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireCronSecret } from "@/lib/api-auth.server";
 
 // ============================================================
 // Täglicher Cron: alle Predictions, deren Horizont abgelaufen ist
