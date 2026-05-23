@@ -169,6 +169,7 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
 }
 
 function AlertsPage() {
+  const t = useT();
   const { alerts, remove, markTriggered } = useAlerts();
   const { guardedAdd, tier, max, count, atLimit } = useAlertsLimit();
   const [symbol, setSymbol] = useState("AAPL");
