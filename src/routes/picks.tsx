@@ -36,6 +36,7 @@ type Sector = (typeof SECTORS)[number];
 type Region = (typeof REGIONS)[number];
 
 function PicksPage() {
+  const t = useT();
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
