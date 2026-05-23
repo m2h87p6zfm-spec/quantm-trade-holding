@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
 import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
