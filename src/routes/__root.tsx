@@ -134,7 +134,7 @@ function AppShell() {
           <AppSidebar />
           <div className="flex flex-1 flex-col relative min-w-0">
             <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
-              <SidebarTrigger className="shrink-0" />
+              <SidebarTrigger className="shrink-0 hidden md:flex" />
               <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
