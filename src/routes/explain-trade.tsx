@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { getCurrentAccessToken } from "@/lib/auth-token";
 
 export const Route = createFileRoute("/explain-trade")({
   component: () => (
@@ -67,6 +69,7 @@ type AnalysisResult = {
 type Step = 1 | 2 | 3 | 4 | 5;
 
 function ExplainTradePage() {
+  const { session, loading: authLoading } = useAuth();
   const [step, setStep] = useState<Step>(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [customSymbol, setCustomSymbol] = useState<string>("");
@@ -77,9 +80,8 @@ function ExplainTradePage() {
 
   const mutation = useMutation({
     mutationFn: async (input: { symbol: string; name: string; buyDate: string; shares: number; sellDate: string | null; sector?: string }) => {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
+      const token = await getCurrentAccessToken(session?.access_token);
+      if (!token) throw new Error("Deine Anmeldung wird gerade wiederhergestellt. Bitte warte kurz und starte die Analyse erneut.");
       const r = await fetch("/api/public/explain-trade", {
         method: "POST",
         headers: {
@@ -119,6 +121,7 @@ function ExplainTradePage() {
   }
 
   function submit() {
+    if (authLoading) return;
     if (!selectedSymbol || !date || !sharesValid) return;
     if (sold === true && !sellDate) return;
     mutation.mutate({

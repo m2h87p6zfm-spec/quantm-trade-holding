@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentAccessToken } from "@/lib/auth-token";
 
 export type NewsSentimentItem = {
   uuid: string;
@@ -43,7 +44,7 @@ export async function fetchNewsSentiment(
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   try {
     const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
+    const token = await getCurrentAccessToken(data.session?.access_token);
     if (token) headers.Authorization = `Bearer ${token}`;
   } catch {
     // ignore — proceed without auth header
