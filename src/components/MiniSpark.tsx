@@ -8,6 +8,13 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 
+function resolveColor(el: HTMLElement, color: string): string {
+  const m = color.match(/^var\((--[^)]+)\)$/);
+  if (!m) return color;
+  const v = getComputedStyle(el).getPropertyValue(m[1]).trim();
+  return v || color;
+}
+
 /**
  * Tiny dependency-free sparkline backed by lightweight-charts.
  * Autosizes to its container. Pass any className for sizing.
@@ -46,7 +53,7 @@ export function MiniSpark({
     });
     chartRef.current = chart;
     seriesRef.current = chart.addSeries(LineSeries, {
-      color,
+      color: resolveColor(ref.current, color),
       lineWidth: strokeWidth as 1 | 2 | 3 | 4,
       priceLineVisible: false,
       lastValueVisible: false,
@@ -70,7 +77,11 @@ export function MiniSpark({
 
   // Update color when prop changes
   useEffect(() => {
-    seriesRef.current?.applyOptions({ color, lineWidth: strokeWidth as 1 | 2 | 3 | 4 });
+    if (!ref.current || !seriesRef.current) return;
+    seriesRef.current.applyOptions({
+      color: resolveColor(ref.current, color),
+      lineWidth: strokeWidth as 1 | 2 | 3 | 4,
+    });
   }, [color, strokeWidth]);
 
   // Update data when it changes
