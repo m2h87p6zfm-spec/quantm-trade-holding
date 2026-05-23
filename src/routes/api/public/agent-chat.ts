@@ -540,10 +540,24 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             void persistMemory(userId, "user", lastUser.content, sessionId);
           }
 
-          // Only persist into chat_messages when sessionId is a real UUID
-          // (the chat_messages.session_id column is uuid-typed).
+          // Persist into chat_messages. The session_id column is uuid-typed,
+          // so when no valid UUID is provided we derive a deterministic
+          // per-user "default chat" UUID from the userId. This guarantees
+          // every authenticated message+answer is stored in the database.
           const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          const validSessionId = sessionId && UUID_RE.test(sessionId) ? sessionId : null;
+          const deriveDefaultSessionId = async (uid: string): Promise<string> => {
+            const data = new TextEncoder().encode(`default-chat:${uid}`);
+            const hash = new Uint8Array(await crypto.subtle.digest("SHA-256", data));
+            // Format first 16 bytes as a UUID (v4-shaped)
+            hash[6] = (hash[6] & 0x0f) | 0x40;
+            hash[8] = (hash[8] & 0x3f) | 0x80;
+            const hex = Array.from(hash.slice(0, 16)).map((b) => b.toString(16).padStart(2, "0")).join("");
+            return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
+          };
+          let validSessionId: string | null = sessionId && UUID_RE.test(sessionId) ? sessionId : null;
+          if (!validSessionId && userId) {
+            validSessionId = await deriveDefaultSessionId(userId);
+          }
 
           // Ensure a chat_sessions row exists so the user can read messages via RLS.
           if (validSessionId && userId) {
