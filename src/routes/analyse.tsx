@@ -15,7 +15,7 @@ import { DisclaimerInline } from "@/components/Disclaimer";
 
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
-import { recordApexAnalysis } from "@/lib/trackRecord.functions";
+import { recordApexAnalysis } from "@/lib/trackrecord.functions";
 import { consumeAnalysisCredit } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
 import { AnalysisCreditBadge } from "@/components/AnalysisCreditBadge";
