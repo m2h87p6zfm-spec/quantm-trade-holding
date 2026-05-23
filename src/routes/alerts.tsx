@@ -238,14 +238,14 @@ function AlertsPage() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-4xl">
-                  Smart Alerts
+                  {t("page.alerts.title")}
                 </h1>
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${tierTint}`}>
                   <Sparkles className="h-2.5 w-2.5" /> {tierLabel}
                 </span>
               </div>
               <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                Echtzeit-Benachrichtigungen für Preis- & Setup-Score-Schwellen — direkt im Browser per Push.
+                {t("page.alerts.subtitle")}
               </p>
             </div>
           </div>
