@@ -70,27 +70,30 @@ export function BreakingNewsTicker() {
         <div className="relative flex-1 overflow-hidden">
           <div className="flex animate-ticker whitespace-nowrap py-1.5 will-change-transform" style={{ animationDuration: "90s" }}>
             {[...marquee, ...marquee].map((it, i) => (
-              <a
+              <span
                 key={`${it.uuid}-${i}`}
-                href={it.link}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="mx-4 inline-flex items-center gap-2 text-[12px] text-foreground/90 hover:text-primary transition-colors"
               >
                 <AgencyLogo source={it.source} size="xs" />
                 <Link
                   to="/produkte/$symbol"
                   params={{ symbol: it.symbol }}
-                  onClick={(e) => e.stopPropagation()}
                   className="rounded bg-muted/60 px-1 py-0.5 font-mono text-[10px] font-bold text-foreground hover:text-primary"
                 >
                   {it.symbol}
                 </Link>
-                <span className="truncate max-w-[480px]">{it.title}</span>
+                <a
+                  href={it.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate max-w-[480px] hover:text-primary"
+                >
+                  {it.title}
+                </a>
                 {it.breaking && (
                   <span className="rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">Breaking</span>
                 )}
-              </a>
+              </span>
             ))}
           </div>
         </div>
