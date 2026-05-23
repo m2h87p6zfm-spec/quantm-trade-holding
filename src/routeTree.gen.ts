@@ -26,6 +26,7 @@ import { Route as KontoRouteImport } from './routes/konto'
 import { Route as KalenderRouteImport } from './routes/kalender'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as HandelsprofilRouteImport } from './routes/handelsprofil'
+import { Route as GlobalIntelRouteImport } from './routes/global-intel'
 import { Route as ExplainTradeRouteImport } from './routes/explain-trade'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as BacktestRouteImport } from './routes/backtest'
@@ -135,6 +136,11 @@ const HeatmapRoute = HeatmapRouteImport.update({
 const HandelsprofilRoute = HandelsprofilRouteImport.update({
   id: '/handelsprofil',
   path: '/handelsprofil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GlobalIntelRoute = GlobalIntelRouteImport.update({
+  id: '/global-intel',
+  path: '/global-intel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExplainTradeRoute = ExplainTradeRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
+  '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
@@ -319,6 +326,7 @@ export interface FileRoutesByTo {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
+  '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
@@ -364,6 +372,7 @@ export interface FileRoutesById {
   '/backtest': typeof BacktestRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
+  '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
   '/kalender': typeof KalenderRoute
@@ -410,6 +419,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/explain-trade'
+    | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
     | '/kalender'
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/explain-trade'
+    | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
     | '/kalender'
@@ -498,6 +509,7 @@ export interface FileRouteTypes {
     | '/backtest'
     | '/einstellungen'
     | '/explain-trade'
+    | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
     | '/kalender'
@@ -543,6 +555,7 @@ export interface RootRouteChildren {
   BacktestRoute: typeof BacktestRoute
   EinstellungenRoute: typeof EinstellungenRoute
   ExplainTradeRoute: typeof ExplainTradeRoute
+  GlobalIntelRoute: typeof GlobalIntelRoute
   HandelsprofilRoute: typeof HandelsprofilRoute
   HeatmapRoute: typeof HeatmapRoute
   KalenderRoute: typeof KalenderRoute
@@ -698,6 +711,13 @@ declare module '@tanstack/react-router' {
       path: '/handelsprofil'
       fullPath: '/handelsprofil'
       preLoaderRoute: typeof HandelsprofilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/global-intel': {
+      id: '/global-intel'
+      path: '/global-intel'
+      fullPath: '/global-intel'
+      preLoaderRoute: typeof GlobalIntelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explain-trade': {
@@ -887,6 +907,7 @@ const rootRouteChildren: RootRouteChildren = {
   BacktestRoute: BacktestRoute,
   EinstellungenRoute: EinstellungenRoute,
   ExplainTradeRoute: ExplainTradeRoute,
+  GlobalIntelRoute: GlobalIntelRoute,
   HandelsprofilRoute: HandelsprofilRoute,
   HeatmapRoute: HeatmapRoute,
   KalenderRoute: KalenderRoute,

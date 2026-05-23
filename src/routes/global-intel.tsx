@@ -346,7 +346,7 @@ function WorldMap({
                 transition: "fill-opacity 200ms ease",
               }}
               onMouseEnter={() => onHover(name)}
-              onMouseLeave={() => onHover((h) => (h === name ? null : h) as any)}
+              onMouseLeave={() => onHover(null)}
               onClick={() => intel && onSelect(intel)}
             >
               <title>
