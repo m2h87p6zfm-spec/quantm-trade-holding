@@ -11,6 +11,7 @@ import { useSettings } from "@/lib/settings";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { recordApexAnalysis } from "@/lib/track-record.functions";
+import { useT } from "@/lib/i18n";
 
 function regimeLabel(r: MarketRegime) {
   return { bull: "Bullisch", bear: "Bärisch", chop: "Seitwärts", high_vol: "Hochvolatil", low_vol: "Ruhig" }[r];
