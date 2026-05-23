@@ -581,6 +581,14 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               if (userId && assistantText.trim()) {
                 void persistMemory(userId, "assistant", assistantText, sessionId);
               }
+              if (sessionId && assistantText.trim()) {
+                void supabaseAdmin
+                  .from("chat_messages")
+                  .insert({ session_id: sessionId, role: "assistant", content: assistantText })
+                  .then(({ error }) => {
+                    if (error) console.warn("chat_messages assistant insert failed", error.message);
+                  });
+              }
             },
           });
 
