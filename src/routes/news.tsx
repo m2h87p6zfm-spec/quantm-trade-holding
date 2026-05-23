@@ -3,9 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
-import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
+import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { useSubscription } from "@/hooks/useSubscription";
+
+const COLLAPSED_SOURCES_COUNT = 8;
+
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -39,25 +42,30 @@ async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<{ it
   return { items: res.items as Item[], gated: res.gated };
 }
 
-function timeAgo(ts: number) {
-  const diff = Math.max(0, Date.now() - ts);
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "gerade eben";
-  if (m < 60) return `vor ${m} min`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `vor ${h} h`;
-  const d = Math.floor(h / 24);
-  return `vor ${d} T`;
+function useTimeAgo() {
+  const t = useT();
+  return (ts: number) => {
+    const diff = Math.max(0, Date.now() - ts);
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return t("news.time.now");
+    if (m < 60) return t("news.time.minAgo").replace("{n}", String(m));
+    const h = Math.floor(m / 60);
+    if (h < 24) return t("news.time.hAgo").replace("{n}", String(h));
+    const d = Math.floor(h / 24);
+    return t("news.time.dAgo").replace("{n}", String(d));
+  };
 }
 
 function SentimentBadge({ s, c }: { s?: Item["sentiment"]; c?: number }) {
+  const t = useT();
   const base = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider";
-  if (s === "bullish") return <span className={`${base} bg-bull/20 text-bull ring-1 ring-bull/40`}><TrendingUp className="h-3 w-3" /> Bullish{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
-  if (s === "bearish") return <span className={`${base} bg-bear/20 text-bear ring-1 ring-bear/40`}><TrendingDown className="h-3 w-3" /> Bearish{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
-  return <span className={`${base} bg-muted text-muted-foreground ring-1 ring-border`}><Minus className="h-3 w-3" /> Neutral</span>;
+  if (s === "bullish") return <span className={`${base} bg-bull/20 text-bull ring-1 ring-bull/40`}><TrendingUp className="h-3 w-3" /> {t("news.sentiment.bullish")}{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
+  if (s === "bearish") return <span className={`${base} bg-bear/20 text-bear ring-1 ring-bear/40`}><TrendingDown className="h-3 w-3" /> {t("news.sentiment.bearish")}{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
+  return <span className={`${base} bg-muted text-muted-foreground ring-1 ring-border`}><Minus className="h-3 w-3" /> {t("news.sentiment.neutral")}</span>;
 }
 
 function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>; onOpen: (it: Item) => void }) {
+  const timeAgo = useTimeAgo();
   return (
     <button
       type="button"
@@ -114,6 +122,8 @@ function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>;
 }
 
 function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<string>; onClose: () => void }) {
+  const t = useT();
+  const timeAgo = useTimeAgo();
   return (
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
@@ -126,7 +136,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-          aria-label="Schließen"
+          aria-label={t("news.close")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -138,7 +148,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
           <span>{timeAgo(it.publishedAt)}</span>
           {it.breaking && (
             <span className="inline-flex items-center gap-1 rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">
-              <Zap className="h-2.5 w-2.5" /> Breaking
+              <Zap className="h-2.5 w-2.5" /> {t("news.stat.breaking")}
             </span>
           )}
         </div>
@@ -146,20 +156,20 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
         <h2 className="mt-3 text-xl font-bold leading-tight">{it.title}</h2>
 
         <div className="mt-3 flex flex-wrap items-center gap-1">
-          {it.tickers.slice(0, 10).map((t) => {
-            const owned = portfolio.has(t);
+          {it.tickers.slice(0, 10).map((sym) => {
+            const owned = portfolio.has(sym);
             return (
               <Link
-                key={t}
+                key={sym}
                 to="/produkte/$symbol"
-                params={{ symbol: t }}
+                params={{ symbol: sym }}
                 className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold transition-colors ${
                   owned
                     ? "bg-primary/15 text-primary ring-1 ring-primary/30 hover:bg-primary/25"
                     : "bg-muted text-foreground/80 hover:text-primary"
                 }`}
               >
-                {t}
+                {sym}
               </Link>
             );
           })}
@@ -168,7 +178,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 
         <div className="mt-5 rounded-xl border border-border/60 bg-background/40 p-4">
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-primary">
-            <Sparkles className="h-3 w-3" /> Artikel-Zusammenfassung
+            <Sparkles className="h-3 w-3" /> {t("news.summary")}
           </div>
           {it.aiSummary ? (
             <p className="whitespace-pre-line text-[14px] leading-relaxed text-foreground/90">
@@ -176,7 +186,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Zusammenfassung wird noch generiert — bitte einen Moment Geduld und neu laden.
+              {t("news.summary.pending")}
             </p>
           )}
         </div>
@@ -187,11 +197,11 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
           rel="noopener noreferrer"
           className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
         >
-          Originalartikel öffnen ↗
+          {t("news.openOriginal")}
         </a>
 
         <p className="mt-4 text-[10px] text-muted-foreground/70">
-          Inhalte werden durch KI verdichtet und ersetzen keine Originalrecherche. Quelle: {it.publisher}.
+          {t("news.aiDisclaimer")} {it.publisher}.
         </p>
       </div>
     </div>
@@ -204,6 +214,7 @@ function NewsPage() {
   const { isPro, loading: subLoading } = useSubscription();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
   const [openItem, setOpenItem] = useState<Item | null>(null);
+  const [showAllSources, setShowAllSources] = useState(false);
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
     [settings.newsSources]
@@ -222,7 +233,7 @@ function NewsPage() {
 
   const items = data?.items ?? [];
   const gated = data?.gated ?? (!subLoading && !isPro);
-  const forYou = items.filter((it) => it.tickers.some((t) => portfolio.has(t)));
+  const forYou = items.filter((it) => it.tickers.some((sym) => portfolio.has(sym)));
   const visible = tab === "foryou" ? forYou : items;
 
   const bull = items.filter((i) => i.sentiment === "bullish").length;
@@ -231,6 +242,16 @@ function NewsPage() {
 
   const toggleSource = (k: NewsSource) =>
     update({ newsSources: { ...settings.newsSources, [k]: !settings.newsSources[k] } });
+
+  // Show the first N sources + any currently-active ones beyond that, so the
+  // user always sees what they have enabled. The rest is hidden behind "Show more".
+  const baseVisibleSources = NEWS_SOURCES.slice(0, COLLAPSED_SOURCES_COUNT);
+  const extraActiveSources = NEWS_SOURCES.slice(COLLAPSED_SOURCES_COUNT).filter(
+    (k) => settings.newsSources[k],
+  );
+  const collapsedSources = [...baseVisibleSources, ...extraActiveSources];
+  const sourcesToRender = showAllSources ? NEWS_SOURCES : collapsedSources;
+  const hiddenCount = NEWS_SOURCES.length - collapsedSources.length;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -248,7 +269,7 @@ function NewsPage() {
             </p>
           </div>
           <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent/40">
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Aktualisieren
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> {t("news.refresh")}
           </button>
         </div>
       </div>
@@ -256,10 +277,10 @@ function NewsPage() {
       {/* Source toggles */}
       <div className="rounded-xl border border-border bg-card/40 p-4 backdrop-blur">
         <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Filter className="h-3 w-3 text-primary" /> News-Quellen
+          <Filter className="h-3 w-3 text-primary" /> {t("news.sources")}
         </div>
         <div className="flex flex-wrap gap-2">
-          {NEWS_SOURCES.map((k) => {
+          {sourcesToRender.map((k) => {
             const on = settings.newsSources[k];
             const meta = AGENCY_META[k];
             return (
@@ -278,51 +299,66 @@ function NewsPage() {
               </button>
             );
           })}
+          {hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAllSources((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 hover:bg-primary/10 transition-colors"
+            >
+              {showAllSources ? (
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" /> {t("news.sources.showLess")}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" /> {t("news.sources.showMore")} (+{hiddenCount})
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Bullish" value={bull} tone="bull" />
-        <Stat label="Bearish" value={bear} tone="bear" />
-        <Stat label="Breaking" value={breakingCount} tone="warn" icon={<Zap className="h-3 w-3" />} />
-        <Stat label="Gesamt" value={items.length} />
+        <Stat label={t("news.stat.bullish")} value={bull} tone="bull" />
+        <Stat label={t("news.stat.bearish")} value={bear} tone="bear" />
+        <Stat label={t("news.stat.breaking")} value={breakingCount} tone="warn" icon={<Zap className="h-3 w-3" />} />
+        <Stat label={t("news.stat.total")} value={items.length} />
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border">
         <TabBtn active={tab === "foryou"} onClick={() => setTab("foryou")} icon={<Sparkles className="h-3.5 w-3.5" />}>
-          Für dich <span className="ml-1.5 rounded bg-primary/15 px-1.5 text-[10px] num text-primary">{forYou.length}</span>
+          {t("news.tab.foryou")} <span className="ml-1.5 rounded bg-primary/15 px-1.5 text-[10px] num text-primary">{forYou.length}</span>
         </TabBtn>
         <TabBtn active={tab === "all"} onClick={() => setTab("all")}>
-          Alle <span className="ml-1.5 rounded bg-muted px-1.5 text-[10px] num text-muted-foreground">{items.length}</span>
+          {t("news.tab.all")} <span className="ml-1.5 rounded bg-muted px-1.5 text-[10px] num text-muted-foreground">{items.length}</span>
         </TabBtn>
       </div>
 
       <div className="space-y-3">
         {gated && (
           <div className="rounded-xl border border-primary/40 bg-primary/10 p-6 text-sm text-foreground">
-            <div className="font-semibold mb-1">Pro- oder Elite-Tier erforderlich</div>
+            <div className="font-semibold mb-1">{t("news.gated.title")}</div>
             <p className="text-muted-foreground">
-              Der Professional Newsroom mit KI-Sentiment & Zusammenfassungen ist Teil von Apex Pro/Elite.
+              {t("news.gated.body")}
               {" "}
-              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">Plan ansehen</Link>
+              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">{t("news.gated.cta")}</Link>
             </p>
           </div>
         )}
         {!gated && isLoading && Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-24 rounded-xl border border-border bg-card/50 animate-pulse" />
         ))}
-        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
+        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">{t("news.error")}</div>}
         {!isLoading && enabledSources.length === 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
-            Keine News-Quelle aktiv. Aktiviere oben mindestens eine.
+            {t("news.empty.noSources")}
           </div>
         )}
         {!isLoading && visible.length === 0 && enabledSources.length > 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
-            {tab === "foryou"
-              ? "Aktuell keine News zu deinen Werten. Wechsle zu \u201EAlle\u201C f\u00fcr globale Schlagzeilen."
-              : "Keine News verf\u00fcgbar."}
+            {tab === "foryou" ? t("news.empty.foryou") : t("news.empty.all")}
           </div>
         )}
 
