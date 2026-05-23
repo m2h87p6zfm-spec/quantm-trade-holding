@@ -173,7 +173,7 @@ function deriveProfile(a: Answers): { trading_goal: TradingGoal; ai_style: AISty
 
 /* ─────────────────── Component ─────────────────── */
 
-const TOTAL_STEPS = 11; // 0 welcome · 1 age · 2 exp · 3 trader · 4 currency · 5 risk · 6 markets · 7 notif · 8 sources · 9 starter · 10 trust+summary
+const TOTAL_STEPS = 12; // 0 welcome · 1 language · 2 age · 3 exp · 4 trader · 5 currency · 6 risk · 7 markets · 8 notif · 9 sources · 10 starter · 11 trust+summary
 
 export function OnboardingGate() {
   const { user, loading: authLoading } = useAuth();
