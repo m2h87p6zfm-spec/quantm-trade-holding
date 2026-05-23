@@ -24,6 +24,7 @@ import {
   TRADE_FLOWS,
   type CountryIntel,
   type GlobalEvent,
+  type FeedItem,
 } from "@/lib/global-intel-data";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
