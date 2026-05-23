@@ -348,7 +348,7 @@ export type Database = {
           reasoning: Json
           scenario_tag: string
           symbol: string
-          user_id: string | null
+          user_id: string
           verdict: string
         }
         Insert: {
@@ -362,7 +362,7 @@ export type Database = {
           reasoning?: Json
           scenario_tag: string
           symbol: string
-          user_id?: string | null
+          user_id: string
           verdict: string
         }
         Update: {
@@ -376,7 +376,7 @@ export type Database = {
           reasoning?: Json
           scenario_tag?: string
           symbol?: string
-          user_id?: string | null
+          user_id?: string
           verdict?: string
         }
         Relationships: []
