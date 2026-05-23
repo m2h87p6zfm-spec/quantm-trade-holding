@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireUserId } from "@/lib/api-auth.server";
 
 import type { NewsSource } from "@/lib/settings";
 
@@ -178,6 +179,8 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
         new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type" } }),
       POST: async ({ request }) => {
         try {
+          const auth = await requireUserId(request);
+          if (auth instanceof Response) return auth;
           const body = (await request.json()) as { symbols?: string[]; tier1Only?: boolean; sources?: string[]; withSummary?: boolean; portfolio?: string[] };
           const symbols = (body.symbols ?? []).filter((s) => typeof s === "string" && /^[A-Z0-9.\-^]{1,12}$/.test(s)).slice(0, 12);
           if (symbols.length === 0) {

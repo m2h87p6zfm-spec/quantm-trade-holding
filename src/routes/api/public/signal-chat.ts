@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireUserId } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 type SignalRow = {
@@ -163,6 +164,8 @@ export const Route = createFileRoute("/api/public/signal-chat")({
         }),
       POST: async ({ request }) => {
         try {
+          const auth = await requireUserId(request);
+          if (auth instanceof Response) return auth;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) {
             return new Response(JSON.stringify({ error: "AI gateway nicht konfiguriert." }), {

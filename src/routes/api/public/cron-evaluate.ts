@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireCronSecret } from "@/lib/api-auth.server";
 
 // ============================================================
 // Täglicher Cron: alle Predictions, deren Horizont abgelaufen ist
@@ -171,8 +172,14 @@ async function runEvaluation(): Promise<Response> {
 export const Route = createFileRoute("/api/public/cron-evaluate")({
   server: {
     handlers: {
-      POST: () => runEvaluation(),
-      GET: () => runEvaluation(),
+      POST: ({ request }) => {
+        const denied = requireCronSecret(request);
+        return denied ?? runEvaluation();
+      },
+      GET: ({ request }) => {
+        const denied = requireCronSecret(request);
+        return denied ?? runEvaluation();
+      },
     },
   },
 });

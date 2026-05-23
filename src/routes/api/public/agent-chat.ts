@@ -443,6 +443,9 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           }
 
           const userId = await resolveUserId(request);
+          if (!userId) {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+          }
           const [addendum, profileAddendum, memoryAddendum, feedbackAddendum] = await Promise.all([
             buildAdaptiveAddendum(userId),
             buildTradingProfileAddendum(userId),
