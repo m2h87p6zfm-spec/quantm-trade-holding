@@ -46,7 +46,9 @@ export function WatchlistSignalsPanel() {
 
   const rows = useMemo(() => {
     return symbols.map((symbol, i) => {
-      const p = findProduct(symbol) ?? { symbol, name: t("watchlist.card.unknown") };
+      const fallbackName = settings.language === "de" ? "Freier Ticker" : "Free ticker";
+      const p = findProduct(symbol) ?? { symbol, name: fallbackName };
+
 
       const c = candleQs[i].data;
       if (!c) return null;
