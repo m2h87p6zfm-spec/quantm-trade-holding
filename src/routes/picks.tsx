@@ -143,6 +143,7 @@ function PicksPage() {
   const recordedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (loading || picks.length === 0) return;
+    if (!user) return; // requires auth — skip for guests
     const today = new Date().toISOString().slice(0, 10);
     let stored: Record<string, string> = {};
     try { stored = JSON.parse(localStorage.getItem("apex_picks_recorded") || "{}"); } catch { /* ignore */ }
