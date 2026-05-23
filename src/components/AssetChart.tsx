@@ -95,81 +95,108 @@ export const AssetChart = memo(function AssetChart({
     "YTD": "seit Jahresanfang", "1Y": "letztes Jahr", "5Y": "letzte 5 Jahre", "MAX": "gesamter Verlauf",
   }[tf];
 
-  /* ------------ lightweight-charts setup ------------ */
+  /* ------------ lightweight-charts setup (dynamic import; client-only) ------------ */
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
   const baseLineRef = useRef<ReturnType<NonNullable<typeof seriesRef.current>["createPriceLine"]> | null>(null);
   const volMapRef = useRef<Map<number, number>>(new Map());
+  const libRef = useRef<typeof import("lightweight-charts") | null>(null);
+
+  // Keep latest values reachable from async setup
+  const upRef = useRef(up);
+  const lastRef = useRef(last);
+  const tfRef = useRef(tf);
+  const dataRef = useRef(data);
+  const firstRef = useRef(first);
+  upRef.current = up;
+  lastRef.current = last;
+  tfRef.current = tf;
+  dataRef.current = data;
+  firstRef.current = first;
 
   const [hover, setHover] = useState<{ time: number; close: number; volume: number } | null>(null);
+  const [ready, setReady] = useState(false);
 
-  // Create chart on mount
+  // Mount: dynamic-import the lib and build the chart
   useEffect(() => {
     if (!wrapRef.current) return;
+    let cancelled = false;
+    let ro: ResizeObserver | undefined;
     const el = wrapRef.current;
-    const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
-    const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
-    const fg = cssVar(el, "--foreground", "#fff");
 
-    const chart = createChart(el, {
-      width: el.clientWidth,
-      height,
-      layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
-        textColor: axis,
-        fontFamily: "ui-monospace, monospace",
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { visible: false },
-        horzLines: { color: grid, style: LineStyle.Dotted },
-      },
-      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.05 } },
-      timeScale: { borderVisible: false, timeVisible: tf === "1D", secondsVisible: false },
-      crosshair: {
-        mode: CrosshairMode.Magnet,
-        vertLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
-        horzLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
-      },
-      handleScale: { axisPressedMouseMove: false },
-    });
-    chartRef.current = chart;
+    (async () => {
+      const lib = await import("lightweight-charts");
+      if (cancelled || !el.isConnected) return;
+      libRef.current = lib;
+      const { createChart, ColorType, CrosshairMode, LineStyle } = lib;
+      const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
+      const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
+      const fg = cssVar(el, "--foreground", "#fff");
 
-    chart.subscribeCrosshairMove((param) => {
-      if (!param.time || !seriesRef.current) { setHover(null); return; }
-      const d = param.seriesData.get(seriesRef.current) as { value: number } | undefined;
-      if (!d) { setHover(null); return; }
-      const t = param.time as number;
-      setHover({ time: t, close: d.value, volume: volMapRef.current.get(t) ?? 0 });
-    });
+      const chart = createChart(el, {
+        width: el.clientWidth || 600,
+        height,
+        layout: {
+          background: { type: ColorType.Solid, color: "transparent" },
+          textColor: axis,
+          fontFamily: "ui-monospace, monospace",
+          attributionLogo: false,
+        },
+        grid: {
+          vertLines: { visible: false },
+          horzLines: { color: grid, style: LineStyle.Dotted },
+        },
+        rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.05 } },
+        timeScale: { borderVisible: false, timeVisible: tfRef.current === "1D", secondsVisible: false },
+        crosshair: {
+          mode: CrosshairMode.Magnet,
+          vertLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
+          horzLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
+        },
+        handleScale: { axisPressedMouseMove: false },
+      });
+      chartRef.current = chart;
 
-    const ro = new ResizeObserver((entries) => {
-      const cr = entries[0]?.contentRect;
-      if (cr) chart.resize(Math.max(120, cr.width), height);
-    });
-    ro.observe(el);
+      chart.subscribeCrosshairMove((param) => {
+        if (!param.time || !seriesRef.current) { setHover(null); return; }
+        const d = param.seriesData.get(seriesRef.current) as { value: number } | undefined;
+        if (!d) { setHover(null); return; }
+        const t = param.time as number;
+        setHover({ time: t, close: d.value, volume: volMapRef.current.get(t) ?? 0 });
+      });
+
+      ro = new ResizeObserver((entries) => {
+        const cr = entries[0]?.contentRect;
+        if (cr) chart.resize(Math.max(120, cr.width), height);
+      });
+      ro.observe(el);
+
+      setReady(true);
+    })();
 
     return () => {
-      ro.disconnect();
-      chart.remove();
+      cancelled = true;
+      ro?.disconnect();
+      chartRef.current?.remove();
       chartRef.current = null;
       seriesRef.current = null;
       baseLineRef.current = null;
+      setReady(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [height]);
 
-  // Re-create series when up/down direction changes (different gradient)
+  // (Re)create area series when direction flips
   useEffect(() => {
-    if (!chartRef.current || !wrapRef.current) return;
+    if (!ready || !chartRef.current || !wrapRef.current || !libRef.current) return;
+    const { AreaSeries, LineStyle } = libRef.current;
     const el = wrapRef.current;
     const bull = cssVar(el, "--bull", "#22FF88");
     const bear = cssVar(el, "--bear", "#FF3B5C");
     const lineColor = up ? bull : bear;
 
     if (seriesRef.current) {
-      chartRef.current.removeSeries(seriesRef.current);
+      try { chartRef.current.removeSeries(seriesRef.current); } catch { /* noop */ }
       seriesRef.current = null;
       baseLineRef.current = null;
     }
@@ -187,12 +214,13 @@ export const AssetChart = memo(function AssetChart({
       priceFormat: { type: "price", precision: axisDecimals(last), minMove: 1 / Math.pow(10, axisDecimals(last)) },
     });
     seriesRef.current = series;
-  }, [up, last]);
+  }, [ready, up, last]);
 
   // Update data
   useEffect(() => {
-    if (!seriesRef.current || !chartRef.current) return;
+    if (!ready || !seriesRef.current || !chartRef.current || !libRef.current) return;
     if (data.length === 0) return;
+    const { LineStyle } = libRef.current;
     const points = data.map((d) => ({
       time: d.time as UTCTimestamp,
       value: d.close,
@@ -200,7 +228,6 @@ export const AssetChart = memo(function AssetChart({
     volMapRef.current = new Map(data.map((d) => [d.time, d.volume]));
     seriesRef.current.setData(points);
 
-    // Baseline reference (start-of-period)
     if (baseLineRef.current) {
       try { seriesRef.current.removePriceLine(baseLineRef.current); } catch { /* noop */ }
       baseLineRef.current = null;
@@ -216,16 +243,16 @@ export const AssetChart = memo(function AssetChart({
         title: "",
       });
     }
-
     chartRef.current.timeScale().fitContent();
-  }, [data, first]);
+  }, [ready, data, first]);
 
-  // Update time-axis format when timeframe changes
+  // Time-axis format on timeframe change
   useEffect(() => {
     chartRef.current?.applyOptions({
       timeScale: { timeVisible: tf === "1D", secondsVisible: false },
     });
   }, [tf]);
+
 
   /* ------------ render ------------ */
   return (
