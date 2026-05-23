@@ -82,11 +82,11 @@ function Cockpit() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#1F1F1F] bg-[#111111] px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] animate-pulse" />
-              Live · Cockpit
+              {t("cockpit.live")}
             </div>
-            <h1 className="mt-3 text-[32px] font-bold tracking-tight">{usingDefault ? "Markt-Cockpit" : "Watchlist"}</h1>
+            <h1 className="mt-3 text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
             <p className="mt-1 text-[13px] text-white/40 tabular-nums">
-              {loading ? `Sync ${loaded}/${total}` : `${loaded} Werte aktiv`}
+              {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -95,13 +95,14 @@ function Cockpit() {
               onClick={() => setManageOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white"
             >
-              <ListPlus className="h-3.5 w-3.5" /> Verwalten
+              <ListPlus className="h-3.5 w-3.5" /> {t("cockpit.manage")}
             </button>
             <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white">
-              <Search className="h-3.5 w-3.5" /> Katalog
+              <Search className="h-3.5 w-3.5" /> {t("cockpit.catalog")}
             </Link>
           </div>
         </div>
+
 
         {/* BEREICH 1 — Markt-Überblick (kompakt) */}
         <section className="space-y-4">
