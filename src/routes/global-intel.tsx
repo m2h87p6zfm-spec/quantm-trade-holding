@@ -1267,7 +1267,8 @@ function NewsDetailModal({ item, onClose }: { item: CountryNewsItem; onClose: ()
           Quelle: {item.sourceLabel}. Inhalte stammen von vertrauenswürdigen Tier-1 Finanzmedien.
         </p>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
