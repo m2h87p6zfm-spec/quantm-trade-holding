@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /konto
+Disallow: /einstellungen
+Disallow: /onboarding
+Disallow: /passwort-vergessen
+Disallow: /passwort-zuruecksetzen
+Disallow: /checkout.return
+
+Sitemap: https://quantm-trade-holding.lovable.app/sitemap.xml
