@@ -132,6 +132,7 @@ const CURRENCY_TO_BASE: Record<PreferredCurrency, BaseCurrency> = {
 /* ─────────────────── Wizard state ─────────────────── */
 
 type Answers = {
+  language?: LangCode;
   age_range?: AgeRange;
   experience_level?: ExperienceLevel;
   trader_type?: TraderType;
