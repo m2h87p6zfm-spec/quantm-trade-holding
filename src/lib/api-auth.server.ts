@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const PRO_PRICES = new Set([
@@ -115,8 +116,6 @@ export function requireCronSecret(request: Request): Response | null {
   const gotBuf = Buffer.from(got, "utf8");
   let ok = expectedBuf.length === gotBuf.length;
   if (ok) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { timingSafeEqual } = require("node:crypto") as typeof import("node:crypto");
     ok = timingSafeEqual(expectedBuf, gotBuf);
   }
   if (!ok) {
