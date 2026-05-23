@@ -183,6 +183,15 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
           )}
         </div>
 
+        <a
+          href={it.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+        >
+          Originalartikel öffnen ↗
+        </a>
+
         <p className="mt-4 text-[10px] text-muted-foreground/70">
           Inhalte werden durch KI verdichtet und ersetzen keine Originalrecherche. Quelle: {it.publisher}.
         </p>
