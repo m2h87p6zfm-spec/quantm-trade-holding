@@ -161,10 +161,22 @@
     font-feature-settings: "tnum" 1, "cv11" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  /* Ambient app-wide backdrop — very subtle, adds depth without distraction */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(ellipse 70% 50% at 15% 0%, color-mix(in oklab, var(--primary) 5%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 45% at 85% 100%, color-mix(in oklab, var(--violet-accent) 4%, transparent) 0%, transparent 65%);
   }
   h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    font-feature-settings: "ss01" 1, "ss02" 1;
   }
   .font-mono, code, kbd, pre, samp, [data-numeric] {
     font-family: var(--font-mono);
@@ -178,6 +190,31 @@
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: color-mix(in oklab, var(--muted-foreground) 90%, transparent);
+  }
+  /* Selection — uses brand mint at low opacity */
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 30%, transparent);
+    color: var(--foreground);
+  }
+  /* Focus ring — visible but elegant */
+  :focus-visible {
+    outline: 2px solid color-mix(in oklab, var(--primary) 70%, transparent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  /* Scrollbars — slim, themed, fade in on hover */
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--border) 80%, transparent) transparent; }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--border) 85%, transparent);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--primary) 35%, var(--border));
+    background-clip: padding-box;
   }
 }
 
