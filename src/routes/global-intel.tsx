@@ -182,13 +182,15 @@ function GlobalIntelPage() {
             </div>
           </div>
 
-          <GlobalSummaryStrip />
+          <MovingMarketsBar />
         </div>
       </header>
 
       {/* Main grid: map + side panel + feed */}
       <main className="mx-auto max-w-[1700px] px-4 py-5 sm:px-8">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+        <GlobalMarketConditions />
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-5">
             {/* Map */}
             <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
