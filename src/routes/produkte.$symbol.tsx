@@ -12,6 +12,7 @@ import { BrokerAssessment } from "@/components/BrokerAssessment";
 import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
+import { AssetEventsPanel } from "@/components/AssetEventsPanel";
 
 export const Route = createFileRoute("/produkte/$symbol")({
   head: ({ params }) => {
@@ -134,6 +135,7 @@ function ProductDetail() {
         </div>
       )}
 
+      <AssetEventsPanel symbol={symbol} />
       <AssetNewsPanel symbol={symbol} />
     </div>
   );

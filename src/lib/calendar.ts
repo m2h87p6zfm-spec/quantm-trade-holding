@@ -21,12 +21,36 @@ export const ECON_EVENTS: EconEvent[] = [
   { id: "boj-1", date: "2026-06-19T03:00:00Z", title: "Bank of Japan Zinsentscheid", country: "JP", impact: "medium", category: "Zinsen" },
   { id: "de-ifo-1", date: "2026-06-24T08:00:00Z", title: "ifo Geschäftsklima", country: "DE", impact: "medium", category: "Wachstum" },
   { id: "us-gdp-1", date: "2026-06-26T12:30:00Z", title: "US GDP Q1 (Final)", country: "US", impact: "medium", category: "Wachstum" },
-  { id: "earn-nvda", date: "2026-08-20T20:00:00Z", title: "NVIDIA Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "Marktbewegender Tech-Bericht." },
+  { id: "earn-tsla", date: "2026-07-22T20:00:00Z", title: "Tesla Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "Fokus: Auto-Margen, FSD-Updates, Energy-Wachstum." },
+  { id: "earn-msft", date: "2026-07-23T20:00:00Z", title: "Microsoft Earnings Q4", country: "US", impact: "high", category: "Earnings", detail: "Azure-Wachstum & KI-Monetarisierung im Fokus." },
+  { id: "earn-googl", date: "2026-07-24T20:00:00Z", title: "Alphabet Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "Search-Ads, Cloud, KI-Konkurrenz." },
+  { id: "earn-meta", date: "2026-07-29T20:00:00Z", title: "Meta Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "Ad-Revenue & Reality-Labs-Verluste." },
   { id: "earn-aapl", date: "2026-07-30T20:00:00Z", title: "Apple Earnings Q3", country: "US", impact: "high", category: "Earnings" },
-  { id: "earn-msft", date: "2026-07-23T20:00:00Z", title: "Microsoft Earnings Q4", country: "US", impact: "high", category: "Earnings" },
+  { id: "earn-amzn", date: "2026-07-31T20:00:00Z", title: "Amazon Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "AWS-Marge & Retail-Wachstum." },
+  { id: "earn-nvda", date: "2026-08-20T20:00:00Z", title: "NVIDIA Earnings Q2", country: "US", impact: "high", category: "Earnings", detail: "Marktbewegender Tech-Bericht. KI-Chip-Nachfrage." },
   { id: "us-cpi-2", date: "2026-07-15T12:30:00Z", title: "US CPI (Juni)", country: "US", impact: "high", category: "Inflation" },
   { id: "fomc-3", date: "2026-07-29T18:00:00Z", title: "FOMC Zinsentscheid", country: "US", impact: "high", category: "Notenbank" },
 ];
+
+const SYMBOL_TO_EARN: Record<string, string> = {
+  TSLA: "earn-tsla", AAPL: "earn-aapl", MSFT: "earn-msft", GOOGL: "earn-googl",
+  GOOG: "earn-googl", META: "earn-meta", AMZN: "earn-amzn", NVDA: "earn-nvda",
+};
+
+export function nextEarningsFor(symbol: string, now = Date.now()): EconEvent | null {
+  const key = SYMBOL_TO_EARN[symbol.toUpperCase()];
+  if (!key) return null;
+  const ev = ECON_EVENTS.find((e) => e.id === key);
+  if (!ev) return null;
+  return new Date(ev.date).getTime() >= now - 6 * 60 * 60 * 1000 ? ev : null;
+}
+
+export function topMacroEvents(limit = 5, now = Date.now()): EconEvent[] {
+  return ECON_EVENTS
+    .filter((e) => e.category !== "Earnings" && e.impact === "high" && new Date(e.date).getTime() >= now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, limit);
+}
 
 export function upcomingEvents(now = Date.now()): EconEvent[] {
   return ECON_EVENTS
