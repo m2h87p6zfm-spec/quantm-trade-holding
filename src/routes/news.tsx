@@ -214,6 +214,7 @@ function NewsPage() {
   const { isPro, loading: subLoading } = useSubscription();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
   const [openItem, setOpenItem] = useState<Item | null>(null);
+  const [showAllSources, setShowAllSources] = useState(false);
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
     [settings.newsSources]
@@ -232,7 +233,7 @@ function NewsPage() {
 
   const items = data?.items ?? [];
   const gated = data?.gated ?? (!subLoading && !isPro);
-  const forYou = items.filter((it) => it.tickers.some((t) => portfolio.has(t)));
+  const forYou = items.filter((it) => it.tickers.some((sym) => portfolio.has(sym)));
   const visible = tab === "foryou" ? forYou : items;
 
   const bull = items.filter((i) => i.sentiment === "bullish").length;
@@ -241,6 +242,16 @@ function NewsPage() {
 
   const toggleSource = (k: NewsSource) =>
     update({ newsSources: { ...settings.newsSources, [k]: !settings.newsSources[k] } });
+
+  // Show the first N sources + any currently-active ones beyond that, so the
+  // user always sees what they have enabled. The rest is hidden behind "Show more".
+  const baseVisibleSources = NEWS_SOURCES.slice(0, COLLAPSED_SOURCES_COUNT);
+  const extraActiveSources = NEWS_SOURCES.slice(COLLAPSED_SOURCES_COUNT).filter(
+    (k) => settings.newsSources[k],
+  );
+  const collapsedSources = [...baseVisibleSources, ...extraActiveSources];
+  const sourcesToRender = showAllSources ? NEWS_SOURCES : collapsedSources;
+  const hiddenCount = NEWS_SOURCES.length - collapsedSources.length;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -258,7 +269,7 @@ function NewsPage() {
             </p>
           </div>
           <button onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent/40">
-            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> Aktualisieren
+            <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} /> {t("news.refresh")}
           </button>
         </div>
       </div>
@@ -266,10 +277,10 @@ function NewsPage() {
       {/* Source toggles */}
       <div className="rounded-xl border border-border bg-card/40 p-4 backdrop-blur">
         <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Filter className="h-3 w-3 text-primary" /> News-Quellen
+          <Filter className="h-3 w-3 text-primary" /> {t("news.sources")}
         </div>
         <div className="flex flex-wrap gap-2">
-          {NEWS_SOURCES.map((k) => {
+          {sourcesToRender.map((k) => {
             const on = settings.newsSources[k];
             const meta = AGENCY_META[k];
             return (
@@ -288,51 +299,66 @@ function NewsPage() {
               </button>
             );
           })}
+          {hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowAllSources((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 hover:bg-primary/10 transition-colors"
+            >
+              {showAllSources ? (
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" /> {t("news.sources.showLess")}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" /> {t("news.sources.showMore")} (+{hiddenCount})
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Stat label="Bullish" value={bull} tone="bull" />
-        <Stat label="Bearish" value={bear} tone="bear" />
-        <Stat label="Breaking" value={breakingCount} tone="warn" icon={<Zap className="h-3 w-3" />} />
-        <Stat label="Gesamt" value={items.length} />
+        <Stat label={t("news.stat.bullish")} value={bull} tone="bull" />
+        <Stat label={t("news.stat.bearish")} value={bear} tone="bear" />
+        <Stat label={t("news.stat.breaking")} value={breakingCount} tone="warn" icon={<Zap className="h-3 w-3" />} />
+        <Stat label={t("news.stat.total")} value={items.length} />
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border">
         <TabBtn active={tab === "foryou"} onClick={() => setTab("foryou")} icon={<Sparkles className="h-3.5 w-3.5" />}>
-          Für dich <span className="ml-1.5 rounded bg-primary/15 px-1.5 text-[10px] num text-primary">{forYou.length}</span>
+          {t("news.tab.foryou")} <span className="ml-1.5 rounded bg-primary/15 px-1.5 text-[10px] num text-primary">{forYou.length}</span>
         </TabBtn>
         <TabBtn active={tab === "all"} onClick={() => setTab("all")}>
-          Alle <span className="ml-1.5 rounded bg-muted px-1.5 text-[10px] num text-muted-foreground">{items.length}</span>
+          {t("news.tab.all")} <span className="ml-1.5 rounded bg-muted px-1.5 text-[10px] num text-muted-foreground">{items.length}</span>
         </TabBtn>
       </div>
 
       <div className="space-y-3">
         {gated && (
           <div className="rounded-xl border border-primary/40 bg-primary/10 p-6 text-sm text-foreground">
-            <div className="font-semibold mb-1">Pro- oder Elite-Tier erforderlich</div>
+            <div className="font-semibold mb-1">{t("news.gated.title")}</div>
             <p className="text-muted-foreground">
-              Der Professional Newsroom mit KI-Sentiment & Zusammenfassungen ist Teil von Apex Pro/Elite.
+              {t("news.gated.body")}
               {" "}
-              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">Plan ansehen</Link>
+              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">{t("news.gated.cta")}</Link>
             </p>
           </div>
         )}
         {!gated && isLoading && Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-24 rounded-xl border border-border bg-card/50 animate-pulse" />
         ))}
-        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
+        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">{t("news.error")}</div>}
         {!isLoading && enabledSources.length === 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
-            Keine News-Quelle aktiv. Aktiviere oben mindestens eine.
+            {t("news.empty.noSources")}
           </div>
         )}
         {!isLoading && visible.length === 0 && enabledSources.length > 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
-            {tab === "foryou"
-              ? "Aktuell keine News zu deinen Werten. Wechsle zu \u201EAlle\u201C f\u00fcr globale Schlagzeilen."
-              : "Keine News verf\u00fcgbar."}
+            {tab === "foryou" ? t("news.empty.foryou") : t("news.empty.all")}
           </div>
         )}
 
