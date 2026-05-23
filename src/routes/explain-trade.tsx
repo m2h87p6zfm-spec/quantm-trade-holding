@@ -432,7 +432,7 @@ function StepDate({
             {date ? format(date, "EEEE, dd. MMMM yyyy", { locale: de }) : "Kaufdatum wählen"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={8} avoidCollisions={false}>
           <Calendar
             mode="single"
             selected={date}
@@ -582,7 +582,7 @@ function StepSellDate({
             {sellDate ? format(sellDate, "EEEE, dd. MMMM yyyy", { locale: de }) : "Verkaufsdatum wählen"}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align="start" side="bottom" sideOffset={8} avoidCollisions={false}>
           <Calendar
             mode="single"
             selected={sellDate}
