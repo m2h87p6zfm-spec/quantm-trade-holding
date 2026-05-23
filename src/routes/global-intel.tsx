@@ -6,10 +6,20 @@ import type { FeatureCollection, Geometry } from "geojson";
 import {
   COUNTRIES,
   COUNTRIES_BY_NAME,
+  COUNTRY_COORDS,
+  COUNTRY_EXTRAS,
+  EVENTS,
+  EVENT_COLOR,
   GLOBAL_SUMMARY,
+  MARKET_FEED,
+  NEUTRAL_LAND,
   RISK_COLOR,
   RISK_LABEL,
+  ROUTE_COLOR,
+  TENSIONS,
+  TRADE_FLOWS,
   type CountryIntel,
+  type GlobalEvent,
 } from "@/lib/global-intel-data";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
@@ -24,11 +34,16 @@ import {
   Building2,
   CircleDot,
   Coins,
+  Eye,
+  Flame,
+  Gauge,
   Globe2,
   Landmark,
+  Layers,
   Minus,
   Newspaper,
   Radio,
+  Route as RouteIcon,
   ShieldCheck,
   Sparkles,
   TrendingDown,
@@ -40,45 +55,51 @@ import {
 export const Route = createFileRoute("/global-intel")({
   head: () => ({
     meta: [
-      { title: "Global Macro Intelligence — Apex Trades" },
+      { title: "Global Market Intelligence War Room — Apex Trades" },
       {
         name: "description",
         content:
-          "Interaktiver geopolitischer Welt-Macro-Monitor: Klick ein Land und verstehe sofort Risiko, Wirtschaft, Politik und Marktauswirkungen.",
+          "Institutional global macro & geopolitical intelligence layer: trade flows, tension lines, event dots and country impact analytics.",
       },
-      { property: "og:title", content: "Global Macro Intelligence — Apex Trades" },
+      { property: "og:title", content: "Global Market Intelligence War Room" },
       {
         property: "og:description",
         content:
-          "Bloomberg-Style Welt-Karte mit live Risikofarben, geopolitischen Daten und Markt-Wirkungs-Analyse.",
+          "Bloomberg-style world intelligence map: macro, geopolitics, supply chains and market transmission in one view.",
       },
     ],
   }),
   component: GlobalIntelPage,
 });
 
-const WORLD_TOPO_URL =
-  "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
+const WORLD_TOPO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 const MAP_W = 1000;
 const MAP_H = 520;
 
 type WorldGeo = FeatureCollection<Geometry, { name: string }>;
 
+type LayerToggles = {
+  trade: boolean;
+  tensions: boolean;
+  events: boolean;
+};
+
 function GlobalIntelPage() {
   const [world, setWorld] = useState<WorldGeo | null>(null);
   const [selected, setSelected] = useState<CountryIntel | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<GlobalEvent | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [utc, setUtc] = useState<string>("");
+  const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true });
 
   useEffect(() => {
     const tick = () => {
       const d = new Date();
-      const hh = String(d.getUTCHours()).padStart(2, "0");
-      const mm = String(d.getUTCMinutes()).padStart(2, "0");
-      const ss = String(d.getUTCSeconds()).padStart(2, "0");
-      setUtc(`${hh}:${mm}:${ss} UTC`);
+      setUtc(
+        `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}:${String(d.getUTCSeconds()).padStart(2, "0")} UTC`,
+      );
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -104,44 +125,42 @@ function GlobalIntelPage() {
   }, []);
 
   const path = useMemo(() => {
-    const projection = geoNaturalEarth1().fitSize([MAP_W, MAP_H], world ?? {
-      type: "Sphere",
-    } as any);
-    return geoPath(projection);
+    const projection = geoNaturalEarth1().fitSize(
+      [MAP_W, MAP_H],
+      world ?? ({ type: "Sphere" } as any),
+    );
+    return { path: geoPath(projection), projection };
   }, [world]);
 
   return (
-    <div className="min-h-screen bg-[oklch(0.10_0.018_265)] text-foreground">
-      {/* Hero / global summary */}
+    <div className="min-h-screen bg-[oklch(0.09_0.014_260)] text-foreground">
+      {/* Top command bar */}
       <header className="relative overflow-hidden border-b border-white/[0.06]">
-        {/* layered backdrop */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.16_0.04_265)] via-[oklch(0.12_0.025_265)] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.14_0.025_260)] via-[oklch(0.11_0.018_260)] to-transparent" />
           <div
-            className="absolute inset-0 opacity-[0.07]"
+            className="absolute inset-0 opacity-[0.05]"
             style={{
               backgroundImage:
                 "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-              backgroundSize: "48px 48px",
-              maskImage:
-                "radial-gradient(ellipse at top, black 30%, transparent 75%)",
+              backgroundSize: "56px 56px",
+              maskImage: "radial-gradient(ellipse at top, black 30%, transparent 75%)",
             }}
           />
-          <div className="absolute -top-32 left-1/2 h-72 w-[60rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-[1600px] px-4 pb-6 pt-6 sm:px-8">
+        <div className="relative mx-auto max-w-[1700px] px-4 pb-5 pt-5 sm:px-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 ring-1 ring-primary/30">
                 <Globe2 className="h-5 w-5 text-primary" />
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_oklch(0.72_0.18_150)]" />
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-emerald-400/80" />
               </div>
               <div>
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
                   <span>Apex</span>
                   <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
-                  <span>Macro Intelligence Terminal</span>
+                  <span>Global Intelligence War Room</span>
                 </div>
                 <h1 className="font-display text-2xl font-bold tracking-tight sm:text-[1.7rem]">
                   Global Market & Geopolitical Monitor
@@ -158,102 +177,107 @@ function GlobalIntelPage() {
           </div>
 
           <GlobalSummaryStrip />
-
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-3.5 py-2.5 backdrop-blur">
-            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-            <p className="text-xs leading-relaxed text-foreground/75">
-              {GLOBAL_SUMMARY.headline}
-            </p>
-          </div>
         </div>
       </header>
 
-      {/* Map + panel */}
-      <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-8">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_440px]">
-          {/* Map */}
-          <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[oklch(0.13_0.025_265)] to-[oklch(0.09_0.02_265)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
-            {/* corner ornaments */}
-            <CornerOrnaments />
+      {/* Main grid: map + side panel + feed */}
+      <main className="mx-auto max-w-[1700px] px-4 py-5 sm:px-8">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="space-y-5">
+            {/* Map */}
+            <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
+              <CornerOrnaments />
 
-            <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/10 bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
-              <Activity className="h-3 w-3 text-primary" />
-              <span>2D · Risk Heatmap</span>
-            </div>
-            <div className="absolute right-4 top-4 z-10 flex items-center gap-3 rounded-md border border-white/10 bg-black/50 px-3 py-1.5 backdrop-blur-md">
-              <LegendDot color={RISK_COLOR.low} label="Stable" />
-              <LegendDot color={RISK_COLOR.medium} label="Neutral" />
-              <LegendDot color={RISK_COLOR.high} label="High Risk" />
-            </div>
-
-            {hovered && (
-              <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-white/10 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
-                {hovered}
+              <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/10 bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
+                <Activity className="h-3 w-3 text-primary" />
+                <span>Intelligence Layer · 2D</span>
               </div>
-            )}
 
-            <div className="relative aspect-[1000/520] w-full">
-              {error && (
-                <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-                  Karte konnte nicht geladen werden: {error}
+              <LayerControls layers={layers} setLayers={setLayers} />
+
+              {hovered && (
+                <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-white/10 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
+                  {hovered}
                 </div>
               )}
-              {!error && (
-                <WorldMap
-                  world={world}
-                  path={path}
-                  selected={selected}
-                  hovered={hovered}
-                  onHover={setHovered}
-                  onSelect={(c) => setSelected(c)}
-                />
-              )}
-            </div>
-          </section>
 
-          {/* Side panel */}
-          <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
-            <CountryPanel country={selected} onClose={() => setSelected(null)} />
+              <div className="relative aspect-[1000/520] w-full">
+                {error && (
+                  <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+                    Map unavailable: {error}
+                  </div>
+                )}
+                {!error && (
+                  <WorldMap
+                    world={world}
+                    geo={path}
+                    selected={selected}
+                    hovered={hovered}
+                    layers={layers}
+                    onHover={setHovered}
+                    onSelectCountry={(c) => {
+                      setSelected(c);
+                      setSelectedEvent(null);
+                    }}
+                    onSelectEvent={(e) => setSelectedEvent(e)}
+                  />
+                )}
+              </div>
+
+              <MapLegend />
+            </section>
+
+            {/* Tracked countries strip */}
+            <section className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+                  <Sparkles className="h-3 w-3 text-primary" /> Tracked countries
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {COUNTRIES.length} markets
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {COUNTRIES.map((c) => {
+                  const isSel = selected?.iso2 === c.iso2;
+                  return (
+                    <button
+                      key={c.iso2}
+                      onClick={() => {
+                        setSelected(c);
+                        setSelectedEvent(null);
+                      }}
+                      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
+                        isSel
+                          ? "border-primary/60 bg-primary/15 text-primary"
+                          : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
+                      }`}
+                    >
+                      <span aria-hidden>{c.flag}</span>
+                      <span className="font-medium">{c.name}</span>
+                      <span
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{ backgroundColor: RISK_COLOR[c.risk] }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
+
+          {/* Right column: country panel + intel feed */}
+          <aside className="space-y-5 xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
+            <CountryPanel
+              country={selected}
+              onClose={() => setSelected(null)}
+            />
+            {selectedEvent && (
+              <EventPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+            )}
+            <IntelFeed />
           </aside>
         </div>
-
-        {/* Countries strip */}
-        <section className="mt-6 rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-              <Sparkles className="h-3 w-3 text-primary" /> Tracked Countries
-            </div>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-              {COUNTRIES.length} markets
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {COUNTRIES.map((c) => {
-              const isSel = selected?.iso2 === c.iso2;
-              return (
-                <button
-                  key={c.iso2}
-                  onClick={() => setSelected(c)}
-                  className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
-                    isSel
-                      ? "border-primary/60 bg-primary/15 text-primary shadow-[0_0_0_3px_oklch(0.65_0.18_260/0.08)]"
-                      : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
-                  }`}
-                >
-                  <span aria-hidden>{c.flag}</span>
-                  <span className="font-medium">{c.name}</span>
-                  <span
-                    className="h-1.5 w-1.5 rounded-full"
-                    style={{
-                      backgroundColor: RISK_COLOR[c.risk],
-                      boxShadow: `0 0 6px ${RISK_COLOR[c.risk]}`,
-                    }}
-                  />
-                </button>
-              );
-            })}
-          </div>
-        </section>
       </main>
     </div>
   );
@@ -262,8 +286,7 @@ function GlobalIntelPage() {
 /* ───────────────────── Components ───────────────────── */
 
 function CornerOrnaments() {
-  const cls =
-    "pointer-events-none absolute h-4 w-4 border-primary/40";
+  const cls = "pointer-events-none absolute h-4 w-4 border-primary/40";
   return (
     <>
       <span className={`${cls} left-2 top-2 border-l border-t`} />
@@ -274,62 +297,101 @@ function CornerOrnaments() {
   );
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-      <span
-        className="h-2 w-2 rounded-full"
-        style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
-      />
+function LayerControls({
+  layers,
+  setLayers,
+}: {
+  layers: LayerToggles;
+  setLayers: (l: LayerToggles) => void;
+}) {
+  const Item = ({
+    on,
+    onClick,
+    icon: Icon,
+    label,
+  }: {
+    on: boolean;
+    onClick: () => void;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 rounded px-2 py-1 text-[10px] font-mono uppercase tracking-wider transition ${
+        on ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
       {label}
+    </button>
+  );
+  return (
+    <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+      <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
+      <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
+      <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
+      <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
     </div>
+  );
+}
+
+function MapLegend() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.06] bg-black/30 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground backdrop-blur">
+      <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.low} /> Stable</span>
+      <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.medium} /> Watch</span>
+      <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.high} /> Elevated</span>
+      <span className="mx-2 h-3 w-px bg-white/10" />
+      <span className="flex items-center gap-1.5"><Dot color={EVENT_COLOR.positive} /> Positive event</span>
+      <span className="flex items-center gap-1.5"><Dot color={EVENT_COLOR.watch} /> Watch event</span>
+      <span className="flex items-center gap-1.5"><Dot color={EVENT_COLOR.negative} /> Negative event</span>
+      <span className="mx-2 h-3 w-px bg-white/10" />
+      <span className="flex items-center gap-1.5"><LineSwatch color={ROUTE_COLOR.stable} /> Stable flow</span>
+      <span className="flex items-center gap-1.5"><LineSwatch color={ROUTE_COLOR.tense} /> Tense</span>
+      <span className="flex items-center gap-1.5"><LineSwatch color={ROUTE_COLOR.disrupted} dashed /> Disrupted</span>
+    </div>
+  );
+}
+
+function Dot({ color }: { color: string }) {
+  return <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />;
+}
+function LineSwatch({ color, dashed }: { color: string; dashed?: boolean }) {
+  return (
+    <span
+      className="inline-block h-[2px] w-5"
+      style={{
+        backgroundImage: dashed
+          ? `repeating-linear-gradient(90deg, ${color} 0 4px, transparent 4px 7px)`
+          : undefined,
+        backgroundColor: dashed ? undefined : color,
+      }}
+    />
   );
 }
 
 function GlobalSummaryStrip() {
   const s = GLOBAL_SUMMARY;
-  const items: { label: string; value: string; tone: "ok" | "warn" | "bad" | "info" }[] = [
-    {
-      label: "Risk Sentiment",
-      value:
-        s.sentiment === "risk-on" ? "Risk-On" : s.sentiment === "risk-off" ? "Risk-Off" : "Mixed",
-      tone: s.sentiment === "risk-on" ? "ok" : s.sentiment === "risk-off" ? "bad" : "warn",
-    },
-    {
-      label: "Volatility",
-      value: s.volatility === "low" ? "Low" : s.volatility === "high" ? "High" : "Medium",
-      tone: s.volatility === "low" ? "ok" : s.volatility === "high" ? "bad" : "warn",
-    },
-    {
-      label: "USD Strength",
-      value: s.usd === "strong" ? "Strong" : s.usd === "weak" ? "Weak" : "Neutral",
-      tone: s.usd === "strong" ? "info" : s.usd === "weak" ? "warn" : "info",
-    },
-    {
-      label: "Global Trend",
-      value:
-        s.trend === "expanding" ? "Expanding" : s.trend === "recession" ? "Recession Risk" : "Slowing",
-      tone: s.trend === "expanding" ? "ok" : s.trend === "recession" ? "bad" : "warn",
-    },
-    {
-      label: "Market Mood",
-      value: s.mood === "bullish" ? "Bullish" : s.mood === "bearish" ? "Bearish" : "Uncertain",
-      tone: s.mood === "bullish" ? "ok" : s.mood === "bearish" ? "bad" : "warn",
-    },
+  type Tone = "ok" | "warn" | "bad" | "info";
+  const items: { label: string; value: string; tone: Tone }[] = [
+    { label: "Risk Sentiment", value: s.sentiment === "risk-on" ? "Risk-On" : s.sentiment === "risk-off" ? "Risk-Off" : "Mixed", tone: s.sentiment === "risk-on" ? "ok" : s.sentiment === "risk-off" ? "bad" : "warn" },
+    { label: "Liquidity", value: s.trend === "expanding" ? "Expanding" : s.trend === "recession" ? "Tightening" : "Stable", tone: s.trend === "expanding" ? "ok" : s.trend === "recession" ? "bad" : "warn" },
+    { label: "Volatility", value: s.volatility === "low" ? "Low" : s.volatility === "high" ? "High" : "Medium", tone: s.volatility === "low" ? "ok" : s.volatility === "high" ? "bad" : "warn" },
+    { label: "USD Strength", value: s.usd === "strong" ? "Strong" : s.usd === "weak" ? "Weak" : "Neutral", tone: "info" },
+    { label: "Trend Bias", value: s.mood === "bullish" ? "Bullish" : s.mood === "bearish" ? "Bearish" : "Uncertain", tone: s.mood === "bullish" ? "ok" : s.mood === "bearish" ? "bad" : "warn" },
   ];
-  const toneColor = (t: "ok" | "warn" | "bad" | "info") =>
+  const tc = (t: Tone) =>
     t === "ok"
-      ? "oklch(0.78 0.17 150)"
+      ? "oklch(0.72 0.10 155)"
       : t === "bad"
-      ? "oklch(0.7 0.21 25)"
-      : t === "warn"
-      ? "oklch(0.82 0.16 75)"
-      : "oklch(0.75 0.12 250)";
-
+        ? "oklch(0.66 0.13 25)"
+        : t === "warn"
+          ? "oklch(0.78 0.10 78)"
+          : "oklch(0.74 0.08 240)";
   return (
     <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       {items.map((it) => {
-        const c = toneColor(it.tone);
+        const c = tc(it.tone);
         return (
           <div
             key={it.label}
@@ -337,18 +399,13 @@ function GlobalSummaryStrip() {
           >
             <span
               className="absolute inset-x-0 top-0 h-px"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${c}, transparent)`,
-              }}
+              style={{ background: `linear-gradient(90deg, transparent, ${c}, transparent)` }}
             />
             <div className="flex items-center justify-between">
               <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
                 {it.label}
               </div>
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{ backgroundColor: c, boxShadow: `0 0 8px ${c}` }}
-              />
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
             </div>
             <div
               className="mt-1.5 font-display text-base font-bold tabular-nums tracking-tight"
@@ -363,22 +420,27 @@ function GlobalSummaryStrip() {
   );
 }
 
+/* ───────────────────── World Map ───────────────────── */
+
 function WorldMap({
   world,
-  path,
+  geo,
   selected,
   hovered,
+  layers,
   onHover,
-  onSelect,
+  onSelectCountry,
+  onSelectEvent,
 }: {
   world: WorldGeo | null;
-  path: ReturnType<typeof geoPath>;
+  geo: { path: ReturnType<typeof geoPath>; projection: ReturnType<typeof geoNaturalEarth1> };
   selected: CountryIntel | null;
   hovered: string | null;
-  onHover: (name: string | null) => void;
-  onSelect: (c: CountryIntel) => void;
+  layers: LayerToggles;
+  onHover: (n: string | null) => void;
+  onSelectCountry: (c: CountryIntel) => void;
+  onSelectEvent: (e: GlobalEvent) => void;
 }) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
   const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, MAP_W, MAP_H]);
   const animRef = useRef<number | null>(null);
 
@@ -388,7 +450,7 @@ function WorldMap({
     if (selected) {
       const f = world.features.find((x) => x.properties?.name === selected.name);
       if (f) {
-        const [[x0, y0], [x1, y1]] = path.bounds(f as any);
+        const [[x0, y0], [x1, y1]] = geo.path.bounds(f as any);
         const padX = (x1 - x0) * 0.6 + 60;
         const padY = (y1 - y0) * 0.6 + 60;
         const w = Math.max(160, x1 - x0 + padX * 2);
@@ -436,81 +498,175 @@ function WorldMap({
   }
 
   const graticule = geoGraticule10();
+  const project = (lng: number, lat: number) => geo.projection([lng, lat]) ?? [0, 0];
+
+  const curvedPath = (a: [number, number], b: [number, number]) => {
+    const [x1, y1] = project(a[0], a[1]);
+    const [x2, y2] = project(b[0], b[1]);
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const nx = -dy / (dist || 1);
+    const ny = dx / (dist || 1);
+    const k = Math.min(80, dist * 0.18);
+    const cx = mx + nx * k;
+    const cy = my + ny * k;
+    return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+  };
 
   return (
     <svg
-      ref={svgRef}
       viewBox={viewBox.join(" ")}
       preserveAspectRatio="xMidYMid meet"
       className="block h-full w-full"
     >
       <defs>
         <radialGradient id="oceanBg" cx="50%" cy="45%" r="65%">
-          <stop offset="0%" stopColor="oklch(0.17 0.03 260)" />
-          <stop offset="70%" stopColor="oklch(0.11 0.02 265)" />
-          <stop offset="100%" stopColor="oklch(0.08 0.018 265)" />
+          <stop offset="0%" stopColor="oklch(0.15 0.022 260)" />
+          <stop offset="70%" stopColor="oklch(0.10 0.016 260)" />
+          <stop offset="100%" stopColor="oklch(0.08 0.014 260)" />
         </radialGradient>
-        <filter id="countryGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" result="blur" />
+        <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.6" result="b" />
           <feMerge>
-            <feMergeNode in="blur" />
+            <feMergeNode in="b" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
         <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="0.5" fill="oklch(0.5 0.02 265)" opacity="0.15" />
+          <circle cx="1" cy="1" r="0.5" fill="oklch(0.5 0.02 260)" opacity="0.10" />
         </pattern>
       </defs>
 
       <rect x={-MAP_W} y={-MAP_H} width={MAP_W * 3} height={MAP_H * 3} fill="url(#oceanBg)" />
       <rect x={-MAP_W} y={-MAP_H} width={MAP_W * 3} height={MAP_H * 3} fill="url(#dots)" />
 
-      {/* graticule */}
       <path
-        d={path(graticule as any) ?? ""}
+        d={geo.path(graticule as any) ?? ""}
         fill="none"
-        stroke="oklch(0.3 0.02 265)"
+        stroke="oklch(0.32 0.015 260)"
         strokeWidth={0.3}
-        strokeOpacity={0.4}
+        strokeOpacity={0.35}
       />
 
+      {/* Countries — institutional baseline; every country visible */}
       <g>
         {world.features.map((f, i) => {
           const name = f.properties?.name ?? "";
           const intel = COUNTRIES_BY_NAME.get(name);
           const isSelected = selected?.name === name;
           const isHovered = hovered === name;
-          const baseFill = intel ? RISK_COLOR[intel.risk] : "oklch(0.24 0.018 265)";
-          const fillOpacity = intel ? (isSelected ? 0.92 : isHovered ? 0.78 : 0.62) : 0.55;
-          const d = path(f as any) ?? "";
+          const tint = intel ? RISK_COLOR[intel.risk] : null;
+          const d = geo.path(f as any) ?? "";
+          // Always visible: neutral base + subtle risk tint overlay only for tracked countries
           return (
-            <path
-              key={i}
-              d={d}
-              fill={baseFill}
-              fillOpacity={fillOpacity}
-              stroke={isSelected ? "oklch(0.98 0 0)" : "oklch(0.16 0.02 265)"}
-              strokeWidth={isSelected ? 0.9 : 0.35}
-              filter={isSelected ? "url(#countryGlow)" : undefined}
-              style={{
-                cursor: intel ? "pointer" : "default",
-                transition: "fill-opacity 220ms ease, stroke-width 220ms ease",
-              }}
-              onMouseEnter={() => onHover(name)}
-              onMouseLeave={() => onHover(null)}
-              onClick={() => intel && onSelect(intel)}
-            >
-              <title>
-                {name}
-                {intel ? ` — ${RISK_LABEL[intel.risk]}` : " — (no data yet)"}
-              </title>
-            </path>
+            <g key={i}>
+              <path
+                d={d}
+                fill={NEUTRAL_LAND}
+                fillOpacity={isSelected ? 0.95 : isHovered ? 0.85 : 0.78}
+                stroke={isSelected ? "oklch(0.96 0 0)" : "oklch(0.18 0.015 260)"}
+                strokeWidth={isSelected ? 0.8 : 0.3}
+                style={{
+                  cursor: intel ? "pointer" : "default",
+                  transition: "fill-opacity 220ms ease, stroke-width 220ms ease",
+                }}
+                onMouseEnter={() => onHover(name)}
+                onMouseLeave={() => onHover(null)}
+                onClick={() => intel && onSelectCountry(intel)}
+              >
+                <title>{name}{intel ? ` — ${RISK_LABEL[intel.risk]}` : ""}</title>
+              </path>
+              {tint && (
+                <path
+                  d={d}
+                  fill={tint}
+                  fillOpacity={isSelected ? 0.34 : isHovered ? 0.26 : 0.18}
+                  stroke="none"
+                  pointerEvents="none"
+                />
+              )}
+            </g>
           );
         })}
       </g>
+
+      {/* Trade & supply chain flows */}
+      {layers.trade && (
+        <g>
+          {TRADE_FLOWS.map((f) => {
+            const color = ROUTE_COLOR[f.status];
+            const d = curvedPath(f.from, f.to);
+            const dashed = f.status === "disrupted";
+            return (
+              <g key={f.id}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={0.55}
+                  strokeWidth={0.9}
+                  strokeDasharray={dashed ? "3 3" : undefined}
+                  filter="url(#softGlow)"
+                >
+                  <title>{f.label} — {f.status} · {f.note}</title>
+                </path>
+              </g>
+            );
+          })}
+        </g>
+      )}
+
+      {/* Tension lines */}
+      {layers.tensions && (
+        <g>
+          {TENSIONS.map((t) => {
+            const a = COUNTRY_COORDS[t.from];
+            const b = COUNTRY_COORDS[t.to];
+            if (!a || !b) return null;
+            const color = RISK_COLOR[t.level];
+            const d = curvedPath(a, b);
+            return (
+              <path
+                key={t.id}
+                d={d}
+                fill="none"
+                stroke={color}
+                strokeOpacity={t.level === "high" ? 0.55 : 0.4}
+                strokeWidth={t.level === "high" ? 0.9 : 0.7}
+                strokeDasharray="1 3"
+              >
+                <title>{t.from} ↔ {t.to} — {t.topic} · {t.impact}</title>
+              </path>
+            );
+          })}
+        </g>
+      )}
+
+      {/* Event dots */}
+      {layers.events && (
+        <g>
+          {EVENTS.map((e) => {
+            const [x, y] = project(e.coords[0], e.coords[1]);
+            const color = EVENT_COLOR[e.type];
+            return (
+              <g key={e.id} style={{ cursor: "pointer" }} onClick={() => onSelectEvent(e)}>
+                <circle cx={x} cy={y} r={4.6} fill={color} fillOpacity={0.18} />
+                <circle cx={x} cy={y} r={2.4} fill={color} stroke="oklch(0.10 0.014 260)" strokeWidth={0.6}>
+                  <title>{e.title} — {e.location}</title>
+                </circle>
+              </g>
+            );
+          })}
+        </g>
+      )}
     </svg>
   );
 }
+
+/* ───────────────────── Country Panel ───────────────────── */
 
 function CountryPanel({
   country,
@@ -521,42 +677,44 @@ function CountryPanel({
 }) {
   if (!country) {
     return (
-      <div className="relative flex h-full min-h-[440px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent p-8 text-center">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage:
-            "radial-gradient(circle at 50% 30%, oklch(0.65 0.18 260 / 0.15), transparent 60%)",
-        }} />
+      <div className="relative flex h-[360px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent p-8 text-center">
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 50% 30%, oklch(0.65 0.10 250 / 0.15), transparent 60%)",
+          }}
+        />
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
           <Globe2 className="h-6 w-6 text-primary" />
         </div>
         <h3 className="relative mt-4 font-display text-base font-semibold">Select a country</h3>
         <p className="relative mt-1.5 max-w-xs text-xs leading-relaxed text-muted-foreground">
-          Klick auf die Karte oder unten auf ein Land, um geopolitische Lage, Wirtschaft, Marktauswirkungen und News zu sehen.
+          Click a country on the map or any event dot to load full macro & geopolitical intelligence.
         </p>
       </div>
     );
   }
+
   const riskColor = RISK_COLOR[country.risk];
+  const extras = COUNTRY_EXTRAS[country.name];
+
   return (
-    <div className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[oklch(0.14_0.025_265)] to-[oklch(0.10_0.02_265)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
       <div
         className="relative border-b border-white/[0.06] p-5"
         style={{
-          background: `linear-gradient(180deg, color-mix(in oklab, ${riskColor} 18%, transparent), transparent)`,
+          background: `linear-gradient(180deg, color-mix(in oklab, ${riskColor} 14%, transparent), transparent)`,
         }}
       >
         <span
           className="absolute inset-x-0 top-0 h-px"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${riskColor}, transparent)`,
-          }}
+          style={{ background: `linear-gradient(90deg, transparent, ${riskColor}, transparent)` }}
         />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
-              <span className="text-3xl leading-none" aria-hidden>
-                {country.flag}
-              </span>
+              <span className="text-3xl leading-none" aria-hidden>{country.flag}</span>
               <div className="min-w-0">
                 <h2 className="font-display text-xl font-bold leading-tight tracking-tight">
                   {country.name}
@@ -565,15 +723,12 @@ function CountryPanel({
                   <span
                     className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
                     style={{
-                      backgroundColor: `color-mix(in oklab, ${riskColor} 20%, transparent)`,
+                      backgroundColor: `color-mix(in oklab, ${riskColor} 18%, transparent)`,
                       color: riskColor,
                       boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${riskColor} 40%, transparent)`,
                     }}
                   >
-                    <span
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: riskColor, boxShadow: `0 0 6px ${riskColor}` }}
-                    />
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: riskColor }} />
                     {RISK_LABEL[country.risk]}
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -596,8 +751,107 @@ function CountryPanel({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="max-h-[68vh]">
         <div className="space-y-5 p-5">
+          {/* Global influence */}
+          {extras && (
+            <Section icon={Gauge} title="Global market influence">
+              <InfluenceMeter score={extras.influenceScore} why={extras.influenceWhy} />
+              <p className="mt-2.5 text-xs leading-relaxed text-foreground/80">
+                <span className="font-semibold text-foreground">Global role · </span>
+                {extras.globalRole}
+              </p>
+            </Section>
+          )}
+
+          {/* Country strength index */}
+          {extras && (
+            <Section icon={ShieldCheck} title="Country strength index">
+              <div className="grid grid-cols-2 gap-2">
+                <KV label="Government" value={extras.strengthIndex.government} />
+                <KV label="Policy consistency" value={extras.strengthIndex.policy} />
+                <KV label="Economic health" value={extras.strengthIndex.economy} />
+                <KV label="Investor confidence" value={extras.strengthIndex.investorConfidence} />
+                <div className="col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
+                  <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Geopolitical stability
+                  </div>
+                  <StabilityBar score={extras.strengthIndex.geopoliticalStability} />
+                </div>
+              </div>
+            </Section>
+          )}
+
+          {/* Transmission effects */}
+          {extras && (
+            <Section icon={Zap} title="Market transmission effects">
+              <ul className="space-y-1.5">
+                {extras.transmission.map((t) => (
+                  <li
+                    key={t}
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5 text-xs leading-relaxed text-foreground/85"
+                  >
+                    <CircleDot className="mt-0.5 h-2.5 w-2.5 shrink-0 text-primary" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {/* Economy */}
+          <Section icon={Building2} title="Economic conditions">
+            <div className="grid grid-cols-2 gap-2">
+              <EconKV
+                label="Inflation"
+                value={country.economy.inflation}
+                map={{ rising: "Rising", stable: "Stable", falling: "Falling" }}
+                tone={{ rising: "bad", stable: "info", falling: "ok" }}
+                arrows={{ rising: "up", stable: "flat", falling: "down" }}
+              />
+              <EconKV
+                label="Rates"
+                value={country.economy.rates}
+                map={{ low: "Low", high: "High", tightening: "Tightening", easing: "Easing" }}
+                tone={{ low: "info", high: "bad", tightening: "warn", easing: "ok" }}
+              />
+              <EconKV
+                label="GDP"
+                value={country.economy.gdp}
+                map={{ growing: "Growing", slowing: "Slowing", "recession-risk": "Recession risk" }}
+                tone={{ growing: "ok", slowing: "warn", "recession-risk": "bad" }}
+                arrows={{ growing: "up", slowing: "flat", "recession-risk": "down" }}
+              />
+              <EconKV
+                label="FX vs USD"
+                value={country.economy.fxVsUsd}
+                map={{ weakening: "Weakening", stable: "Stable", strengthening: "Strengthening" }}
+                tone={{ weakening: "bad", stable: "info", strengthening: "ok" }}
+                arrows={{ weakening: "down", stable: "flat", strengthening: "up" }}
+              />
+            </div>
+          </Section>
+
+          {/* Market impact */}
+          <Section icon={Activity} title="Market impact">
+            <div className="space-y-1.5">
+              <ImpactRow icon={TrendingUp} label="Equities" text={country.impact.equities} />
+              <ImpactRow icon={Coins} label="Forex" text={country.impact.forex} />
+              <ImpactRow icon={Activity} label="Commodities" text={country.impact.commodities} />
+              <ImpactRow icon={Globe2} label="Risk sentiment" text={country.impact.sentiment} />
+            </div>
+          </Section>
+
+          {/* Geopolitics */}
+          <Section icon={Flame} title="Geopolitical state">
+            <div className="grid grid-cols-2 gap-2">
+              <KV label="Government" value={country.geopolitics.governmentStability} />
+              <KV label="Political risk" value={country.geopolitics.politicalRisk} />
+              <KV label="Policy" value={country.geopolitics.policyDirection} />
+              <KV label="Tensions" value={country.geopolitics.tensions} tight />
+            </div>
+          </Section>
+
           {/* Pivotal event */}
           <Section icon={Landmark} title="Pivotal event">
             <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">
@@ -613,86 +867,10 @@ function CountryPanel({
             </div>
           </Section>
 
-          {/* Geopolitics */}
-          <Section icon={ShieldCheck} title="Geopolitical state">
-            <div className="grid grid-cols-2 gap-2">
-              <KV label="Government" value={country.geopolitics.governmentStability} />
-              <KV label="Political risk" value={country.geopolitics.politicalRisk} />
-              <KV label="Policy" value={country.geopolitics.policyDirection} />
-              <KV label="Tensions" value={country.geopolitics.tensions} tight />
-            </div>
-          </Section>
-
-          {/* Economy */}
-          <Section icon={Building2} title="Economic conditions">
-            <div className="grid grid-cols-2 gap-2">
-              <EconKV
-                label="Inflation"
-                value={country.economy.inflation}
-                map={{ rising: "Rising", stable: "Stable", falling: "Falling" }}
-                tone={{ rising: "bad", stable: "info", falling: "ok" }}
-                arrows={{ rising: "up", stable: "flat", falling: "down" }}
-              />
-              <EconKV
-                label="Rates"
-                value={country.economy.rates}
-                map={{
-                  low: "Low",
-                  high: "High",
-                  tightening: "Tightening",
-                  easing: "Easing",
-                }}
-                tone={{ low: "info", high: "bad", tightening: "warn", easing: "ok" }}
-              />
-              <EconKV
-                label="GDP"
-                value={country.economy.gdp}
-                map={{
-                  growing: "Growing",
-                  slowing: "Slowing",
-                  "recession-risk": "Recession risk",
-                }}
-                tone={{ growing: "ok", slowing: "warn", "recession-risk": "bad" }}
-                arrows={{ growing: "up", slowing: "flat", "recession-risk": "down" }}
-              />
-              <EconKV
-                label="FX vs USD"
-                value={country.economy.fxVsUsd}
-                map={{
-                  weakening: "Weakening",
-                  stable: "Stable",
-                  strengthening: "Strengthening",
-                }}
-                tone={{ weakening: "bad", stable: "info", strengthening: "ok" }}
-                arrows={{ weakening: "down", stable: "flat", strengthening: "up" }}
-              />
-            </div>
-          </Section>
-
-          {/* Market impact */}
-          <Section icon={Zap} title="Market impact zones">
-            <div className="space-y-1.5">
-              <ImpactRow icon={TrendingUp} label="Equities" text={country.impact.equities} />
-              <ImpactRow icon={Coins} label="Forex" text={country.impact.forex} />
-              <ImpactRow icon={Activity} label="Commodities" text={country.impact.commodities} />
-              <ImpactRow icon={Globe2} label="Risk sentiment" text={country.impact.sentiment} />
-            </div>
-          </Section>
-
           {/* Pos / Neg */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <ListCard
-              title="Positives"
-              items={country.positives}
-              tone="ok"
-              icon={ArrowUpRight}
-            />
-            <ListCard
-              title="Negatives"
-              items={country.negatives}
-              tone="bad"
-              icon={ArrowDownRight}
-            />
+            <ListCard title="Key positives" items={country.positives} tone="ok" icon={ArrowUpRight} />
+            <ListCard title="Key risks" items={country.negatives} tone="bad" icon={ArrowDownRight} />
           </div>
 
           {/* Live news */}
@@ -704,6 +882,94 @@ function CountryPanel({
     </div>
   );
 }
+
+/* ───────────────────── Event Panel ───────────────────── */
+
+function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => void }) {
+  const color = EVENT_COLOR[event.type];
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.12_0.018_260)] backdrop-blur">
+      <div
+        className="flex items-start justify-between gap-3 border-b border-white/[0.06] p-4"
+        style={{
+          background: `linear-gradient(180deg, color-mix(in oklab, ${color} 14%, transparent), transparent)`,
+        }}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+            {event.category} · {event.date}
+          </div>
+          <div className="mt-1 font-display text-base font-bold tracking-tight">{event.title}</div>
+          <div className="text-[11px] text-muted-foreground">{event.location}</div>
+        </div>
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-white/10" onClick={onClose}>
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      <div className="space-y-2 p-4">
+        <p className="text-xs leading-relaxed text-foreground/85">{event.summary}</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {event.impact.fx && <ImpactTag label="FX" value={event.impact.fx} />}
+          {event.impact.commodities && <ImpactTag label="Commodities" value={event.impact.commodities} />}
+          {event.impact.equities && <ImpactTag label="Equities" value={event.impact.equities} />}
+          {event.impact.regions && <ImpactTag label="Regions" value={event.impact.regions} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ImpactTag({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5">
+      <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="text-[11px] text-foreground/85">{value}</div>
+    </div>
+  );
+}
+
+/* ───────────────────── Intel feed ───────────────────── */
+
+function IntelFeed() {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.11_0.016_260)]">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+        <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <Radio className="h-3 w-3 text-emerald-400" />
+          Market intelligence feed
+        </div>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          {MARKET_FEED.length} signals
+        </span>
+      </div>
+      <ScrollArea className="max-h-[460px]">
+        <ul className="divide-y divide-white/[0.05]">
+          {MARKET_FEED.map((f) => {
+            const c = RISK_COLOR[f.impact];
+            return (
+              <li key={f.id} className="px-4 py-3 transition hover:bg-white/[0.02]">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
+                    <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+                      {f.category}
+                    </Badge>
+                  </div>
+                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{f.time}</span>
+                </div>
+                <div className="mt-1.5 text-[12px] font-semibold leading-tight">{f.title}</div>
+                <div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{f.body}</div>
+              </li>
+            );
+          })}
+        </ul>
+      </ScrollArea>
+    </div>
+  );
+}
+
+/* ───────────────────── Shared bits ───────────────────── */
 
 function Section({
   icon: Icon,
@@ -722,6 +988,51 @@ function Section({
         <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
       </div>
       {children}
+    </div>
+  );
+}
+
+function InfluenceMeter({ score, why }: { score: number; why: string }) {
+  const pct = Math.max(0, Math.min(100, (score / 10) * 100));
+  const color =
+    score >= 8 ? "oklch(0.74 0.10 78)" : score >= 5 ? "oklch(0.72 0.08 200)" : "oklch(0.62 0.06 260)";
+  return (
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+            Influence score
+          </div>
+          <div className="mt-0.5 flex items-baseline gap-1.5">
+            <span className="font-display text-2xl font-bold tabular-nums" style={{ color }}>
+              {score.toFixed(1)}
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">/ 10</span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{why}</p>
+    </div>
+  );
+}
+
+function StabilityBar({ score }: { score: number }) {
+  return (
+    <div className="mt-1.5 flex items-center gap-2">
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.06]">
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${(score / 10) * 100}%`,
+            backgroundColor:
+              score >= 7 ? "oklch(0.72 0.10 155)" : score >= 4 ? "oklch(0.78 0.10 78)" : "oklch(0.66 0.13 25)",
+          }}
+        />
+      </div>
+      <span className="font-mono text-[11px] tabular-nums text-foreground/85">{score}/10</span>
     </div>
   );
 }
@@ -757,12 +1068,12 @@ function EconKV<T extends string>({
   const Arrow = arrow === "up" ? TrendingUp : arrow === "down" ? TrendingDown : Minus;
   const color =
     t === "ok"
-      ? "text-emerald-400"
+      ? "text-emerald-300/90"
       : t === "bad"
-      ? "text-rose-400"
-      : t === "warn"
-      ? "text-amber-400"
-      : "text-sky-300";
+        ? "text-rose-300/90"
+        : t === "warn"
+          ? "text-amber-300/90"
+          : "text-sky-300/90";
   return (
     <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5 transition hover:border-white/15">
       <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
@@ -809,9 +1120,11 @@ function ListCard({
   tone: "ok" | "bad";
   icon: React.ComponentType<{ className?: string }>;
 }) {
-  const color = tone === "ok" ? "text-emerald-400" : "text-rose-400";
+  const color = tone === "ok" ? "text-emerald-300/90" : "text-rose-300/90";
   const ring =
-    tone === "ok" ? "border-emerald-500/15 bg-emerald-500/[0.04]" : "border-rose-500/15 bg-rose-500/[0.04]";
+    tone === "ok"
+      ? "border-emerald-500/15 bg-emerald-500/[0.03]"
+      : "border-rose-500/15 bg-rose-500/[0.03]";
   return (
     <div className={`rounded-xl border p-3.5 ${ring}`}>
       <div className={`flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] ${color}`}>
@@ -850,10 +1163,10 @@ function LiveNews({ country }: { country: CountryIntel }) {
         label: meta.label,
         headline: `${country.flag} ${kw}: ${
           country.risk === "high"
-            ? "Risiken eskalieren — Anleger beobachten Volatilität."
+            ? "Risks escalating — markets watching volatility."
             : country.risk === "medium"
-            ? "Märkte gemischt — Analysten warten auf nächste Datenpunkte."
-            : "Sentiment stabil — Fokus auf Fundamentaldaten."
+              ? "Mixed signals — analysts await next data points."
+              : "Sentiment stable — focus on fundamentals."
         }`,
       };
     });
@@ -863,7 +1176,7 @@ function LiveNews({ country }: { country: CountryIntel }) {
     return (
       <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Keine vertrauten News-Quellen ausgewählt. Wähle deine Quellen in den Einstellungen.
+        No trusted news sources selected. Choose your sources in settings.
       </div>
     );
   }
@@ -887,9 +1200,6 @@ function LiveNews({ country }: { country: CountryIntel }) {
           <div className="mt-1.5 text-xs leading-relaxed text-foreground/90">{n.headline}</div>
         </div>
       ))}
-      <p className="font-mono text-[10px] italic text-muted-foreground">
-        Headlines aus Apex News-Engine · deine vertrauten Quellen.
-      </p>
     </div>
   );
 }
