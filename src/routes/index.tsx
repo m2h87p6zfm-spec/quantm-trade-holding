@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({ component: Cockpit });
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
 function Cockpit() {
-  const { settings, removeSymbol } = useSettings();
+  const { settings } = useSettings();
   const [manageOpen, setManageOpen] = useState(false);
   const usingDefault = settings.watchlist.length === 0 && settings.portfolioSymbols.length === 0;
 
