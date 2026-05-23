@@ -7,6 +7,7 @@ import type {
 } from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
 import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
+import { chartCssVar, resolveChartColor } from "@/lib/chartColors";
 
 /**
  * Premium interactive chart with timeframe switcher.
@@ -40,11 +41,6 @@ async function fetchTfCandles(symbol: string, interval: string, range: string): 
   if (j.status === "reconnecting") throw new MarketDataReconnectingError(j.message);
   if (!j.c || !j.t || !j.c.length) throw new MarketDataReconnectingError("Keine Daten");
   return j;
-}
-
-function cssVar(el: HTMLElement, name: string, fallback: string): string {
-  const v = getComputedStyle(el).getPropertyValue(name).trim();
-  return v || fallback;
 }
 
 export type AssetChartProps = {
@@ -130,9 +126,9 @@ export const AssetChart = memo(function AssetChart({
       if (cancelled || !el.isConnected) return;
       libRef.current = lib;
       const { createChart, ColorType, CrosshairMode, LineStyle } = lib;
-      const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
-      const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
-      const fg = cssVar(el, "--foreground", "#fff");
+      const grid = chartCssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
+      const axis = chartCssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
+      const fg = chartCssVar(el, "--foreground", "#fff");
 
       const chart = createChart(el, {
         width: el.clientWidth || 600,
@@ -191,8 +187,8 @@ export const AssetChart = memo(function AssetChart({
     if (!ready || !chartRef.current || !wrapRef.current || !libRef.current) return;
     const { AreaSeries, LineStyle } = libRef.current;
     const el = wrapRef.current;
-    const bull = cssVar(el, "--bull", "#22FF88");
-    const bear = cssVar(el, "--bear", "#FF3B5C");
+    const bull = chartCssVar(el, "--bull", "#22FF88");
+    const bear = chartCssVar(el, "--bear", "#FF3B5C");
     const lineColor = up ? bull : bear;
 
     if (seriesRef.current) {
@@ -203,12 +199,12 @@ export const AssetChart = memo(function AssetChart({
     const series = chartRef.current.addSeries(AreaSeries, {
       lineColor,
       lineWidth: 2,
-      topColor: `color-mix(in oklab, ${lineColor} 35%, transparent)`,
-      bottomColor: `color-mix(in oklab, ${lineColor} 0%, transparent)`,
+      topColor: resolveChartColor(el, `color-mix(in oklab, ${lineColor} 35%, transparent)`, "rgba(34,255,136,0.35)"),
+      bottomColor: "rgba(0, 0, 0, 0)",
       priceLineColor: lineColor,
       priceLineStyle: LineStyle.Dotted,
       priceLineWidth: 1,
-      crosshairMarkerBorderColor: "var(--background)",
+      crosshairMarkerBorderColor: chartCssVar(el, "--background", "#000"),
       crosshairMarkerBackgroundColor: lineColor,
       crosshairMarkerRadius: 4,
       priceFormat: { type: "price", precision: axisDecimals(last), minMove: 1 / Math.pow(10, axisDecimals(last)) },
@@ -233,7 +229,7 @@ export const AssetChart = memo(function AssetChart({
       baseLineRef.current = null;
     }
     if (first > 0 && wrapRef.current) {
-      const axis = cssVar(wrapRef.current, "--chart-axis", "rgba(255,255,255,0.45)");
+      const axis = chartCssVar(wrapRef.current, "--chart-axis", "rgba(255,255,255,0.45)");
       baseLineRef.current = seriesRef.current.createPriceLine({
         price: first,
         color: axis,

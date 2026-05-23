@@ -10,6 +10,7 @@ import type {
 import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
 import { formatNumber, formatPercent, axisDecimals } from "@/lib/format";
+import { chartCssVar } from "@/lib/chartColors";
 
 type CandlesIn = { c: number[]; o?: number[]; h?: number[]; l?: number[]; v?: number[]; t: number[] };
 type Overlay = "ema20" | "ema50" | "sma200" | "bbands";
@@ -23,11 +24,6 @@ export type ProChartProps = {
   showZones?: boolean;
   compact?: boolean;
 };
-
-function cssVar(el: HTMLElement, name: string, fallback: string): string {
-  const v = getComputedStyle(el).getPropertyValue(name).trim();
-  return v || fallback;
-}
 
 type Hover = {
   o: number; h: number; l: number; c: number; t: number; v: number;
@@ -110,15 +106,15 @@ export function ProChart({
         ColorType, CrosshairMode, LineStyle,
       } = lib;
 
-      const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
-      const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
-      const fg = cssVar(el, "--foreground", "#fff");
-      const bull = cssVar(el, "--bull", "#22FF88");
-      const bear = cssVar(el, "--bear", "#FF3B5C");
-      const c1 = cssVar(el, "--chart-1", "#7AA2FF");
-      const c2 = cssVar(el, "--chart-2", "#FFB347");
-      const c3 = cssVar(el, "--chart-3", "#C29BFF");
-      const c4 = cssVar(el, "--chart-4", "#5EE4D1");
+      const grid = chartCssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
+      const axis = chartCssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
+      const fg = chartCssVar(el, "--foreground", "#fff");
+      const bull = chartCssVar(el, "--bull", "#22FF88");
+      const bear = chartCssVar(el, "--bear", "#FF3B5C");
+      const c1 = chartCssVar(el, "--chart-1", "#7AA2FF");
+      const c2 = chartCssVar(el, "--chart-2", "#FFB347");
+      const c3 = chartCssVar(el, "--chart-3", "#C29BFF");
+      const c4 = chartCssVar(el, "--chart-4", "#5EE4D1");
 
       const baseLayout = {
         background: { type: ColorType.Solid, color: "transparent" },
