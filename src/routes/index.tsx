@@ -172,9 +172,9 @@ function Cockpit() {
         <section>
           <details className="group rounded-2xl border border-[#1F1F1F] bg-[#111111]/40 [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/60 transition hover:text-white">
-              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#8B9EFF]" /> Quant-Signale &amp; Smart Money</span>
-              <span className="text-[11px] font-normal tracking-normal text-white/40 group-open:hidden">Einblenden ↓</span>
-              <span className="hidden text-[11px] font-normal tracking-normal text-white/40 group-open:inline">Einklappen ↑</span>
+              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#8B9EFF]" /> {t("cockpit.insights.title")}</span>
+              <span className="text-[11px] font-normal tracking-normal text-white/40 group-open:hidden">{t("cockpit.insights.expand")}</span>
+              <span className="hidden text-[11px] font-normal tracking-normal text-white/40 group-open:inline">{t("cockpit.insights.collapse")}</span>
             </summary>
             <div className="space-y-8 border-t border-[#1F1F1F] p-5">
               {featured && (
@@ -183,7 +183,7 @@ function Cockpit() {
                     <SignalOfDay symbol={featured.symbol} ind={featured.ind} sig={featured.sig} closes={featured.closes} />
                   </div>
                   <div className="lg:col-span-4">
-                    <AlphaScoreGauge score={featured.alpha} label={`Setup-Score · ${featured.symbol}`} />
+                    <AlphaScoreGauge score={featured.alpha} label={t("cockpit.setupScore", { symbol: featured.symbol })} />
                   </div>
                 </div>
               )}
