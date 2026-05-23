@@ -188,6 +188,8 @@ export const Route = createFileRoute("/api/public/explain-trade")({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
         try {
+          const auth = await requireUserId(request);
+          if (auth instanceof Response) return auth;
           const body = (await request.json()) as {
             symbol?: string; buyDate?: string; shares?: number; name?: string;
             sellDate?: string | null; sector?: string;
