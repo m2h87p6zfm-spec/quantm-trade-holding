@@ -382,6 +382,7 @@ function AgentAnalysisView({
 
   const recordTrack = useServerFn(recordApexAnalysis);
   useEffect(() => {
+    if (cachedText !== undefined) return; // gecachte Antwort — keine Neuaufzeichnung
     if (!user) return;
     record({
       data: {
