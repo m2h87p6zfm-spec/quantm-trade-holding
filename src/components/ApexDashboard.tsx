@@ -9,6 +9,8 @@ import type { Candles, Quote } from "@/lib/finnhub";
 import type { DecisionReport } from "@/lib/analysis";
 import type { MarketRegime } from "@/lib/ai-learning";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
+import { fetchNewsSentiment } from "@/lib/news-sentiment";
+import { useSubscription } from "@/hooks/useSubscription";
 
 type Signal = "pos" | "neg" | "neu";
 
@@ -183,21 +185,19 @@ function technicalSignals(ind: IndicatorSet, stoch: number, atrVal: number, avgV
 // ---------- News ----------
 type NewsItem = { uuid: string; title: string; link: string; publishedAt: number; publisher: string; sentiment?: "bullish" | "bearish" | "neutral" };
 function useTopNews(symbol: string) {
+  const { isPro, loading: subLoading } = useSubscription();
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    if (subLoading) return;
+    if (!isPro) { setItems([]); setLoading(false); return; }
     let alive = true;
     setLoading(true);
-    fetch("/api/public/news-sentiment", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ symbols: [symbol], tier1Only: false }),
-    })
-      .then((r) => r.json())
-      .then((j) => { if (alive) { setItems((j.items ?? []).slice(0, 3)); setLoading(false); } })
+    fetchNewsSentiment({ symbols: [symbol], tier1Only: false })
+      .then((r) => { if (alive) { setItems((r.items as NewsItem[]).slice(0, 3)); setLoading(false); } })
       .catch(() => { if (alive) { setItems([]); setLoading(false); } });
     return () => { alive = false; };
-  }, [symbol]);
+  }, [symbol, isPro, subLoading]);
   return { items, loading };
 }
 

@@ -5,6 +5,7 @@ import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo, AGENCY_META } from "@/components/AgencyLogo";
 import { Newspaper, TrendingUp, TrendingDown, Minus, RefreshCw, Zap, Sparkles, Filter, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export const Route = createFileRoute("/news")({
   head: () => ({
@@ -31,15 +32,11 @@ type Item = {
   aiSummary?: string;
 };
 
-async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<Item[]> {
-  const res = await fetch("/api/public/news-sentiment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbols, sources, tier1Only: false, withSummary: true }),
-  });
-  if (!res.ok) throw new Error("News fehlgeschlagen");
-  const json = (await res.json()) as { items: Item[] };
-  return json.items ?? [];
+import { fetchNewsSentiment } from "@/lib/news-sentiment";
+
+async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<{ items: Item[]; gated: boolean }> {
+  const res = await fetchNewsSentiment({ symbols, sources, tier1Only: false, withSummary: true });
+  return { items: res.items as Item[], gated: res.gated };
 }
 
 function timeAgo(ts: number) {
@@ -204,6 +201,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 function NewsPage() {
   const t = useT();
   const { settings, update } = useSettings();
+  const { isPro, loading: subLoading } = useSubscription();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
   const [openItem, setOpenItem] = useState<Item | null>(null);
   const enabledSources = useMemo(
@@ -219,10 +217,11 @@ function NewsPage() {
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,
-    enabled: enabledSources.length > 0,
+    enabled: !subLoading && isPro && enabledSources.length > 0,
   });
 
-  const items = data ?? [];
+  const items = data?.items ?? [];
+  const gated = data?.gated ?? (!subLoading && !isPro);
   const forYou = items.filter((it) => it.tickers.some((t) => portfolio.has(t)));
   const visible = tab === "foryou" ? forYou : items;
 
@@ -300,10 +299,20 @@ function NewsPage() {
       </div>
 
       <div className="space-y-3">
-        {isLoading && Array.from({ length: 6 }).map((_, i) => (
+        {gated && (
+          <div className="rounded-xl border border-primary/40 bg-primary/10 p-6 text-sm text-foreground">
+            <div className="font-semibold mb-1">Pro- oder Elite-Tier erforderlich</div>
+            <p className="text-muted-foreground">
+              Der Professional Newsroom mit KI-Sentiment & Zusammenfassungen ist Teil von Apex Pro/Elite.
+              {" "}
+              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">Plan ansehen</Link>
+            </p>
+          </div>
+        )}
+        {!gated && isLoading && Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-24 rounded-xl border border-border bg-card/50 animate-pulse" />
         ))}
-        {error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
+        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
         {!isLoading && enabledSources.length === 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
             Keine News-Quelle aktiv. Aktiviere oben mindestens eine.

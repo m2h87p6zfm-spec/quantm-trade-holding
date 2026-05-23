@@ -5,33 +5,14 @@ import { Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo } from "@/components/AgencyLogo";
+import { fetchNewsSentiment, type NewsSentimentItem } from "@/lib/news-sentiment";
+import { useSubscription } from "@/hooks/useSubscription";
 
-type Item = {
-  uuid: string;
-  title: string;
-  publisher: string;
-  source: NewsSource | "other";
-  link: string;
-  publishedAt: number;
-  symbol: string;
-  tickers: string[];
-  breaking?: boolean;
-};
-
-async function fetchBreaking(symbols: string[], sources: NewsSource[]): Promise<Item[]> {
-  if (symbols.length === 0) return [];
-  const res = await fetch("/api/public/news-sentiment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ symbols, sources, tier1Only: true }),
-  });
-  if (!res.ok) return [];
-  const j = await res.json();
-  return (j.items ?? []) as Item[];
-}
+type Item = NewsSentimentItem & { source: NewsSource | "other" };
 
 export function BreakingNewsTicker() {
   const { settings } = useSettings();
+  const { isPro, loading: subLoading } = useSubscription();
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
     [settings.newsSources]
@@ -43,10 +24,13 @@ export function BreakingNewsTicker() {
 
   const { data } = useQuery({
     queryKey: ["news-ticker", symbols.join(","), enabledSources.join(",")],
-    queryFn: () => fetchBreaking(symbols, enabledSources),
+    queryFn: async () => {
+      const res = await fetchNewsSentiment({ symbols, sources: enabledSources, tier1Only: true });
+      return res.items as Item[];
+    },
     refetchInterval: 60_000,
     staleTime: 45_000,
-    enabled: enabledSources.length > 0,
+    enabled: !subLoading && isPro && enabledSources.length > 0,
   });
 
   const items = (data ?? []).slice(0, 20);
