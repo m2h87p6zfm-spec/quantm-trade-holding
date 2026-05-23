@@ -96,12 +96,12 @@ export function WatchlistSignalsPanel() {
   if (symbols.length === 0) return null;
 
   return (
-    <div className="space-y-6 rounded-2xl bg-[#0A0A0A] p-5 text-white ring-1 ring-[#1F1F1F]" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+    <div className="space-y-8 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-[24px] font-bold leading-tight tracking-tight">Watchlist</h2>
-          <p className="mt-1 text-[13px] text-white/50">
+          <h2 className="text-[28px] font-bold leading-tight tracking-tight">Meine Watchlist</h2>
+          <p className="mt-1.5 text-[13px] text-white/50">
             <span className="tabular-nums">{symbols.length}</span> Werte • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />Live aktualisiert</span>
           </p>
         </div>
