@@ -356,6 +356,8 @@ function AgentAnalysisView({
   user,
   record,
   userQuery,
+  cachedText,
+  onDone,
 }: {
   symbol: string;
   name: string;
@@ -369,7 +371,10 @@ function AgentAnalysisView({
   user: ReturnType<typeof useAuth>["user"];
   record: (args: { data: Record<string, unknown> }) => Promise<unknown>;
   userQuery: string;
+  cachedText?: string;
+  onDone?: (t: string) => void;
 }) {
+
   const recordTrack = useServerFn(recordApexAnalysis);
   useEffect(() => {
     if (!user) return;
