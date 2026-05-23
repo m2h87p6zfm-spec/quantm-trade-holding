@@ -1,12 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
-
-function resolveColor(el: HTMLElement, color: string): string {
-  const m = color.match(/^var\((--[^)]+)\)$/);
-  if (!m) return color;
-  const v = getComputedStyle(el).getPropertyValue(m[1]).trim();
-  return v || color;
-}
+import { resolveChartColor } from "@/lib/chartColors";
 
 /**
  * Tiny dependency-free sparkline backed by lightweight-charts.
@@ -61,7 +55,7 @@ export function MiniSpark({
       });
       chartRef.current = chart;
       const series = chart.addSeries(LineSeries, {
-        color: resolveColor(el, colorRef.current),
+        color: resolveChartColor(el, colorRef.current),
         lineWidth: strokeRef.current as 1 | 2 | 3 | 4,
         priceLineVisible: false,
         lastValueVisible: false,
@@ -95,7 +89,7 @@ export function MiniSpark({
   useEffect(() => {
     if (!ref.current || !seriesRef.current) return;
     seriesRef.current.applyOptions({
-      color: resolveColor(ref.current, color),
+      color: resolveChartColor(ref.current, color),
       lineWidth: strokeWidth as 1 | 2 | 3 | 4,
     });
   }, [color, strokeWidth]);
