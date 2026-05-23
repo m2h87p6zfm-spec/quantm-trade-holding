@@ -1180,38 +1180,92 @@ function LiveNews({ country }: { country: CountryIntel }) {
     );
   }
 
+  return <LiveNewsList items={items} />;
+}
+
+function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
+  const [openItem, setOpenItem] = useState<CountryNewsItem | null>(null);
   return (
-    <div className="space-y-2">
-      {items.map((n: CountryNewsItem) => {
-        const meta = (AGENCY_META as Record<string, { label: string }>)[n.source] ?? { label: n.sourceLabel };
-        return (
-          <a
-            key={n.id}
-            href={n.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group block rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition hover:border-primary/30 hover:bg-white/[0.04]"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
-                {meta.label}
-              </Badge>
-              <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-emerald-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                Live · 7d
-              </span>
-            </div>
-            <div className="mt-1.5 text-xs font-semibold leading-snug text-foreground group-hover:text-primary">
-              {n.title}
-            </div>
-            {n.snippet && (
-              <div className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                {n.snippet}
+    <>
+      <div className="space-y-2">
+        {items.map((n) => {
+          const meta = (AGENCY_META as Record<string, { label: string }>)[n.source] ?? { label: n.sourceLabel };
+          return (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => setOpenItem(n)}
+              className="group block w-full rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left transition hover:border-primary/30 hover:bg-white/[0.04]"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+                  {meta.label}
+                </Badge>
+                <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-emerald-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                  Live · 7d
+                </span>
               </div>
-            )}
-          </a>
-        );
-      })}
+              <div className="mt-1.5 text-xs font-semibold leading-snug text-foreground group-hover:text-primary">
+                {n.title}
+              </div>
+              {n.snippet && (
+                <div className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                  {n.snippet}
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {openItem && <NewsDetailModal item={openItem} onClose={() => setOpenItem(null)} />}
+    </>
+  );
+}
+
+function NewsDetailModal({ item, onClose }: { item: CountryNewsItem; onClose: () => void }) {
+  const meta = (AGENCY_META as Record<string, { label: string }>)[item.source] ?? { label: item.sourceLabel };
+  const published = item.publishedAt ? new Date(item.publishedAt).toLocaleString("de-DE") : null;
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative mt-12 w-full max-w-2xl rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
+          aria-label="Schließen"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+            {meta.label}
+          </Badge>
+          {published && <span>{published}</span>}
+        </div>
+        <h2 className="mt-3 text-xl font-bold leading-tight">{item.title}</h2>
+        {item.snippet && (
+          <p className="mt-4 whitespace-pre-line text-[14px] leading-relaxed text-foreground/85">
+            {item.snippet}
+          </p>
+        )}
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+        >
+          Originalartikel öffnen ↗
+        </a>
+        <p className="mt-4 text-[10px] text-muted-foreground/70">
+          Quelle: {item.sourceLabel}. Inhalte stammen von vertrauenswürdigen Tier-1 Finanzmedien.
+        </p>
+      </div>
     </div>
   );
 }
