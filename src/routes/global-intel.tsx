@@ -169,7 +169,7 @@ function GlobalIntelPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-                  <span>Apex</span>
+                  <span>Quantm</span>
                   <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
                   <span>Global Intelligence War Room</span>
                 </div>

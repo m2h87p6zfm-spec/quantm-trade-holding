@@ -193,7 +193,7 @@ function AccountPage() {
             <div className="flex items-center gap-2 mb-1">
               <h2 className="font-semibold">Aktueller Plan</h2>
               <Badge variant={tier === "free" ? "outline" : "default"} className={tier === "elite" ? "bg-primary" : ""}>
-                {tier === "free" ? "Free" : tier === "pro" ? "Apex Pro" : "Apex Elite"}
+                {tier === "free" ? "Free" : tier === "pro" ? "Quantm Pro" : "Quantm Elite"}
               </Badge>
             </div>
             {subLoading ? (
