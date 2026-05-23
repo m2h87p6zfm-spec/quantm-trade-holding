@@ -173,11 +173,9 @@ export function OnboardingGate() {
   const [saving, setSaving] = useState(false);
 
   if (authLoading || loading || !user || !profile) return null;
-  if (profile.onboarding_completed) {
-    // Already done — bounce to the personalized watchlist/cockpit.
-    if (typeof window !== "undefined") navigate({ to: "/", replace: true });
-    return null;
-  }
+  // If already completed, AuthGate handles the redirect — do NOT navigate during render here
+  // (caused a flicker loop between / and /onboarding).
+  if (profile.onboarding_completed) return null;
 
   const canNext = (() => {
     if (step === 0) return true;

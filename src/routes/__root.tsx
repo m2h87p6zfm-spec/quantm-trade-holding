@@ -9,6 +9,7 @@ import { MarketClock } from "@/components/MarketClock";
 import { CommandPalette } from "@/components/CommandPalette";
 import { QuickPanel } from "@/components/QuickPanel";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { TradingProfileProvider } from "@/hooks/use-trading-profile";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 
 import { DunningBanner } from "@/components/DunningBanner";
@@ -93,12 +94,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <SubscriptionProvider>
-          <AuthGate>
-            <AppShell />
-          </AuthGate>
-          <Toaster />
-        </SubscriptionProvider>
+        <TradingProfileProvider>
+          <SubscriptionProvider>
+            <AuthGate>
+              <AppShell />
+            </AuthGate>
+            <Toaster />
+          </SubscriptionProvider>
+        </TradingProfileProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
