@@ -65,7 +65,7 @@ export const sendTradeChatMessage = createServerFn({ method: "POST" })
           user_id: userId,
           title: seedTitle.slice(0, 120),
           symbol: seedSymbol,
-          trade_summary: data.seed?.summary ?? null,
+          trade_summary: (data.seed?.summary ?? null) as never,
         })
         .select("id")
         .single();
