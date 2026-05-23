@@ -582,7 +582,53 @@ function AnalysePage() {
 
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-4xl flex-col p-6">
+    <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-7xl gap-4 p-4 md:p-6">
+      {/* Sidebar: Chat-Historie pro Nutzer */}
+      <aside className="hidden w-60 shrink-0 flex-col rounded-2xl border border-border bg-card/40 p-3 md:flex">
+        <button
+          onClick={newChat}
+          className="mb-3 inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          <MessageSquarePlus className="h-4 w-4" /> Neue Analyse
+        </button>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Mein Verlauf</div>
+        <div className="flex-1 space-y-1 overflow-y-auto">
+          {!user && (
+            <p className="px-1 text-xs text-muted-foreground">
+              Melde dich an, um deine Analyse-Historie zu speichern.
+            </p>
+          )}
+          {user && conversations.length === 0 && (
+            <p className="px-1 text-xs text-muted-foreground">Noch keine Analysen.</p>
+          )}
+          {conversations.map((c) => {
+            const label = c.title.startsWith(ANALYSE_TITLE_PREFIX)
+              ? c.title.slice(ANALYSE_TITLE_PREFIX.length)
+              : c.title;
+            return (
+              <div
+                key={c.id}
+                className={`group flex items-center gap-1 rounded-md px-2 py-1.5 text-sm hover:bg-muted/40 ${activeConvId === c.id ? "bg-muted/60" : ""}`}
+              >
+                <button onClick={() => openConv(c.id)} className="flex-1 truncate text-left">
+                  {label || "Analyse"}
+                </button>
+                <button
+                  onClick={() => deleteConv(c.id)}
+                  className="opacity-0 transition group-hover:opacity-100"
+                  title="Löschen"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex flex-1 flex-col">
+
       {/* Header mit Icon + Glow */}
       <div className="mb-5 flex items-start gap-3">
         <div className="relative">
