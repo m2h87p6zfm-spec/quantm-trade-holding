@@ -42,22 +42,26 @@ async function fetchNews(symbols: string[], sources: NewsSource[]): Promise<{ it
   return { items: res.items as Item[], gated: res.gated };
 }
 
-function timeAgo(ts: number) {
-  const diff = Math.max(0, Date.now() - ts);
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "gerade eben";
-  if (m < 60) return `vor ${m} min`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `vor ${h} h`;
-  const d = Math.floor(h / 24);
-  return `vor ${d} T`;
+function useTimeAgo() {
+  const t = useT();
+  return (ts: number) => {
+    const diff = Math.max(0, Date.now() - ts);
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return t("news.time.now");
+    if (m < 60) return t("news.time.minAgo").replace("{n}", String(m));
+    const h = Math.floor(m / 60);
+    if (h < 24) return t("news.time.hAgo").replace("{n}", String(h));
+    const d = Math.floor(h / 24);
+    return t("news.time.dAgo").replace("{n}", String(d));
+  };
 }
 
 function SentimentBadge({ s, c }: { s?: Item["sentiment"]; c?: number }) {
+  const t = useT();
   const base = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider";
-  if (s === "bullish") return <span className={`${base} bg-bull/20 text-bull ring-1 ring-bull/40`}><TrendingUp className="h-3 w-3" /> Bullish{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
-  if (s === "bearish") return <span className={`${base} bg-bear/20 text-bear ring-1 ring-bear/40`}><TrendingDown className="h-3 w-3" /> Bearish{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
-  return <span className={`${base} bg-muted text-muted-foreground ring-1 ring-border`}><Minus className="h-3 w-3" /> Neutral</span>;
+  if (s === "bullish") return <span className={`${base} bg-bull/20 text-bull ring-1 ring-bull/40`}><TrendingUp className="h-3 w-3" /> {t("news.sentiment.bullish")}{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
+  if (s === "bearish") return <span className={`${base} bg-bear/20 text-bear ring-1 ring-bear/40`}><TrendingDown className="h-3 w-3" /> {t("news.sentiment.bearish")}{c ? ` · ${Math.round(c * 100)}%` : ""}</span>;
+  return <span className={`${base} bg-muted text-muted-foreground ring-1 ring-border`}><Minus className="h-3 w-3" /> {t("news.sentiment.neutral")}</span>;
 }
 
 function NewsCard({ it, portfolio, onOpen }: { it: Item; portfolio: Set<string>; onOpen: (it: Item) => void }) {
