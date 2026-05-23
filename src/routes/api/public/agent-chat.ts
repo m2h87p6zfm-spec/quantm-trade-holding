@@ -478,8 +478,6 @@ export const Route = createFileRoute("/api/public/agent-chat")({
                 ...messages,
               ],
             }),
-            }),
-
           });
 
           if (!upstream.ok) {
