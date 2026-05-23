@@ -1,39 +1,36 @@
 import { Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { Search, ArrowRight } from "lucide-react";
+import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { findProduct } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
-import { scoreIndicators, buildDecision, stabilizeDecision, whyNow, type Decision } from "@/lib/analysis";
-import { detectRegime, regimeLabel, type MarketRegime } from "@/lib/ai-learning";
+import { scoreIndicators, buildDecision, stabilizeDecision, type Decision } from "@/lib/analysis";
+import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 
+type SortKey = "confidence" | "perf1d" | "perf30d" | "volatility";
+type FilterKey = "all" | "LONG" | "SHORT" | "NEUTRAL";
 
-type SortKey = "confidence" | "zscore" | "rsi" | "volatility";
+const toSignal = (d: Decision): "LONG" | "SHORT" | "NEUTRAL" =>
+  d === "BUY" ? "LONG" : d === "SELL" ? "SHORT" : "NEUTRAL";
 
-const decisionStyle: Record<Decision, string> = {
-  BUY: "bg-bull/15 text-bull border-bull/40",
-  SELL: "bg-bear/15 text-bear border-bear/40",
-  HOLD: "bg-muted text-muted-foreground border-border",
-};
-
-const regimeStyle: Record<MarketRegime, string> = {
-  bull: "bg-bull/10 text-bull border-bull/30",
-  bear: "bg-bear/10 text-bear border-bear/30",
-  chop: "bg-muted text-muted-foreground border-border",
-  high_vol: "bg-amber-500/10 text-amber-500 border-amber-500/30",
-  low_vol: "bg-sky-500/10 text-sky-500 border-sky-500/30",
-};
+const ACCENT = {
+  LONG:    { text: "text-[#22FF88]", bg: "bg-[#22FF88]/12", border: "border-[#22FF88]/40", stroke: "#22FF88", glow: "shadow-[0_0_40px_-12px_rgba(34,255,136,0.55)]" },
+  SHORT:   { text: "text-[#FF3B5C]", bg: "bg-[#FF3B5C]/12", border: "border-[#FF3B5C]/40", stroke: "#FF3B5C", glow: "shadow-[0_0_40px_-12px_rgba(255,59,92,0.55)]" },
+  NEUTRAL: { text: "text-[#8B9EFF]", bg: "bg-[#8B9EFF]/10", border: "border-[#8B9EFF]/30", stroke: "#8B9EFF", glow: "" },
+} as const;
 
 export function WatchlistSignalsPanel() {
   const { settings } = useSettings();
   const [sortKey, setSortKey] = useState<SortKey>("confidence");
-  const [decisionFilter, setDecisionFilter] = useState<"all" | Decision>("all");
-  const [regimeFilter, setRegimeFilter] = useState<"all" | MarketRegime>("all");
-  const scanSymbols = settings.watchlist;
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [query, setQuery] = useState("");
+  const symbols = settings.watchlist;
 
   const candleQs = useQueries({
-    queries: scanSymbols.map((symbol) => ({
+    queries: symbols.map((symbol) => ({
       queryKey: ["candles", symbol],
       queryFn: () => fetchCandles(symbol, "D", 260),
       enabled: !!getApiKey(),
@@ -44,177 +41,239 @@ export function WatchlistSignalsPanel() {
   });
 
   const rows = useMemo(() => {
-    return scanSymbols.map((symbol, i) => {
+    return symbols.map((symbol, i) => {
       const p = findProduct(symbol) ?? { symbol, name: "Freier Ticker" };
       const c = candleQs[i].data;
       if (!c) return null;
       const ind = computeAll(c.c);
       const sig = scoreIndicators(ind, settings.risk);
-      const regime = detectRegime(ind);
+      const regime: MarketRegime = detectRegime(ind);
       const raw = buildDecision(p.symbol, p.name, ind, sig, regime);
       const stable = stabilizeDecision(p.symbol, raw.decision, raw.confidence);
       const report = stable.decision === raw.decision ? raw : { ...raw, decision: stable.decision };
       const last = c.c.at(-1) ?? 0;
       const prev = c.c.at(-2) ?? last;
       const change = prev ? ((last - prev) / prev) * 100 : 0;
-      return { p, ind, sig, regime, report, change };
-    }).filter(Boolean) as {
+      const changeAbs = last - prev;
+      const spark = c.c.slice(-30);
+      const first30 = spark[0] ?? last;
+      const perf30 = first30 ? ((last - first30) / first30) * 100 : 0;
+      const signal = toSignal(report.decision);
+      return { p, ind, last, change, changeAbs, spark, perf30, signal, confidence: report.confidence };
+    }).filter(Boolean) as Array<{
       p: { symbol: string; name: string };
       ind: ReturnType<typeof computeAll>;
-      sig: ReturnType<typeof scoreIndicators>;
-      regime: MarketRegime;
-      report: ReturnType<typeof buildDecision>;
-      change: number;
-    }[];
-  }, [candleQs, scanSymbols, settings.risk]);
+      last: number; change: number; changeAbs: number;
+      spark: number[]; perf30: number;
+      signal: "LONG" | "SHORT" | "NEUTRAL"; confidence: number;
+    }>;
+  }, [candleQs, symbols, settings.risk]);
 
-  const aggRegime = useMemo<MarketRegime | null>(() => {
-    if (rows.length === 0) return null;
-    const counts: Record<MarketRegime, number> = { bull: 0, bear: 0, chop: 0, high_vol: 0, low_vol: 0 };
-    rows.forEach((r) => counts[r.regime]++);
-    return (Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as MarketRegime);
+  const counts = useMemo(() => {
+    const c = { LONG: 0, SHORT: 0, NEUTRAL: 0 };
+    rows.forEach((r) => c[r.signal]++);
+    return c;
   }, [rows]);
+  const total = rows.length || 1;
 
   const filtered = rows
-    .filter((r) => decisionFilter === "all" || r.report.decision === decisionFilter)
-    .filter((r) => regimeFilter === "all" || r.regime === regimeFilter)
+    .filter((r) => filter === "all" || r.signal === filter)
+    .filter((r) => {
+      if (!query.trim()) return true;
+      const q = query.toLowerCase();
+      return r.p.symbol.toLowerCase().includes(q) || r.p.name.toLowerCase().includes(q);
+    })
     .sort((a, b) => {
       switch (sortKey) {
-        case "zscore": return Math.abs(b.ind.zScore) - Math.abs(a.ind.zScore);
-        case "rsi": return Math.abs(b.ind.rsi - 50) - Math.abs(a.ind.rsi - 50);
+        case "perf1d": return b.change - a.change;
+        case "perf30d": return b.perf30 - a.perf30;
         case "volatility": return b.ind.volatility - a.ind.volatility;
-        default: return b.report.confidence - a.report.confidence;
+        default: return b.confidence - a.confidence;
       }
     });
 
   const loading = candleQs.some((q) => q.isLoading);
-
-  const counts = useMemo(() => {
-    const c = { BUY: 0, SELL: 0, HOLD: 0 } as Record<Decision, number>;
-    rows.forEach((r) => c[r.report.decision]++);
-    return c;
-  }, [rows]);
-
-  if (scanSymbols.length === 0) return null;
+  if (symbols.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-6 rounded-2xl bg-[#0A0A0A] p-5 text-white ring-1 ring-[#1F1F1F]" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+      {/* HEADER */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl font-semibold tracking-tight">Quant-Signale</h2>
-          <p className="text-xs text-muted-foreground">Institutional Decision Engine — regime- &amp; smart-money-gefiltert. Konfidenz &lt; 60 % → HOLD.</p>
+          <h2 className="text-[24px] font-bold leading-tight tracking-tight">Watchlist</h2>
+          <p className="mt-1 text-[13px] text-white/50">
+            <span className="tabular-nums">{symbols.length}</span> Werte • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />Live aktualisiert</span>
+          </p>
         </div>
-        {aggRegime && (
-          <div className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs ${regimeStyle[aggRegime]}`}>
-            <span className="font-semibold uppercase tracking-wider">Markt-Regime</span>
-            <span className="font-bold">{regimeLabel(aggRegime)}</span>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Suchen…"
+              className="h-9 w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
+            />
           </div>
-        )}
-      </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {(["BUY", "HOLD", "SELL"] as const).map((d) => (
-          <div key={d} className={`rounded-lg border px-4 py-3 ${decisionStyle[d]}`}>
-            <div className="text-[11px] font-semibold uppercase tracking-wider opacity-80">{d}</div>
-            <div className="text-2xl font-bold tabular-nums">{counts[d]}</div>
+          <div className="flex items-center gap-1 rounded-lg border border-[#1F1F1F] bg-[#111111] p-1">
+            {([
+              { k: "all", label: "Alle" },
+              { k: "LONG", label: "Long" },
+              { k: "SHORT", label: "Short" },
+              { k: "NEUTRAL", label: "Neutral" },
+            ] as { k: FilterKey; label: string }[]).map((f) => {
+              const active = filter === f.k;
+              const tone = f.k === "LONG" ? "text-[#22FF88]" : f.k === "SHORT" ? "text-[#FF3B5C]" : f.k === "NEUTRAL" ? "text-[#8B9EFF]" : "text-white";
+              return (
+                <button
+                  key={f.k}
+                  onClick={() => setFilter(f.k)}
+                  className={`rounded-md px-3 py-1.5 text-[13px] font-medium transition ${active ? `bg-white/5 ${tone}` : "text-white/60 hover:text-white"}`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
           </div>
-        ))}
-      </div>
 
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted-foreground mr-1">Entscheidung:</span>
-          {(["all", "BUY", "SELL", "HOLD"] as const).map((s) => (
-            <button key={s} onClick={() => setDecisionFilter(s)} className={`rounded-md border px-2.5 py-1 text-xs font-medium ${decisionFilter === s ? "bg-primary text-primary-foreground border-primary" : "border-border bg-card hover:bg-accent"}`}>
-              {s === "all" ? "Alle" : s}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-muted-foreground mr-1">Regime:</span>
-          {(["all", "bull", "bear", "chop", "high_vol", "low_vol"] as const).map((r) => (
-            <button key={r} onClick={() => setRegimeFilter(r)} className={`rounded-md border px-2.5 py-1 text-xs ${regimeFilter === r ? "border-primary text-primary" : "border-border"}`}>
-              {r === "all" ? "Alle" : regimeLabel(r)}
-            </button>
-          ))}
-        </div>
-        <div className="ml-auto flex items-center gap-1.5 text-xs">
-          <span className="text-muted-foreground">Sortieren:</span>
-          {(["confidence", "zscore", "rsi", "volatility"] as SortKey[]).map((k) => (
-            <button key={k} onClick={() => setSortKey(k)} className={`rounded-md border px-2 py-1 ${sortKey === k ? "border-primary text-primary" : "border-border"}`}>
-              {k === "confidence" ? "Konfidenz" : k === "zscore" ? "Z-Score" : k === "rsi" ? "RSI" : "Vola"}
-            </button>
-          ))}
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+            className="h-9 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
+          >
+            <option value="confidence">Konfidenz</option>
+            <option value="perf1d">Performance 1T</option>
+            <option value="perf30d">Performance 30T</option>
+            <option value="volatility">Volatilität</option>
+          </select>
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <div className="hidden sm:grid grid-cols-12 gap-2 border-b border-border bg-muted/40 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <div className="col-span-3">Symbol</div>
-          <div className="col-span-2">Regime</div>
-          <div className="col-span-1 text-right">Z</div>
-          <div className="col-span-1 text-right">RSI</div>
-          <div className="col-span-1 text-right">Vola</div>
-          <div className="col-span-1 text-right">Tag Δ</div>
-          <div className="col-span-3 text-right">Decision · Konfidenz</div>
+      {/* MARKT-STIMMUNG */}
+      <div className="rounded-xl border border-[#1F1F1F] bg-[#111111] p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[13px] font-medium text-white/60">Markt-Stimmung</span>
+          <span className="text-[13px] text-white/40 tabular-nums">{rows.length} analysiert</span>
         </div>
-        {loading && <div className="p-6 text-center text-sm text-muted-foreground">Berechne Decision-Reports für {scanSymbols.length} Watchlist-Werte…</div>}
-        {!loading && filtered.length === 0 && <div className="p-6 text-center text-sm text-muted-foreground">Keine Signale erfüllen die Filter.</div>}
-        {filtered.map(({ p, ind, sig, regime, report, change }) => {
-          const delta = report.confidence - report.rawConfidence;
-          const trigger = whyNow(ind, sig);
+        <div className="flex h-2 overflow-hidden rounded-full bg-[#1F1F1F]">
+          <div className="h-full bg-[#22FF88] transition-all" style={{ width: `${(counts.LONG / total) * 100}%` }} />
+          <div className="h-full bg-[#8B9EFF] transition-all" style={{ width: `${(counts.NEUTRAL / total) * 100}%` }} />
+          <div className="h-full bg-[#FF3B5C] transition-all" style={{ width: `${(counts.SHORT / total) * 100}%` }} />
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-3 text-[13px]">
+          {([
+            { k: "LONG", label: "Bullish", color: "#22FF88" },
+            { k: "NEUTRAL", label: "Neutral", color: "#8B9EFF" },
+            { k: "SHORT", label: "Bearish", color: "#FF3B5C" },
+          ] as const).map((s) => (
+            <div key={s.k} className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-white/70">
+                <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+                {s.label}
+              </span>
+              <span className="tabular-nums font-semibold" style={{ color: s.color }}>
+                {counts[s.k]} <span className="text-white/40 font-normal">({((counts[s.k] / total) * 100).toFixed(0)}%)</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CARD GRID */}
+      {loading && <div className="py-12 text-center text-[13px] text-white/40">Lade Decision-Reports…</div>}
+      {!loading && filtered.length === 0 && (
+        <div className="py-12 text-center text-[13px] text-white/40">Keine Werte erfüllen die Filter.</div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((r) => {
+          const a = ACCENT[r.signal];
+          const up = r.change >= 0;
+          const strong = r.confidence >= 70;
+          const initials = r.p.symbol.slice(0, 2);
           return (
-            <Link
-              key={p.symbol}
-              to="/produkte/$symbol"
-              params={{ symbol: p.symbol }}
-              className="grid grid-cols-12 gap-2 border-b border-border px-4 py-3 hover:bg-accent/40 text-sm items-center"
+            <div
+              key={r.p.symbol}
+              className={`group relative flex flex-col rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/15 ${strong ? a.glow : ""}`}
             >
-              <div className="col-span-12 sm:col-span-3">
-                <div className="font-semibold">{p.symbol}</div>
-                <div className="text-xs text-muted-foreground truncate">{p.name}</div>
-                <div className={`mt-1 flex items-start gap-1 text-[11px] leading-snug ${report.decision === "BUY" ? "text-bull/90" : report.decision === "SELL" ? "text-bear/90" : "text-muted-foreground"}`}>
-                  <span className="mt-0.5">⚡</span>
-                  <span className="truncate" title={trigger}>{trigger}</span>
+              {/* Top bar */}
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[11px] font-bold text-white ring-1 ring-white/10">
+                  {initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[18px] font-bold leading-tight">{r.p.symbol}</div>
+                  <div className="truncate text-[13px] text-white/40">{r.p.name}</div>
                 </div>
               </div>
-              <div className="hidden sm:block col-span-2">
-                <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-medium ${regimeStyle[regime]}`}>
-                  {regimeLabel(regime)}
-                </span>
-              </div>
-              <div className={`hidden sm:block col-span-1 text-right font-mono tabular-nums ${Math.abs(ind.zScore) > 2 ? (ind.zScore > 0 ? "text-bear" : "text-bull") : ""}`}>{ind.zScore.toFixed(2)}</div>
-              <div className={`hidden sm:block col-span-1 text-right font-mono tabular-nums ${ind.rsi > 70 ? "text-bear" : ind.rsi < 30 ? "text-bull" : ""}`}>{ind.rsi.toFixed(0)}</div>
-              <div className="hidden sm:block col-span-1 text-right font-mono tabular-nums text-muted-foreground">{(ind.volatility * 100).toFixed(0)}%</div>
-              <div className={`hidden sm:block col-span-1 text-right font-mono tabular-nums ${change >= 0 ? "text-bull" : "text-bear"}`}>{change >= 0 ? "+" : ""}{change.toFixed(2)}%</div>
-              <div className="col-span-12 sm:col-span-3 flex items-center justify-end gap-2">
-                <div className="text-right">
-                  <div className="font-mono tabular-nums text-sm">
-                    <span className="font-semibold">{report.confidence}%</span>
-                    {delta !== 0 && (
-                      <span className={`ml-1 text-[10px] ${delta > 0 ? "text-bull" : "text-bear"}`}>
-                        ({delta > 0 ? "+" : ""}{delta})
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">vs. raw {report.rawConfidence}%</div>
+
+              {/* Price */}
+              <div className="mt-5">
+                <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
+                  {r.last.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
-                <span className={`inline-flex min-w-[60px] justify-center rounded-md border px-2.5 py-1 text-xs font-bold ${decisionStyle[report.decision]}`}>
-                  {report.decision}
-                </span>
+                <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
+                  <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
+                  <span className="font-mono text-white/50">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
+                </div>
               </div>
-            </Link>
+
+              {/* Sparkline */}
+              <div className="mt-4 h-[90px] -mx-1">
+                <ResponsiveContainer>
+                  <LineChart data={r.spark.map((v, i) => ({ i, v }))}>
+                    <YAxis hide domain={["dataMin", "dataMax"]} />
+                    <Line
+                      type="monotone"
+                      dataKey="v"
+                      stroke={up ? "#22FF88" : "#FF3B5C"}
+                      strokeWidth={2}
+                      dot={false}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Signal Pill */}
+              <div className="mt-4">
+                <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-bold tracking-wide ${a.bg} ${a.border} ${a.text}`}>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.stroke, boxShadow: `0 0 8px ${a.stroke}` }} />
+                  {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
+                </div>
+              </div>
+
+              {/* Metrics chips */}
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                <Chip label="Z" value={r.ind.zScore.toFixed(2)} />
+                <Chip label="RSI" value={r.ind.rsi.toFixed(0)} />
+                <Chip label="Vol" value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
+              </div>
+
+              {/* Footer button */}
+              <Link
+                to="/produkte/$symbol"
+                params={{ symbol: r.p.symbol }}
+                className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition hover:border-[#22FF88]/60 hover:bg-[#22FF88]/5 hover:text-[#22FF88]"
+              >
+                Analyse öffnen
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           );
         })}
       </div>
-
-
-
-      <div className="rounded-lg border border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
-        <p><span className="font-semibold text-foreground">Smart Money Filter:</span> Momentum ohne Volumen-Confirm, High-Beta-Longs in Bärenmärkten und Counter-Trend-Setups werden gedämpft. Trend- und Sharpe-Bestätigung heben die Konfidenz.</p>
-        <p><span className="font-semibold text-foreground">Regime Awareness:</span> In Hochvolatilität und Seitwärtsmärkten gilt ein HOLD-Bias. Long-Setups in Bullen-, Short-Setups in Bärenmärkten erhalten Rückenwind.</p>
-        <p><span className="font-semibold text-foreground">Stabilität:</span> Entscheidung kippt erst, wenn Konfidenz die Hysterese-Schwelle reißt (HOLD→Trade ≥58%, Richtungswechsel ≥65%) — kein Flip-Flop.</p>
-      </div>
     </div>
+  );
+}
+
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-[#1F1F1F] bg-[#0A0A0A] px-2 py-1 text-[11px] text-white/60">
+      <span className="text-white/40">{label}</span>
+      <span className="font-mono tabular-nums text-white/90">{value}</span>
+    </span>
   );
 }
