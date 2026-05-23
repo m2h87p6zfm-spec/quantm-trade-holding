@@ -550,6 +550,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               reasoning: { effort: "medium" },
               messages: [
                 { role: "system", content: SYSTEM + addendum + profileAddendum + memoryAddendum + feedbackAddendum },
+                { role: "system", content: SELF_OPTIMIZE },
                 { role: "system", content: webContext },
                 ...messages,
               ],
