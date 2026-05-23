@@ -403,8 +403,13 @@ const DICT: Record<Lang, Dict> = {
 export function useT() {
   const { settings } = useSettings();
   const lang = (settings.language as Lang) in DICT ? (settings.language as Lang) : "en";
-  return (key: string): string => DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+  return (key: string, vars?: Record<string, string | number>): string => {
+    const raw = DICT[lang]?.[key] ?? DICT.en[key] ?? key;
+    if (!vars) return raw;
+    return raw.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? String(vars[k]) : `{${k}}`));
+  };
 }
+
 
 export function useLang(): Lang {
   const { settings } = useSettings();
