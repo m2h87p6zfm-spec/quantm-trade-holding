@@ -126,6 +126,7 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
           }
         }
         setDone(true);
+        if (onDone && acc) onDone(acc);
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
         setError((e as Error).message);
@@ -133,7 +134,9 @@ Zufallsseed für Variation: ${Math.random().toString(36).slice(2, 10)}-${Date.no
     })();
 
     return () => controller.abort();
-  }, [query, symbol, indicators, regime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, symbol, indicators, regime, cachedText]);
+
 
   if (error) {
     return <div className="rounded-lg border border-bear/30 bg-bear/5 p-3 text-xs text-bear">KI-Kommentar fehlgeschlagen: {error}</div>;
