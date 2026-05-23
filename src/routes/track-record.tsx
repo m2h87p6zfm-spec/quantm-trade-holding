@@ -727,7 +727,7 @@ function CTA() {
       <p className="text-muted-foreground mt-2">Jetzt selbst analysieren.</p>
       <div className="flex justify-center gap-3 mt-6">
         <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-400 text-black"><Link to="/login">Kostenlos starten</Link></Button>
-        <Button asChild size="lg" variant="outline"><Link to="/analyse">APEX Demo ansehen</Link></Button>
+        <Button asChild size="lg" variant="outline"><Link to="/analyse">Quantm Demo ansehen</Link></Button>
       </div>
     </section>
   );

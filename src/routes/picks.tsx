@@ -21,9 +21,9 @@ function regimeLabel(r: MarketRegime) {
 export const Route = createFileRoute("/picks")({
   head: () => ({
     meta: [
-      { title: "Apex Picks — KI-Aktien-Empfehlungen" },
+      { title: "Quantm Picks — KI-Aktien-Empfehlungen" },
       { name: "description", content: "Proaktive KI-Vorschläge: Aktien & ETFs mit der höchsten Wahrscheinlichkeit auf steigende Kurse — belegt durch Z-Score, RSI, MACD, Trend & Momentum." },
-      { property: "og:title", content: "Apex Picks — KI-Aktien-Empfehlungen" },
+      { property: "og:title", content: "Quantm Picks — KI-Aktien-Empfehlungen" },
       { property: "og:description", content: "Proaktive KI-Vorschläge: Aktien & ETFs mit der höchsten Wahrscheinlichkeit auf steigende Kurse." },
     ],
   }),
@@ -194,7 +194,7 @@ function PicksPage() {
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-              <Sparkles className="h-3 w-3" /> APEX AI Picks
+              <Sparkles className="h-3 w-3" /> Quantm AI Picks
             </div>
             <h1 className="mt-3 font-display text-2xl md:text-3xl font-bold tracking-tight">
               {t("page.picks.title")}
