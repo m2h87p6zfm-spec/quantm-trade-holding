@@ -194,6 +194,7 @@ function ArticleModal({ it, portfolio, onClose }: { it: Item; portfolio: Set<str
 function NewsPage() {
   const { settings, update } = useSettings();
   const [tab, setTab] = useState<"foryou" | "all">("foryou");
+  const [openItem, setOpenItem] = useState<Item | null>(null);
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
     [settings.newsSources]
