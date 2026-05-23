@@ -1,12 +1,23 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  createChart,
+  AreaSeries,
+  ColorType,
+  CrosshairMode,
+  LineStyle,
+  type IChartApi,
+  type ISeriesApi,
+  type UTCTimestamp,
+  type Time,
+} from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
 import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
 
 /**
  * Premium interactive chart with timeframe switcher.
  * Backed by /api/public/candles (Yahoo proxy, cached).
+ * Powered by lightweight-charts.
  */
 
 export type Timeframe = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y" | "5Y" | "MAX";
@@ -37,13 +48,15 @@ async function fetchTfCandles(symbol: string, interval: string, range: string): 
   return j;
 }
 
+function cssVar(el: HTMLElement, name: string, fallback: string): string {
+  const v = getComputedStyle(el).getPropertyValue(name).trim();
+  return v || fallback;
+}
+
 export type AssetChartProps = {
   symbol: string;
-  /** Currency symbol shown next to prices (defaults to "$"). */
   currency?: string;
-  /** Chart pixel height (default 380). */
   height?: number;
-  /** Initial timeframe (default 1Y). */
   defaultTf?: Timeframe;
 };
 
@@ -74,11 +87,7 @@ export const AssetChart = memo(function AssetChart({
     const c = q.data.c;
     const t = q.data.t;
     const v = q.data.v ?? [];
-    return c.map((close, i) => ({
-      t: t[i] * 1000,
-      close,
-      volume: v[i] ?? 0,
-    }));
+    return c.map((close, i) => ({ time: t[i] as number, close, volume: v[i] ?? 0 }));
   }, [q.data]);
 
   const first = data[0]?.close ?? 0;
@@ -87,40 +96,153 @@ export const AssetChart = memo(function AssetChart({
   const changePct = pctChange(first, last);
   const up = changeAbs >= 0;
 
-  const { min, max } = useMemo(() => {
-    if (!data.length) return { min: 0, max: 1 };
-    let mn = Infinity, mx = -Infinity;
-    for (const d of data) { if (d.close < mn) mn = d.close; if (d.close > mx) mx = d.close; }
-    const pad = (mx - mn) * 0.08 || mx * 0.01 || 1;
-    return { min: mn - pad, max: mx + pad };
-  }, [data]);
-
-  const fmtPrice = useCallback((n: number) => formatPrice(n, currency), [currency]);
-  const fmtAxis = useCallback((n: number) => formatPrice(n, currency, axisDecimals(n)), [currency]);
-
-  const xTickFmt = useCallback((ms: number) => {
-    const d = new Date(ms);
-    if (tf === "1D") return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    if (tf === "1W" || tf === "1M") return d.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
-    if (tf === "5Y" || tf === "MAX") return d.toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
-    return d.toLocaleDateString("de-DE", { month: "short", year: "2-digit" });
-  }, [tf]);
-
-  const lineColor = up ? "var(--bull)" : "var(--bear)";
-  const gradientId = `assetChartGrad-${up ? "up" : "dn"}-${symbol.replace(/[^a-z0-9]/gi, "")}-${tf}`;
-
   const perfLabel = {
     "1D": "heute", "1W": "letzte Woche", "1M": "letzten Monat", "3M": "letzte 3 Monate",
     "YTD": "seit Jahresanfang", "1Y": "letztes Jahr", "5Y": "letzte 5 Jahre", "MAX": "gesamter Verlauf",
   }[tf];
 
+  /* ------------ lightweight-charts setup ------------ */
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
+  const baseLineRef = useRef<ReturnType<NonNullable<typeof seriesRef.current>["createPriceLine"]> | null>(null);
+
+  const [hover, setHover] = useState<{ time: number; close: number; volume: number } | null>(null);
+
+  // Create chart on mount
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const el = wrapRef.current;
+    const grid = cssVar(el, "--chart-grid", "rgba(255,255,255,0.06)");
+    const axis = cssVar(el, "--chart-axis", "rgba(255,255,255,0.45)");
+    const fg = cssVar(el, "--foreground", "#fff");
+
+    const chart = createChart(el, {
+      width: el.clientWidth,
+      height,
+      layout: {
+        background: { type: ColorType.Solid, color: "transparent" },
+        textColor: axis,
+        fontFamily: "ui-monospace, monospace",
+        attributionLogo: false,
+      },
+      grid: {
+        vertLines: { visible: false },
+        horzLines: { color: grid, style: LineStyle.Dotted },
+      },
+      rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.05 } },
+      timeScale: { borderVisible: false, timeVisible: tf === "1D", secondsVisible: false },
+      crosshair: {
+        mode: CrosshairMode.Magnet,
+        vertLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
+        horzLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
+      },
+      handleScale: { axisPressedMouseMove: false },
+    });
+    chartRef.current = chart;
+
+    chart.subscribeCrosshairMove((param) => {
+      if (!param.time || !seriesRef.current) { setHover(null); return; }
+      const d = param.seriesData.get(seriesRef.current) as { value: number; customValues?: { volume?: number } } | undefined;
+      if (!d) { setHover(null); return; }
+      setHover({
+        time: param.time as number,
+        close: d.value,
+        volume: d.customValues?.volume ?? 0,
+      });
+    });
+
+    const ro = new ResizeObserver((entries) => {
+      const cr = entries[0]?.contentRect;
+      if (cr) chart.resize(Math.max(120, cr.width), height);
+    });
+    ro.observe(el);
+
+    return () => {
+      ro.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
+      baseLineRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [height]);
+
+  // Re-create series when up/down direction changes (different gradient)
+  useEffect(() => {
+    if (!chartRef.current || !wrapRef.current) return;
+    const el = wrapRef.current;
+    const bull = cssVar(el, "--bull", "#22FF88");
+    const bear = cssVar(el, "--bear", "#FF3B5C");
+    const lineColor = up ? bull : bear;
+
+    if (seriesRef.current) {
+      chartRef.current.removeSeries(seriesRef.current);
+      seriesRef.current = null;
+      baseLineRef.current = null;
+    }
+    const series = chartRef.current.addSeries(AreaSeries, {
+      lineColor,
+      lineWidth: 2,
+      topColor: `color-mix(in oklab, ${lineColor} 35%, transparent)`,
+      bottomColor: `color-mix(in oklab, ${lineColor} 0%, transparent)`,
+      priceLineColor: lineColor,
+      priceLineStyle: LineStyle.Dotted,
+      priceLineWidth: 1,
+      crosshairMarkerBorderColor: "var(--background)",
+      crosshairMarkerBackgroundColor: lineColor,
+      crosshairMarkerRadius: 4,
+      priceFormat: { type: "price", precision: axisDecimals(last), minMove: 1 / Math.pow(10, axisDecimals(last)) },
+    });
+    seriesRef.current = series;
+  }, [up, last]);
+
+  // Update data
+  useEffect(() => {
+    if (!seriesRef.current || !chartRef.current) return;
+    if (data.length === 0) return;
+    const points = data.map((d) => ({
+      time: d.time as UTCTimestamp,
+      value: d.close,
+      customValues: { volume: d.volume },
+    }));
+    seriesRef.current.setData(points);
+
+    // Baseline reference (start-of-period)
+    if (baseLineRef.current) {
+      try { seriesRef.current.removePriceLine(baseLineRef.current); } catch { /* noop */ }
+      baseLineRef.current = null;
+    }
+    if (first > 0 && wrapRef.current) {
+      const axis = cssVar(wrapRef.current, "--chart-axis", "rgba(255,255,255,0.45)");
+      baseLineRef.current = seriesRef.current.createPriceLine({
+        price: first,
+        color: axis,
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: false,
+        title: "",
+      });
+    }
+
+    chartRef.current.timeScale().fitContent();
+  }, [data, first]);
+
+  // Update time-axis format when timeframe changes
+  useEffect(() => {
+    chartRef.current?.applyOptions({
+      timeScale: { timeVisible: tf === "1D", secondsVisible: false },
+    });
+  }, [tf]);
+
+  /* ------------ render ------------ */
   return (
     <div className="w-full">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
         <div>
           <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
-            {fmtPrice(last)}
+            {formatPrice(last, currency)}
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-sm tabular-nums">
             <span className={up ? "text-bull" : "text-bear"}>
@@ -141,67 +263,15 @@ export const AssetChart = memo(function AssetChart({
       {/* Chart */}
       <div style={{ height }} className="relative w-full">
         {data.length === 0 && q.isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
-            <div className="h-full w-full animate-pulse rounded-md bg-gradient-to-b from-card/40 to-card/10" />
-          </div>
+          <div className="absolute inset-0 animate-pulse rounded-md bg-gradient-to-b from-card/40 to-card/10" />
         )}
-        {data.length > 0 && (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={lineColor} stopOpacity={0.35} />
-                  <stop offset="60%" stopColor={lineColor} stopOpacity={0.08} />
-                  <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="2 6" vertical={false} />
-              <XAxis
-                dataKey="t"
-                type="number"
-                domain={["dataMin", "dataMax"]}
-                tickFormatter={xTickFmt}
-                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-                tickLine={false}
-                axisLine={false}
-                minTickGap={48}
-              />
-              <YAxis
-                domain={[min, max]}
-                tickFormatter={fmtAxis}
-                tick={{ fill: "var(--chart-axis)", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-                tickLine={false}
-                axisLine={false}
-                width={72}
-                orientation="right"
-              />
-              <ReferenceLine y={first} stroke="var(--chart-axis)" strokeDasharray="2 4" strokeOpacity={0.5} />
-              <Tooltip
-                cursor={{ stroke: "var(--chart-axis)", strokeDasharray: "2 3", strokeOpacity: 0.8 }}
-                content={(props: any) => (
-                  <ChartTooltip
-                    active={props.active}
-                    payload={props.payload}
-                    base={first}
-                    currency={currency}
-                    tf={tf}
-                  />
-                )}
-              />
-              <Area
-                type="monotone"
-                dataKey="close"
-                stroke={lineColor}
-                strokeWidth={1.75}
-                fill={`url(#${gradientId})`}
-                isAnimationActive
-                animationDuration={420}
-                animationEasing="ease-out"
-                activeDot={{ r: 3, stroke: lineColor, strokeWidth: 1.5, fill: "var(--background)" }}
-                dot={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div ref={wrapRef} className="h-full w-full" />
+
+        {/* Hover overlay */}
+        {hover && (
+          <div className="pointer-events-none absolute left-3 top-3 min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
+            <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} />
+          </div>
         )}
       </div>
     </div>
@@ -245,51 +315,46 @@ const TimeframeBar = memo(function TimeframeBar({
 });
 
 /* --- Tooltip --- */
-function ChartTooltip({
-  active, payload, base, currency, tf,
+function HoverTooltip({
+  hover, base, currency, tf,
 }: {
-  active?: boolean;
-  payload?: any[];
+  hover: { time: number; close: number; volume: number };
   base: number;
   currency: string;
   tf: Timeframe;
 }) {
-  if (!active || !payload?.length) return null;
-  const p = payload[0].payload;
-  const pct = pctChange(base, p.close);
-  const abs = absChange(base, p.close);
+  const pct = pctChange(base, hover.close);
+  const abs = absChange(base, hover.close);
   const up = pct >= 0;
-  const d = new Date(p.t);
+  const d = new Date(hover.time * 1000);
   const dateStr =
     tf === "1D" || tf === "1W" || tf === "1M"
       ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
       : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <div className="min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
+    <>
       <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
       <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
-        {formatPrice(p.close, currency)}
+        {formatPrice(hover.close, currency)}
       </div>
       <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-        <span>{formatSignedAbs(abs, axisDecimals(p.close))}</span>
+        <span>{formatSignedAbs(abs, axisDecimals(hover.close))}</span>
         <span>·</span>
         <span>{formatPercent(pct)}</span>
       </div>
       <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">seit Periodenstart</div>
-      {p.volume > 0 && (
+      {hover.volume > 0 && (
         <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
           <span className="uppercase tracking-wider">Vol</span>
-          <span className="text-foreground/80">{formatCompact(p.volume, 2)}</span>
+          <span className="text-foreground/80">{formatCompact(hover.volume, 2)}</span>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-
 /* prefetch hook (optional) */
 export function useAssetChartPrefetch(_symbol: string) {
-  // placeholder for future cross-route prefetch
   useEffect(() => {}, []);
 }
