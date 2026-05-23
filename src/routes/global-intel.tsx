@@ -1255,7 +1255,6 @@ function CountryFinder({
         c.name.toLowerCase().includes(q) ||
         c.iso2.toLowerCase().includes(q) ||
         c.newsKeywords?.some((k) => k.toLowerCase().includes(q))
-        c.newsKeywords?.some((k) => k.toLowerCase().includes(q))
       );
     });
   }, [query, risk]);
