@@ -299,10 +299,20 @@ function NewsPage() {
       </div>
 
       <div className="space-y-3">
-        {isLoading && Array.from({ length: 6 }).map((_, i) => (
+        {gated && (
+          <div className="rounded-xl border border-primary/40 bg-primary/10 p-6 text-sm text-foreground">
+            <div className="font-semibold mb-1">Pro- oder Elite-Tier erforderlich</div>
+            <p className="text-muted-foreground">
+              Der Professional Newsroom mit KI-Sentiment & Zusammenfassungen ist Teil von Apex Pro/Elite.
+              {" "}
+              <Link to="/preise" className="text-primary underline-offset-2 hover:underline">Plan ansehen</Link>
+            </p>
+          </div>
+        )}
+        {!gated && isLoading && Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="h-24 rounded-xl border border-border bg-card/50 animate-pulse" />
         ))}
-        {error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
+        {!gated && error && <div className="rounded-xl border border-bear/40 bg-bear/10 p-4 text-sm text-bear">News konnten nicht geladen werden.</div>}
         {!isLoading && enabledSources.length === 0 && (
           <div className="rounded-xl border border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
             Keine News-Quelle aktiv. Aktiviere oben mindestens eine.
