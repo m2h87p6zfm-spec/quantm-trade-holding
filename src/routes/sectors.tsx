@@ -118,8 +118,21 @@ function SectorRotationPage() {
         </p>
       </div>
 
+      <PageExplainer
+        title="Was ist Sektor-Rotation und warum interessiert mich das?"
+        intro="Die US-Wirtschaft ist in 11 Sektoren aufgeteilt (z.B. Tech, Banken, Energie). Großanleger schichten ständig Kapital zwischen ihnen um — je nachdem, wo sie die nächste Phase erwarten. Diese Seite zeigt dir live, wer aktuell führt und wer abgehängt wird. So weißt du, wo das große Geld gerade hinfließt."
+        points={[
+          { q: "Risk-On vs. Risk-Off", a: "Risk-On = Anleger nehmen Risiko, kaufen Tech & Zykliker. Risk-Off = sie flüchten in Defensive (Health, Staples, Utilities)." },
+          { q: "Relative Stärke (RS)", a: "Wie stark ein Sektor gegen SPY läuft. Positiv = besser als der Markt. Profis kaufen, was Relative Stärke zeigt." },
+          { q: "Momentum-Score", a: "Gewichteter Mix aus 1W/1M/3M-Performance. Hoher Wert = klarer Aufwärtstrend, Trader steigen ein." },
+          { q: "Wie nutze ich das?", a: "Konzentriere dich auf Aktien aus den Top-3-Sektoren. Vermeide Aktien aus den unteren 3 — sie kämpfen gegen den Strom." },
+        ]}
+        cta="Klick auf einen Sektor in der Tabelle, um die enthaltenen Aktien zu sehen. Oder nutze den AI-Analyst-Button für eine ausführliche Markterklärung."
+      />
+
       {/* Regime-Hero */}
       <div className={`card-glow rounded-2xl border p-5 ${regimeMeta.bg}`}>
+
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-start gap-4">
             <div className={`flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-border/60 ${regimeMeta.color}`}>
