@@ -186,7 +186,7 @@ export function OnboardingGate() {
   if (profile.onboarding_completed) return null;
 
   const canNext = (() => {
-    if (step === 0) return true;
+    if (step === 0) return a.terms_accepted && a.privacy_accepted && a.risk_disclosure_accepted && a.age_confirmed;
     if (step === 1) return !!a.language;
     if (step === 2) return !!a.age_range;
     if (step === 3) return !!a.experience_level;
