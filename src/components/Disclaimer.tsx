@@ -110,7 +110,7 @@ function LegalModal({ onClose }: { onClose: () => void }) {
           <section>
             <h3 className="font-semibold text-foreground mb-1">5. Keine Garantie für Verfügbarkeit oder Datenqualität</h3>
             <p>
-              Kurs- und Fundamentaldaten werden von Drittanbietern (z.B. Yahoo Finance, Finnhub) bezogen und können verzögert,
+              Kurs- und Fundamentaldaten werden von Drittanbietern (z.B. Twelve Data) bezogen und können verzögert,
               fehlerhaft oder zeitweise nicht verfügbar sein. Es besteht <strong>kein Anspruch</strong> auf ununterbrochene
               Verfügbarkeit, Vollständigkeit oder Aktualität der Plattform.
             </p>
