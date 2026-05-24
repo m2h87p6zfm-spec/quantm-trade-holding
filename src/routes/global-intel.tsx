@@ -719,6 +719,98 @@ function deriveSnapshot() {
   return { globalRisk, marketTrend, liquidity, usd, vol };
 }
 
+/* Click-to-explain popover, shared by Snapshot pills + Driver cards. */
+function ExplainPopover({
+  metricKey,
+  label,
+  status,
+  loading,
+  explanation,
+  children,
+}: {
+  metricKey: string;
+  label: string;
+  status: string;
+  loading: boolean;
+  explanation: { why: string; impact: string; citations: string[] } | undefined;
+  children: React.ReactNode;
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="group relative w-full cursor-pointer rounded-2xl text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+          aria-label={`Explain ${label}: ${status}`}
+        >
+          {children}
+          <span className="pointer-events-none absolute right-2 top-2 inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/[0.06] text-[9px] font-bold text-muted-foreground ring-1 ring-white/10 transition group-hover:bg-primary/15 group-hover:text-primary">
+            ?
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        className="w-[320px] border-white/10 bg-[oklch(0.12_0.018_260)] p-0 text-foreground/90 shadow-2xl"
+      >
+        <div className="border-b border-white/[0.08] px-4 py-2.5">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+            {label}
+          </div>
+          <div className="mt-0.5 text-[13px] font-semibold">{status}</div>
+        </div>
+        <div className="space-y-3 px-4 py-3 text-[12.5px] leading-relaxed">
+          {loading && (
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              Reading today's market signal…
+            </div>
+          )}
+          {!loading && !explanation && (
+            <p className="text-[11.5px] text-muted-foreground">
+              Live explanation unavailable right now. Tap again in a moment.
+            </p>
+          )}
+          {!loading && explanation && (
+            <>
+              <div>
+                <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                  Why
+                </div>
+                <p className="mt-1 text-foreground/95">{explanation.why}</p>
+              </div>
+              {explanation.impact && (
+                <div className="rounded-lg border border-primary/20 bg-primary/[0.05] p-2.5">
+                  <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-primary/80">
+                    What it means
+                  </div>
+                  <p className="mt-1 text-[12px] text-foreground/95">{explanation.impact}</p>
+                </div>
+              )}
+              {explanation.citations.length > 0 && (
+                <div className="border-t border-white/[0.06] pt-2">
+                  <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+                    Based on today's headlines
+                  </div>
+                  <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
+                    {explanation.citations.map((c, i) => (
+                      <li key={i}>· {c}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+          <div className="border-t border-white/[0.06] pt-2 font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">
+            Updates several times a day · ID: {metricKey}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function StatusPill({
   icon: Icon,
   label,
@@ -732,7 +824,7 @@ function StatusPill({
 }) {
   const t = PILL_TONE[tone];
   return (
-    <div className={`flex min-w-0 items-center gap-3 rounded-xl border border-white/[0.08] ${t.bg} px-3.5 py-2.5 ring-1 ${t.ring} backdrop-blur-sm`}>
+    <div className={`flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] ${t.bg} px-3.5 py-2.5 ring-1 ${t.ring} backdrop-blur-sm`}>
       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/40 ${t.fg}`}>
         <Icon className="h-3.5 w-3.5" />
       </div>
@@ -752,14 +844,12 @@ function StatusPill({
 function DriverCard({
   icon: Icon,
   label,
-  headline,
-  impact,
+  status,
   direction,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  headline: string;
-  impact: string;
+  status: string;
   direction: Direction;
 }) {
   const Arrow = direction === "up" ? TrendingUp : direction === "down" ? TrendingDown : Minus;
@@ -782,15 +872,11 @@ function DriverCard({
         </div>
       </div>
 
-      <p className="mt-4 text-[14px] font-medium leading-relaxed text-foreground/95">
-        {headline}
-      </p>
-
-      <div className="mt-4 border-t border-white/[0.06] pt-3">
-        <div className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
-          Market impact
-        </div>
-        <p className={`mt-1 text-[12.5px] leading-relaxed ${t.fg}`}>{impact}</p>
+      <div className="mt-5 flex items-baseline gap-2">
+        <span className={`text-2xl font-bold leading-none ${t.fg}`}>{status}</span>
+      </div>
+      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary/80">
+        Tap to see today's reasoning →
       </div>
     </article>
   );
