@@ -14,7 +14,7 @@ import { useSettings } from "@/lib/settings";
 import { useAnalysis, useQuote } from "@/lib/useMarketData";
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
 import { findProduct, PRODUCTS } from "@/lib/products";
-import { DisclaimerInline } from "@/components/Disclaimer";
+
 
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
 import { recordPrediction } from "@/lib/ai-learning.functions";
@@ -449,7 +449,8 @@ function AgentAnalysisView({
           Vollständige Detailansicht →
         </Link>
       </div>
-      <DisclaimerInline />
+
+
 
     </div>
   );

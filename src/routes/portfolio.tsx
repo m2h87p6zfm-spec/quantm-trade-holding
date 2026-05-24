@@ -6,7 +6,7 @@ import { useQuote } from "@/lib/useMarketData";
 import { findProduct } from "@/lib/products";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { whyNow } from "@/lib/analysis";
-import { DisclaimerInline } from "@/components/Disclaimer";
+
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
@@ -346,7 +346,7 @@ function PortfolioPage() {
       {/* 4. Command Center — Hinzufügen / KI-Assistent (am Ende, da seltener gebraucht) */}
       <PortfolioCommandCenter />
 
-      <DisclaimerInline />
+      
     </div>
   );
 }
