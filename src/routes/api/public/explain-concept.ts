@@ -55,16 +55,21 @@ export const Route = createFileRoute("/api/public/explain-concept")({
           if (!apiKey) {
             return Response.json({ error: "AI gateway nicht konfiguriert." }, { status: 500 });
           }
-          const body = (await request.json()) as { topic?: string; context?: string };
+          const body = (await request.json()) as { topic?: string; context?: string; lang?: string };
           const topic = (body.topic || "").toString().slice(0, 200);
           const context = (body.context || "").toString().slice(0, 800);
+          const lang = body.lang === "en" ? "en" : "de";
           if (!topic) {
-            return Response.json({ error: "Kein Thema angegeben." }, { status: 400 });
+            return Response.json({ error: lang === "en" ? "No topic provided." : "Kein Thema angegeben." }, { status: 400 });
           }
 
-          const userMsg = context
-            ? `Erkläre für einen Anfänger: "${topic}".\n\nAktueller Kontext: ${context}`
-            : `Erkläre für einen Anfänger: "${topic}".`;
+          const userMsg = lang === "en"
+            ? (context
+                ? `Explain for a beginner: "${topic}".\n\nCurrent context: ${context}`
+                : `Explain for a beginner: "${topic}".`)
+            : (context
+                ? `Erkläre für einen Anfänger: "${topic}".\n\nAktueller Kontext: ${context}`
+                : `Erkläre für einen Anfänger: "${topic}".`);
 
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
@@ -75,7 +80,7 @@ export const Route = createFileRoute("/api/public/explain-concept")({
             body: JSON.stringify({
               model: "google/gemini-3-flash-preview",
               messages: [
-                { role: "system", content: SYSTEM },
+                { role: "system", content: lang === "en" ? SYSTEM_EN : SYSTEM_DE },
                 { role: "user", content: userMsg },
               ],
             }),
