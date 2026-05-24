@@ -108,10 +108,12 @@ export function resolveTicker(query: string): string | null {
     if (re.test(upper)) return p.symbol;
   }
 
-  // 4) Generischer Fallback — 1–5-Letter-Upper-Token, das nicht in Block-Liste ist.
-  for (const m of upper.matchAll(/\b[A-Z]{2,5}(?:[.:-][A-Z]{1,5})?\b/g)) {
+  // 4) Generischer Fallback — nur Tokens, die im ORIGINAL bereits all-caps sind
+  //    (verhindert dass "Hallo" → "HALLO" als Ticker erkannt wird).
+  for (const m of query.matchAll(/\b[A-Z]{2,5}(?:[.:-][A-Z]{1,5})?\b/g)) {
     if (!TICKER_BLOCKLIST.has(m[0])) return m[0];
   }
+
 
   return null;
 }
