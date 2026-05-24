@@ -238,11 +238,38 @@ function GlobalIntelPage() {
 
               <LayerControls layers={layers} setLayers={setLayers} />
 
-              {hovered && (
-                <div className="pointer-events-none absolute bottom-16 left-4 z-10 rounded-md border border-white/[0.14] bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
-                  {hovered}
-                </div>
-              )}
+              {hovered && (() => {
+                const hc = COUNTRIES_BY_NAME.get(hovered);
+                return (
+                  <div className="pointer-events-none absolute bottom-16 left-4 z-10 max-w-[280px] rounded-lg border border-white/[0.14] bg-black/75 p-2.5 backdrop-blur-md">
+                    <div className="flex items-center gap-1.5">
+                      {hc && <span className="text-base leading-none">{hc.flag}</span>}
+                      <span className="text-[11px] font-semibold text-foreground">{hovered}</span>
+                      {hc && (
+                        <span
+                          className="ml-auto rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider"
+                          style={{
+                            color: RISK_COLOR[hc.risk],
+                            backgroundColor: `color-mix(in oklab, ${RISK_COLOR[hc.risk]} 18%, transparent)`,
+                          }}
+                        >
+                          {RISK_LABEL[hc.risk]}
+                        </span>
+                      )}
+                    </div>
+                    {hc ? (
+                      <>
+                        <div className="mt-1.5 text-[11px] leading-snug text-foreground/80">{hc.summary}</div>
+                        <div className="mt-1.5 border-t border-white/10 pt-1.5 text-[10px] text-primary/90">
+                          Klick → volle Marktanalyse für deine Trades
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-1 text-[10px] text-muted-foreground">Keine Daten verfügbar</div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {selectedEvent && (
                 <div className="pointer-events-none absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-amber-400/30 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90 backdrop-blur-md">
