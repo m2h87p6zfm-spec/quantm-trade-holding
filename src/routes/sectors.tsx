@@ -236,6 +236,8 @@ function SectorRotationPage() {
             </tbody>
           </table>
         </div>
+        </TooltipProvider>
+
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
           <Legend label="Growth" desc="Tech, Communication" />
