@@ -14,8 +14,8 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Quant Core
     "nav.picks": "Quantm Picks",
     "nav.picks.desc": "KI-Vorschläge",
-    "nav.analyse": "Analyse-Agent",
-    "nav.analyse.desc": "Statistik-Engine",
+    "nav.analyse": "Aktien-Analyse",
+    "nav.analyse.desc": "Indikatoren & Score pro Symbol",
     "nav.trackRecord": "Quantm Track Record",
     "nav.trackRecord.desc": "Live-Trefferquote",
     "nav.explain": "Explain My Trade",
@@ -45,8 +45,8 @@ const DICT: Record<Lang, Dict> = {
     "nav.methodology": "Methodik",
     "nav.about": "Über uns",
     "nav.settings": "Einstellungen",
-    "nav.agent": "AI Analyst",
-    "nav.agent.desc": "Markt-Chat & Analyse",
+    "nav.agent": "KI-Stratege",
+    "nav.agent.desc": "Freier Chat zu Märkten & Setups",
     // Sidebar misc
     "side.tagline": "Statistical Trading Agent",
     "side.quantCore": "Quant Core",
@@ -339,8 +339,8 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Quant Core
     "nav.picks": "Quantm Picks",
     "nav.picks.desc": "AI suggestions",
-    "nav.analyse": "Analysis Agent",
-    "nav.analyse.desc": "Statistics engine",
+    "nav.analyse": "Stock Analysis",
+    "nav.analyse.desc": "Indicators & score per symbol",
     "nav.trackRecord": "Quantm Track Record",
     "nav.trackRecord.desc": "Live hit rate",
     "nav.explain": "Explain My Trade",
@@ -370,8 +370,8 @@ const DICT: Record<Lang, Dict> = {
     "nav.methodology": "Methodology",
     "nav.about": "About",
     "nav.settings": "Settings",
-    "nav.agent": "AI Analyst",
-    "nav.agent.desc": "Market chat & analysis",
+    "nav.agent": "AI Strategist",
+    "nav.agent.desc": "Free chat about markets & setups",
     // Sidebar misc
     "side.tagline": "Statistical Trading Agent",
     "side.quantCore": "Quant Core",
