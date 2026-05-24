@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Brain, Calendar, Compass, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Network, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, BookOpen, Bot, Brain, Calendar, Compass, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Network, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,33 +10,41 @@ import { useT } from "@/lib/i18n";
 
 type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: string; feature?: Feature };
 
+// Quant Core — the daily-use AI tools (4)
 const quantCore: NavItem[] = [
   { titleKey: "nav.picks", url: "/picks", icon: Sparkles, descKey: "nav.picks.desc" },
+  { titleKey: "nav.agent", url: "/agent", icon: Bot, descKey: "nav.agent.desc" },
   { titleKey: "nav.analyse", url: "/analyse", icon: Sigma, descKey: "nav.analyse.desc" },
   { titleKey: "nav.trackRecord", url: "/track-record", icon: ShieldCheck, descKey: "nav.trackRecord.desc" },
-  { titleKey: "nav.explain", url: "/explain-trade", icon: Microscope, descKey: "nav.explain.desc", feature: "risk_analytics" },
-  { titleKey: "nav.aiLearning", url: "/ai-learning", icon: Brain, descKey: "nav.aiLearning.desc", feature: "ai_learning" },
 ];
 
+// Markets — what's moving (5)
 const markets: NavItem[] = [
   { titleKey: "nav.watchlist", url: "/", icon: ListOrdered },
   { titleKey: "nav.heatmap", url: "/heatmap", icon: Flame },
-  { titleKey: "nav.sectors", url: "/sectors", icon: Compass, descKey: "nav.sectors.desc" },
-  { titleKey: "nav.correlations", url: "/correlations", icon: Network, descKey: "nav.correlations.desc" },
+  { titleKey: "nav.sectors", url: "/sectors", icon: Compass },
   { titleKey: "nav.news", url: "/news", icon: Newspaper, feature: "news_sentiment" },
-  { titleKey: "nav.global", url: "/global-intel", icon: Globe2, descKey: "nav.global.desc" },
   { titleKey: "nav.calendar", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
+// Portfolio & Risk — your positions (3)
 const trading: NavItem[] = [
   { titleKey: "nav.portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
   { titleKey: "nav.alerts", url: "/alerts", icon: Bell },
+  { titleKey: "nav.correlations", url: "/correlations", icon: Network },
 ];
 
+// More Tools — power features used less often (4)
+const moreTools: NavItem[] = [
+  { titleKey: "nav.explain", url: "/explain-trade", icon: Microscope, feature: "risk_analytics" },
+  { titleKey: "nav.aiLearning", url: "/ai-learning", icon: Brain, feature: "ai_learning" },
+  { titleKey: "nav.global", url: "/global-intel", icon: Globe2 },
+  { titleKey: "nav.catalog", url: "/produkte", icon: LineChart },
+];
+
+// Account & Help — settings, billing, info (4)
 const system: NavItem[] = [
   { titleKey: "nav.pricing", url: "/preise", icon: CreditCard },
-  { titleKey: "nav.catalog", url: "/produkte", icon: LineChart },
-  
   { titleKey: "nav.methodology", url: "/methodology", icon: BookOpen },
   { titleKey: "nav.about", url: "/about", icon: Info },
   { titleKey: "nav.settings", url: "/einstellungen", icon: SettingsIcon },
@@ -138,6 +146,29 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {trading.map((item) => {
+                const locked = isLocked(item);
+                const title = t(item.titleKey);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.more")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {moreTools.map((item) => {
                 const locked = isLocked(item);
                 const title = t(item.titleKey);
                 return (
