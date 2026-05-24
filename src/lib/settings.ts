@@ -245,6 +245,17 @@ export function useSettings() {
     });
   }, []);
 
+  const updateWatchlistMeta = useCallback((id: string, meta: { emoji?: string; color?: string }) => {
+    setStored((prev) => {
+      const next: StoredSettings = {
+        ...prev,
+        watchlists: prev.watchlists.map((w) => (w.id === id ? { ...w, ...meta } : w)),
+      };
+      write(next);
+      return next;
+    });
+  }, []);
+
   const deleteWatchlist = useCallback((id: string) => {
     setStored((prev) => {
       if (prev.watchlists.length <= 1) return prev;
