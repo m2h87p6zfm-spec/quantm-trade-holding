@@ -32,6 +32,7 @@ import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { Footer } from "@/components/Footer";
+import { MarketRegimePill } from "@/components/MarketRegimePill";
 
 
 import appCss from "../styles.css?url";
@@ -163,6 +164,7 @@ function AppShell() {
                 <MarketClock />
               </div>
               <div className="ml-auto flex items-center gap-2 shrink-0">
+                <MarketRegimePill />
                 <CommandPalette />
                 <AuthHeaderButton />
               </div>
