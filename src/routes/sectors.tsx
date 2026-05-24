@@ -208,11 +208,12 @@ function SectorRotationPage() {
                     </Link>
                   </td>
                   <PctCell pct={r.r1d} />
-                  <PctCell pct={r.r1w} />
+                  <PctCell pct={r.r1w} className="hidden sm:table-cell" />
                   <PctCell pct={r.r1m} colored />
-                  <PctCell pct={r.r3m} />
+                  <PctCell pct={r.r3m} className="hidden md:table-cell" />
                   <RsCell pct={r.rs1m} />
-                  <RsCell pct={r.rs3m} />
+                  <RsCell pct={r.rs3m} className="hidden lg:table-cell" />
+
                   <td className="px-2 py-2.5 text-right">
                     <div className="inline-flex items-center gap-1.5">
                       <div className="h-1.5 w-16 rounded-full bg-muted/40 overflow-hidden">
