@@ -301,9 +301,36 @@ function Bubble({ role, content, feedback }: { role: "user" | "assistant"; conte
           <Bot className="h-4 w-4" />
         </div>
       )}
-      <div className={`flex max-w-[80%] flex-col ${isUser ? "items-end" : "items-start"}`}>
-        <div className={`whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${isUser ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-          {content}
+      <div className={`flex min-w-0 max-w-[85%] flex-col ${isUser ? "items-end" : "items-start"}`}>
+        <div
+          className={`min-w-0 max-w-full overflow-hidden rounded-lg px-4 py-3 text-sm break-words ${
+            isUser
+              ? "whitespace-pre-wrap bg-primary text-primary-foreground"
+              : "bg-muted/60 text-foreground ring-1 ring-border/60"
+          }`}
+        >
+          {isUser ? (
+            content
+          ) : (
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none
+                prose-headings:font-semibold prose-headings:text-foreground
+                prose-h1:text-base prose-h1:mt-3 prose-h1:mb-2
+                prose-h2:text-sm prose-h2:mt-3 prose-h2:mb-1.5 prose-h2:text-primary
+                prose-h3:text-sm prose-h3:mt-2 prose-h3:mb-1 prose-h3:text-foreground/90
+                prose-p:my-1.5 prose-p:leading-relaxed
+                prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5
+                prose-strong:text-foreground prose-strong:font-semibold
+                prose-hr:my-3 prose-hr:border-border/60
+                prose-code:rounded prose-code:bg-background/60 prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+                prose-pre:overflow-x-auto prose-pre:rounded-md prose-pre:bg-background/80 prose-pre:p-2 prose-pre:text-xs
+                prose-table:block prose-table:overflow-x-auto prose-table:text-xs
+                prose-a:text-primary hover:prose-a:underline
+                prose-blockquote:border-l-primary/50 prose-blockquote:text-muted-foreground"
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            </div>
+          )}
         </div>
         {feedback}
       </div>
