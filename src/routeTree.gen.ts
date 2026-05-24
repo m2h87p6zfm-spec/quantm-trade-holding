@@ -25,6 +25,7 @@ import { Route as PasswortVergessenRouteImport } from './routes/passwort-vergess
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as MethodologyRouteImport } from './routes/methodology'
+import { Route as MarktRadarRouteImport } from './routes/markt-radar'
 import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KontoRouteImport } from './routes/konto'
@@ -143,6 +144,11 @@ const NewsRoute = NewsRouteImport.update({
 const MethodologyRoute = MethodologyRouteImport.update({
   id: '/methodology',
   path: '/methodology',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarktRadarRoute = MarktRadarRouteImport.update({
+  id: '/markt-radar',
+  path: '/markt-radar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaerkteRoute = MaerkteRouteImport.update({
@@ -365,6 +371,7 @@ export interface FileRoutesByFullPath {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/markt-radar': typeof MarktRadarRoute
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
@@ -422,6 +429,7 @@ export interface FileRoutesByTo {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/markt-radar': typeof MarktRadarRoute
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
@@ -480,6 +488,7 @@ export interface FileRoutesById {
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
   '/maerkte': typeof MaerkteRoute
+  '/markt-radar': typeof MarktRadarRoute
   '/methodology': typeof MethodologyRoute
   '/news': typeof NewsRoute
   '/onboarding': typeof OnboardingRoute
@@ -539,6 +548,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/markt-radar'
     | '/methodology'
     | '/news'
     | '/onboarding'
@@ -596,6 +606,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/markt-radar'
     | '/methodology'
     | '/news'
     | '/onboarding'
@@ -653,6 +664,7 @@ export interface FileRouteTypes {
     | '/konto'
     | '/login'
     | '/maerkte'
+    | '/markt-radar'
     | '/methodology'
     | '/news'
     | '/onboarding'
@@ -711,6 +723,7 @@ export interface RootRouteChildren {
   KontoRoute: typeof KontoRoute
   LoginRoute: typeof LoginRoute
   MaerkteRoute: typeof MaerkteRoute
+  MarktRadarRoute: typeof MarktRadarRoute
   MethodologyRoute: typeof MethodologyRoute
   NewsRoute: typeof NewsRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -860,6 +873,13 @@ declare module '@tanstack/react-router' {
       path: '/methodology'
       fullPath: '/methodology'
       preLoaderRoute: typeof MethodologyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/markt-radar': {
+      id: '/markt-radar'
+      path: '/markt-radar'
+      fullPath: '/markt-radar'
+      preLoaderRoute: typeof MarktRadarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/maerkte': {
@@ -1159,6 +1179,7 @@ const rootRouteChildren: RootRouteChildren = {
   KontoRoute: KontoRoute,
   LoginRoute: LoginRoute,
   MaerkteRoute: MaerkteRoute,
+  MarktRadarRoute: MarktRadarRoute,
   MethodologyRoute: MethodologyRoute,
   NewsRoute: NewsRoute,
   OnboardingRoute: OnboardingRoute,

@@ -44,7 +44,7 @@ function corrColor(c: number | null): string {
   return `color-mix(in oklab, var(--bear) ${Math.round(a * 100)}%, transparent)`;
 }
 
-function CorrelationsPage() {
+export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const { settings } = useSettings();
   const [window, setWindow] = useState<Window>(60);
   const symbols = useMemo(() => {
@@ -114,18 +114,22 @@ function CorrelationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    <div className={embedded ? "space-y-6" : "mx-auto max-w-7xl space-y-8 p-6"}>
       <div className="animate-fade-up">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Network className="h-3 w-3 text-primary" /> Korrelations-Matrix
-        </div>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">Wie ähnlich bewegen sich deine Werte?</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Pearson-Korrelation der täglichen Log-Returns. Werte nahe <span className="text-bull">+1</span> bewegen sich parallel,
-          nahe <span className="text-bear">−1</span> gegenläufig. Hohe Korrelationen = versteckte Klumpenrisiken im Portfolio.
-        </p>
+        {!embedded && (
+          <>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              <Network className="h-3 w-3 text-primary" /> Korrelations-Matrix
+            </div>
+            <h1 className="mt-3 text-4xl font-bold tracking-tight">Wie ähnlich bewegen sich deine Werte?</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              Pearson-Korrelation der täglichen Log-Returns. Werte nahe <span className="text-bull">+1</span> bewegen sich parallel,
+              nahe <span className="text-bear">−1</span> gegenläufig. Hohe Korrelationen = versteckte Klumpenrisiken im Portfolio.
+            </p>
+          </>
+        )}
 
-        <div className="mt-4 inline-flex rounded-lg border border-border bg-card p-1">
+        <div className={`${embedded ? "" : "mt-4"} inline-flex rounded-lg border border-border bg-card p-1`}>
           {([30, 60, 90] as const).map((w) => (
             <button
               key={w}
@@ -139,6 +143,7 @@ function CorrelationsPage() {
           ))}
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card-glow rounded-xl p-4">

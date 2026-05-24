@@ -71,7 +71,7 @@ function HeatCell({ cell, big }: { cell: Cell; big?: boolean }) {
   );
 }
 
-function HeatmapPage() {
+export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useT();
   const [range, setRange] = useState<Range>("D");
   const [mode, setMode] = useState<Mode>("sector");
@@ -131,7 +131,8 @@ function HeatmapPage() {
   }, [cells]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    <div className={embedded ? "space-y-6" : "mx-auto max-w-7xl space-y-8 p-6"}>
+      {!embedded && (
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Flame className="h-3 w-3 text-bear" /> Marktpuls
@@ -142,28 +143,30 @@ function HeatmapPage() {
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           {t("page.heatmap.subtitle")}
         </p>
+      </div>
+      )}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <div className="inline-flex rounded-lg border border-border bg-card p-1">
-            {(["D", "W", "M"] as const).map((r) => (
-              <button key={r} onClick={() => setRange(r)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${range === r ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-                {r === "D" ? "1 Tag" : r === "W" ? "1 Woche" : "1 Monat"}
-              </button>
-            ))}
-          </div>
-          <div className="inline-flex rounded-lg border border-border bg-card p-1">
-            <button onClick={() => setMode("sector")}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "sector" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-              <Boxes className="h-3 w-3" /> Sektoren
+      <div className="flex flex-wrap gap-2">
+        <div className="inline-flex rounded-lg border border-border bg-card p-1">
+          {(["D", "W", "M"] as const).map((r) => (
+            <button key={r} onClick={() => setRange(r)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition ${range === r ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
+              {r === "D" ? "1 Tag" : r === "W" ? "1 Woche" : "1 Monat"}
             </button>
-            <button onClick={() => setMode("grid")}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-              <LayoutGrid className="h-3 w-3" /> Grid
-            </button>
-          </div>
+          ))}
+        </div>
+        <div className="inline-flex rounded-lg border border-border bg-card p-1">
+          <button onClick={() => setMode("sector")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "sector" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <Boxes className="h-3 w-3" /> Sektoren
+          </button>
+          <button onClick={() => setMode("grid")}
+            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
+            <LayoutGrid className="h-3 w-3" /> Grid
+          </button>
         </div>
       </div>
+
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Steigend" value={rising.toString()} hint={`von ${loaded.length}`} icon={<TrendingUp className="h-4 w-4" />} tint="bull" />

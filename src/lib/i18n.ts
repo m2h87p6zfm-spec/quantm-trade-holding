@@ -24,6 +24,7 @@ const DICT: Record<Lang, Dict> = {
     "nav.aiLearning.desc": "Selbstlernend",
     // Nav — Markets
     "nav.watchlist": "Watchlist",
+    "nav.marktRadar": "Markt-Radar",
     "nav.heatmap": "Heatmap",
     "nav.sectors": "Sektor-Rotation",
     "nav.sectors.desc": "Wer führt den Markt?",
@@ -348,6 +349,7 @@ const DICT: Record<Lang, Dict> = {
     "nav.aiLearning.desc": "Self-learning",
     // Nav — Markets
     "nav.watchlist": "Watchlist",
+    "nav.marktRadar": "Market Radar",
     "nav.heatmap": "Heatmap",
     "nav.sectors": "Sector Rotation",
     "nav.sectors.desc": "Who's leading the market?",

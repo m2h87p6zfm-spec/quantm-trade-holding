@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Bot, Brain, Calendar, Compass, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Network, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, BookOpen, Bot, Brain, Calendar, CreditCard, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Radar, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,20 +18,18 @@ const quantCore: NavItem[] = [
   { titleKey: "nav.trackRecord", url: "/track-record", icon: ShieldCheck, descKey: "nav.trackRecord.desc" },
 ];
 
-// Markets — what's moving (5)
+// Markets — what's moving (4)
 const markets: NavItem[] = [
   { titleKey: "nav.watchlist", url: "/", icon: ListOrdered },
-  { titleKey: "nav.heatmap", url: "/heatmap", icon: Flame },
-  { titleKey: "nav.sectors", url: "/sectors", icon: Compass },
+  { titleKey: "nav.marktRadar", url: "/markt-radar", icon: Radar },
   { titleKey: "nav.news", url: "/news", icon: Newspaper, feature: "news_sentiment" },
   { titleKey: "nav.calendar", url: "/kalender", icon: Calendar, feature: "calendar" },
 ];
 
-// Portfolio & Risk — your positions (3)
+// Portfolio & Risk — your positions (2)
 const trading: NavItem[] = [
   { titleKey: "nav.portfolio", url: "/portfolio", icon: Wallet, feature: "portfolio" },
   { titleKey: "nav.alerts", url: "/alerts", icon: Bell },
-  { titleKey: "nav.correlations", url: "/correlations", icon: Network },
 ];
 
 // More Tools — power features used less often (4)
