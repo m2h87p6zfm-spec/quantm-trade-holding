@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchCandles } from "@/lib/finnhub";
-import { TrendingUp, TrendingDown, Layers, Compass, Activity, Shield, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Layers, Compass, Activity, Shield, Zap, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
+import { PageExplainer } from "@/components/PageExplainer";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/sectors")({ component: SectorRotationPage });
 
@@ -116,8 +118,21 @@ function SectorRotationPage() {
         </p>
       </div>
 
+      <PageExplainer
+        title="Was ist Sektor-Rotation und warum interessiert mich das?"
+        intro="Die US-Wirtschaft ist in 11 Sektoren aufgeteilt (z.B. Tech, Banken, Energie). Großanleger schichten ständig Kapital zwischen ihnen um — je nachdem, wo sie die nächste Phase erwarten. Diese Seite zeigt dir live, wer aktuell führt und wer abgehängt wird. So weißt du, wo das große Geld gerade hinfließt."
+        points={[
+          { q: "Risk-On vs. Risk-Off", a: "Risk-On = Anleger nehmen Risiko, kaufen Tech & Zykliker. Risk-Off = sie flüchten in Defensive (Health, Staples, Utilities)." },
+          { q: "Relative Stärke (RS)", a: "Wie stark ein Sektor gegen SPY läuft. Positiv = besser als der Markt. Profis kaufen, was Relative Stärke zeigt." },
+          { q: "Momentum-Score", a: "Gewichteter Mix aus 1W/1M/3M-Performance. Hoher Wert = klarer Aufwärtstrend, Trader steigen ein." },
+          { q: "Wie nutze ich das?", a: "Konzentriere dich auf Aktien aus den Top-3-Sektoren. Vermeide Aktien aus den unteren 3 — sie kämpfen gegen den Strom." },
+        ]}
+        cta="Klick auf einen Sektor in der Tabelle, um die enthaltenen Aktien zu sehen. Oder nutze den AI-Analyst-Button für eine ausführliche Markterklärung."
+      />
+
       {/* Regime-Hero */}
       <div className={`card-glow rounded-2xl border p-5 ${regimeMeta.bg}`}>
+
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-start gap-4">
             <div className={`flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-border/60 ${regimeMeta.color}`}>
@@ -137,6 +152,24 @@ function SectorRotationPage() {
         </div>
       </div>
 
+      {/* Leaders & Laggards — die Kernaussage auf einen Blick */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <LeaderLaggardCard
+          title="Sektor-Leader"
+          subtitle="Wo Geld aktuell hinfließt"
+          tone="bull"
+          icon={<ArrowUpRight className="h-4 w-4" />}
+          items={data.rows.slice(0, 3)}
+        />
+        <LeaderLaggardCard
+          title="Sektor-Nachzügler"
+          subtitle="Wo Trader Risiko meiden"
+          tone="bear"
+          icon={<ArrowDownRight className="h-4 w-4" />}
+          items={[...data.rows].slice(-3).reverse()}
+        />
+      </div>
+
       {/* Sektor-Tabelle */}
       <div className="card-glow rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
@@ -144,23 +177,25 @@ function SectorRotationPage() {
             <Layers className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-semibold uppercase tracking-wider">Sektor-Performance & Relative Stärke</h2>
           </div>
-          <div className="text-[10px] text-muted-foreground">Benchmark: SPY</div>
+          <div className="text-[10px] text-muted-foreground">Benchmark: SPY · Sortiert nach Momentum</div>
         </div>
 
+        <TooltipProvider delayDuration={200}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/60 text-[10px] uppercase tracking-widest text-muted-foreground">
                 <th className="px-2 py-2 text-left">Sektor</th>
                 <th className="px-2 py-2 text-right">1T</th>
-                <th className="px-2 py-2 text-right">1W</th>
+                <th className="px-2 py-2 text-right hidden sm:table-cell">1W</th>
                 <th className="px-2 py-2 text-right">1M</th>
-                <th className="px-2 py-2 text-right">3M</th>
-                <th className="px-2 py-2 text-right">RS 1M</th>
-                <th className="px-2 py-2 text-right">RS 3M</th>
-                <th className="px-2 py-2 text-right">Momentum</th>
+                <th className="px-2 py-2 text-right hidden md:table-cell">3M</th>
+                <ThWithTip label="RS 1M" tip="Relative Stärke (1 Monat): Sektor-Return minus SPY-Return. Positiv = besser als der Markt." />
+                <ThWithTip label="RS 3M" tip="Relative Stärke (3 Monate). Anhaltend positive Werte deuten auf institutionellen Kapitalzufluss." className="hidden lg:table-cell" />
+                <ThWithTip label="Momentum" tip="Gewichteter Trend-Score: 1W (50%) + 1M (30%) + 3M (20%). Höher = stärkerer Aufwärtstrend." />
               </tr>
             </thead>
+
             <tbody>
               {data.rows.map((r, idx) => (
                 <tr key={r.symbol} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
@@ -173,11 +208,12 @@ function SectorRotationPage() {
                     </Link>
                   </td>
                   <PctCell pct={r.r1d} />
-                  <PctCell pct={r.r1w} />
+                  <PctCell pct={r.r1w} className="hidden sm:table-cell" />
                   <PctCell pct={r.r1m} colored />
-                  <PctCell pct={r.r3m} />
+                  <PctCell pct={r.r3m} className="hidden md:table-cell" />
                   <RsCell pct={r.rs1m} />
-                  <RsCell pct={r.rs3m} />
+                  <RsCell pct={r.rs3m} className="hidden lg:table-cell" />
+
                   <td className="px-2 py-2.5 text-right">
                     <div className="inline-flex items-center gap-1.5">
                       <div className="h-1.5 w-16 rounded-full bg-muted/40 overflow-hidden">
@@ -200,6 +236,8 @@ function SectorRotationPage() {
             </tbody>
           </table>
         </div>
+        </TooltipProvider>
+
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px]">
           <Legend label="Growth" desc="Tech, Communication" />
@@ -212,11 +250,11 @@ function SectorRotationPage() {
   );
 }
 
-function PctCell({ pct, colored }: { pct: number | null; colored?: boolean }) {
-  if (pct == null) return <td className="px-2 py-2.5 text-right text-muted-foreground font-mono">—</td>;
+function PctCell({ pct, colored, className }: { pct: number | null; colored?: boolean; className?: string }) {
+  if (pct == null) return <td className={`px-2 py-2.5 text-right text-muted-foreground font-mono ${className ?? ""}`}>—</td>;
   const cls = pct >= 0 ? "text-bull" : "text-bear";
   return (
-    <td className="px-2 py-2.5 text-right">
+    <td className={`px-2 py-2.5 text-right ${className ?? ""}`}>
       <span
         className={`font-mono text-xs tabular-nums ${cls} ${colored ? "rounded px-1.5 py-0.5" : ""}`}
         style={colored ? { background: colorBg(pct) } : undefined}
@@ -227,12 +265,12 @@ function PctCell({ pct, colored }: { pct: number | null; colored?: boolean }) {
   );
 }
 
-function RsCell({ pct }: { pct: number | null }) {
-  if (pct == null) return <td className="px-2 py-2.5 text-right text-muted-foreground font-mono">—</td>;
+function RsCell({ pct, className }: { pct: number | null; className?: string }) {
+  if (pct == null) return <td className={`px-2 py-2.5 text-right text-muted-foreground font-mono ${className ?? ""}`}>—</td>;
   const Icon = pct >= 0 ? TrendingUp : TrendingDown;
   const cls = pct >= 0 ? "text-bull" : "text-bear";
   return (
-    <td className="px-2 py-2.5 text-right">
+    <td className={`px-2 py-2.5 text-right ${className ?? ""}`}>
       <span className={`inline-flex items-center gap-1 font-mono text-xs tabular-nums ${cls}`}>
         <Icon className="h-3 w-3" />
         {pct >= 0 ? "+" : ""}{pct.toFixed(2)}
@@ -240,6 +278,68 @@ function RsCell({ pct }: { pct: number | null }) {
     </td>
   );
 }
+
+function ThWithTip({ label, tip, className }: { label: string; tip: string; className?: string }) {
+  return (
+    <th className={`px-2 py-2 text-right ${className ?? ""}`}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help border-b border-dotted border-muted-foreground/40">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[240px] text-xs normal-case tracking-normal">{tip}</TooltipContent>
+      </Tooltip>
+    </th>
+  );
+}
+
+type SectorRow = { symbol: string; name: string; mom: number; rs1m: number | null; r1m: number | null };
+
+function LeaderLaggardCard({
+  title, subtitle, tone, icon, items,
+}: {
+  title: string;
+  subtitle: string;
+  tone: "bull" | "bear";
+  icon: React.ReactNode;
+  items: SectorRow[];
+}) {
+  const toneClasses = tone === "bull"
+    ? "border-bull/30 bg-bull/[0.06]"
+    : "border-bear/30 bg-bear/[0.06]";
+  const toneText = tone === "bull" ? "text-bull" : "text-bear";
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClasses}`}>
+      <div className="flex items-center gap-2">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-border/40 ${toneText}`}>{icon}</span>
+        <div>
+          <div className={`text-sm font-semibold ${toneText}`}>{title}</div>
+          <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+        </div>
+      </div>
+      <ul className="mt-3 space-y-1.5">
+        {items.map((r, i) => (
+          <li key={r.symbol}>
+            <Link
+              to="/produkte/$symbol"
+              params={{ symbol: r.symbol }}
+              className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm transition hover:bg-background/40"
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold bg-background/60 text-muted-foreground">{i + 1}</span>
+                <span className="font-mono font-bold">{r.symbol}</span>
+                <span className="truncate text-xs text-muted-foreground">{r.name}</span>
+              </span>
+              <span className={`font-mono text-xs tabular-nums ${toneText}`}>
+                {r.r1m != null ? `${r.r1m >= 0 ? "+" : ""}${r.r1m.toFixed(2)}%` : "—"}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 
 function TypeBadge({ type }: { type: "cyclical" | "defensive" | "rate" | "growth" }) {
   const map = {

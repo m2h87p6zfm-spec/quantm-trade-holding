@@ -28,6 +28,7 @@ import {
 } from "@/lib/global-intel-data";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
+import { PageExplainer } from "@/components/PageExplainer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -205,10 +206,23 @@ function GlobalIntelPage() {
       <SectionNav />
 
       <main className="mx-auto max-w-[1700px] space-y-6 px-4 py-6 sm:px-8">
+        <PageExplainer
+          title="Was siehst du hier — und warum bewegt das den Markt?"
+          intro="Globale Politik, Konflikte und Handelsströme entscheiden über Rohstoffpreise, Währungen und Aktien. Diese Karte bündelt, was Profi-Trader morgens als Erstes checken: Wo brennt es geopolitisch, welche Lieferketten sind bedroht und welche Sektoren reagieren? Du musst kein Geopolitik-Experte sein — klick einfach Länder und Event-Punkte an, um die Folgen für deine Trades zu sehen."
+          points={[
+            { q: "Rote/Orange Punkte", a: "Aktive geopolitische Ereignisse (Konflikte, Sanktionen, Wahlen). Größe = Marktrelevanz. Klick → siehst betroffene Sektoren." },
+            { q: "Linien auf der Karte", a: "Blau = Handelsströme (z.B. Öl, Chips). Rot = militärische/diplomatische Spannungen. Beides verschiebt globale Preise sofort." },
+            { q: "Länder anklicken", a: "Öffnet ein Briefing: BIP, Risk-Score, größte Exporte und welche Aktien/ETFs typischerweise auf das Land reagieren." },
+            { q: "Wie nutze ich das?", a: "Vor wichtigen Trades: Schau, ob ein aktives Event deine Position beeinflusst (z.B. Öl-Position bei Nahost-Spannungen)." },
+          ]}
+          cta="Tipp: Der Live Feed in der Seitenleiste zeigt eingehende Nachrichten mit ihrer Marktwirkung — perfekt für den Morgen-Check."
+        />
+
         {/* 1. MARKET OVERVIEW */}
         <Panel id="briefing" eyebrow="At a glance" title="Global Market Overview" icon={Globe2} collapsible defaultOpen>
           <StrategicBriefing />
         </Panel>
+
 
         {/* 2. COMMAND CENTER (Map + tabbed aside) */}
         <Panel id="command" eyebrow="Realtime" title="Global Intelligence Map" icon={Globe2} padded={false}>
