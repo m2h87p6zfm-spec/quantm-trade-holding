@@ -1963,8 +1963,10 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
           <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
             What happened
           </div>
-          <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/90">{event.summary}</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-foreground/90 whitespace-pre-line">{event.summary}</p>
+          <EventArticleLink event={event} />
         </div>
+
 
         {/* B. Why it matters */}
         {chain && (
