@@ -2439,6 +2439,8 @@ function CountryFinder({
   const [query, setQuery] = useState("");
   const [risk, setRisk] = useState<RiskFilter>("all");
   const [activeIdx, setActiveIdx] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+  const COLLAPSED_COUNT = 12;
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Global "/" shortcut to focus search
@@ -2574,33 +2576,47 @@ function CountryFinder({
           No countries match <span className="font-semibold text-foreground">"{query}"</span>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {filtered.map((c, i) => {
-            const isSel = selected?.iso2 === c.iso2;
-            const isActive = i === activeIdx && query.length > 0;
-            return (
-              <button
-                key={c.iso2}
-                onClick={() => onSelect(c)}
-                onMouseEnter={() => setActiveIdx(i)}
-                className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
-                  isSel
-                    ? "border-primary/60 bg-primary/15 text-primary"
-                    : isActive
-                      ? "border-primary/40 bg-primary/[0.08] text-foreground"
-                      : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
-                }`}
-              >
-                <span aria-hidden>{c.flag}</span>
-                <span className="font-medium">
-                  {query ? <Highlight text={c.name} query={query} /> : c.name}
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">{c.iso2}</span>
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RISK_COLOR[c.risk] }} />
-              </button>
-            );
-          })}
-        </div>
+        <>
+          <div className="flex flex-wrap gap-1.5">
+            {(showAll || query ? filtered : filtered.slice(0, COLLAPSED_COUNT)).map((c, i) => {
+              const isSel = selected?.iso2 === c.iso2;
+              const isActive = i === activeIdx && query.length > 0;
+              return (
+                <button
+                  key={c.iso2}
+                  onClick={() => onSelect(c)}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
+                    isSel
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : isActive
+                        ? "border-primary/40 bg-primary/[0.08] text-foreground"
+                        : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
+                  }`}
+                >
+                  <span aria-hidden>{c.flag}</span>
+                  <span className="font-medium">
+                    {query ? <Highlight text={c.name} query={query} /> : c.name}
+                  </span>
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">{c.iso2}</span>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RISK_COLOR[c.risk] }} />
+                </button>
+              );
+            })}
+          </div>
+          {!query && filtered.length > COLLAPSED_COUNT && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/[0.06] px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/[0.12]"
+            >
+              {showAll
+                ? `Weniger anzeigen`
+                : `Alle ${filtered.length} Länder anzeigen (+${filtered.length - COLLAPSED_COUNT})`}
+              <ChevronDown className={`h-3 w-3 transition-transform ${showAll ? "rotate-180" : ""}`} />
+            </button>
+          )}
+        </>
       )}
     </section>
   );
