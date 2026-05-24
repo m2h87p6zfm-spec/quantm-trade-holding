@@ -338,6 +338,7 @@ export function useSettings() {
     createWatchlist,
     createWatchlistWithSymbols,
     renameWatchlist,
+    updateWatchlistMeta,
     deleteWatchlist,
     setActiveWatchlist,
     setPortfolio,
