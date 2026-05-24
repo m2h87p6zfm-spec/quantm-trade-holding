@@ -238,11 +238,38 @@ function GlobalIntelPage() {
 
               <LayerControls layers={layers} setLayers={setLayers} />
 
-              {hovered && (
-                <div className="pointer-events-none absolute bottom-16 left-4 z-10 rounded-md border border-white/[0.14] bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
-                  {hovered}
-                </div>
-              )}
+              {hovered && (() => {
+                const hc = COUNTRIES_BY_NAME.get(hovered);
+                return (
+                  <div className="pointer-events-none absolute bottom-16 left-4 z-10 max-w-[280px] rounded-lg border border-white/[0.14] bg-black/75 p-2.5 backdrop-blur-md">
+                    <div className="flex items-center gap-1.5">
+                      {hc && <span className="text-base leading-none">{hc.flag}</span>}
+                      <span className="text-[11px] font-semibold text-foreground">{hovered}</span>
+                      {hc && (
+                        <span
+                          className="ml-auto rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider"
+                          style={{
+                            color: RISK_COLOR[hc.risk],
+                            backgroundColor: `color-mix(in oklab, ${RISK_COLOR[hc.risk]} 18%, transparent)`,
+                          }}
+                        >
+                          {RISK_LABEL[hc.risk]}
+                        </span>
+                      )}
+                    </div>
+                    {hc ? (
+                      <>
+                        <div className="mt-1.5 text-[11px] leading-snug text-foreground/80">{hc.summary}</div>
+                        <div className="mt-1.5 border-t border-white/10 pt-1.5 text-[10px] text-primary/90">
+                          Klick → volle Marktanalyse für deine Trades
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-1 text-[10px] text-muted-foreground">Keine Daten verfügbar</div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {selectedEvent && (
                 <div className="pointer-events-none absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-amber-400/30 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90 backdrop-blur-md">
@@ -2412,6 +2439,8 @@ function CountryFinder({
   const [query, setQuery] = useState("");
   const [risk, setRisk] = useState<RiskFilter>("all");
   const [activeIdx, setActiveIdx] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+  const COLLAPSED_COUNT = 12;
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // Global "/" shortcut to focus search
@@ -2547,33 +2576,47 @@ function CountryFinder({
           No countries match <span className="font-semibold text-foreground">"{query}"</span>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
-          {filtered.map((c, i) => {
-            const isSel = selected?.iso2 === c.iso2;
-            const isActive = i === activeIdx && query.length > 0;
-            return (
-              <button
-                key={c.iso2}
-                onClick={() => onSelect(c)}
-                onMouseEnter={() => setActiveIdx(i)}
-                className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
-                  isSel
-                    ? "border-primary/60 bg-primary/15 text-primary"
-                    : isActive
-                      ? "border-primary/40 bg-primary/[0.08] text-foreground"
-                      : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
-                }`}
-              >
-                <span aria-hidden>{c.flag}</span>
-                <span className="font-medium">
-                  {query ? <Highlight text={c.name} query={query} /> : c.name}
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">{c.iso2}</span>
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RISK_COLOR[c.risk] }} />
-              </button>
-            );
-          })}
-        </div>
+        <>
+          <div className="flex flex-wrap gap-1.5">
+            {(showAll || query ? filtered : filtered.slice(0, COLLAPSED_COUNT)).map((c, i) => {
+              const isSel = selected?.iso2 === c.iso2;
+              const isActive = i === activeIdx && query.length > 0;
+              return (
+                <button
+                  key={c.iso2}
+                  onClick={() => onSelect(c)}
+                  onMouseEnter={() => setActiveIdx(i)}
+                  className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] transition-all ${
+                    isSel
+                      ? "border-primary/60 bg-primary/15 text-primary"
+                      : isActive
+                        ? "border-primary/40 bg-primary/[0.08] text-foreground"
+                        : "border-white/10 bg-white/[0.02] text-muted-foreground hover:-translate-y-0.5 hover:border-white/25 hover:text-foreground"
+                  }`}
+                >
+                  <span aria-hidden>{c.flag}</span>
+                  <span className="font-medium">
+                    {query ? <Highlight text={c.name} query={query} /> : c.name}
+                  </span>
+                  <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground/70">{c.iso2}</span>
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: RISK_COLOR[c.risk] }} />
+                </button>
+              );
+            })}
+          </div>
+          {!query && filtered.length > COLLAPSED_COUNT && (
+            <button
+              type="button"
+              onClick={() => setShowAll((v) => !v)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/[0.06] px-3 py-1.5 text-[11px] font-semibold text-primary transition hover:bg-primary/[0.12]"
+            >
+              {showAll
+                ? `Weniger anzeigen`
+                : `Alle ${filtered.length} Länder anzeigen (+${filtered.length - COLLAPSED_COUNT})`}
+              <ChevronDown className={`h-3 w-3 transition-transform ${showAll ? "rotate-180" : ""}`} />
+            </button>
+          )}
+        </>
       )}
     </section>
   );
