@@ -13,7 +13,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useSettings } from "@/lib/settings";
 import { useAnalysis, useQuote } from "@/lib/useMarketData";
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
-import { findProduct, PRODUCTS } from "@/lib/products";
+import { findProduct } from "@/lib/products";
 
 
 import { detectRegime, deriveScenarioTag } from "@/lib/ai-learning";
@@ -188,66 +188,12 @@ Zufallsseed: ${Math.random().toString(36).slice(2, 10)}.`
 }
 
 
-const NAME_STOPWORDS = new Set([
-  "inc", "inc.", "corp", "corp.", "corporation", "company", "co", "co.", "ag", "se", "sa", "nv", "plc",
-  "ltd", "ltd.", "limited", "holdings", "holding", "group", "the", "and", "of", "&",
-  "technologies", "technology", "tech", "systems", "industries", "international", "global",
-  "platforms", "motors", "motor", "bank", "banco", "vz", "pharmaceuticals", "pharma",
-]);
-
-function nameTokens(name: string): string[] {
-  return name
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, " ")
-    .split(/[^a-zäöüß0-9]+/)
-    .filter((t) => t.length >= 3 && !NAME_STOPWORDS.has(t));
-}
+import { resolveTicker } from "@/lib/ticker-resolver";
 
 function extractSymbol(q: string): string | null {
-  const upper = q.toUpperCase();
-  const lower = q.toLowerCase();
-  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  // 1) Direkter Symbol-Match (längste zuerst)
-  for (const p of [...PRODUCTS].sort((a, b) => b.symbol.length - a.symbol.length)) {
-    const symbol = p.symbol.toUpperCase();
-    if (new RegExp(`(^|[^A-Z0-9])${escapeRe(symbol)}($|[^A-Z0-9])`).test(upper)) return p.symbol;
-  }
-
-  // 2) Name-Match: irgendein bedeutsamer Token des Firmennamens muss als Wort in der Query stehen
-  //    Längere Tokens bekommen Vorrang (z.B. "vertiv" > "tech").
-  const candidates: Array<{ symbol: string; score: number }> = [];
-  for (const p of PRODUCTS) {
-    const tokens = nameTokens(p.name);
-    for (const t of tokens) {
-      if (new RegExp(`(^|[^a-zäöüß0-9])${escapeRe(t)}($|[^a-zäöüß0-9])`).test(lower)) {
-        candidates.push({ symbol: p.symbol, score: t.length });
-        break;
-      }
-    }
-  }
-  if (candidates.length > 0) {
-    candidates.sort((a, b) => b.score - a.score);
-    return candidates[0].symbol;
-  }
-
-  // 3) Aliase / gängige Spitznamen
-  const aliases: Record<string, string> = {
-    apple: "AAPL", tesla: "TSLA", nvidia: "NVDA", microsoft: "MSFT", amazon: "AMZN", meta: "META", facebook: "META",
-    google: "GOOGL", alphabet: "GOOGL", netflix: "NFLX", "deutsche bank": "DBK.DE", siemens: "SIE.DE",
-    volkswagen: "VOW3.DE", bmw: "BMW.DE", bayer: "BAYN.DE", airbus: "AIR.PA", sap: "SAP", asml: "ASML",
-    dax: "EWG", "s&p": "SPY", "s&p 500": "SPY", nasdaq: "QQQ", "dow jones": "DIA", dow: "DIA", nikkei: "EWJ",
-    vertiv: "VRT", palantir: "PLTR", berkshire: "BRK.B", buffett: "BRK.B",
-  };
-  for (const [k, v] of Object.entries(aliases)) if (lower.includes(k)) return v;
-
-  // 4) Fallback: irgendein groß geschriebenes Token sieht nach Ticker aus
-  const blocked = new Set(["ICH", "WIE", "KAUF", "KAUFEN", "VERKAUF", "VERKAUFEN", "HALTEN", "SOLL", "LONG", "SHORT"]);
-  for (const match of upper.matchAll(/\b[A-Z]{1,5}(?:[.:-][A-Z]{1,5})?\b/g)) {
-    if (!blocked.has(match[0])) return match[0];
-  }
-  return null;
+  return resolveTicker(q);
 }
+
 
 
 type CreditState =

@@ -42,22 +42,12 @@ export async function analyzeTicker(symbol: string): Promise<ApexReport | null> 
   return apexAnalyze(symbol.toUpperCase(), asset, bench.map((c) => c.c));
 }
 
-// Detect 1-5 letter uppercase tickers in a free-text message.
-// Filters obvious German stop-words so "ANALYSIERE NVDA" picks NVDA, not "ANALYSIERE".
-const STOP = new Set([
-  "DASHBOARD", "SIGNAL", "SIGNALE", "SCAN", "SCANNE", "ANALYSIERE", "ANALYSE",
-  "BITTE", "DANKE", "OK", "JA", "NEIN", "UND", "ODER", "DER", "DIE", "DAS",
-  "EIN", "EINE", "DEN", "DEM", "MIT", "VON", "FÜR", "FUR", "ÜBER", "UEBER",
-  "AKTIE", "ETF", "BUY", "SELL", "HOLD", "STOCK", "USD", "EUR", "USA",
-  "APEX", "PRIME", "TOP", "RSI", "MACD", "SMA", "EMA", "BB", "ATR", "VAR",
-]);
+// Robuste Ticker-Erkennung: nutzt denselben mehrstufigen Resolver wie das
+// Frontend (Aliase → Firmenname → direktes Symbol → Generic-Fallback).
+// Verhindert z. B. dass "Analysiere Rheinmetall" zu META wird.
+import { resolveTicker } from "@/lib/ticker-resolver";
 
 export function detectTicker(text: string): string | null {
-  const tokens = text.toUpperCase().match(/\b[A-Z]{1,5}\b/g) ?? [];
-  for (const t of tokens) {
-    if (STOP.has(t)) continue;
-    if (t.length === 1) continue;
-    return t;
-  }
-  return null;
+  return resolveTicker(text);
 }
+
