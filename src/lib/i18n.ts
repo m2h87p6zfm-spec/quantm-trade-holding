@@ -92,6 +92,12 @@ const DICT: Record<Lang, Dict> = {
     "common.delete": "Löschen",
     "common.search": "Suchen",
     "common.back": "Zurück",
+    // Explain AI dialog
+    "explain.label": "AI erklärt",
+    "explain.loading": "AI erklärt das Konzept…",
+    "explain.signInRequired": "Bitte zuerst anmelden, um die KI-Erklärung zu nutzen.",
+    "explain.rateLimited": "Zu viele Anfragen — bitte kurz warten.",
+    "explain.creditsOut": "AI-Credits aufgebraucht.",
     // Settings
     "settings.title": "Einstellungen",
     "settings.subtitle": "Passe deinen Trading-Agent an deinen Stil an — Risiko, Darstellung, Benachrichtigungen und Standard-Targets.",
@@ -403,6 +409,12 @@ const DICT: Record<Lang, Dict> = {
     "common.delete": "Delete",
     "common.search": "Search",
     "common.back": "Back",
+    // Explain AI dialog
+    "explain.label": "Explain AI",
+    "explain.loading": "AI is explaining the concept…",
+    "explain.signInRequired": "Please sign in first to use the AI explanation.",
+    "explain.rateLimited": "Too many requests — please wait a moment.",
+    "explain.creditsOut": "AI credits exhausted.",
     // Settings
     "settings.title": "Settings",
     "settings.subtitle": "Tailor your trading agent — risk, appearance, notifications, and default targets.",

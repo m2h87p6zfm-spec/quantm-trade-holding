@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
+import { useSettings } from "@/lib/settings";
 import { AuthGate } from "@/components/AuthGate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -122,6 +124,15 @@ function AppShell() {
     pathname === "/passwort-vergessen" ||
     pathname === "/passwort-zuruecksetzen" ||
     pathname === "/onboarding";
+
+  // Keep <html lang> in sync with the user's chosen language so screen
+  // readers, browser translation, and SEO see the right locale.
+  const { settings } = useSettings();
+  useEffect(() => {
+    if (typeof document !== "undefined" && settings?.language) {
+      document.documentElement.lang = settings.language;
+    }
+  }, [settings?.language]);
 
   // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   if (!user || isAuthScreen) {
