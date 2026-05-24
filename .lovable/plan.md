@@ -1,66 +1,93 @@
-# APEX Track Record — Plan
+# QUANTM Causal Engine — Implementierungsplan
 
-Öffentliche, datengetriebene Vertrauensseite unter `/track-record`. Alle Zahlen werden live aus zwei neuen Tabellen berechnet, die automatisch befüllt und nachverfolgt werden.
+Ein eigenständiges Modul, das parallel zur bestehenden Analyse läuft. Bestehender Code wird nicht angefasst.
 
-## 1. Datenbank (Migration)
+## Wichtige Anpassung gegenüber Spec
 
-**`apex_analyses`** (öffentlich lesbar, anonym):
-- `id uuid pk`, `ticker text`, `name text`, `sector text`, `asset_type text` (`Aktie`/`ETF`)
-- `analyzed_at timestamptz`, `verdict text` (`KAUF`/`HALTEN`/`VERKAUFEN`)
-- `confidence_score numeric`, `price_at_analysis numeric`
-- `indicators jsonb` (RSI, MACD, Z-Score, Bollinger, SMA, Vola, Momentum …)
-- **keine `user_id`** — vollständig anonym
+Der Prompt fordert **Supabase Edge Functions**. Dieses Projekt nutzt jedoch ausschließlich **TanStack Server Functions / Server Routes** (siehe Projekt-Stack). Edge Functions sind hier explizit verboten. Ich implementiere die gleiche Logik 1:1 als:
 
-**`apex_outcomes`**:
-- `id uuid pk`, `analysis_id uuid fk → apex_analyses(id)` unique
-- `price_after_30d/60d/90d numeric null`
-- `return_30d/60d/90d numeric null`
-- `is_correct boolean null` (basiert auf 30d-Richtung vs. Verdict)
-- `updated_at timestamptz`
+- `createServerFn` für client-getriggerte Calls (`fetch-causal-events`, finaler Score)
+- Server Route unter `/api/public/hooks/causal-outcomes` für den täglichen Cron Job
+- pg_cron ruft diese Route täglich um 02:00 UTC auf
 
-**RLS**: SELECT für `anon` + `authenticated` auf beide Tabellen. INSERT/UPDATE nur über Server-Funktionen mit Service-Role (kein Client-Write).
+Funktional identisch zur Spec, nur stack-konform.
 
-## 2. Automatisches Speichern
+## Phase 1 — Datenbank
 
-In `src/routes/analyse.tsx` nach erfolgreicher APEX-Analyse: neue ServerFn `recordApexAnalysis` aufrufen (fire-and-forget), die anonymisiert in `apex_analyses` schreibt und einen leeren `apex_outcomes`-Eintrag anlegt.
+Migration mit allen 4 Tabellen:
+- `causal_events` (event log)
+- `causal_outcomes` (preis-snapshots & returns, FK auf events)
+- `causal_patterns` (aggregierte muster, UNIQUE ticker+event_type)
+- `causal_analysis_results` (analyse-snapshots)
 
-## 3. Cron-Job für 30/60/90-Tage-Tracking
+RLS:
+- `causal_events`, `causal_patterns`, `causal_outcomes`, `causal_analysis_results`: public read (anon+authenticated). Writes nur serverseitig via service role.
 
-- Neue Public-Route `src/routes/api/public/hooks/track-outcomes.ts`
-- Lädt alle Analysen, deren 30/60/90-Tage-Fenster fällig und Spalte noch null
-- Holt aktuelle Kurse via Finnhub, berechnet Rendite, setzt `is_correct` nach 30 Tagen:
-  - KAUF korrekt wenn `return_30d > 0`
-  - VERKAUFEN korrekt wenn `return_30d < 0`
-  - HALTEN korrekt wenn `|return_30d| < 5 %`
-- pg_cron läuft täglich um 02:00 UTC (via `supabase--insert`)
+Index auf `causal_events(ticker, event_date)`, `causal_outcomes(event_id)`, `causal_patterns(ticker)`.
 
-## 4. Seite `/track-record` (öffentlich)
+## Phase 2 — Backend
 
-Neue Route `src/routes/track-record.tsx` (außerhalb `_authenticated`), dunkles Bloomberg-Terminal-Design.
+### `src/lib/causal-engine.server.ts`
+Kernlogik (server-only):
+- `classifyEvent(text)` → mapped Suchergebnis-Snippet auf einen der 16 erlaubten `event_type` Werte (Keyword-basiert, "unklar" → skip)
+- `fetchHistoricalPrice(ticker, date)` → nutzt bestehende Twelve-Data Integration
+- `recordEventsForTicker(ticker, companyName)` → Firecrawl-Search × 6 queries, klassifiziert, dedupiziert (gleicher ticker+type ±3d), upsert in `causal_events`, preis-snapshot in `causal_outcomes`
+- `backfillOutcomes()` → täglicher Job: lädt pending outcomes, holt 3/7/14/30/90d preise, berechnet returns
+- `recalcPatternsFor(ticker)` → aggregiert, berechnet `repeatability_score`, UPSERT in `causal_patterns`
+- `computeCausalScore(ticker)` → lädt events der letzten 30d + patterns, berechnet causal_score+verdict, speichert in `causal_analysis_results`
 
-**Sektionen** (alle live aus DB berechnet, mit Filter-State `useState`):
-1. **Hero**: „APEX hat X von Y Analysen korrekt vorhergesagt" + 3 KPI-Karten (Gesamtgenauigkeit mit Donut, Anzahl, Ø Rendite KAUF 90d)
-2. **Filter-Leiste**: Zeitraum / Urteil / Sektor / Asset-Typ / Ergebnis
-3. **Indikator-Genauigkeit**: pro Indikator wird simuliert, ob sein Einzelsignal stimmig zum Outcome war → Trefferquote als farbige Karten
-4. **Performance-Chart**: kumulierte Genauigkeit über Zeit (3 Linien KAUF/HALTEN/VERKAUFEN) — Recharts LineChart mit Tooltip
-5. **APEX vs. Markt**: Tabelle mit Ø Rendite KAUF (90d/1y) vs. SPY, URTH, ^GDAXI (live via Finnhub Candles)
-6. **Analyse-Tabelle**: sortierbar, suchbar, paginiert (20/Seite), responsive
-7. **Sektor-Heatmap**: Rechtecke pro Sektor, Größe = Anzahl, Farbe = Genauigkeit; Klick filtert Tabelle
-8. **Beste / Schlechteste Vorhersagen**: Top-5 / Bottom-5 nach `return_30d` (Verdict-konform)
-9. **Methodologie-Accordion**: 4 FAQ-Einträge
-10. **CTA-Block** mit zwei Buttons → `/login` und `/analyse`
+### `src/lib/causal-engine.functions.ts`
+- `runCausalAnalysis({ ticker, companyName })` server fn → ruft `recordEventsForTicker` → `recalcPatternsFor` → `computeCausalScore` und gibt komplettes Ergebnis-Objekt für UI zurück.
 
-**Datenladung**: eine ServerFn `getTrackRecord()` mit allen Aggregaten + Liste der Analysen+Outcomes, gecached via TanStack Query. Filter werden client-seitig auf dem geladenen Datensatz angewendet (instant, kein Refetch).
+### `src/routes/api/public/hooks/causal-outcomes.ts`
+POST-Route, verifiziert `apikey` Header gegen `SUPABASE_PUBLISHABLE_KEY`, ruft `backfillOutcomes()` auf.
 
-**Auth-frei**: Route liegt direkt unter `src/routes/`, kein `_authenticated`-Layout. Sidebar wird auf dieser Seite nicht gezeigt (eigenes Public-Layout mit Header + Logo).
+### pg_cron
+```sql
+select cron.schedule('causal-outcomes-daily', '0 2 * * *',
+  $$ select net.http_post(url:='…/api/public/hooks/causal-outcomes',
+       headers:='{"Content-Type":"application/json","apikey":"…"}'::jsonb,
+       body:='{}'::jsonb) $$);
+```
 
-## 5. Navigation
+## Phase 3 — Score-Berechnung
 
-Link „Track Record" in `AppSidebar` für eingeloggte Nutzer + Footer-Link.
+Eingebaut in `computeCausalScore` (Spec 1:1).
 
-## Technische Details
-- ServerFns: `src/lib/track-record.functions.ts` (`recordApexAnalysis`, `getTrackRecord`)
-- Cron-Endpoint nutzt `supabaseAdmin` + `process.env.FINNHUB_API_KEY` (bereits vorhanden via `finnhub.ts`)
-- Indikator-Genauigkeit-Heuristik: pro Analyse wird je Indikator geprüft ob sein Signal (z. B. RSI < 30 = bullish) zum tatsächlichen 30-Tage-Outcome passt
-- Charts: Recharts (bereits installiert)
-- Dunkles Theme: bestehende `--background`/`--card`-Tokens reichen, aktuelles Theme der App ist bereits dunkel
+## Phase 4 — UI
+
+### `src/components/CausalEngineCard.tsx`
+Neue Karte mit den 6 Elementen aus der Spec:
+1. Header mit Icon + Timestamp + Trennlinie (volle Karten-Breite, `w-full`)
+2. Verdict-Badge (große Pille, farbcodiert nach Spec)
+3. Zwei Score-Boxen nebeneinander (`grid-cols-2`) mit Score + Progress-Bar (rot/gelb/grün-Schwellen)
+4. Aktuell erkannte Ereignisse (Liste mit farbigem Dot je type)
+5. Historische Muster (nur types mit ≥3 Occurrences)
+6. Disclaimer
+
+Empty-States: bei `KEINE_DATEN` einheitliche Meldung statt leerer Bereiche. Mobile: alles `min-w-0` + `truncate`/`break-words`, getestet bei 375px.
+
+### Integration
+In `src/routes/analyse.tsx` nach dem bestehenden `AiSummaryCard` rendern:
+- nutzt `useServerFn(runCausalAnalysis)` mit `useQuery`, getriggert wenn ein Ticker erkannt wurde
+- Lädt asynchron parallel zur Haupt-Analyse, blockiert nichts
+- Loading-Skeleton während fetch
+
+## Phase 5 — QA
+
+Nach Build prüfe ich:
+- Migration angewendet, alle 4 Tabellen mit Constraints sichtbar
+- Card overflow-frei (`overflow-hidden` + `w-full` auf Trennlinie)
+- Mobile 375px responsive
+- Cron job in `cron.job` registriert
+- Edge Cases: KEINE_DATEN zeigt definierte Meldung
+- Bestehende Komponenten unverändert (diff-check)
+
+## Reihenfolge der Tool-Calls
+
+1. `supabase--migration` für die 4 Tabellen (warte auf Approval)
+2. Server-Code: `causal-engine.server.ts`, `causal-engine.functions.ts`, hook-route
+3. UI: `CausalEngineCard.tsx`
+4. Integration in `analyse.tsx`
+5. `supabase--insert` für pg_cron schedule
+6. QA-Check

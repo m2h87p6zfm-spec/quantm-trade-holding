@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { buildIndicatorPrompt } from "@/lib/indicator-prompt";
 import { ApexDashboard, ApexLoading } from "@/components/ApexDashboard";
 import { AiSummaryCard } from "@/components/AiSummaryCard";
+import { CausalEngineCard } from "@/components/CausalEngineCard";
 import type { IndicatorSet } from "@/lib/indicators";
 import type { MarketRegime } from "@/lib/ai-learning";
 
@@ -414,6 +415,7 @@ function AgentAnalysisView({
         regime={regime}
       />
       <AiCommentary query={userQuery} symbol={symbol} indicators={indicators} regime={regime} cachedText={cachedText} onDone={onDone} />
+      <CausalEngineCard ticker={symbol} companyName={name} />
       <div className="pt-1">
         <Link to="/produkte/$symbol" params={{ symbol }} className="text-xs text-cyan-accent hover:underline">
           Vollständige Detailansicht →
