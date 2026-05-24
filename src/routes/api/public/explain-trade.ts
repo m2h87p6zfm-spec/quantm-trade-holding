@@ -352,7 +352,8 @@ export const Route = createFileRoute("/api/public/explain-trade")({
                 if (retry) analysis = retry;
               }
             } catch (e) {
-              aiError = e instanceof Error ? e.message : "AI-Fehler";
+              console.error("explain-trade AI error", e);
+              aiError = "AI-Fehler";
             }
           }
 
