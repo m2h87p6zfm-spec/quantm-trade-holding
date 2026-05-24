@@ -121,7 +121,7 @@ function GlobalIntelPage() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [utc, setUtc] = useState<string>("");
-  const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true });
+  const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true, heatmap: "none" });
 
   useEffect(() => {
     const tick = () => {
