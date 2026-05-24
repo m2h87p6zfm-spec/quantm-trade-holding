@@ -1827,11 +1827,99 @@ function CountryPanel({
           <Section icon={Newspaper} title="Live news · trusted sources">
             <LiveNews country={country} />
           </Section>
+
+          {/* Source / freshness footer */}
+          <div className="rounded-xl border border-white/[0.10] bg-white/[0.015] px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>Macro data: curated registry · updated weekly</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+              <span>Live news: Reuters / Bloomberg / FT (24 h)</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+              <span>Map: world-atlas</span>
+            </div>
+          </div>
         </div>
       </ScrollArea>
     </div>
   );
 }
+
+/* ───────────────────── Risk Score & Ticker Chips ───────────────────── */
+
+function RiskScoreCard({ score }: { score: ReturnType<typeof computeRiskScore> }) {
+  const color = RISK_BAND_COLOR[score.band];
+  const pct = score.score;
+  return (
+    <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3.5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+            Composite risk · 0–100
+          </div>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className="font-display text-3xl font-bold tabular-nums" style={{ color }}>
+              {score.score}
+            </span>
+            <span
+              className="rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+              style={{
+                backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)`,
+                color,
+                boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 40%, transparent)`,
+              }}
+            >
+              {RISK_BAND_LABEL[score.band]}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <ul className="mt-3 space-y-1">
+        {score.drivers.map((d, i) => (
+          <li key={i} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-foreground/85">
+            <CircleDot className="mt-0.5 h-2.5 w-2.5 shrink-0" style={{ color }} />
+            {d}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TickerChips({ tickers }: { tickers: NonNullable<ReturnType<typeof tickersForCountry>> }) {
+  const Group = ({ label, items }: { label: string; items: { symbol: string; name: string }[] }) => (
+    <div>
+      <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((t) => (
+          <span
+            key={t.symbol}
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-foreground/90"
+            title={t.name}
+          >
+            <span className="font-semibold tabular-nums">{t.symbol}</span>
+            <span className="text-[9px] text-muted-foreground">{t.name}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className="mt-2.5 space-y-2 rounded-xl border border-white/[0.10] bg-white/[0.015] p-2.5">
+      <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-primary/80">
+        Watch these tickers
+      </div>
+      {tickers.equities.length > 0 && <Group label="Equities" items={tickers.equities} />}
+      {tickers.fx && <Group label="FX" items={[tickers.fx]} />}
+      {tickers.commodities && tickers.commodities.length > 0 && (
+        <Group label="Commodities" items={tickers.commodities} />
+      )}
+    </div>
+  );
+}
+
 
 /* ───────────────────── Event Panel ───────────────────── */
 
