@@ -28,6 +28,7 @@ import {
 } from "@/lib/global-intel-data";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
+import { PageExplainer } from "@/components/PageExplainer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
