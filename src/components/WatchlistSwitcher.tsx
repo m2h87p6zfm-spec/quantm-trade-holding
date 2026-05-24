@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronDown, Plus, Trash2, Check, Edit2 } from "lucide-react";
-import { useSettings } from "@/lib/settings";
+import { ChevronDown, Plus, Trash2, Check, Edit2, Palette } from "lucide-react";
+import { useSettings, WATCHLIST_COLORS, WATCHLIST_EMOJIS } from "@/lib/settings";
 
 export function WatchlistSwitcher() {
   const {
@@ -8,17 +8,22 @@ export function WatchlistSwitcher() {
     createWatchlist,
     deleteWatchlist,
     renameWatchlist,
+    updateWatchlistMeta,
     setActiveWatchlist,
   } = useSettings();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [customizing, setCustomizing] = useState<string | null>(null);
 
   const lists = settings.watchlists;
   const active = lists.find((w) => w.id === settings.activeWatchlistId) ?? lists[0];
 
   function startCreate() {
     const id = createWatchlist(`Liste ${lists.length + 1}`);
+    // Give it a random color so each list looks distinct
+    const color = WATCHLIST_COLORS[lists.length % WATCHLIST_COLORS.length];
+    updateWatchlistMeta(id, { emoji: "📈", color });
     setEditing(id);
     setDraft(`Liste ${lists.length + 1}`);
   }
@@ -27,25 +32,35 @@ export function WatchlistSwitcher() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors"
+        className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors"
+        style={{ borderColor: active?.color ? `${active.color}66` : undefined }}
       >
-        <span className="text-muted-foreground text-[10px] uppercase tracking-wider">Liste</span>
-        <span className="font-semibold">{active?.name ?? "—"}</span>
+        <span aria-hidden className="text-sm leading-none">{active?.emoji ?? "📊"}</span>
+        <span className="font-semibold" style={{ color: active?.color ?? undefined }}>{active?.name ?? "—"}</span>
         <span className="num text-muted-foreground text-[11px]">{active?.symbols.length ?? 0}</span>
         <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-50 mt-1 w-72 rounded-lg border border-border bg-popover shadow-xl">
-            <ul className="py-1 max-h-72 overflow-auto">
+          <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setCustomizing(null); }} />
+          <div className="absolute right-0 z-50 mt-1 w-80 rounded-lg border border-border bg-popover shadow-xl">
+            <ul className="py-1 max-h-80 overflow-auto">
               {lists.map((w) => {
                 const isActive = w.id === settings.activeWatchlistId;
                 const isEditing = editing === w.id;
+                const isCustom = customizing === w.id;
                 return (
                   <li key={w.id} className="px-1">
                     <div className={`group flex items-center gap-1 rounded-md px-2 py-1.5 ${isActive ? "bg-accent/40" : "hover:bg-accent/30"}`}>
+                      <button
+                        onClick={() => setCustomizing(isCustom ? null : w.id)}
+                        className="text-base leading-none px-0.5 hover:scale-110 transition-transform"
+                        aria-label="Symbol & Farbe ändern"
+                        title="Symbol & Farbe"
+                      >
+                        {w.emoji ?? "📊"}
+                      </button>
                       {isEditing ? (
                         <input
                           autoFocus
@@ -60,8 +75,8 @@ export function WatchlistSwitcher() {
                           onClick={() => { setActiveWatchlist(w.id); setOpen(false); }}
                           className="flex-1 flex items-center gap-2 text-left text-sm min-w-0"
                         >
-                          {isActive ? <Check className="h-3.5 w-3.5 text-primary shrink-0" /> : <span className="h-3.5 w-3.5 shrink-0" />}
-                          <span className="truncate">{w.name}</span>
+                          {isActive ? <Check className="h-3.5 w-3.5 shrink-0" style={{ color: w.color ?? undefined }} /> : <span className="h-3.5 w-3.5 shrink-0" />}
+                          <span className="truncate" style={{ color: isActive ? (w.color ?? undefined) : undefined }}>{w.name}</span>
                           <span className="num text-[10px] text-muted-foreground ml-auto">{w.symbols.length}</span>
                         </button>
                       )}
@@ -86,6 +101,41 @@ export function WatchlistSwitcher() {
                         </>
                       )}
                     </div>
+
+                    {isCustom && (
+                      <div className="mt-1 mb-2 rounded-md border border-border/60 bg-background/60 p-2 space-y-2">
+                        <div>
+                          <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Symbol</div>
+                          <div className="grid grid-cols-8 gap-1">
+                            {WATCHLIST_EMOJIS.map((e) => (
+                              <button
+                                key={e}
+                                onClick={() => updateWatchlistMeta(w.id, { emoji: e })}
+                                className={`text-base rounded p-1 hover:bg-accent ${w.emoji === e ? "ring-1 ring-primary bg-accent/40" : ""}`}
+                              >
+                                {e}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <Palette className="h-3 w-3" /> Farbe
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {WATCHLIST_COLORS.map((c) => (
+                              <button
+                                key={c}
+                                onClick={() => updateWatchlistMeta(w.id, { color: c })}
+                                className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${w.color === c ? "border-foreground" : "border-transparent"}`}
+                                style={{ backgroundColor: c }}
+                                aria-label={`Farbe ${c}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </li>
                 );
               })}

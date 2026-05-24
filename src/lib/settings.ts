@@ -1,7 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
 import type { RiskProfile } from "./analysis";
 
-export type Watchlist = { id: string; name: string; symbols: string[] };
+export type Watchlist = { id: string; name: string; symbols: string[]; emoji?: string; color?: string };
+
+export const WATCHLIST_COLORS = [
+  "#3b82f6", "#10b981", "#f59e0b", "#ef4444",
+  "#a855f7", "#ec4899", "#06b6d4", "#84cc16",
+] as const;
+export const WATCHLIST_EMOJIS = [
+  "📊", "🚀", "💎", "🔥", "⭐", "🌱", "🛡️", "🎯",
+  "💼", "🧪", "🌍", "⚡", "🏦", "🪙", "🎮", "🤖",
+] as const;
 export type ExperienceLevel = "beginner" | "intermediate" | "pro";
 export type BaseCurrency = "USD" | "EUR" | "GBP" | "CHF" | "AUD" | "CAD" | "JPY";
 
@@ -57,6 +66,8 @@ const DEFAULT_LIST: Watchlist = {
   id: "default",
   name: "Hauptliste",
   symbols: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"],
+  emoji: "📊",
+  color: "#3b82f6",
 };
 
 const DEFAULT_SOURCES: Record<NewsSource, boolean> = Object.fromEntries(
@@ -234,6 +245,17 @@ export function useSettings() {
     });
   }, []);
 
+  const updateWatchlistMeta = useCallback((id: string, meta: { emoji?: string; color?: string }) => {
+    setStored((prev) => {
+      const next: StoredSettings = {
+        ...prev,
+        watchlists: prev.watchlists.map((w) => (w.id === id ? { ...w, ...meta } : w)),
+      };
+      write(next);
+      return next;
+    });
+  }, []);
+
   const deleteWatchlist = useCallback((id: string) => {
     setStored((prev) => {
       if (prev.watchlists.length <= 1) return prev;
@@ -316,6 +338,7 @@ export function useSettings() {
     createWatchlist,
     createWatchlistWithSymbols,
     renameWatchlist,
+    updateWatchlistMeta,
     deleteWatchlist,
     setActiveWatchlist,
     setPortfolio,

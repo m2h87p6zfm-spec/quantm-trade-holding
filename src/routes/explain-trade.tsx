@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { PRODUCTS, searchProducts, findProduct, type Product } from "@/lib/products";
 import { FeatureGate } from "@/lib/featureGate";
-import { DisclaimerInline } from "@/components/Disclaimer";
+
 import { TradeChatPanel } from "@/components/TradeChatPanel";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -278,7 +278,7 @@ function ExplainTradePage() {
         />
       </section>
 
-      <DisclaimerInline />
+      
     </div>
   );
 }
