@@ -26,6 +26,17 @@ import {
   type GlobalEvent,
   type FeedItem,
 } from "@/lib/global-intel-data";
+import {
+  computeRiskScore,
+  RISK_BAND_COLOR,
+  RISK_BAND_LABEL,
+  heatmapValue,
+  heatColor,
+  HEATMAP_LABEL,
+  type HeatmapMode,
+  tickersForCountry,
+  useUserCountryExposure,
+} from "@/lib/country-derived";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
 import { PageExplainer } from "@/components/PageExplainer";
