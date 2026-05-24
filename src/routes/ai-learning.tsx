@@ -1,31 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Brain, TrendingUp, TrendingDown, Activity, CheckCircle2, XCircle, MinusCircle, Sparkles, Target, BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, ReferenceLine, ScatterChart, Scatter, CartesianGrid, BarChart, Bar, Cell } from "recharts";
 import { getPerformanceMetrics } from "@/lib/ai-learning.functions";
-import { FeatureGate } from "@/lib/featureGate";
 
 export const Route = createFileRoute("/ai-learning")({
-  component: () => (
-    <FeatureGate
-      feature="ai_learning"
-      title="AI Learning ist Elite"
-      description="Sieh, wie die Engine aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration und Selbstkorrekturen pro Marktregime."
-    >
-      <AiLearningPage />
-    </FeatureGate>
-  ),
-  head: () => ({
-    meta: [
-      { title: "AI Learning · Quantm Trade" },
-      { name: "description", content: "Sieh, wie der statistische Analyst aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration, Self-Corrections und Performance pro Marktregime." },
-    ],
-  }),
+  beforeLoad: () => {
+    throw redirect({ to: "/track-record" });
+  },
 });
 
-function AiLearningPage() {
+export function AiLearningPage() {
+
   const [window, setWindow] = useState<7 | 30 | 90>(30);
   const fetchMetrics = useServerFn(getPerformanceMetrics);
   const { data, isLoading } = useQuery({

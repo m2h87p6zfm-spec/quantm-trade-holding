@@ -34,7 +34,7 @@ const trading: NavItem[] = [
 // More Tools — power features used less often (4)
 const moreTools: NavItem[] = [
   { titleKey: "nav.explain", url: "/explain-trade", icon: Microscope, feature: "risk_analytics" },
-  { titleKey: "nav.aiLearning", url: "/ai-learning", icon: Brain, feature: "ai_learning" },
+  
   { titleKey: "nav.global", url: "/global-intel", icon: Globe2 },
   { titleKey: "nav.catalog", url: "/produkte", icon: LineChart },
 ];

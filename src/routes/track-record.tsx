@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown, Brain, BarChart3 } from "lucide-react";
+import { AiLearningPage } from "./ai-learning";
+import { FeatureGate } from "@/lib/featureGate";
 import { formatPercent, formatNumber, formatPrice } from "@/lib/format";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
@@ -87,6 +89,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
   const [sector, setSector] = useState<(typeof SECTORS)[number]>("Alle");
   const [assetType, setAssetType] = useState<(typeof ASSET_TYPES)[number]>("Alle");
   const [result, setResult] = useState<(typeof RESULTS)[number]>("Alle");
+  const [tab, setTab] = useState<"record" | "learning">("record");
 
   const filtered = useMemo(() => {
     const cutoff = period === "all" ? 0 : Date.now() - PERIODS.find((p) => p.id === period)!.days * 86400_000;
@@ -113,21 +116,52 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
       <PublicHeader />
       <Hero correct={correct} total={completed.length} accuracy={accuracy} avgBuyReturn={avgBuyReturn90} />
       <main className="max-w-7xl mx-auto px-4 md:px-6 pb-20 space-y-10">
-        <FilterBar
-          period={period} setPeriod={setPeriod}
-          verdict={verdict} setVerdict={setVerdict}
-          sector={sector} setSector={setSector}
-          assetType={assetType} setAssetType={setAssetType}
-          result={result} setResult={setResult}
-        />
-        <IndicatorAccuracy analyses={completed} />
-        <PerformanceChart analyses={completed} />
-        <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
-        <AnalysisTable analyses={filtered} />
-        <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
-        <BestWorst analyses={completed} />
-        <Methodology />
-        <CTA />
+        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1 w-fit">
+          <button
+            onClick={() => setTab("record")}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+              tab === "record" ? "bg-cyan-500 text-black" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5" /> Track Record
+          </button>
+          <button
+            onClick={() => setTab("learning")}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+              tab === "learning" ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Brain className="h-3.5 w-3.5" /> AI Learning
+          </button>
+        </div>
+
+        {tab === "record" ? (
+          <>
+            <FilterBar
+              period={period} setPeriod={setPeriod}
+              verdict={verdict} setVerdict={setVerdict}
+              sector={sector} setSector={setSector}
+              assetType={assetType} setAssetType={setAssetType}
+              result={result} setResult={setResult}
+            />
+            <IndicatorAccuracy analyses={completed} />
+            <PerformanceChart analyses={completed} />
+            <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
+            <AnalysisTable analyses={filtered} />
+            <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
+            <BestWorst analyses={completed} />
+            <Methodology />
+            <CTA />
+          </>
+        ) : (
+          <FeatureGate
+            feature="ai_learning"
+            title="AI Learning ist Elite"
+            description="Sieh, wie die Engine aus Fehlern lernt — Accuracy-Trends, Confidence-Calibration und Selbstkorrekturen pro Marktregime."
+          >
+            <AiLearningPage />
+          </FeatureGate>
+        )}
       </main>
       <PublicFooter />
     </div>
