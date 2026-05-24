@@ -370,8 +370,8 @@ const DICT: Record<Lang, Dict> = {
     "nav.methodology": "Methodology",
     "nav.about": "About",
     "nav.settings": "Settings",
-    "nav.agent": "AI Analyst",
-    "nav.agent.desc": "Market chat & analysis",
+    "nav.agent": "AI Strategist",
+    "nav.agent.desc": "Free chat about markets & setups",
     // Sidebar misc
     "side.tagline": "Statistical Trading Agent",
     "side.quantCore": "Quant Core",
