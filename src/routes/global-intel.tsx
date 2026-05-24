@@ -205,8 +205,8 @@ function GlobalIntelPage() {
       <SectionNav />
 
       <main className="mx-auto max-w-[1700px] space-y-6 px-4 py-6 sm:px-8">
-        {/* 1. BRIEFING */}
-        <Panel id="briefing" eyebrow="Today's narrative" title="Strategic Briefing" icon={Sparkles} collapsible defaultOpen>
+        {/* 1. MARKET OVERVIEW */}
+        <Panel id="briefing" eyebrow="At a glance" title="Global Market Overview" icon={Globe2} collapsible defaultOpen>
           <StrategicBriefing />
         </Panel>
 
