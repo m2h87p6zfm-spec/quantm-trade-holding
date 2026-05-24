@@ -64,6 +64,7 @@ import {
   HeartPulse,
   Landmark,
   Layers,
+  ExternalLink,
   LineChart,
   Minus,
   Newspaper,
