@@ -2158,12 +2158,6 @@ function LiveNews({ country }: { country: CountryIntel }) {
   // No hard gate on trusted-source selection any more — we default to a
   // world-class pool of 60+ tier-1/2/3 sources so the feed is rich out of the box.
 
-      <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
-        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        No trusted news sources selected. Choose your sources in settings.
-      </div>
-    );
-  }
 
   if (query.isLoading) {
     return (
