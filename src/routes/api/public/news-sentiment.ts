@@ -214,7 +214,8 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
             headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=120", "Access-Control-Allow-Origin": "*" },
           });
         } catch (e) {
-          return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          console.error("news-sentiment error", e);
+          return new Response(JSON.stringify({ error: "Interner Fehler" }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       },
     },
