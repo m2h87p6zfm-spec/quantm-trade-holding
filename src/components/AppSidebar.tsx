@@ -164,6 +164,29 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.more")}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {moreTools.map((item) => {
+                const locked = isLocked(item);
+                const title = t(item.titleKey);
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
+                      <Link to={item.url} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4" />
+                        <span className="flex-1">{title}</span>
+                        {locked && <Lock className="h-3 w-3 text-gold/80" />}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t("side.system")}</SidebarGroupLabel>
