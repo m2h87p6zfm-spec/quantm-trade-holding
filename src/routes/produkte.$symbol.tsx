@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown, LayoutDashboard, LineChart, Newspaper, CalendarDays, Database } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
