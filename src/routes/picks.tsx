@@ -211,16 +211,30 @@ function PicksPage() {
               {t("page.picks.subtitle")}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1 text-right">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Scan-Universum</div>
-            <div className="font-mono text-2xl font-bold tabular-nums text-primary">{total}</div>
-            <div className="text-[11px] text-muted-foreground">{picks.length} BUY-Kandidaten</div>
+          <div className="flex flex-col items-end gap-2 text-right">
+            <div className="inline-flex rounded-lg border border-border bg-background/40 p-0.5">
+              <button onClick={() => setMode("ki")} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${mode === "ki" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                <Sparkles className="h-3.5 w-3.5" /> KI-Picks
+              </button>
+              <button onClick={() => setMode("browse")} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${mode === "browse" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                <Compass className="h-3.5 w-3.5" /> Durchsuchen
+              </button>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Filter */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3">
+        {mode === "browse" && (
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Symbol oder Name suchen (z.B. AAPL, Tesla, SAP)…" className="pl-9 h-9 bg-background/60" />
+          </div>
+        )}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Filter className="h-3.5 w-3.5" /> Filter:
         </div>
