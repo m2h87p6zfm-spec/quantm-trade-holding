@@ -65,6 +65,7 @@ import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
+import { Route as ApiPublicHooksCausalOutcomesRouteImport } from './routes/api/public/hooks/causal-outcomes'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -349,6 +350,12 @@ const ApiPublicHooksTrackOutcomesRoute =
     path: '/api/public/hooks/track-outcomes',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksCausalOutcomesRoute =
+  ApiPublicHooksCausalOutcomesRouteImport.update({
+    id: '/api/public/hooks/causal-outcomes',
+    path: '/api/public/hooks/causal-outcomes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -405,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -463,6 +471,7 @@ export interface FileRoutesByTo {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -522,6 +531,7 @@ export interface FileRoutesById {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -582,6 +592,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
@@ -698,6 +710,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -757,6 +770,7 @@ export interface RootRouteChildren {
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
   ApiPublicSignalChatRoute: typeof ApiPublicSignalChatRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
+  ApiPublicHooksCausalOutcomesRoute: typeof ApiPublicHooksCausalOutcomesRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -1155,6 +1169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTrackOutcomesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/causal-outcomes': {
+      id: '/api/public/hooks/causal-outcomes'
+      path: '/api/public/hooks/causal-outcomes'
+      fullPath: '/api/public/hooks/causal-outcomes'
+      preLoaderRoute: typeof ApiPublicHooksCausalOutcomesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1213,6 +1234,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSearchRoute: ApiPublicSearchRoute,
   ApiPublicSignalChatRoute: ApiPublicSignalChatRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
+  ApiPublicHooksCausalOutcomesRoute: ApiPublicHooksCausalOutcomesRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
