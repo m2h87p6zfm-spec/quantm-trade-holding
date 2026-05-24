@@ -304,7 +304,18 @@ export function OnboardingGate() {
 
         {/* Body */}
         <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
-          {step === 0 && <WelcomeStep />}
+          {step === 0 && (
+            <WelcomeStep
+              terms={a.terms_accepted}
+              privacy={a.privacy_accepted}
+              risk={a.risk_disclosure_accepted}
+              age={a.age_confirmed}
+              setTerms={(v) => setA((s) => ({ ...s, terms_accepted: v }))}
+              setPrivacy={(v) => setA((s) => ({ ...s, privacy_accepted: v }))}
+              setRisk={(v) => setA((s) => ({ ...s, risk_disclosure_accepted: v }))}
+              setAge={(v) => setA((s) => ({ ...s, age_confirmed: v }))}
+            />
+          )}
           {step === 1 && (
             <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
               <Grid cols={3}>
