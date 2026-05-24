@@ -1788,7 +1788,9 @@ function CountryPanel({
               <ImpactRow icon={Activity} label="Commodities" text={country.impact.commodities} />
               <ImpactRow icon={Globe2} label="Risk sentiment" text={country.impact.sentiment} />
             </div>
+            {tickers && <TickerChips tickers={tickers} />}
           </Section>
+
 
           {/* Geopolitics */}
           <Section icon={Flame} title="Geopolitical state">
