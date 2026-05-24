@@ -130,6 +130,10 @@ type Answers = {
   trusted_sources: NewsSource[];
   starter_watchlists: string[];
   ai_transparency_ack: boolean;
+  terms_accepted: boolean;
+  privacy_accepted: boolean;
+  risk_disclosure_accepted: boolean;
+  age_confirmed: boolean;
 };
 
 const initialAnswers: Answers = {
@@ -139,6 +143,10 @@ const initialAnswers: Answers = {
   trusted_sources: ["reuters", "bloomberg", "yahoo"],
   starter_watchlists: [],
   ai_transparency_ack: false,
+  terms_accepted: false,
+  privacy_accepted: false,
+  risk_disclosure_accepted: false,
+  age_confirmed: false,
 };
 
 /* Map trader_type → derived trading_goal + ai_style so the existing AI logic stays untouched. */
@@ -178,7 +186,7 @@ export function OnboardingGate() {
   if (profile.onboarding_completed) return null;
 
   const canNext = (() => {
-    if (step === 0) return true;
+    if (step === 0) return a.terms_accepted && a.privacy_accepted && a.risk_disclosure_accepted && a.age_confirmed;
     if (step === 1) return !!a.language;
     if (step === 2) return !!a.age_range;
     if (step === 3) return !!a.experience_level;
@@ -296,7 +304,18 @@ export function OnboardingGate() {
 
         {/* Body */}
         <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
-          {step === 0 && <WelcomeStep />}
+          {step === 0 && (
+            <WelcomeStep
+              terms={a.terms_accepted}
+              privacy={a.privacy_accepted}
+              risk={a.risk_disclosure_accepted}
+              age={a.age_confirmed}
+              setTerms={(v) => setA((s) => ({ ...s, terms_accepted: v }))}
+              setPrivacy={(v) => setA((s) => ({ ...s, privacy_accepted: v }))}
+              setRisk={(v) => setA((s) => ({ ...s, risk_disclosure_accepted: v }))}
+              setAge={(v) => setA((s) => ({ ...s, age_confirmed: v }))}
+            />
+          )}
           {step === 1 && (
             <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
               <Grid cols={3}>
@@ -488,32 +507,122 @@ export function OnboardingGate() {
 
 /* ─────────────────── Sub-components ─────────────────── */
 
-function WelcomeStep() {
+function WelcomeStep({
+  terms,
+  privacy,
+  risk,
+  age,
+  setTerms,
+  setPrivacy,
+  setRisk,
+  setAge,
+}: {
+  terms: boolean;
+  privacy: boolean;
+  risk: boolean;
+  age: boolean;
+  setTerms: (v: boolean) => void;
+  setPrivacy: (v: boolean) => void;
+  setRisk: (v: boolean) => void;
+  setAge: (v: boolean) => void;
+}) {
   return (
-    <div className="text-center py-6">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-500/30 ring-1 ring-primary/40 mb-5">
-        <Sparkles className="h-7 w-7 text-primary" />
+    <div className="py-2">
+      <div className="text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-500/30 ring-1 ring-primary/40 mb-4">
+          <Sparkles className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
+          Willkommen bei <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Quantm Trade</span>
+        </h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+          Bevor wir deine Plattform kalibrieren, lies bitte unsere rechtlichen Bedingungen und bestätige sie.
+        </p>
       </div>
-      <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-        Willkommen bei <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Apex AI</span>
-      </h2>
-      <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-        In den nächsten 90 Sekunden kalibrieren wir die Plattform exakt auf deinen Trading-Stil,
-        deine Risikobereitschaft und deine bevorzugten Informationsquellen.
-      </p>
-      <div className="mt-6 grid grid-cols-3 gap-2 max-w-md mx-auto">
-        {[
-          { i: TrendingUp, l: "Personalisierte Signale" },
-          { i: Newspaper, l: "Kuratierte News" },
-          { i: ShieldCheck, l: "Institutional-Grade" },
-        ].map((b, i) => (
-          <div key={i} className="rounded-lg border border-border/50 bg-background/40 p-3">
-            <b.i className="h-4 w-4 text-primary mx-auto" />
-            <div className="mt-1.5 text-[10px] text-muted-foreground">{b.l}</div>
+
+      {/* Risk disclosure banner */}
+      <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+        <div className="flex items-start gap-2.5">
+          <ShieldCheck className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+          <div className="text-[11px] leading-relaxed text-amber-100/90">
+            <span className="font-semibold text-amber-200">Wichtiger Hinweis zum Risiko.</span>{" "}
+            Quantm Trade stellt ausschließlich informationsbasierte Inhalte, Marktdaten und algorithmische Analysen bereit. Wir bieten <span className="font-semibold">keine</span> Anlageberatung, Vermögensverwaltung oder individuelle Empfehlung im Sinne der MiFID II / WpHG.
+            Der Handel mit Finanzinstrumenten birgt erhebliche Verlustrisiken, bis hin zum Totalverlust des eingesetzten Kapitals. Vergangene Performance ist kein Indikator für zukünftige Ergebnisse.
+            AI-generierte Signale sind probabilistisch und können fehlerhaft sein. Treffe Handelsentscheidungen ausschließlich auf eigene Verantwortung.
           </div>
-        ))}
+        </div>
+      </div>
+
+      {/* Acceptance checkboxes */}
+      <div className="mt-4 space-y-2">
+        <ConsentRow
+          checked={age}
+          onChange={setAge}
+          label={
+            <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 18 Jahre alt</span> und voll geschäftsfähig bin.</>
+          }
+        />
+        <ConsentRow
+          checked={terms}
+          onChange={setTerms}
+          label={
+            <>
+              Ich akzeptiere die{" "}
+              <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                Allgemeinen Geschäftsbedingungen (AGB)
+              </a>
+              {" "}von Quantm Trade.
+            </>
+          }
+        />
+        <ConsentRow
+          checked={privacy}
+          onChange={setPrivacy}
+          label={
+            <>
+              Ich habe die{" "}
+              <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                Datenschutzerklärung
+              </a>
+              {" "}gelesen und stimme der Verarbeitung meiner Daten zu.
+            </>
+          }
+        />
+        <ConsentRow
+          checked={risk}
+          onChange={setRisk}
+          label={
+            <>
+              Ich habe die <span className="font-semibold text-foreground">Risikohinweise</span> verstanden und nehme zur Kenntnis, dass Quantm Trade <span className="font-semibold text-foreground">keine Anlageberatung</span> leistet und nicht für Handelsverluste haftet.
+            </>
+          }
+        />
       </div>
     </div>
+  );
+}
+
+function ConsentRow({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: React.ReactNode;
+}) {
+  return (
+    <label className={`flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer select-none transition ${
+      checked ? "border-primary/50 bg-primary/5" : "border-border/50 bg-background/30 hover:border-foreground/30"
+    }`}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border bg-background accent-primary"
+      />
+      <span className="text-xs leading-relaxed text-muted-foreground">{label}</span>
+    </label>
   );
 }
 
