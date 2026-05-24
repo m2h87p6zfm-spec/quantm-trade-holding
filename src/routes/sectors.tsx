@@ -42,7 +42,7 @@ function colorBg(pct: number | null): string {
   return `color-mix(in oklab, ${c} ${Math.round(a * 100)}%, transparent)`;
 }
 
-function SectorRotationPage() {
+export function SectorRotationPage({ embedded = false }: { embedded?: boolean } = {}) {
   const queries = useQueries({
     queries: ALL.map((s) => ({
       queryKey: ["sector-candles", s],
