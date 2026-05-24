@@ -2,8 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchCandles } from "@/lib/finnhub";
-import { TrendingUp, TrendingDown, Layers, Compass, Activity, Shield, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Layers, Compass, Activity, Shield, Zap, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
+import { PageExplainer } from "@/components/PageExplainer";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Route = createFileRoute("/sectors")({ component: SectorRotationPage });
 
