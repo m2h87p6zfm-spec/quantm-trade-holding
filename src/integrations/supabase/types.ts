@@ -649,6 +649,191 @@ export type Database = {
           },
         ]
       }
+      causal_analysis_results: {
+        Row: {
+          analyzed_at: string
+          causal_score: number
+          causal_verdict: string
+          current_events_detected: Json
+          id: string
+          patterns_applied: Json
+          repeatability_score: number
+          summary_text: string
+          ticker: string
+        }
+        Insert: {
+          analyzed_at?: string
+          causal_score?: number
+          causal_verdict: string
+          current_events_detected?: Json
+          id?: string
+          patterns_applied?: Json
+          repeatability_score?: number
+          summary_text?: string
+          ticker: string
+        }
+        Update: {
+          analyzed_at?: string
+          causal_score?: number
+          causal_verdict?: string
+          current_events_detected?: Json
+          id?: string
+          patterns_applied?: Json
+          repeatability_score?: number
+          summary_text?: string
+          ticker?: string
+        }
+        Relationships: []
+      }
+      causal_events: {
+        Row: {
+          created_at: string
+          event_date: string
+          event_description: string
+          event_type: string
+          id: string
+          source_url: string | null
+          ticker: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          event_description: string
+          event_type: string
+          id?: string
+          source_url?: string | null
+          ticker: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          event_description?: string
+          event_type?: string
+          id?: string
+          source_url?: string | null
+          ticker?: string
+        }
+        Relationships: []
+      }
+      causal_outcomes: {
+        Row: {
+          event_id: string
+          id: string
+          price_after_14d: number | null
+          price_after_30d: number | null
+          price_after_3d: number | null
+          price_after_7d: number | null
+          price_after_90d: number | null
+          price_at_event: number
+          return_14d: number | null
+          return_30d: number | null
+          return_3d: number | null
+          return_7d: number | null
+          return_90d: number | null
+          ticker: string
+          updated_at: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          price_after_14d?: number | null
+          price_after_30d?: number | null
+          price_after_3d?: number | null
+          price_after_7d?: number | null
+          price_after_90d?: number | null
+          price_at_event: number
+          return_14d?: number | null
+          return_30d?: number | null
+          return_3d?: number | null
+          return_7d?: number | null
+          return_90d?: number | null
+          ticker: string
+          updated_at?: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          price_after_14d?: number | null
+          price_after_30d?: number | null
+          price_after_3d?: number | null
+          price_after_7d?: number | null
+          price_after_90d?: number | null
+          price_at_event?: number
+          return_14d?: number | null
+          return_30d?: number | null
+          return_3d?: number | null
+          return_7d?: number | null
+          return_90d?: number | null
+          ticker?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "causal_outcomes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "causal_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      causal_patterns: {
+        Row: {
+          avg_return_14d: number
+          avg_return_30d: number
+          avg_return_3d: number
+          avg_return_7d: number
+          avg_return_90d: number
+          event_type: string
+          id: string
+          last_calculated_at: string
+          positive_outcomes_14d: number
+          positive_outcomes_30d: number
+          positive_outcomes_3d: number
+          positive_outcomes_7d: number
+          positive_outcomes_90d: number
+          repeatability_score: number
+          ticker: string
+          total_occurrences: number
+        }
+        Insert: {
+          avg_return_14d?: number
+          avg_return_30d?: number
+          avg_return_3d?: number
+          avg_return_7d?: number
+          avg_return_90d?: number
+          event_type: string
+          id?: string
+          last_calculated_at?: string
+          positive_outcomes_14d?: number
+          positive_outcomes_30d?: number
+          positive_outcomes_3d?: number
+          positive_outcomes_7d?: number
+          positive_outcomes_90d?: number
+          repeatability_score?: number
+          ticker: string
+          total_occurrences?: number
+        }
+        Update: {
+          avg_return_14d?: number
+          avg_return_30d?: number
+          avg_return_3d?: number
+          avg_return_7d?: number
+          avg_return_90d?: number
+          event_type?: string
+          id?: string
+          last_calculated_at?: string
+          positive_outcomes_14d?: number
+          positive_outcomes_30d?: number
+          positive_outcomes_3d?: number
+          positive_outcomes_7d?: number
+          positive_outcomes_90d?: number
+          repeatability_score?: number
+          ticker?: string
+          total_occurrences?: number
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
