@@ -47,7 +47,7 @@ function DatenschutzPage() {
           <ul className="mt-1 list-disc pl-5 space-y-1">
             <li><strong>Supabase</strong> (Hosting, Auth, DB) — Standardvertragsklauseln.</li>
             <li><strong>Stripe</strong> (Zahlungsabwicklung).</li>
-            <li><strong>Yahoo Finance / Finnhub</strong> — anonyme Abruf von Marktdaten.</li>
+            <li><strong>Twelve Data</strong> — anonymer Abruf von Marktdaten (Kurse, Kerzen, Symbolsuche).</li>
             <li><strong>OpenAI / Google (Lovable AI Gateway)</strong> — KI-Auswertungen; übermittelt werden ausschließlich anonymisierte Markt- und Indikatordaten.</li>
           </ul>
         </section>

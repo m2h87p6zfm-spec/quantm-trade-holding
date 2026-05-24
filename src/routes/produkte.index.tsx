@@ -73,7 +73,7 @@ function KatalogPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm">
           <div>
             <div className="font-semibold">Freien Ticker verwenden: {customSymbol}</div>
-            <div className="text-xs text-muted-foreground">Wenn Yahoo Finance das Symbol kennt, lädt die App Analyse und Chart trotzdem.</div>
+            <div className="text-xs text-muted-foreground">Wenn Twelve Data das Symbol kennt (70+ Börsen weltweit), lädt die App Analyse und Chart trotzdem.</div>
           </div>
           <div className="flex gap-2">
             <button onClick={() => guardedAdd(customSymbol)} className="rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent">

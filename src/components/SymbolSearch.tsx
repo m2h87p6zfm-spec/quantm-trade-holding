@@ -143,7 +143,7 @@ export function SymbolSearch({
       {open && q.trim() && (
         <div className="absolute z-50 left-0 right-0 mt-1 max-h-80 overflow-auto rounded-lg border border-border bg-popover shadow-xl">
           {loading && hits.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche bei Yahoo Finance…</div>
+            <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche weltweit (Twelve Data)…</div>
           ) : hits.length === 0 ? (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground">
               Keine Treffer. <button onClick={() => stage(q)} className="text-primary hover:underline">"{q.toUpperCase()}" trotzdem hinzufügen</button>

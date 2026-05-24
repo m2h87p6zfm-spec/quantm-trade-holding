@@ -14,7 +14,7 @@ export const Route = createFileRoute("/status")({
 });
 
 const services = [
-  { name: "Marktdaten-Feed", desc: "Yahoo Finance · Live-Quotes", uptime: "99.98%" },
+  { name: "Marktdaten-Feed", desc: "Twelve Data · Live-Quotes (70+ Börsen)", uptime: "99.98%" },
   { name: "KI-Analyse-Engine", desc: "Lovable AI Gateway · Composite Scoring", uptime: "99.95%" },
   { name: "Authentifizierung", desc: "Email & Google OAuth", uptime: "100.00%" },
   { name: "Datenbank", desc: "Lovable Cloud · Read & Write", uptime: "99.99%" },
