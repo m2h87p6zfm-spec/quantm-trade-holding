@@ -41,7 +41,7 @@ export const Route = createFileRoute("/produkte/$symbol")({
 /* ─────────────────── Plain-language one-liner ─────────────────── */
 
 function plainVerdict(
-  verdict: "LONG" | "SHORT" | "HOLD",
+  verdict: string,
   confidence: number,
   rsi: number,
   zScore: number,
