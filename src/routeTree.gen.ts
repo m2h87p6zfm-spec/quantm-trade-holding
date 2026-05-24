@@ -28,16 +28,19 @@ import { Route as MaerkteRouteImport } from './routes/maerkte'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as KontoRouteImport } from './routes/konto'
 import { Route as KalenderRouteImport } from './routes/kalender'
+import { Route as ImpressumRouteImport } from './routes/impressum'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
 import { Route as HandelsprofilRouteImport } from './routes/handelsprofil'
 import { Route as GlobalIntelRouteImport } from './routes/global-intel'
 import { Route as ExplainTradeRouteImport } from './routes/explain-trade'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as DatenschutzRouteImport } from './routes/datenschutz'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as AlertsRouteImport } from './routes/alerts'
 import { Route as AiLearningRouteImport } from './routes/ai-learning'
 import { Route as AgentRouteImport } from './routes/agent'
+import { Route as AgbRouteImport } from './routes/agb'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
@@ -153,6 +156,11 @@ const KalenderRoute = KalenderRouteImport.update({
   path: '/kalender',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImpressumRoute = ImpressumRouteImport.update({
+  id: '/impressum',
+  path: '/impressum',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HeatmapRoute = HeatmapRouteImport.update({
   id: '/heatmap',
   path: '/heatmap',
@@ -178,6 +186,11 @@ const EinstellungenRoute = EinstellungenRouteImport.update({
   path: '/einstellungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DatenschutzRoute = DatenschutzRouteImport.update({
+  id: '/datenschutz',
+  path: '/datenschutz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BacktestRoute = BacktestRouteImport.update({
   id: '/backtest',
   path: '/backtest',
@@ -201,6 +214,11 @@ const AiLearningRoute = AiLearningRouteImport.update({
 const AgentRoute = AgentRouteImport.update({
   id: '/agent',
   path: '/agent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgbRoute = AgbRouteImport.update({
+  id: '/agb',
+  path: '/agb',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -305,16 +323,19 @@ const ApiPublicHooksTrackOutcomesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/agb': typeof AgbRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
+  '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
   '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
+  '/impressum': typeof ImpressumRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
@@ -355,16 +376,19 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/agb': typeof AgbRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
+  '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
   '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
+  '/impressum': typeof ImpressumRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
@@ -406,16 +430,19 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/agb': typeof AgbRoute
   '/agent': typeof AgentRoute
   '/ai-learning': typeof AiLearningRoute
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
+  '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
   '/global-intel': typeof GlobalIntelRoute
   '/handelsprofil': typeof HandelsprofilRoute
   '/heatmap': typeof HeatmapRoute
+  '/impressum': typeof ImpressumRoute
   '/kalender': typeof KalenderRoute
   '/konto': typeof KontoRoute
   '/login': typeof LoginRoute
@@ -458,16 +485,19 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/agb'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
+    | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
     | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
+    | '/impressum'
     | '/kalender'
     | '/konto'
     | '/login'
@@ -508,16 +538,19 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/agb'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
+    | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
     | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
+    | '/impressum'
     | '/kalender'
     | '/konto'
     | '/login'
@@ -558,16 +591,19 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/agb'
     | '/agent'
     | '/ai-learning'
     | '/alerts'
     | '/analyse'
     | '/backtest'
+    | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
     | '/global-intel'
     | '/handelsprofil'
     | '/heatmap'
+    | '/impressum'
     | '/kalender'
     | '/konto'
     | '/login'
@@ -609,16 +645,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AgbRoute: typeof AgbRoute
   AgentRoute: typeof AgentRoute
   AiLearningRoute: typeof AiLearningRoute
   AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
   BacktestRoute: typeof BacktestRoute
+  DatenschutzRoute: typeof DatenschutzRoute
   EinstellungenRoute: typeof EinstellungenRoute
   ExplainTradeRoute: typeof ExplainTradeRoute
   GlobalIntelRoute: typeof GlobalIntelRoute
   HandelsprofilRoute: typeof HandelsprofilRoute
   HeatmapRoute: typeof HeatmapRoute
+  ImpressumRoute: typeof ImpressumRoute
   KalenderRoute: typeof KalenderRoute
   KontoRoute: typeof KontoRoute
   LoginRoute: typeof LoginRoute
@@ -792,6 +831,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KalenderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/impressum': {
+      id: '/impressum'
+      path: '/impressum'
+      fullPath: '/impressum'
+      preLoaderRoute: typeof ImpressumRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/heatmap': {
       id: '/heatmap'
       path: '/heatmap'
@@ -827,6 +873,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EinstellungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/datenschutz': {
+      id: '/datenschutz'
+      path: '/datenschutz'
+      fullPath: '/datenschutz'
+      preLoaderRoute: typeof DatenschutzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/backtest': {
       id: '/backtest'
       path: '/backtest'
@@ -860,6 +913,13 @@ declare module '@tanstack/react-router' {
       path: '/agent'
       fullPath: '/agent'
       preLoaderRoute: typeof AgentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agb': {
+      id: '/agb'
+      path: '/agb'
+      fullPath: '/agb'
+      preLoaderRoute: typeof AgbRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -1001,16 +1061,19 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AgbRoute: AgbRoute,
   AgentRoute: AgentRoute,
   AiLearningRoute: AiLearningRoute,
   AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
   BacktestRoute: BacktestRoute,
+  DatenschutzRoute: DatenschutzRoute,
   EinstellungenRoute: EinstellungenRoute,
   ExplainTradeRoute: ExplainTradeRoute,
   GlobalIntelRoute: GlobalIntelRoute,
   HandelsprofilRoute: HandelsprofilRoute,
   HeatmapRoute: HeatmapRoute,
+  ImpressumRoute: ImpressumRoute,
   KalenderRoute: KalenderRoute,
   KontoRoute: KontoRoute,
   LoginRoute: LoginRoute,

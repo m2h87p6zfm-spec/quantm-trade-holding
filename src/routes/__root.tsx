@@ -29,6 +29,7 @@ import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide
 import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { Footer } from "@/components/Footer";
 
 
 import appCss from "../styles.css?url";
@@ -162,6 +163,7 @@ function AppShell() {
               </div>
             </main>
             <DisclaimerBanner />
+            <Footer />
           </div>
         </div>
         <MobileBottomNav />

@@ -14,6 +14,7 @@ import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DisclaimerInline } from "@/components/Disclaimer";
 
 export const Route = createFileRoute("/produkte/$symbol")({
   head: ({ params }) => {
@@ -96,12 +97,15 @@ function ProductDetail() {
 
       {indicators && sig && (
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Übersicht</TabsTrigger>
-            <TabsTrigger value="chart">Chart</TabsTrigger>
-            <TabsTrigger value="analyse">Analyse</TabsTrigger>
-            <TabsTrigger value="events">Events & News</TabsTrigger>
-          </TabsList>
+          {/* Mobile: horizontal scroll · Desktop: 4-col grid · 44px touch target */}
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsList className="inline-flex h-11 w-max min-w-full sm:grid sm:w-full sm:grid-cols-4">
+              <TabsTrigger value="overview" className="min-h-[44px] px-4 sm:px-3">Übersicht</TabsTrigger>
+              <TabsTrigger value="chart" className="min-h-[44px] px-4 sm:px-3">Chart</TabsTrigger>
+              <TabsTrigger value="analyse" className="min-h-[44px] px-4 sm:px-3">Analyse</TabsTrigger>
+              <TabsTrigger value="events" className="min-h-[44px] px-4 sm:px-3">Events & News</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ÜBERSICHT — schneller Eindruck */}
           <TabsContent value="overview" className="mt-4 space-y-4">
@@ -113,6 +117,7 @@ function ProductDetail() {
               <AssetChart symbol={symbol} height={360} defaultTf="1Y" currency="$" />
             </div>
             <MarketConsensus symbol={symbol} indicators={indicators} />
+            <DisclaimerInline />
           </TabsContent>
 
           {/* CHART — alle Indikatoren */}

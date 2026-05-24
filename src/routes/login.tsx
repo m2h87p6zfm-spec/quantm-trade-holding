@@ -72,10 +72,26 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8 text-foreground/80 hover:text-foreground">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-6 text-foreground/80 hover:text-foreground">
           <ApexLogo className="h-7 w-7" />
           <span className="font-semibold tracking-tight">Quantm Trade</span>
         </Link>
+
+        {/* Fokussierte Value-Prop */}
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+            KI erklärt dir jeden Trade<br />
+            <span className="text-primary">in 30 Sekunden auf Deutsch.</span>
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Z-Score, RSI, MACD & Wall-Street-Konsens — automatisch ausgewertet, klar erklärt.
+          </p>
+          <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <span>✓ Keine Kreditkarte nötig</span>
+            <span>✓ Made in Germany · DSGVO</span>
+          </div>
+        </div>
+
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           <Tabs defaultValue="signin">
             <TabsList className="grid grid-cols-2 w-full mb-6">
@@ -132,6 +148,14 @@ function LoginPage() {
           <Link to="/preise" className="hover:text-foreground">{t("login.viewPlans")}</Link>
           <span className="mx-2 opacity-30">·</span>
           <Link to="/" className="hover:text-foreground">{t("login.backHome")}</Link>
+        </p>
+        <p className="text-center text-[10px] text-muted-foreground/70 mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1">
+          <Link to="/impressum" className="hover:text-foreground">Impressum</Link>
+          <Link to="/agb" className="hover:text-foreground">AGB</Link>
+          <Link to="/datenschutz" className="hover:text-foreground">Datenschutz</Link>
+        </p>
+        <p className="text-center text-[10px] text-muted-foreground/60 mt-3 px-4 leading-relaxed">
+          Keine Anlageberatung. Handel mit Wertpapieren birgt das Risiko des Totalverlusts.
         </p>
       </div>
     </div>
