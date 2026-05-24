@@ -1,0 +1,206 @@
+// Twelve Data adapter — globaler Marktdaten-Provider (70+ Börsen, FX, Crypto).
+// Wird von /api/public/quote, /api/public/candles und /api/public/search genutzt.
+// Hält dieselbe Response-Shape wie der frühere Yahoo-Proxy, damit das Frontend
+// (src/lib/finnhub.ts, useMarketData, TickerBand) ohne Änderung weiterläuft.
+
+const BASE = "https://api.twelvedata.com";
+
+function getKey(): string {
+  const k = process.env.TWELVEDATA_API_KEY;
+  if (!k) throw new Error("TWELVEDATA_API_KEY missing");
+  return k;
+}
+
+// ---- In-Memory Cache (pro Worker-Instanz) ----
+type Entry<T> = { value: T; expires: number; lastUpdated: number };
+const CACHE = new Map<string, Entry<any>>();
+
+function cacheGet<T>(key: string): Entry<T> | null {
+  const e = CACHE.get(key) as Entry<T> | undefined;
+  if (!e) return null;
+  return e;
+}
+function cacheSet<T>(key: string, value: T, ttlSec: number) {
+  CACHE.set(key, { value, expires: Date.now() + ttlSec * 1000, lastUpdated: Date.now() });
+}
+
+async function tdFetch(path: string, params: Record<string, string>): Promise<any> {
+  const q = new URLSearchParams({ ...params, apikey: getKey() });
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(`${BASE}${path}?${q.toString()}`, { signal: ctrl.signal });
+    if (!res.ok) throw new Error(`TD ${res.status}`);
+    const j: any = await res.json();
+    // TD wraps errors as {status:"error", code, message}
+    if (j?.status === "error") throw new Error(j.message || `TD error ${j.code ?? ""}`);
+    return j;
+  } finally { clearTimeout(t); }
+}
+
+// ===================== QUOTE =====================
+export type TdQuote = {
+  c: number; pc: number; d: number; dp: number;
+  h: number; l: number; o: number; t: number;
+  v?: number; h52?: number; l52?: number; marketCap?: number;
+  currency?: string; exchange?: string; name?: string;
+};
+
+function parseQuote(j: any): TdQuote | null {
+  if (!j || j.status === "error") return null;
+  const c = Number(j.close);
+  if (!Number.isFinite(c)) return null;
+  const pc = Number(j.previous_close ?? c);
+  const num = (x: any) => (Number.isFinite(Number(x)) ? Number(x) : undefined);
+  return {
+    c,
+    pc,
+    d: Number(j.change ?? c - pc),
+    dp: Number(j.percent_change ?? (pc ? ((c - pc) / pc) * 100 : 0)),
+    h: Number.isFinite(Number(j.high)) ? Number(j.high) : c,
+    l: Number.isFinite(Number(j.low)) ? Number(j.low) : c,
+    o: Number.isFinite(Number(j.open)) ? Number(j.open) : c,
+    t: j.timestamp ? Number(j.timestamp) : Math.floor(Date.now() / 1000),
+    v: num(j.volume),
+    h52: num(j.fifty_two_week?.high),
+    l52: num(j.fifty_two_week?.low),
+    currency: j.currency,
+    exchange: j.exchange,
+    name: j.name || j.symbol,
+  };
+}
+
+export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
+  value: TdQuote | null; stale: boolean; lastUpdated: number;
+}> {
+  const key = `q:${symbol}`;
+  const hit = cacheGet<TdQuote | null>(key);
+  if (hit && hit.expires > Date.now()) {
+    return { value: hit.value, stale: false, lastUpdated: hit.lastUpdated };
+  }
+  try {
+    const j = await tdFetch("/quote", { symbol });
+    const v = parseQuote(j);
+    cacheSet(key, v, ttlSec);
+    return { value: v, stale: false, lastUpdated: Date.now() };
+  } catch {
+    if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
+    return { value: null, stale: true, lastUpdated: 0 };
+  }
+}
+
+// ===================== TIME SERIES (CANDLES) =====================
+export type TdCandles = { c: number[]; h: number[]; l: number[]; o: number[]; v: number[]; t: number[]; s: "ok" };
+
+// Yahoo-style interval/range → Twelve Data interval + outputsize
+export function mapInterval(yi: string): string {
+  switch (yi) {
+    case "1m": return "1min";
+    case "2m": case "5m": return "5min";
+    case "15m": return "15min";
+    case "30m": return "30min";
+    case "60m": case "90m": case "1h": return "1h";
+    case "1d": case "5d": return "1day";
+    case "1wk": return "1week";
+    case "1mo": case "3mo": return "1month";
+    default: return "1day";
+  }
+}
+
+export function mapOutputsize(range: string, interval: string): number {
+  // Tageskerzen
+  const isDaily = interval === "1day";
+  const isWeekly = interval === "1week";
+  if (isDaily) {
+    switch (range) {
+      case "1mo": return 22;
+      case "3mo": return 66;
+      case "6mo": return 130;
+      case "ytd": return 260;
+      case "1y": return 260;
+      case "2y": return 520;
+      case "5y": return 1300;
+      case "10y": return 2600;
+      case "max": return 5000;
+      default: return 260;
+    }
+  }
+  if (isWeekly) return 260;
+  if (interval === "1month") return 120;
+  // Intraday
+  switch (range) {
+    case "1d": return 100;
+    case "5d": return 400;
+    default: return 500;
+  }
+}
+
+function parseTimeSeries(j: any): TdCandles | null {
+  const vals: any[] = j?.values || [];
+  if (!vals.length) return null;
+  // TD liefert neueste zuerst → in chronologische Reihenfolge bringen
+  const sorted = [...vals].reverse();
+  const c: number[] = [], h: number[] = [], l: number[] = [], o: number[] = [], v: number[] = [], t: number[] = [];
+  for (const row of sorted) {
+    const close = Number(row.close);
+    if (!Number.isFinite(close)) continue;
+    c.push(close);
+    h.push(Number(row.high ?? close));
+    l.push(Number(row.low ?? close));
+    o.push(Number(row.open ?? close));
+    v.push(Number(row.volume ?? 0));
+    const dt = row.datetime ? Math.floor(new Date(row.datetime).getTime() / 1000) : 0;
+    t.push(dt);
+  }
+  if (!c.length) return null;
+  return { c, h, l, o, v, t, s: "ok" };
+}
+
+export async function getCandlesCached(
+  symbol: string, interval: string, range: string, ttlSec: number
+): Promise<{ value: TdCandles | null; stale: boolean; lastUpdated: number }> {
+  const tdInterval = mapInterval(interval);
+  const outputsize = mapOutputsize(range, tdInterval);
+  const key = `c:${symbol}:${tdInterval}:${outputsize}`;
+  const hit = cacheGet<TdCandles | null>(key);
+  if (hit && hit.expires > Date.now()) {
+    return { value: hit.value, stale: false, lastUpdated: hit.lastUpdated };
+  }
+  try {
+    const j = await tdFetch("/time_series", {
+      symbol,
+      interval: tdInterval,
+      outputsize: String(outputsize),
+      order: "DESC",
+    });
+    const v = parseTimeSeries(j);
+    cacheSet(key, v, ttlSec);
+    return { value: v, stale: false, lastUpdated: Date.now() };
+  } catch {
+    if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
+    return { value: null, stale: true, lastUpdated: 0 };
+  }
+}
+
+// ===================== SYMBOL SEARCH =====================
+export type SearchHit = { symbol: string; name: string; exchange?: string; type?: string };
+
+export async function searchSymbolsTd(q: string): Promise<SearchHit[]> {
+  const key = `s:${q.toLowerCase()}`;
+  const hit = cacheGet<SearchHit[]>(key);
+  if (hit && hit.expires > Date.now()) return hit.value;
+  try {
+    const j = await tdFetch("/symbol_search", { symbol: q, outputsize: "15" });
+    const data: any[] = j?.data || [];
+    const out: SearchHit[] = data.slice(0, 15).map((r) => ({
+      symbol: String(r.symbol),
+      name: String(r.instrument_name || r.symbol),
+      exchange: r.exchange,
+      type: r.instrument_type,
+    }));
+    cacheSet(key, out, 300);
+    return out;
+  } catch {
+    return hit?.value ?? [];
+  }
+}
