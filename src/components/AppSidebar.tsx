@@ -1,5 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Brain, Calendar, CreditCard, Filter, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, BookOpen, Brain, Calendar, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -34,7 +33,7 @@ const trading: NavItem[] = [
 const system: NavItem[] = [
   { titleKey: "nav.pricing", url: "/preise", icon: CreditCard },
   { titleKey: "nav.catalog", url: "/produkte", icon: LineChart },
-  { titleKey: "nav.screener", url: "/screener", icon: Filter },
+  
   { titleKey: "nav.methodology", url: "/methodology", icon: BookOpen },
   { titleKey: "nav.about", url: "/about", icon: Info },
   { titleKey: "nav.settings", url: "/einstellungen", icon: SettingsIcon },
