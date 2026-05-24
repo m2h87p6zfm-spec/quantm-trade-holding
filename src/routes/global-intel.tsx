@@ -1925,6 +1925,67 @@ function TickerChips({ tickers }: { tickers: NonNullable<ReturnType<typeof ticke
 
 /* ───────────────────── Event Panel ───────────────────── */
 
+function EventArticleLink({ event }: { event: GlobalEvent }) {
+  const { settings } = useSettings();
+  const preferredSources = useMemo(
+    () =>
+      Object.entries(settings.newsSources ?? {})
+        .filter(([, on]) => on)
+        .map(([k]) => k),
+    [settings.newsSources],
+  );
+  const fetchArticle = useServerFn(getEventArticle);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["event-article", event.id, preferredSources.join(",")],
+    queryFn: () =>
+      fetchArticle({
+        data: { query: event.newsQuery || event.title, preferredSources },
+      }),
+    staleTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="mt-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="h-1 w-1 animate-pulse rounded-full bg-primary" />
+        Searching trusted sources…
+      </div>
+    );
+  }
+
+  const article = data?.article;
+  if (!article) return null;
+
+  const meta = (AGENCY_META as Record<string, { label: string }>)[article.sourceKey] ?? { label: article.sourceLabel };
+
+  return (
+    <a
+      href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2.5 flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/[0.06] p-2.5 transition hover:border-primary/60 hover:bg-primary/[0.10]"
+    >
+      <Newspaper className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.18em] text-primary/80">
+          {article.fromUserSource ? "From your sources" : "Background read"}
+          <span className="text-muted-foreground">·</span>
+          <span className="text-foreground/80">{meta.label}</span>
+        </div>
+        <div className="mt-0.5 line-clamp-2 text-[12px] font-semibold leading-snug text-foreground/95">
+          {article.title}
+        </div>
+        <div className="mt-1 inline-flex items-center gap-1 text-[10.5px] font-medium text-primary">
+          Read the news article
+          <ExternalLink className="h-3 w-3" />
+        </div>
+      </div>
+    </a>
+  );
+}
+
 function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => void }) {
   const color = EVENT_COLOR[event.type];
   const chain = EVENT_CHAINS[event.id];
