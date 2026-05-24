@@ -74,6 +74,7 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
+  Wallet,
   Wind,
   X,
   Zap,
