@@ -3,7 +3,7 @@
 // Bestandsaufrufer (APEX, TrackRecord, Cron, Explain-Trade, Portfolio-Extract)
 // ohne Anpassung funktionieren.
 
-import { getCandlesCached, getQuoteCached, type TdCandles, type TdQuote } from "@/lib/twelvedata.server";
+import { getCandlesCached, type TdCandles, type TdQuote } from "@/lib/twelvedata.server";
 
 type Entry = { value: any; expires: number; staleUntil: number };
 
@@ -56,11 +56,11 @@ async function doFetch(
 ): Promise<CachedChart> {
   const now = Date.now();
   try {
-    const [candles, quote] = await Promise.all([
-      getCandlesCached(symbol, interval, range, ttlSec),
-      getQuoteCached(symbol, Math.max(ttlSec, 60)),
-    ]);
-    const synth = synthYahooChart(symbol, candles.value, quote.value);
+    // Nur Candles holen — der separate /quote-Call ist für alle aktuellen
+    // Aufrufer redundant (letzter Close ist in candles.c.at(-1) bereits enthalten).
+    // Halbiert die Twelve-Data-Credits pro Scan.
+    const candles = await getCandlesCached(symbol, interval, range, ttlSec);
+    const synth = synthYahooChart(symbol, candles.value, null);
     if (synth) {
       STORE.set(`${symbol}|${interval}|${range}`, {
         value: synth,

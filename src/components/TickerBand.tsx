@@ -1,9 +1,8 @@
-import { useQueries } from "@tanstack/react-query";
-import { fetchCandles } from "@/lib/finnhub";
+import { useQuery } from "@tanstack/react-query";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
-// Live-Ticker-Band — SSE-Stream alle 3s + Fallback auf Tageskerzen für %-Veränderung.
+// Live-Ticker-Band — SSE-Stream alle 3s + Batch-Quote als Fallback/Baseline.
 const TICKER_SYMBOLS = [
   "SPY", "QQQ", "DIA", "IWM", "VTI",
   "EWG", "FEZ", "EWJ", "VEA",
@@ -12,30 +11,36 @@ const TICKER_SYMBOLS = [
 
 type Item = { symbol: string; price: number; change: number; ok: boolean };
 
+type BatchQuote = { c: number; pc: number; dp?: number };
+type BatchResp = { quotes: Record<string, BatchQuote> };
+
 export function TickerBand() {
   // Live-Stream (Pro-Plan: 3-Sekunden-Ticks via SSE)
   const { quotes: live } = useLiveQuotes(TICKER_SYMBOLS);
 
-  // Tageskerzen als Fallback + Basis für Tagesveränderung (langer Cache)
-  const results = useQueries({
-    queries: TICKER_SYMBOLS.map((s) => ({
-      queryKey: ["candles", s],
-      queryFn: () => fetchCandles(s, "D", 30),
-      staleTime: 60 * 60 * 1000,
-      gcTime: 24 * 60 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      retry: 1,
-    })),
+  // Batch-Quote — EIN Twelve-Data-Call für alle 16 Symbole statt 16 einzelne
+  // Candles-Calls. Spart ~94 % Credits gegenüber dem alten useQueries-Ansatz.
+  const { data } = useQuery<BatchResp>({
+    queryKey: ["ticker-band-batch", TICKER_SYMBOLS.join(",")],
+    queryFn: async () => {
+      const res = await fetch(`/api/public/quotes-batch?symbols=${TICKER_SYMBOLS.join(",")}`);
+      if (!res.ok) throw new Error("batch failed");
+      return res.json();
+    },
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: 60 * 1000,
+    retry: 1,
   });
 
-  const items: Item[] = TICKER_SYMBOLS.map((symbol, i) => {
-    const closes = results[i].data?.c ?? [];
-    const lastCandle = closes.at(-1) ?? 0;
-    const prevCandle = closes.at(-2) ?? lastCandle;
+  const batchQuotes = data?.quotes ?? {};
+
+  const items: Item[] = TICKER_SYMBOLS.map((symbol) => {
+    const batch = batchQuotes[symbol];
     const liveQ = live[symbol];
-    const price = liveQ?.c ?? lastCandle;
-    // Wenn Live verfügbar: Live-Preis vs. gestriger Close, sonst Candle-vs-Candle
-    const baseline = liveQ ? (liveQ.pc || prevCandle) : prevCandle;
+    const price = liveQ?.c ?? batch?.c ?? 0;
+    const baseline = liveQ?.pc || batch?.pc || 0;
     const change = baseline ? ((price - baseline) / baseline) * 100 : 0;
     return { symbol, price, change, ok: !!price };
   });
