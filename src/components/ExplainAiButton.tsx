@@ -112,22 +112,81 @@ export function ExplainAiButton({ topic, context, label, variant = "chip", class
   );
 }
 
-// Minimal markdown renderer for headings + paragraphs (no external dep)
+// Minimal markdown renderer for headings, paragraphs, bullets + inline bold
+function renderInline(text: string, keyBase: string) {
+  // Split on **bold** while keeping markers
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((p, i) => {
+    const m = p.match(/^\*\*([^*]+)\*\*$/);
+    if (m) return <strong key={`${keyBase}-b-${i}`} className="font-semibold text-foreground">{m[1]}</strong>;
+    return <span key={`${keyBase}-t-${i}`}>{p}</span>;
+  });
+}
+
 function renderMarkdown(md: string) {
   const blocks = md.split(/\n{2,}/);
-  return blocks.map((b, i) => {
-    const h2 = b.match(/^##\s+(.*)/);
+  const out: React.ReactNode[] = [];
+
+  blocks.forEach((b, i) => {
+    const lines = b.split("\n");
+    const first = lines[0];
+    const rest = lines.slice(1);
+
+    const h2 = first.match(/^##\s+(.*)/);
+    const h1 = !h2 && first.match(/^#\s+(.*)/);
+
     if (h2) {
-      return (
-        <h3 key={i} className="mt-4 mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary first:mt-0">
+      out.push(
+        <h3 key={`h2-${i}`} className="mt-4 mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary first:mt-0">
           {h2[1]}
         </h3>
       );
+    } else if (h1) {
+      out.push(
+        <h2 key={`h1-${i}`} className="mt-3 mb-1 text-base font-semibold text-foreground">{h1[1]}</h2>
+      );
     }
-    const h1 = b.match(/^#\s+(.*)/);
-    if (h1) {
-      return <h2 key={i} className="mt-3 mb-1 text-base font-semibold text-foreground">{h1[1]}</h2>;
-    }
-    return <p key={i} className="mb-2 text-sm leading-relaxed text-foreground/85">{b}</p>;
+
+    const bodyLines = h2 || h1 ? rest : lines;
+    if (bodyLines.length === 0) return;
+
+    // Group bullet lines vs paragraph lines
+    const bulletRx = /^\s*[*\-•]\s+(.*)/;
+    let para: string[] = [];
+    let bullets: string[] = [];
+
+    const flushPara = (key: string) => {
+      if (para.length === 0) return;
+      const txt = para.join(" ").trim();
+      if (txt) out.push(<p key={key} className="mb-2 text-sm leading-relaxed text-foreground/85">{renderInline(txt, key)}</p>);
+      para = [];
+    };
+    const flushBullets = (key: string) => {
+      if (bullets.length === 0) return;
+      out.push(
+        <ul key={key} className="mb-2 ml-4 list-disc space-y-1 text-sm leading-relaxed text-foreground/85 marker:text-primary/70">
+          {bullets.map((bl, j) => <li key={`${key}-${j}`}>{renderInline(bl, `${key}-${j}`)}</li>)}
+        </ul>
+      );
+      bullets = [];
+    };
+
+    bodyLines.forEach((ln, j) => {
+      const m = ln.match(bulletRx);
+      if (m) {
+        flushPara(`p-${i}-${j}`);
+        bullets.push(m[1]);
+      } else if (ln.trim() === "") {
+        flushBullets(`u-${i}-${j}`);
+        flushPara(`p-${i}-${j}`);
+      } else {
+        flushBullets(`u-${i}-${j}`);
+        para.push(ln);
+      }
+    });
+    flushBullets(`u-${i}-end`);
+    flushPara(`p-${i}-end`);
   });
+
+  return out;
 }
