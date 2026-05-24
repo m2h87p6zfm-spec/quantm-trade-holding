@@ -13,7 +13,6 @@ type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: str
 // Quant Core — the daily-use AI tools (4)
 const quantCore: NavItem[] = [
   { titleKey: "nav.picks", url: "/picks", icon: Sparkles, descKey: "nav.picks.desc" },
-  { titleKey: "nav.agent", url: "/agent", icon: Bot, descKey: "nav.agent.desc" },
   { titleKey: "nav.analyse", url: "/analyse", icon: Sigma, descKey: "nav.analyse.desc" },
   { titleKey: "nav.trackRecord", url: "/track-record", icon: ShieldCheck, descKey: "nav.trackRecord.desc" },
 ];
