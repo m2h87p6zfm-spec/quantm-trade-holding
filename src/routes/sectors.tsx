@@ -133,7 +133,7 @@ function SectorRotationPage() {
             <StatMini label="Cyc − Def (1M)" value={`${data.spread >= 0 ? "+" : ""}${data.spread.toFixed(2)}%`} tone={data.spread >= 0 ? "bull" : "bear"} />
             <StatMini label="SPY 1M" value={data.bench1m != null ? `${data.bench1m >= 0 ? "+" : ""}${data.bench1m.toFixed(2)}%` : "—"} tone={(data.bench1m ?? 0) >= 0 ? "bull" : "bear"} />
           </div>
-          <ExplainAiButton topic="Sektor-Rotation & Marktregime" context={`Aktuelles Regime: ${data.regime}. Cyclical-Defensive-Spread (1M): ${data.spread.toFixed(2)}%. SPY 1M: ${data.bench1m?.toFixed(2)}%. Erkläre dem User, was Sektor-Rotation für seine Trading-Entscheidungen bedeutet, welche Sektoren in diesem Regime typischerweise outperformen, und wie professionelle Anleger darauf reagieren.`} variant="default" />
+          <ExplainAiButton topic="Sektor-Rotation & Marktregime" context={`Aktuelles Regime: ${data.regime}. Cyclical-Defensive-Spread (1M): ${data.spread.toFixed(2)}%. SPY 1M: ${data.bench1m?.toFixed(2)}%. Erkläre dem User, was Sektor-Rotation für seine Trading-Entscheidungen bedeutet, welche Sektoren in diesem Regime typischerweise outperformen, und wie professionelle Anleger darauf reagieren.`} variant="chip" />
         </div>
       </div>
 
