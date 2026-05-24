@@ -26,6 +26,17 @@ import {
   type GlobalEvent,
   type FeedItem,
 } from "@/lib/global-intel-data";
+import {
+  computeRiskScore,
+  RISK_BAND_COLOR,
+  RISK_BAND_LABEL,
+  heatmapValue,
+  heatColor,
+  HEATMAP_LABEL,
+  type HeatmapMode,
+  tickersForCountry,
+  useUserCountryExposure,
+} from "@/lib/country-derived";
 import { useSettings } from "@/lib/settings";
 import { AGENCY_META } from "@/components/AgencyLogo";
 import { PageExplainer } from "@/components/PageExplainer";
@@ -63,6 +74,7 @@ import {
   TrendingDown,
   TrendingUp,
   Users,
+  Wallet,
   Wind,
   X,
   Zap,
@@ -99,6 +111,7 @@ type LayerToggles = {
   trade: boolean;
   tensions: boolean;
   events: boolean;
+  heatmap: HeatmapMode;
 };
 
 function GlobalIntelPage() {
@@ -108,7 +121,7 @@ function GlobalIntelPage() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [utc, setUtc] = useState<string>("");
-  const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true });
+  const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true, heatmap: "none" });
 
   useEffect(() => {
     const tick = () => {
@@ -522,12 +535,30 @@ function LayerControls({
       {label}
     </button>
   );
+  const heatModes: HeatmapMode[] = ["none", "risk", "influence", "stability", "inflation"];
   return (
-    <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
-      <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
-      <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
-      <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
-      <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
+    <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+        <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
+        <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
+        <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
+        <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
+      </div>
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+        <Gauge className="ml-1 h-3 w-3 text-muted-foreground" />
+        <span className="mr-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Heatmap</span>
+        {heatModes.map((m) => (
+          <button
+            key={m}
+            onClick={() => setLayers({ ...layers, heatmap: m })}
+            className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider transition ${
+              layers.heatmap === m ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {HEATMAP_LABEL[m]}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1406,7 +1437,10 @@ function WorldMap({
           const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
           const isAffected = !!chain?.who.includes(name);
           const propagationActive = !!chain;
-          const tint = intel ? RISK_COLOR[intel.risk] : null;
+          const heatV = intel && layers.heatmap !== "none" ? heatmapValue(intel, layers.heatmap) : null;
+          const tint = intel
+            ? (heatV != null ? heatColor(heatV) : RISK_COLOR[intel.risk])
+            : null;
           const d = geo.path(f as any) ?? "";
           // While propagation is active: dim non-affected countries, glow affected ones.
           const baseOpacity = propagationActive
@@ -1440,7 +1474,11 @@ function WorldMap({
                 <path
                   d={d}
                   fill={tint}
-                  fillOpacity={isAffected ? 0.45 : isSelected ? 0.34 : isHovered ? 0.26 : propagationActive ? 0.08 : 0.18}
+                  fillOpacity={
+                    heatV != null
+                      ? 0.18 + heatV * 0.55
+                      : isAffected ? 0.45 : isSelected ? 0.34 : isHovered ? 0.26 : propagationActive ? 0.08 : 0.18
+                  }
                   stroke="none"
                   pointerEvents="none"
                 />
@@ -1590,6 +1628,10 @@ function CountryPanel({
 
   const riskColor = RISK_COLOR[country.risk];
   const extras = COUNTRY_EXTRAS[country.name];
+  const riskScore = computeRiskScore(country);
+  const exposure = useUserCountryExposure();
+  const ownsExposure = exposure.has(country.iso2.toUpperCase());
+  const tickers = tickersForCountry(country.iso2);
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
@@ -1626,6 +1668,15 @@ function CountryPanel({
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     {country.iso2}
                   </span>
+                  {ownsExposure && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/30"
+                      title="You hold positions exposed to this country"
+                    >
+                      <Wallet className="h-2.5 w-2.5" />
+                      In your portfolio
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -1645,6 +1696,11 @@ function CountryPanel({
 
       <ScrollArea className="max-h-[68vh]">
         <div className="space-y-5 p-5">
+          {/* Risk Score (numeric 0–100 with drivers) */}
+          <Section icon={AlertTriangle} title="Risk score">
+            <RiskScoreCard score={riskScore} />
+          </Section>
+
           {/* Global influence */}
           {extras && (
             <Section icon={Gauge} title="Global market influence">
@@ -1732,7 +1788,9 @@ function CountryPanel({
               <ImpactRow icon={Activity} label="Commodities" text={country.impact.commodities} />
               <ImpactRow icon={Globe2} label="Risk sentiment" text={country.impact.sentiment} />
             </div>
+            {tickers && <TickerChips tickers={tickers} />}
           </Section>
+
 
           {/* Geopolitics */}
           <Section icon={Flame} title="Geopolitical state">
@@ -1769,11 +1827,99 @@ function CountryPanel({
           <Section icon={Newspaper} title="Live news · trusted sources">
             <LiveNews country={country} />
           </Section>
+
+          {/* Source / freshness footer */}
+          <div className="rounded-xl border border-white/[0.10] bg-white/[0.015] px-3 py-2.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span>Macro data: curated registry · updated weekly</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+              <span>Live news: Reuters / Bloomberg / FT (24 h)</span>
+              <span className="h-1 w-1 rounded-full bg-muted-foreground/50" />
+              <span>Map: world-atlas</span>
+            </div>
+          </div>
         </div>
       </ScrollArea>
     </div>
   );
 }
+
+/* ───────────────────── Risk Score & Ticker Chips ───────────────────── */
+
+function RiskScoreCard({ score }: { score: ReturnType<typeof computeRiskScore> }) {
+  const color = RISK_BAND_COLOR[score.band];
+  const pct = score.score;
+  return (
+    <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3.5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+            Composite risk · 0–100
+          </div>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className="font-display text-3xl font-bold tabular-nums" style={{ color }}>
+              {score.score}
+            </span>
+            <span
+              className="rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider"
+              style={{
+                backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)`,
+                color,
+                boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${color} 40%, transparent)`,
+              }}
+            >
+              {RISK_BAND_LABEL[score.band]}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <ul className="mt-3 space-y-1">
+        {score.drivers.map((d, i) => (
+          <li key={i} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-foreground/85">
+            <CircleDot className="mt-0.5 h-2.5 w-2.5 shrink-0" style={{ color }} />
+            {d}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TickerChips({ tickers }: { tickers: NonNullable<ReturnType<typeof tickersForCountry>> }) {
+  const Group = ({ label, items }: { label: string; items: { symbol: string; name: string }[] }) => (
+    <div>
+      <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {items.map((t) => (
+          <span
+            key={t.symbol}
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.12] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-foreground/90"
+            title={t.name}
+          >
+            <span className="font-semibold tabular-nums">{t.symbol}</span>
+            <span className="text-[9px] text-muted-foreground">{t.name}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className="mt-2.5 space-y-2 rounded-xl border border-white/[0.10] bg-white/[0.015] p-2.5">
+      <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-primary/80">
+        Watch these tickers
+      </div>
+      {tickers.equities.length > 0 && <Group label="Equities" items={tickers.equities} />}
+      {tickers.fx && <Group label="FX" items={[tickers.fx]} />}
+      {tickers.commodities && tickers.commodities.length > 0 && (
+        <Group label="Commodities" items={tickers.commodities} />
+      )}
+    </div>
+  );
+}
+
 
 /* ───────────────────── Event Panel ───────────────────── */
 
