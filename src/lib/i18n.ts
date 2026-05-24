@@ -14,8 +14,8 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Quant Core
     "nav.picks": "Quantm Picks",
     "nav.picks.desc": "KI-Vorschläge",
-    "nav.analyse": "Analyse-Agent",
-    "nav.analyse.desc": "Statistik-Engine",
+    "nav.analyse": "Aktien-Analyse",
+    "nav.analyse.desc": "Indikatoren & Score pro Symbol",
     "nav.trackRecord": "Quantm Track Record",
     "nav.trackRecord.desc": "Live-Trefferquote",
     "nav.explain": "Explain My Trade",
