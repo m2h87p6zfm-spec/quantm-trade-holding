@@ -31,7 +31,10 @@ export const Route = createFileRoute("/api/public/candles")({
             });
           }
           const isIntraday = !["1d", "5d", "1wk", "1mo", "3mo"].includes(interval);
-          const ttl = isIntraday ? 60 : 3600;
+          // Tageskerzen ändern sich nur 1× pro Tag nach Close → langer TTL
+          // ist sicher und spart massiv Credits bei wiederholten Picks-Scans.
+          // Intraday bleibt knapp (60s) für Live-Feel.
+          const ttl = isIntraday ? 60 : 6 * 3600;
           const r = await getCandlesCached(symbol, interval, range, ttl);
           if (!r.value) {
             return new Response(JSON.stringify({
