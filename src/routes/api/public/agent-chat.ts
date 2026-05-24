@@ -502,17 +502,17 @@ export const Route = createFileRoute("/api/public/agent-chat")({
             buildFeedbackAddendum(userId, 5),
           ]);
 
-          // ===== WEB INTELLIGENCE LAYER (Firecrawl) =====
-          // Multi-query: simple user query + catalyst/news-focused variants so
-          // sector- or policy-driving headlines (e.g. "USA $2B Quantum Computing
-          // investment" for IonQ) actually surface, even when the user just
-          // wrote "analysiere ionq".
+          // ===== PARALLEL: WEB INTELLIGENCE + APEX QUANT =====
+          // Beide Layer sind unabhängig — parallel statt sequenziell halbiert
+          // die Wartezeit (vorher: ~9s Firecrawl + ~2s Quant = ~11s; jetzt
+          // ~max(6s, 2s) ≈ ~6s). Außerdem Firecrawl auf 2 Queries / 6s
+          // Timeout gestrafft, der 3./4. Bucket brachte selten neue Treffer.
           const lastUser = [...messages].reverse().find((m) => m.role === "user");
-          let webContext = "";
-          if (lastUser && process.env.FIRECRAWL_API_KEY) {
+
+          const webPromise: Promise<string> = (async () => {
+            if (!lastUser || !process.env.FIRECRAWL_API_KEY) return "";
             try {
               const raw = lastUser.content.slice(0, 400).trim();
-              // crude asset-token extraction: uppercase ticker OR first noun-ish word
               const tickerMatch = raw.match(/\b[A-Z]{2,5}\b/);
               const lowerWords = raw.toLowerCase().replace(/[^a-z0-9äöüß\s$.-]/g, " ").split(/\s+/).filter(Boolean);
               const stop = new Set(["analysiere","analyse","bitte","mir","die","der","das","ein","eine","aktie","stock","etf","von","und","oder","mit","für","fuer","zu","auf","im","in","am","an","zum","wie","ist","sind","über","ueber","kannst","du","mal","gib","aktien","investieren","kaufen","verkaufen","kurs","preis","heute","jetzt"]);
@@ -521,15 +521,13 @@ export const Route = createFileRoute("/api/public/agent-chat")({
               const monthName = today.toLocaleString("en-US", { month: "long", year: "numeric" });
 
               const queries = [
-                { q: raw, tbs: "qdr:m", limit: 4 },
-                { q: `${token} stock news catalyst ${monthName}`, tbs: "qdr:w", limit: 4 },
-                { q: `${token} announcement OR funding OR regulation OR earnings`, tbs: "qdr:w", limit: 4 },
-                { q: `${token} share price driver why moving today`, tbs: "qdr:d", limit: 3 },
+                { q: raw, tbs: "qdr:w", limit: 5 },
+                { q: `${token} stock news catalyst ${monthName}`, tbs: "qdr:w", limit: 5 },
               ];
 
               const fcCall = async (q: string, tbs: string, limit: number) => {
                 const ctrl = new AbortController();
-                const tid = setTimeout(() => ctrl.abort(), 9000);
+                const tid = setTimeout(() => ctrl.abort(), 6000);
                 try {
                   const res = await fetch("https://api.firecrawl.dev/v2/search", {
                     method: "POST",
@@ -558,7 +556,6 @@ export const Route = createFileRoute("/api/public/agent-chat")({
                 for (const r of bucket) {
                   const key = (r.url ?? r.title ?? "").toLowerCase();
                   if (!key || seen.has(key)) continue;
-                  // filter social-media junk per system prompt
                   if (/(reddit\.com|twitter\.com|x\.com|tiktok\.com|facebook\.com|instagram\.com)/i.test(r.url ?? "")) continue;
                   seen.add(key);
                   merged.push(r);
@@ -567,41 +564,40 @@ export const Route = createFileRoute("/api/public/agent-chat")({
                 if (merged.length >= 10) break;
               }
 
-              if (merged.length > 0) {
-                webContext =
-                  "## WEB CONTEXT (Live-Suche, " +
-                  new Date().toISOString().slice(0, 10) +
-                  `, Asset-Token: "${token}")\n` +
-                  "Diese Quellen enthalten die jüngsten Katalysatoren und Schlagzeilen. Du MUSST sie im Pflichtblock '📰 Aktuelle Katalysatoren' verarbeiten und inline als [1]..[" +
-                  merged.length +
-                  "] zitieren. Auflistung am Ende unter '## Quellen'.\n\n" +
-                  merged
-                    .map((r, i) => `[${i + 1}] ${r.title ?? "Untitled"}\nURL: ${r.url ?? ""}\nSnippet: ${(r.description ?? "").slice(0, 500)}`)
-                    .join("\n\n");
-              }
+              if (merged.length === 0) return "";
+              return (
+                "## WEB CONTEXT (Live-Suche, " +
+                new Date().toISOString().slice(0, 10) +
+                `, Asset-Token: "${token}")\n` +
+                "Diese Quellen enthalten die jüngsten Katalysatoren und Schlagzeilen. Du MUSST sie im Pflichtblock '📰 Aktuelle Katalysatoren' verarbeiten und inline als [1]..[" +
+                merged.length +
+                "] zitieren. Auflistung am Ende unter '## Quellen'.\n\n" +
+                merged
+                  .map((r, i) => `[${i + 1}] ${r.title ?? "Untitled"}\nURL: ${r.url ?? ""}\nSnippet: ${(r.description ?? "").slice(0, 500)}`)
+                  .join("\n\n")
+              );
             } catch (err) {
               console.warn("Firecrawl multi-search error", err);
+              return "";
             }
-          }
+          })();
+
+          const quantPromise: Promise<string> = (async () => {
+            if (!lastUser) return "";
+            const ticker = detectTicker(lastUser.content);
+            if (!ticker) return "";
+            try {
+              const report = await analyzeTicker(ticker);
+              return report ? renderApexReport(report) : "";
+            } catch (e) {
+              console.warn("apex quant compute failed", e);
+              return "";
+            }
+          })();
+
+          let [webContext, quantContext] = await Promise.all([webPromise, quantPromise]);
           if (!webContext) {
             webContext = "## WEB CONTEXT\nKeine verifizierten Live-Daten verfügbar — Analyse explizit als modellbasiert kennzeichnen und im Katalysatoren-Block 'Keine signifikanten frischen Katalysatoren in den abgerufenen Quellen' schreiben.";
-          }
-
-          // ===== APEX QUANT LAYER =====
-          // Detect a ticker in the latest user message, fetch 1y daily candles +
-          // SPY benchmark, run the full 40-model quant engine and inject the
-          // numerical report as a binding system context block.
-          let quantContext = "";
-          if (lastUser) {
-            const ticker = detectTicker(lastUser.content);
-            if (ticker) {
-              try {
-                const report = await analyzeTicker(ticker);
-                if (report) quantContext = renderApexReport(report);
-              } catch (e) {
-                console.warn("apex quant compute failed", e);
-              }
-            }
           }
           if (!quantContext) {
             quantContext = "## LIVE-QUANT-REPORT\nKein Ticker erkannt oder Marktdaten nicht verfügbar — wenn der Nutzer eine konkrete Aktie meint, einmal nach dem Yahoo-Ticker fragen.";
