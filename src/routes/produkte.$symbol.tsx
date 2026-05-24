@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown, LayoutDashboard, LineChart, Newspaper, CalendarDays, Database } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
@@ -107,14 +108,28 @@ function ProductDetail() {
     ticker: lang === "en" ? "Ticker" : "Ticker",
     updating: lang === "en" ? "Live data updating… last valid values shown." : "Live-Daten werden aktualisiert… letzte gültige Werte werden angezeigt.",
     verdictLabel: lang === "en" ? "Today's read" : "Heutige Einschätzung",
-    deepDive: lang === "en" ? "Show full analysis" : "Vollständige Analyse anzeigen",
-    deepDiveOpen: lang === "en" ? "Hide full analysis" : "Vollständige Analyse ausblenden",
-    deepDiveHint: lang === "en" ? "Advanced chart, all indicators, raw values" : "Erweiterter Chart, alle Indikatoren, Rohdaten",
     advChart: lang === "en" ? "Advanced chart" : "Erweiterter Chart",
     advChartCtx: lang === "en" ? "Candles, EMAs, Bollinger, RSI, MACD" : "Candles, EMAs, Bollinger, RSI, MACD",
     rawData: lang === "en" ? "Raw indicators" : "Rohdaten — Indikatoren",
-    eventsNews: lang === "en" ? "Events & News" : "Events & News",
+    tabs: {
+      overview: lang === "en" ? "Overview" : "Übersicht",
+      chart: lang === "en" ? "Chart & Analysis" : "Chart & Analyse",
+      news: lang === "en" ? "News & Sentiment" : "News & Sentiment",
+      events: lang === "en" ? "Events" : "Events",
+      data: lang === "en" ? "Data" : "Daten",
+    },
   };
+
+  type TabKey = "overview" | "chart" | "news" | "events" | "data";
+  const [tab, setTab] = useState<TabKey>("overview");
+
+  const tabList: { key: TabKey; label: string; icon: typeof LayoutDashboard }[] = [
+    { key: "overview", label: t.tabs.overview, icon: LayoutDashboard },
+    { key: "chart", label: t.tabs.chart, icon: LineChart },
+    { key: "news", label: t.tabs.news, icon: Newspaper },
+    { key: "events", label: t.tabs.events, icon: CalendarDays },
+    { key: "data", label: t.tabs.data, icon: Database },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
@@ -152,6 +167,27 @@ function ProductDetail() {
             {t.watchlist}
           </button>
         </div>
+
+        {/* ─── Tab nav ─── */}
+        <div className="mt-3 -mb-px flex gap-1 overflow-x-auto">
+          {tabList.map(({ key, label, icon: Icon }) => {
+            const active = tab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-t-md border-b-2 px-3 py-2 text-xs font-medium transition sm:text-sm ${
+                  active
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {(candles.isError || candles.data?.stale) && (
@@ -163,108 +199,97 @@ function ProductDetail() {
 
       {indicators && sig && (
         <>
-          {/* ─── 1. THE VERDICT — one signal, one sentence, one button ─── */}
-          <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-card/95 to-card/40 p-6 backdrop-blur">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                {t.verdictLabel}
-              </div>
-              <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
-            </div>
-            <p className="text-lg leading-relaxed text-foreground sm:text-xl">
-              {plainVerdict(sig.verdict, sig.confidence, indicators.rsi, indicators.zScore, lang)}
-            </p>
-            <div className="mt-3 flex items-center gap-2">
-              <ExplainAiButton
-                topic={lang === "en" ? `Why ${symbol} is rated ${sig.verdict}` : `Warum ${symbol} als ${sig.verdict} bewertet wird`}
-                context={`RSI ${indicators.rsi.toFixed(1)}, Z-Score ${indicators.zScore.toFixed(2)}, MACD ${indicators.macd.macd.toFixed(2)}, Vol ${(indicators.volatility * 100).toFixed(1)}%, Confidence ${sig.confidence}%.`}
-                label={lang === "en" ? "Explain in detail" : "Im Detail erklären"}
-              />
-            </div>
-          </section>
-
-          {/* ─── 2. THE CHART — visual anchor, big and clean ─── */}
-          <section className="rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5">
-            <AssetChart symbol={symbol} height={380} defaultTf="1Y" currency="$" />
-          </section>
-
-          {/* ─── 3. SECOND OPINIONS — what others think ─── */}
-          <section className="grid gap-4 lg:grid-cols-2">
-            <MarketConsensus symbol={symbol} indicators={indicators} />
-            <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
-          </section>
-
-          {/* ─── 4. DEEP DIVE — collapsed by default ─── */}
-          <details className="group rounded-2xl border border-border/70 bg-card/40">
-            <summary className="flex cursor-pointer items-center justify-between gap-4 p-5 hover:bg-card/60">
-              <div>
-                <div className="text-sm font-semibold text-foreground">
-                  <span className="group-open:hidden">{t.deepDive}</span>
-                  <span className="hidden group-open:inline">{t.deepDiveOpen}</span>
-                </div>
-                <div className="mt-0.5 text-xs text-muted-foreground">{t.deepDiveHint}</div>
-              </div>
-              <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-            </summary>
-
-            <div className="space-y-4 border-t border-border/70 p-5">
-              {/* Advanced chart */}
-              <div>
+          {tab === "overview" && (
+            <>
+              <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-card/95 to-card/40 p-6 backdrop-blur">
                 <div className="mb-3 flex items-center justify-between">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t.advChart}
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    {t.verdictLabel}
                   </div>
+                  <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
+                </div>
+                <p className="text-lg leading-relaxed text-foreground sm:text-xl">
+                  {plainVerdict(sig.verdict, sig.confidence, indicators.rsi, indicators.zScore, lang)}
+                </p>
+                <div className="mt-3 flex items-center gap-2">
                   <ExplainAiButton
-                    topic={t.advChart}
-                    context={`${t.advChartCtx} — ${symbol}.`}
+                    topic={lang === "en" ? `Why ${symbol} is rated ${sig.verdict}` : `Warum ${symbol} als ${sig.verdict} bewertet wird`}
+                    context={`RSI ${indicators.rsi.toFixed(1)}, Z-Score ${indicators.zScore.toFixed(2)}, MACD ${indicators.macd.macd.toFixed(2)}, Vol ${(indicators.volatility * 100).toFixed(1)}%, Confidence ${sig.confidence}%.`}
+                    label={lang === "en" ? "Explain in detail" : "Im Detail erklären"}
                   />
                 </div>
-                {candles.data && (
-                  <ProChart
-                    data={candles.data}
-                    height={520}
-                    overlays={["ema20", "ema50", "sma200", "bbands"]}
-                    subcharts={["volume", "rsi", "macd"]}
-                    showZones
-                  />
-                )}
-              </div>
+              </section>
 
-              {/* Raw indicators */}
-              <div className="rounded-lg border border-border/60 bg-background/40 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {t.rawData}
-                  </div>
-                  <ExplainAiButton
-                    topic={lang === "en" ? "Technical indicators overview" : "Technische Indikatoren Übersicht"}
-                    context={`RSI ${indicators.rsi.toFixed(1)}, MACD ${indicators.macd.macd.toFixed(2)}, Vola ${(indicators.volatility * 100).toFixed(1)}%`}
-                  />
-                </div>
-                <div className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
-                  <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} explain="Z-Score" ctx={`Aktuell ${indicators.zScore.toFixed(2)} für ${symbol}.`} />
-                  <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} explain="RSI (Relative Strength Index)" ctx={`RSI aktuell ${indicators.rsi.toFixed(1)} für ${symbol}.`} />
-                  <Row k="MACD" v={indicators.macd.macd.toFixed(3)} explain="MACD" ctx={`MACD-Linie ${indicators.macd.macd.toFixed(3)}, Signal ${indicators.macd.signal.toFixed(3)}.`} />
-                  <Row k="MACD Signal" v={indicators.macd.signal.toFixed(3)} />
-                  <Row k="MACD Histogramm" v={indicators.macd.histogram.toFixed(3)} />
-                  <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} explain="Bollinger Bands" ctx={`Upper ${indicators.bollinger.upper.toFixed(2)}, Lower ${indicators.bollinger.lower.toFixed(2)}, Preis ${last.toFixed(2)}.`} />
-                  <Row k="Bollinger Lower" v={indicators.bollinger.lower.toFixed(2)} />
-                  <Row k={lang === "en" ? "Volatility (annualised)" : "Vola annualisiert"} v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität" ctx={`Annualisierte Vola ${(indicators.volatility * 100).toFixed(1)}% für ${symbol}.`} />
-                  <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum * 100).toFixed(2)}%.`} />
-                  <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} explain="Sharpe Ratio" ctx={`Sharpe Ratio ${indicators.sharpe.toFixed(2)}.`} />
-                  <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
-                  <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${indicators.sma20.toFixed(1)}, SMA50 ${indicators.sma50.toFixed(1)}, SMA200 ${indicators.sma200.toFixed(1)}.`} />
-                </div>
-              </div>
-            </div>
-          </details>
+              <section className="rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5">
+                <AssetChart symbol={symbol} height={320} defaultTf="1Y" currency="$" />
+              </section>
 
-          {/* ─── 5. EVENTS & NEWS ─── */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t.eventsNews}</h2>
-            <AssetEventsPanel symbol={symbol} />
-            <AssetNewsPanel symbol={symbol} />
-          </section>
+              <section className="grid gap-4 lg:grid-cols-2">
+                <MarketConsensus symbol={symbol} indicators={indicators} />
+                <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
+              </section>
+            </>
+          )}
+
+          {tab === "chart" && (
+            <section className="rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t.advChart}
+                </div>
+                <ExplainAiButton topic={t.advChart} context={`${t.advChartCtx} — ${symbol}.`} />
+              </div>
+              {candles.data && (
+                <ProChart
+                  data={candles.data}
+                  height={560}
+                  overlays={["ema20", "ema50", "sma200", "bbands"]}
+                  subcharts={["volume", "rsi", "macd"]}
+                  showZones
+                />
+              )}
+            </section>
+          )}
+
+          {tab === "news" && (
+            <section className="space-y-4">
+              <AssetNewsPanel symbol={symbol} />
+            </section>
+          )}
+
+          {tab === "events" && (
+            <section className="space-y-4">
+              <AssetEventsPanel symbol={symbol} />
+            </section>
+          )}
+
+          {tab === "data" && (
+            <section className="rounded-2xl border border-border/70 bg-card/40 p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  {t.rawData}
+                </div>
+                <ExplainAiButton
+                  topic={lang === "en" ? "Technical indicators overview" : "Technische Indikatoren Übersicht"}
+                  context={`RSI ${indicators.rsi.toFixed(1)}, MACD ${indicators.macd.macd.toFixed(2)}, Vola ${(indicators.volatility * 100).toFixed(1)}%`}
+                />
+              </div>
+              <div className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+                <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} explain="Z-Score" ctx={`Aktuell ${indicators.zScore.toFixed(2)} für ${symbol}.`} />
+                <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} explain="RSI (Relative Strength Index)" ctx={`RSI aktuell ${indicators.rsi.toFixed(1)} für ${symbol}.`} />
+                <Row k="MACD" v={indicators.macd.macd.toFixed(3)} explain="MACD" ctx={`MACD-Linie ${indicators.macd.macd.toFixed(3)}, Signal ${indicators.macd.signal.toFixed(3)}.`} />
+                <Row k="MACD Signal" v={indicators.macd.signal.toFixed(3)} />
+                <Row k="MACD Histogramm" v={indicators.macd.histogram.toFixed(3)} />
+                <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} explain="Bollinger Bands" ctx={`Upper ${indicators.bollinger.upper.toFixed(2)}, Lower ${indicators.bollinger.lower.toFixed(2)}, Preis ${last.toFixed(2)}.`} />
+                <Row k="Bollinger Lower" v={indicators.bollinger.lower.toFixed(2)} />
+                <Row k={lang === "en" ? "Volatility (annualised)" : "Vola annualisiert"} v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität" ctx={`Annualisierte Vola ${(indicators.volatility * 100).toFixed(1)}% für ${symbol}.`} />
+                <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum * 100).toFixed(2)}%.`} />
+                <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} explain="Sharpe Ratio" ctx={`Sharpe Ratio ${indicators.sharpe.toFixed(2)}.`} />
+                <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
+                <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${indicators.sma20.toFixed(1)}, SMA50 ${indicators.sma50.toFixed(1)}, SMA200 ${indicators.sma200.toFixed(1)}.`} />
+              </div>
+            </section>
+          )}
 
           <DisclaimerInline />
         </>
