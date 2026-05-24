@@ -934,6 +934,31 @@ function StrategicBriefing() {
   const growthDir: Direction =
     s.trend === "expanding" ? "up" : s.trend === "recession" || s.trend === "slowing" ? "down" : "neutral";
 
+  // Build the list of metrics whose explanations we want from the AI.
+  const metrics = useMemo(
+    () => [
+      { key: "globalRisk" as const,  label: "Global Risk",            status: snap.globalRisk.label },
+      { key: "marketTrend" as const, label: "Market Trend",           status: snap.marketTrend.label },
+      { key: "liquidity" as const,   label: "Liquidity",              status: snap.liquidity.label },
+      { key: "usd" as const,         label: "USD Strength",           status: snap.usd.label },
+      { key: "vol" as const,         label: "Volatility",             status: snap.vol.label },
+      { key: "positioning" as const, label: "Investor Positioning",   status: snap.globalRisk.label },
+      { key: "liquidityCB" as const, label: "Liquidity & Central Banks", status: snap.liquidity.label },
+      { key: "currency" as const,    label: "Currency Pressure",      status: snap.usd.label },
+      { key: "growth" as const,      label: "Global Growth Outlook",  status: snap.liquidity.label },
+    ],
+    [snap],
+  );
+
+  const fetchExplanations = useServerFn(getMacroExplanations);
+  const { data: explData, isLoading: explLoading } = useQuery({
+    queryKey: ["macro-explanations", metrics.map((m) => `${m.key}:${m.status}`).join("|")],
+    queryFn: () => fetchExplanations({ data: { metrics } }),
+    staleTime: 6 * 60 * 60 * 1000, // 6h
+    refetchOnWindowFocus: false,
+  });
+  const expl = explData?.explanations ?? {};
+
   return (
     <section aria-label="Global market overview" className="space-y-6">
       {/* ── LAYER 1 · Global Snapshot ─────────────────────────────── */}
@@ -943,15 +968,25 @@ function StrategicBriefing() {
             Global Snapshot
           </h3>
           <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Read in 5 seconds
+            Tap any tile for today's reasoning
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-          <StatusPill icon={Gauge}       label="Global Risk"    status={snap.globalRisk.label}  tone={snap.globalRisk.tone} />
-          <StatusPill icon={LineChart}   label="Market Trend"   status={snap.marketTrend.label} tone={snap.marketTrend.tone} />
-          <StatusPill icon={Droplets}    label="Liquidity"      status={snap.liquidity.label}   tone={snap.liquidity.tone} />
-          <StatusPill icon={DollarSign}  label="USD Strength"   status={snap.usd.label}         tone={snap.usd.tone} />
-          <StatusPill icon={Wind}        label="Volatility"     status={snap.vol.label}         tone={snap.vol.tone} />
+          <ExplainPopover metricKey="globalRisk" label="Global Risk" status={snap.globalRisk.label} loading={explLoading} explanation={expl.globalRisk}>
+            <StatusPill icon={Gauge}      label="Global Risk"   status={snap.globalRisk.label}  tone={snap.globalRisk.tone} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="marketTrend" label="Market Trend" status={snap.marketTrend.label} loading={explLoading} explanation={expl.marketTrend}>
+            <StatusPill icon={LineChart}  label="Market Trend"  status={snap.marketTrend.label} tone={snap.marketTrend.tone} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="liquidity" label="Liquidity" status={snap.liquidity.label} loading={explLoading} explanation={expl.liquidity}>
+            <StatusPill icon={Droplets}   label="Liquidity"     status={snap.liquidity.label}   tone={snap.liquidity.tone} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="usd" label="USD Strength" status={snap.usd.label} loading={explLoading} explanation={expl.usd}>
+            <StatusPill icon={DollarSign} label="USD Strength"  status={snap.usd.label}         tone={snap.usd.tone} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="vol" label="Volatility" status={snap.vol.label} loading={explLoading} explanation={expl.vol}>
+            <StatusPill icon={Wind}       label="Volatility"    status={snap.vol.label}         tone={snap.vol.tone} />
+          </ExplainPopover>
         </div>
       </div>
 
@@ -962,88 +997,26 @@ function StrategicBriefing() {
             Core Market Drivers
           </h3>
           <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            What's actually moving capital today
+            Tap any card for today's reasoning
           </span>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <DriverCard
-            icon={Users}
-            label="Investor Positioning"
-            headline={
-              s.sentiment === "risk-on"
-                ? "Investors are leaning into risk again."
-                : s.sentiment === "risk-off"
-                  ? "Capital is rotating into safe havens."
-                  : "Positioning is split — no clear consensus."
-            }
-            impact={
-              s.sentiment === "risk-on"
-                ? "Equities and cyclicals attract inflows."
-                : s.sentiment === "risk-off"
-                  ? "Bonds, gold and the dollar are bid."
-                  : "Sector rotation matters more than index direction."
-            }
-            direction={positioningDir}
-          />
-          <DriverCard
-            icon={Landmark}
-            label="Liquidity & Central Banks"
-            headline={
-              liquidityDir === "up"
-                ? "Central banks are easing — more money in the system."
-                : liquidityDir === "down"
-                  ? "Policy stays tight — funding conditions are squeezing."
-                  : "Central banks on hold — liquidity is steady."
-            }
-            impact={
-              liquidityDir === "up"
-                ? "Tailwind for risk assets and emerging markets."
-                : liquidityDir === "down"
-                  ? "Headwind for credit, EM and high-multiple stocks."
-                  : "Cross-asset flows are balanced."
-            }
-            direction={liquidityDir}
-          />
-          <DriverCard
-            icon={DollarSign}
-            label="Currency Pressure"
-            headline={
-              usdDir === "up"
-                ? "The dollar is strong and pulling capital in."
-                : usdDir === "down"
-                  ? "The dollar is weakening — relief for the rest of the world."
-                  : "Dollar is rangebound — currencies trade on local stories."
-            }
-            impact={
-              usdDir === "up"
-                ? "Pressure on commodities, EM currencies and US exporters."
-                : usdDir === "down"
-                  ? "Boost for commodities, EM equities and gold."
-                  : "FX is a sideshow — focus on rates and earnings."
-            }
-            direction={usdDir}
-          />
-          <DriverCard
-            icon={Globe2}
-            label="Global Growth Outlook"
-            headline={
-              growthDir === "up"
-                ? "Growth is broadening across regions."
-                : growthDir === "down"
-                  ? "Growth is slowing — US resilience masks weakness elsewhere."
-                  : "Growth is mixed — divergence between regions."
-            }
-            impact={
-              growthDir === "up"
-                ? "Cyclicals, industrials and EM earnings get a lift."
-                : growthDir === "down"
-                  ? "Defensive sectors and quality names outperform."
-                  : "Stock-picking matters more than top-down calls."
-            }
-            direction={growthDir}
-          />
+          <ExplainPopover metricKey="positioning" label="Investor Positioning" status={snap.globalRisk.label} loading={explLoading} explanation={expl.positioning}>
+            <DriverCard icon={Users}      label="Investor Positioning"   status={snap.globalRisk.label} direction={positioningDir} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="liquidityCB" label="Liquidity & Central Banks" status={snap.liquidity.label} loading={explLoading} explanation={expl.liquidityCB}>
+            <DriverCard icon={Landmark}   label="Liquidity & Central Banks" status={snap.liquidity.label} direction={liquidityDir} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="currency" label="Currency Pressure" status={snap.usd.label} loading={explLoading} explanation={expl.currency}>
+            <DriverCard icon={DollarSign} label="Currency Pressure"      status={snap.usd.label}         direction={usdDir} />
+          </ExplainPopover>
+          <ExplainPopover metricKey="growth" label="Global Growth Outlook" status={snap.liquidity.label} loading={explLoading} explanation={expl.growth}>
+            <DriverCard icon={Globe2}     label="Global Growth Outlook"  status={snap.liquidity.label}   direction={growthDir} />
+          </ExplainPopover>
         </div>
       </div>
+
+
 
       {/* ── LAYER 3 · Market Context (expandable) ─────────────────── */}
       <div>
