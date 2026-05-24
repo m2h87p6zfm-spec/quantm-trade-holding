@@ -89,6 +89,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
   const [sector, setSector] = useState<(typeof SECTORS)[number]>("Alle");
   const [assetType, setAssetType] = useState<(typeof ASSET_TYPES)[number]>("Alle");
   const [result, setResult] = useState<(typeof RESULTS)[number]>("Alle");
+  const [tab, setTab] = useState<"record" | "learning">("record");
 
   const filtered = useMemo(() => {
     const cutoff = period === "all" ? 0 : Date.now() - PERIODS.find((p) => p.id === period)!.days * 86400_000;
