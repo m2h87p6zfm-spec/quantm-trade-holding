@@ -1696,6 +1696,11 @@ function CountryPanel({
 
       <ScrollArea className="max-h-[68vh]">
         <div className="space-y-5 p-5">
+          {/* Risk Score (numeric 0–100 with drivers) */}
+          <Section icon={AlertTriangle} title="Risk score">
+            <RiskScoreCard score={riskScore} />
+          </Section>
+
           {/* Global influence */}
           {extras && (
             <Section icon={Gauge} title="Global market influence">
