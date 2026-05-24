@@ -1437,7 +1437,10 @@ function WorldMap({
           const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
           const isAffected = !!chain?.who.includes(name);
           const propagationActive = !!chain;
-          const tint = intel ? RISK_COLOR[intel.risk] : null;
+          const heatV = intel && layers.heatmap !== "none" ? heatmapValue(intel, layers.heatmap) : null;
+          const tint = intel
+            ? (heatV != null ? heatColor(heatV) : RISK_COLOR[intel.risk])
+            : null;
           const d = geo.path(f as any) ?? "";
           // While propagation is active: dim non-affected countries, glow affected ones.
           const baseOpacity = propagationActive
