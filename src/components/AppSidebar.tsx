@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Brain, Calendar, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, BookOpen, Brain, Calendar, Compass, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Network, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +21,8 @@ const quantCore: NavItem[] = [
 const markets: NavItem[] = [
   { titleKey: "nav.watchlist", url: "/", icon: ListOrdered },
   { titleKey: "nav.heatmap", url: "/heatmap", icon: Flame },
+  { titleKey: "nav.sectors", url: "/sectors", icon: Compass, descKey: "nav.sectors.desc" },
+  { titleKey: "nav.correlations", url: "/correlations", icon: Network, descKey: "nav.correlations.desc" },
   { titleKey: "nav.news", url: "/news", icon: Newspaper, feature: "news_sentiment" },
   { titleKey: "nav.global", url: "/global-intel", icon: Globe2, descKey: "nav.global.desc" },
   { titleKey: "nav.calendar", url: "/kalender", icon: Calendar, feature: "calendar" },
