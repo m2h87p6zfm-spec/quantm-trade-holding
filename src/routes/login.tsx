@@ -149,6 +149,14 @@ function LoginPage() {
           <span className="mx-2 opacity-30">·</span>
           <Link to="/" className="hover:text-foreground">{t("login.backHome")}</Link>
         </p>
+        <p className="text-center text-[10px] text-muted-foreground/70 mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1">
+          <Link to="/impressum" className="hover:text-foreground">Impressum</Link>
+          <Link to="/agb" className="hover:text-foreground">AGB</Link>
+          <Link to="/datenschutz" className="hover:text-foreground">Datenschutz</Link>
+        </p>
+        <p className="text-center text-[10px] text-muted-foreground/60 mt-3 px-4 leading-relaxed">
+          Keine Anlageberatung. Handel mit Wertpapieren birgt das Risiko des Totalverlusts.
+        </p>
       </div>
     </div>
   );
