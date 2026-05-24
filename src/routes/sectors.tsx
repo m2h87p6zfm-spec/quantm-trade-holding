@@ -152,6 +152,24 @@ function SectorRotationPage() {
         </div>
       </div>
 
+      {/* Leaders & Laggards — die Kernaussage auf einen Blick */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <LeaderLaggardCard
+          title="Sektor-Leader"
+          subtitle="Wo Geld aktuell hinfließt"
+          tone="bull"
+          icon={<ArrowUpRight className="h-4 w-4" />}
+          items={data.rows.slice(0, 3)}
+        />
+        <LeaderLaggardCard
+          title="Sektor-Nachzügler"
+          subtitle="Wo Trader Risiko meiden"
+          tone="bear"
+          icon={<ArrowDownRight className="h-4 w-4" />}
+          items={[...data.rows].slice(-3).reverse()}
+        />
+      </div>
+
       {/* Sektor-Tabelle */}
       <div className="card-glow rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
@@ -159,23 +177,25 @@ function SectorRotationPage() {
             <Layers className="h-4 w-4 text-primary" />
             <h2 className="text-sm font-semibold uppercase tracking-wider">Sektor-Performance & Relative Stärke</h2>
           </div>
-          <div className="text-[10px] text-muted-foreground">Benchmark: SPY</div>
+          <div className="text-[10px] text-muted-foreground">Benchmark: SPY · Sortiert nach Momentum</div>
         </div>
 
+        <TooltipProvider delayDuration={200}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/60 text-[10px] uppercase tracking-widest text-muted-foreground">
                 <th className="px-2 py-2 text-left">Sektor</th>
                 <th className="px-2 py-2 text-right">1T</th>
-                <th className="px-2 py-2 text-right">1W</th>
+                <th className="px-2 py-2 text-right hidden sm:table-cell">1W</th>
                 <th className="px-2 py-2 text-right">1M</th>
-                <th className="px-2 py-2 text-right">3M</th>
-                <th className="px-2 py-2 text-right">RS 1M</th>
-                <th className="px-2 py-2 text-right">RS 3M</th>
-                <th className="px-2 py-2 text-right">Momentum</th>
+                <th className="px-2 py-2 text-right hidden md:table-cell">3M</th>
+                <ThWithTip label="RS 1M" tip="Relative Stärke (1 Monat): Sektor-Return minus SPY-Return. Positiv = besser als der Markt." />
+                <ThWithTip label="RS 3M" tip="Relative Stärke (3 Monate). Anhaltend positive Werte deuten auf institutionellen Kapitalzufluss." className="hidden lg:table-cell" />
+                <ThWithTip label="Momentum" tip="Gewichteter Trend-Score: 1W (50%) + 1M (30%) + 3M (20%). Höher = stärkerer Aufwärtstrend." />
               </tr>
             </thead>
+
             <tbody>
               {data.rows.map((r, idx) => (
                 <tr key={r.symbol} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
