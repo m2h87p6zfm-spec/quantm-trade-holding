@@ -14,7 +14,7 @@ export type RiskScore = {
   drivers: string[]; // 3 short bullets explaining the score
 };
 
-const RISK_WEIGHT = { low: 25, medium: 55, high: 80 } as const;
+const RISK_WEIGHT: Record<"low" | "medium" | "high", number> = { low: 25, medium: 55, high: 80 };
 
 export function computeRiskScore(country: CountryIntel): RiskScore {
   const extras = COUNTRY_EXTRAS[country.name];
