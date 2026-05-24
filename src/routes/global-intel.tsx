@@ -1668,6 +1668,15 @@ function CountryPanel({
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     {country.iso2}
                   </span>
+                  {ownsExposure && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-primary ring-1 ring-primary/30"
+                      title="You hold positions exposed to this country"
+                    >
+                      <Wallet className="h-2.5 w-2.5" />
+                      In your portfolio
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
