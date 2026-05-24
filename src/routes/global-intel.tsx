@@ -1628,6 +1628,10 @@ function CountryPanel({
 
   const riskColor = RISK_COLOR[country.risk];
   const extras = COUNTRY_EXTRAS[country.name];
+  const riskScore = computeRiskScore(country);
+  const exposure = useUserCountryExposure();
+  const ownsExposure = exposure.has(country.iso2.toUpperCase());
+  const tickers = tickersForCountry(country.iso2);
 
   return (
     <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
