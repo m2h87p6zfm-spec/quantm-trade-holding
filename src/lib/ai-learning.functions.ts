@@ -228,13 +228,17 @@ export const getPerformanceMetrics = createServerFn({ method: "POST" })
       xs.length > 0 ? xs.reduce((s, x) => s + x.accuracy, 0) / xs.length : 0;
     const improvement = trend.length >= 4 ? avg(secondHalf) - avg(firstHalf) : 0;
 
-    // Learning Events Timeline
-    const { data: events } = await supabaseAdmin
-      .from("ai_learning_events")
-      .select("id, created_at, scenario_tag, market_regime, pattern_detected, before_belief, after_belief, sample_size, prior_accuracy")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    // Learning Events Timeline — beschränkt auf eigene Predictions
+    const ownPredIds = evaluated.map((e) => e.id);
+    const { data: events } = ownPredIds.length > 0
+      ? await supabaseAdmin
+          .from("ai_learning_events")
+          .select("id, created_at, scenario_tag, market_regime, pattern_detected, before_belief, after_belief, sample_size, prior_accuracy, trigger_prediction_ids")
+          .gte("created_at", since)
+          .overlaps("trigger_prediction_ids", ownPredIds)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      : { data: [] as any[] };
 
     return {
       window: data.window,
