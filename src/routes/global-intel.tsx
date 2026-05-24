@@ -111,6 +111,7 @@ type LayerToggles = {
   trade: boolean;
   tensions: boolean;
   events: boolean;
+  heatmap: HeatmapMode;
 };
 
 function GlobalIntelPage() {
