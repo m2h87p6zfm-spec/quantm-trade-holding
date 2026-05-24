@@ -117,6 +117,7 @@ function ProductDetail() {
               <AssetChart symbol={symbol} height={360} defaultTf="1Y" currency="$" />
             </div>
             <MarketConsensus symbol={symbol} indicators={indicators} />
+            <DisclaimerInline />
           </TabsContent>
 
           {/* CHART — alle Indikatoren */}
