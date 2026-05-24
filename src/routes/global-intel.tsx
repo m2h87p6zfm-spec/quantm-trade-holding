@@ -146,7 +146,7 @@ function GlobalIntelPage() {
   return (
     <div className="min-h-screen bg-[oklch(0.09_0.014_260)] text-foreground">
       {/* Top command bar */}
-      <header className="relative overflow-hidden border-b border-white/[0.06]">
+      <header className="relative overflow-hidden border-b border-white/[0.12]">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.14_0.025_260)] via-[oklch(0.11_0.018_260)] to-transparent" />
           <div
@@ -179,7 +179,7 @@ function GlobalIntelPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-3 py-1.5 font-mono text-[11px] tabular-nums text-foreground/80 backdrop-blur">
+            <div className="flex items-center gap-2 rounded-lg border border-white/[0.14] bg-black/30 px-3 py-1.5 font-mono text-[11px] tabular-nums text-foreground/80 backdrop-blur">
               <Radio className="h-3 w-3 text-emerald-400" />
               <span className="text-muted-foreground">LIVE</span>
               <span className="mx-1 h-3 w-px bg-white/10" />
@@ -198,7 +198,7 @@ function GlobalIntelPage() {
         <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-5">
             {/* Map */}
-            <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
+            <section className="relative overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
               <CornerOrnaments />
 
               <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/10 bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
@@ -342,7 +342,7 @@ function LayerControls({
 
 function MapLegend() {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.06] bg-black/30 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground backdrop-blur">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/[0.12] bg-black/30 px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground backdrop-blur">
       <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.low} /> Stable</span>
       <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.medium} /> Watch</span>
       <span className="flex items-center gap-1.5"><Dot color={RISK_COLOR.high} /> Elevated</span>
@@ -383,9 +383,9 @@ function MovingMarketsBar() {
   // Duplicate for seamless marquee loop.
   const loop = [...items, ...items];
   return (
-    <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.07] bg-black/30 backdrop-blur">
+    <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.12] bg-black/30 backdrop-blur">
       <div className="flex items-stretch">
-        <div className="flex shrink-0 items-center gap-1.5 border-r border-white/[0.07] bg-primary/10 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+        <div className="flex shrink-0 items-center gap-1.5 border-r border-white/[0.12] bg-primary/10 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
           <Activity className="h-3 w-3" />
           What's moving markets
         </div>
@@ -611,7 +611,7 @@ function BriefingCardView({ c }: { c: BriefingCard }) {
   const color = TONE_COLOR[c.tone];
   const Icon = c.icon;
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.035] to-transparent p-4 backdrop-blur-md transition hover:border-white/15 hover:from-white/[0.05]">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.035] to-transparent p-4 backdrop-blur-md transition hover:border-white/15 hover:from-white/[0.05]">
       <span
         className="absolute inset-x-0 top-0 h-px"
         style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }}
@@ -655,7 +655,7 @@ function BriefingCardView({ c }: { c: BriefingCard }) {
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/[0.06] pt-3">
+      <div className="mt-3 flex flex-wrap gap-1.5 border-t border-white/[0.12] pt-3">
         {c.affected.map((a) => (
           <ToneChip key={a.label} label={a.label} tone={a.tone} />
         ))}
@@ -684,7 +684,7 @@ function StrategicBriefing() {
             What's moving the world — and why it matters for your portfolio
           </h2>
         </div>
-        <div className="hidden items-center gap-1.5 rounded-md border border-white/[0.07] bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:flex">
+        <div className="hidden items-center gap-1.5 rounded-md border border-white/[0.12] bg-black/30 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground sm:flex">
           <Sparkles className="h-3 w-3 text-primary" />
           Cause · Consequence · Markets
         </div>
@@ -922,8 +922,8 @@ function ActiveFlashpoints({
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.016_260)] backdrop-blur">
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.016_260)] backdrop-blur">
+      <div className="flex items-center justify-between border-b border-white/[0.12] px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           <AlertTriangle className="h-3 w-3 text-amber-400" />
           Active Global Flashpoints
@@ -961,7 +961,7 @@ function ActiveFlashpoints({
           );
         })}
       </ul>
-      <div className="border-t border-white/[0.06] px-4 py-2.5 text-[10.5px] text-muted-foreground">
+      <div className="border-t border-white/[0.12] px-4 py-2.5 text-[10.5px] text-muted-foreground">
         Tap any flashpoint to see the full cause → effect chain and watch it propagate on the map.
         <span className="ml-1 text-foreground/70">
           Or pick a country (e.g.{" "}
@@ -1312,9 +1312,9 @@ function CountryPanel({
   const extras = COUNTRY_EXTRAS[country.name];
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
       <div
-        className="relative border-b border-white/[0.06] p-5"
+        className="relative border-b border-white/[0.12] p-5"
         style={{
           background: `linear-gradient(180deg, color-mix(in oklab, ${riskColor} 14%, transparent), transparent)`,
         }}
@@ -1384,7 +1384,7 @@ function CountryPanel({
                 <KV label="Policy consistency" value={extras.strengthIndex.policy} />
                 <KV label="Economic health" value={extras.strengthIndex.economy} />
                 <KV label="Investor confidence" value={extras.strengthIndex.investorConfidence} />
-                <div className="col-span-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5">
+                <div className="col-span-2 rounded-xl border border-white/[0.14] bg-white/[0.02] px-3 py-2.5">
                   <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
                     Geopolitical stability
                   </div>
@@ -1401,7 +1401,7 @@ function CountryPanel({
                 {extras.transmission.map((t) => (
                   <li
                     key={t}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5 text-xs leading-relaxed text-foreground/85"
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.14] bg-white/[0.02] p-2.5 text-xs leading-relaxed text-foreground/85"
                   >
                     <CircleDot className="mt-0.5 h-2.5 w-2.5 shrink-0 text-primary" />
                     {t}
@@ -1466,7 +1466,7 @@ function CountryPanel({
 
           {/* Pivotal event */}
           <Section icon={Landmark} title="Pivotal event">
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">
+            <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-sm font-semibold">{country.pivotalEvent.title}</div>
                 <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[10px] tabular-nums">
@@ -1501,9 +1501,9 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
   const color = EVENT_COLOR[event.type];
   const chain = EVENT_CHAINS[event.id];
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.12_0.018_260)] backdrop-blur">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-[oklch(0.12_0.018_260)] backdrop-blur">
       <div
-        className="flex items-start justify-between gap-3 border-b border-white/[0.06] p-4"
+        className="flex items-start justify-between gap-3 border-b border-white/[0.12] p-4"
         style={{
           background: `linear-gradient(180deg, color-mix(in oklab, ${color} 14%, transparent), transparent)`,
         }}
@@ -1540,7 +1540,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
 
         {/* B. Why it matters */}
         {chain && (
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+          <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3">
             <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
               Why it matters globally
             </div>
@@ -1582,7 +1582,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
                 return (
                   <li
                     key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5"
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
                   >
                     <span
                       className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
@@ -1613,7 +1613,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
                 return (
                   <li
                     key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5"
+                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
                   >
                     <span
                       className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
@@ -1649,7 +1649,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
 
 function ImpactTag({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1.5">
+    <div className="rounded-lg border border-white/[0.14] bg-white/[0.02] px-2.5 py-1.5">
       <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
       <div className="text-[11px] text-foreground/85">{value}</div>
     </div>
@@ -1702,8 +1702,8 @@ const FEED_IMPACT_INFO: Record<FeedItem["impact"], { label: string; desc: string
 function IntelFeed() {
   const [openFeed, setOpenFeed] = useState<FeedItem | null>(null);
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[oklch(0.11_0.016_260)]">
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-[oklch(0.11_0.016_260)]">
+      <div className="flex items-center justify-between border-b border-white/[0.12] px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           <Radio className="h-3 w-3 text-emerald-400" />
           Market intelligence feed
@@ -1842,7 +1842,7 @@ function InfluenceMeter({ score, why }: { score: number; why: string }) {
   const color =
     score >= 8 ? "oklch(0.74 0.10 78)" : score >= 5 ? "oklch(0.72 0.08 200)" : "oklch(0.62 0.06 260)";
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3.5">
+    <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3.5">
       <div className="flex items-end justify-between">
         <div>
           <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -1885,7 +1885,7 @@ function StabilityBar({ score }: { score: number }) {
 function KV({ label, value, tight }: { label: string; value: string; tight?: boolean }) {
   return (
     <div
-      className={`rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5 transition hover:border-white/15 ${
+      className={`rounded-xl border border-white/[0.14] bg-white/[0.02] px-3 py-2.5 transition hover:border-white/15 ${
         tight ? "col-span-2" : ""
       }`}
     >
@@ -1920,7 +1920,7 @@ function EconKV<T extends string>({
           ? "text-amber-300/90"
           : "text-sky-300/90";
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5 transition hover:border-white/15">
+    <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] px-3 py-2.5 transition hover:border-white/15">
       <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">{label}</div>
       <div className={`mt-1 flex items-center gap-1.5 text-xs font-semibold tabular-nums ${color}`}>
         {arrow && <Arrow className="h-3 w-3" />}
@@ -1940,7 +1940,7 @@ function ImpactRow({
   text: string;
 }) {
   return (
-    <div className="flex items-start gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 transition hover:border-white/15">
+    <div className="flex items-start gap-2.5 rounded-xl border border-white/[0.14] bg-white/[0.02] p-3 transition hover:border-white/15">
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/20">
         <Icon className="h-3.5 w-3.5 text-primary" />
       </div>
@@ -2020,7 +2020,7 @@ function LiveNews({ country }: { country: CountryIntel }) {
     return (
       <div className="space-y-2">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="animate-pulse rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+          <div key={i} className="animate-pulse rounded-xl border border-white/[0.12] bg-white/[0.02] p-3">
             <div className="h-2 w-20 rounded bg-white/10" />
             <div className="mt-2 h-3 w-full rounded bg-white/10" />
             <div className="mt-1.5 h-3 w-4/5 rounded bg-white/10" />
@@ -2043,7 +2043,7 @@ function LiveNews({ country }: { country: CountryIntel }) {
   const items = query.data?.items ?? [];
   if (items.length === 0) {
     return (
-      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-xs text-muted-foreground">
+      <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3 text-xs text-muted-foreground">
         No fresh stories from your trusted sources for {country.name} in the past week.
       </div>
     );
@@ -2064,7 +2064,7 @@ function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
               key={n.id}
               type="button"
               onClick={() => setOpenItem(n)}
-              className="group block w-full rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left transition hover:border-primary/30 hover:bg-white/[0.04]"
+              className="group block w-full rounded-xl border border-white/[0.14] bg-white/[0.02] p-3 text-left transition hover:border-primary/30 hover:bg-white/[0.04]"
             >
               <div className="flex items-center justify-between gap-2">
                 <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
@@ -2220,7 +2220,7 @@ function CountryFinder({
   ];
 
   return (
-    <section className="rounded-2xl border border-white/[0.06] bg-black/20 p-4 backdrop-blur">
+    <section className="rounded-2xl border border-white/[0.12] bg-black/20 p-4 backdrop-blur">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">
           <Sparkles className="h-3 w-3 text-primary" /> Tracked countries
@@ -2263,7 +2263,7 @@ function CountryFinder({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 rounded-lg border border-white/[0.06] bg-white/[0.02] p-0.5">
+        <div className="flex items-center gap-1 rounded-lg border border-white/[0.12] bg-white/[0.02] p-0.5">
           {riskFilters.map((r) => {
             const active = risk === r.key;
             return (
