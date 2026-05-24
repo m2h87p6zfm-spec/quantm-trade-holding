@@ -127,12 +127,14 @@ export const getLearningContext = createServerFn({ method: "POST" })
 export const getPerformanceMetrics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => MetricsSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     const since = new Date(Date.now() - data.window * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: rows } = await supabaseAdmin
       .from("ai_predictions")
       .select("id, created_at, symbol, scenario_tag, market_regime, verdict, confidence, ai_outcomes(correct, realized_return, evaluated_at)")
+      .eq("user_id", userId)
       .gte("created_at", since)
       .order("created_at", { ascending: true });
 
