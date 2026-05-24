@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw } from "lucide-react";
+import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
@@ -43,22 +44,29 @@ function PicksPage() {
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
   const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
+  const [mode, setMode] = useState<"ki" | "browse">("ki");
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
     if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
     if (region !== "Alle") list = list.filter((p) => p.region === region);
+    if (mode === "browse") {
+      const q = query.trim().toLowerCase();
+      if (q) list = list.filter((p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+      return list;
+    }
     // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
     else if (universe === "extended") list = list.slice(0, 250);
     return list;
-  }, [sector, region, universe]);
+  }, [sector, region, universe, mode, query]);
 
   const candleQs = useQueries({
-    queries: filtered.map((p) => ({
+    queries: (mode === "ki" ? filtered : []).map((p) => ({
       queryKey: ["candles", p.symbol],
       queryFn: () => fetchCandles(p.symbol, "D", 260),
-      enabled: !!getApiKey(),
+      enabled: !!getApiKey() && mode === "ki",
       staleTime: 12 * 60 * 60 * 1000,
       gcTime: 24 * 60 * 60 * 1000,
       refetchOnWindowFocus: false,
