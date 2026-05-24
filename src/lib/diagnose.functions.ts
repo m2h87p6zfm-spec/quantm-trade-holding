@@ -39,7 +39,7 @@ export const diagnoseFeedError = createServerFn({ method: "POST" })
     }
 
     const userMsg = `Symbol: ${data.symbol}
-Fehlermeldung vom Yahoo-Proxy: ${data.errorMessage}
+Fehlermeldung vom Marktdaten-Feed: ${data.errorMessage}
 ${data.context ? `Kontext: ${data.context}` : ""}
 
 Warum schlägt das vermutlich fehl und was kann der Nutzer jetzt konkret tun?`;
