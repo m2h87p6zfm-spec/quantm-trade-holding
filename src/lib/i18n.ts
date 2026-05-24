@@ -25,6 +25,10 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Markets
     "nav.watchlist": "Watchlist",
     "nav.heatmap": "Heatmap",
+    "nav.sectors": "Sektor-Rotation",
+    "nav.sectors.desc": "Wer führt den Markt?",
+    "nav.correlations": "Korrelationen",
+    "nav.correlations.desc": "Klumpenrisiko erkennen",
     "nav.news": "News & Sentiment",
     "nav.global": "Global Macro",
     "nav.global.desc": "Geopolitik-Karte",
@@ -342,6 +346,10 @@ const DICT: Record<Lang, Dict> = {
     // Nav — Markets
     "nav.watchlist": "Watchlist",
     "nav.heatmap": "Heatmap",
+    "nav.sectors": "Sector Rotation",
+    "nav.sectors.desc": "Who's leading the market?",
+    "nav.correlations": "Correlations",
+    "nav.correlations.desc": "Spot cluster risk",
     "nav.news": "News & Sentiment",
     "nav.global": "Global Macro",
     "nav.global.desc": "Geopolitics map",
