@@ -535,12 +535,30 @@ function LayerControls({
       {label}
     </button>
   );
+  const heatModes: HeatmapMode[] = ["none", "risk", "influence", "stability", "inflation"];
   return (
-    <div className="absolute right-4 top-4 z-10 flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
-      <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
-      <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
-      <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
-      <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
+    <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+        <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
+        <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
+        <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
+        <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
+      </div>
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+        <Gauge className="ml-1 h-3 w-3 text-muted-foreground" />
+        <span className="mr-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Heatmap</span>
+        {heatModes.map((m) => (
+          <button
+            key={m}
+            onClick={() => setLayers({ ...layers, heatmap: m })}
+            className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider transition ${
+              layers.heatmap === m ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {HEATMAP_LABEL[m]}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
