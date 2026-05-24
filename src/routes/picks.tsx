@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw } from "lucide-react";
+import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
@@ -43,22 +44,29 @@ function PicksPage() {
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
   const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
+  const [mode, setMode] = useState<"ki" | "browse">("ki");
+  const [query, setQuery] = useState("");
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
     if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
     if (region !== "Alle") list = list.filter((p) => p.region === region);
+    if (mode === "browse") {
+      const q = query.trim().toLowerCase();
+      if (q) list = list.filter((p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
+      return list;
+    }
     // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
     else if (universe === "extended") list = list.slice(0, 250);
     return list;
-  }, [sector, region, universe]);
+  }, [sector, region, universe, mode, query]);
 
   const candleQs = useQueries({
-    queries: filtered.map((p) => ({
+    queries: (mode === "ki" ? filtered : []).map((p) => ({
       queryKey: ["candles", p.symbol],
       queryFn: () => fetchCandles(p.symbol, "D", 260),
-      enabled: !!getApiKey(),
+      enabled: !!getApiKey() && mode === "ki",
       staleTime: 12 * 60 * 60 * 1000,
       gcTime: 24 * 60 * 60 * 1000,
       refetchOnWindowFocus: false,
@@ -203,16 +211,30 @@ function PicksPage() {
               {t("page.picks.subtitle")}
             </p>
           </div>
-          <div className="flex flex-col items-end gap-1 text-right">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Scan-Universum</div>
-            <div className="font-mono text-2xl font-bold tabular-nums text-primary">{total}</div>
-            <div className="text-[11px] text-muted-foreground">{picks.length} BUY-Kandidaten</div>
+          <div className="flex flex-col items-end gap-2 text-right">
+            <div className="inline-flex rounded-lg border border-border bg-background/40 p-0.5">
+              <button onClick={() => setMode("ki")} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${mode === "ki" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                <Sparkles className="h-3.5 w-3.5" /> KI-Picks
+              </button>
+              <button onClick={() => setMode("browse")} className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${mode === "browse" ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                <Compass className="h-3.5 w-3.5" /> Durchsuchen
+              </button>
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
+            </div>
           </div>
         </div>
       </header>
 
       {/* Filter */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3">
+        {mode === "browse" && (
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Symbol oder Name suchen (z.B. AAPL, Tesla, SAP)…" className="pl-9 h-9 bg-background/60" />
+          </div>
+        )}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Filter className="h-3.5 w-3.5" /> Filter:
         </div>
@@ -227,27 +249,29 @@ function PicksPage() {
             <button key={r} onClick={() => setRegion(r)} className={`rounded-md border px-2.5 py-1 text-xs ${region === r ? "border-primary text-primary" : "border-border hover:bg-accent/40"}`}>{r}</button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
-          {(["top", "extended", "all"] as const).map((u) => (
-            <button
-              key={u}
-              onClick={() => setUniverse(u)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
-            >
-              {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
-            </button>
-          ))}
-        </div>
+        {mode === "ki" && (
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
+            {(["top", "extended", "all"] as const).map((u) => (
+              <button
+                key={u}
+                onClick={() => setUniverse(u)}
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
+              >
+                {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {apiMissing && (
+      {apiMissing && mode === "ki" && (
         <Card className="border-amber-500/40 bg-amber-500/5 p-4 text-sm">
           API-Key für Marktdaten fehlt. Hinterlege ihn in den <Link to="/einstellungen" className="text-primary underline">Einstellungen</Link>.
         </Card>
       )}
 
-      {loading && (
+      {mode === "ki" && loading && (
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
@@ -266,21 +290,20 @@ function PicksPage() {
         </div>
       )}
 
-      {!loading && pendingFeed > 0 && (
+      {mode === "ki" && !loading && pendingFeed > 0 && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-2 text-[11px] text-muted-foreground">
           {succeeded} von {total} Werten erfolgreich analysiert · {pendingFeed} Werte werden beim nächsten Scan automatisch erneut abgefragt.
         </div>
       )}
 
-
-      {!loading && picks.length === 0 && (
+      {mode === "ki" && !loading && picks.length === 0 && (
         <Card className="p-8 text-center text-sm text-muted-foreground">
           Aktuell keine BUY-Kandidaten in diesem Filter — die KI bleibt diszipliniert und schlägt nur vor, wenn die Konfidenz ≥ 60 % ist.
         </Card>
       )}
 
       {/* Podium Top 3 */}
-      {podium.length > 0 && (
+      {mode === "ki" && podium.length > 0 && (
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Trophy className="h-4 w-4 text-gold" />
@@ -295,7 +318,7 @@ function PicksPage() {
       )}
 
       {/* Weitere Picks */}
-      {rest.length > 0 && (
+      {mode === "ki" && rest.length > 0 && (
         <section>
           <div className="mb-3 flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-bull" />
@@ -310,9 +333,60 @@ function PicksPage() {
         </section>
       )}
 
+      {/* Browse-Modus: alle Treffer als kompakte Karten */}
+      {mode === "browse" && (
+        <section>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Compass className="h-4 w-4 text-primary" />
+              <h2 className="font-display text-lg font-semibold tracking-tight">Alle Treffer</h2>
+              <span className="text-xs text-muted-foreground">({filtered.length})</span>
+            </div>
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Klick für Detailanalyse</div>
+          </div>
+          {filtered.length === 0 ? (
+            <Card className="p-8 text-center text-sm text-muted-foreground">
+              Keine Treffer für die aktuelle Filter-Kombination.
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filtered.slice(0, 120).map((p) => (
+                <Link
+                  key={p.symbol}
+                  to="/produkte/$symbol"
+                  params={{ symbol: p.symbol }}
+                  className="group block rounded-xl border border-border bg-card p-4 transition hover:border-primary/40"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="font-mono font-bold tracking-tight">{p.symbol}</div>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                  <div className="text-sm text-foreground/80 truncate">{p.name}</div>
+                  <div className="mt-3 flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{p.sector}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded">{p.region}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          {filtered.length > 120 && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {filtered.length - 120} weitere Treffer — Filter verfeinern für genauere Auswahl.
+            </div>
+          )}
+        </section>
+      )}
+
       <Card className="border-border bg-muted/20 p-4 text-xs text-muted-foreground space-y-1">
-        <p><span className="font-semibold text-foreground">Wie ranken wir?</span> Adjustierte Konfidenz (regime- &amp; smart-money-gefiltert) + erwartetes Upside zum Kursziel (Gewicht 0,4) + Regime-Bonus. Nur Werte mit BUY-Decision &amp; ≥ 60 % Konfidenz erscheinen.</p>
-        <p><span className="font-semibold text-foreground">Kein Hype, nur Statistik.</span> Z-Score, RSI, MACD-Histogramm, SMA50/200, Momentum &amp; Sharpe — pro Pick einsehbar.</p>
+        {mode === "ki" ? (
+          <>
+            <p><span className="font-semibold text-foreground">Wie ranken wir?</span> Adjustierte Konfidenz (regime- &amp; smart-money-gefiltert) + erwartetes Upside zum Kursziel (Gewicht 0,4) + Regime-Bonus. Nur Werte mit BUY-Decision &amp; ≥ 60 % Konfidenz erscheinen.</p>
+            <p><span className="font-semibold text-foreground">Kein Hype, nur Statistik.</span> Z-Score, RSI, MACD-Histogramm, SMA50/200, Momentum &amp; Sharpe — pro Pick einsehbar.</p>
+          </>
+        ) : (
+          <p><span className="font-semibold text-foreground">Durchsuchen-Modus.</span> Hier siehst du das volle Universum ohne KI-Scan — ideal, wenn du gezielt nach einem Symbol suchst. Wechsle zurück zu <button onClick={() => setMode("ki")} className="text-primary underline">KI-Picks</button>, um Top-Kandidaten ranken zu lassen.</p>
+        )}
       </Card>
     </div>
   );
