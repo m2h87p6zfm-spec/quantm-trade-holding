@@ -11,7 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown, Brain, BarChart3 } from "lucide-react";
+import { AiLearningPage } from "./ai-learning";
+import { FeatureGate } from "@/lib/featureGate";
 import { formatPercent, formatNumber, formatPrice } from "@/lib/format";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 
