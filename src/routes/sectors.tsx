@@ -105,7 +105,8 @@ export function SectorRotationPage({ embedded = false }: { embedded?: boolean } 
       : { icon: <Activity className="h-4 w-4" />, color: "text-muted-foreground", bg: "bg-muted/20 border-border", desc: "Kein klares Regime — Zykliker und Defensive bewegen sich auf ähnlichem Niveau." };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    <div className={embedded ? "space-y-6" : "mx-auto max-w-7xl space-y-8 p-6"}>
+      {!embedded && (
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Compass className="h-3 w-3 text-primary" /> Sektor-Rotation · S&amp;P 500
@@ -117,6 +118,8 @@ export function SectorRotationPage({ embedded = false }: { embedded?: boolean } 
           <span className="text-bear font-medium">Risk-Off</span>-Modus läuft.
         </p>
       </div>
+      )}
+
 
       <PageExplainer
         title="Was ist Sektor-Rotation und warum interessiert mich das?"
