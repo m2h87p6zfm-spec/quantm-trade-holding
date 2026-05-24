@@ -250,11 +250,11 @@ function SectorRotationPage() {
   );
 }
 
-function PctCell({ pct, colored }: { pct: number | null; colored?: boolean }) {
-  if (pct == null) return <td className="px-2 py-2.5 text-right text-muted-foreground font-mono">—</td>;
+function PctCell({ pct, colored, className }: { pct: number | null; colored?: boolean; className?: string }) {
+  if (pct == null) return <td className={`px-2 py-2.5 text-right text-muted-foreground font-mono ${className ?? ""}`}>—</td>;
   const cls = pct >= 0 ? "text-bull" : "text-bear";
   return (
-    <td className="px-2 py-2.5 text-right">
+    <td className={`px-2 py-2.5 text-right ${className ?? ""}`}>
       <span
         className={`font-mono text-xs tabular-nums ${cls} ${colored ? "rounded px-1.5 py-0.5" : ""}`}
         style={colored ? { background: colorBg(pct) } : undefined}
@@ -265,12 +265,12 @@ function PctCell({ pct, colored }: { pct: number | null; colored?: boolean }) {
   );
 }
 
-function RsCell({ pct }: { pct: number | null }) {
-  if (pct == null) return <td className="px-2 py-2.5 text-right text-muted-foreground font-mono">—</td>;
+function RsCell({ pct, className }: { pct: number | null; className?: string }) {
+  if (pct == null) return <td className={`px-2 py-2.5 text-right text-muted-foreground font-mono ${className ?? ""}`}>—</td>;
   const Icon = pct >= 0 ? TrendingUp : TrendingDown;
   const cls = pct >= 0 ? "text-bull" : "text-bear";
   return (
-    <td className="px-2 py-2.5 text-right">
+    <td className={`px-2 py-2.5 text-right ${className ?? ""}`}>
       <span className={`inline-flex items-center gap-1 font-mono text-xs tabular-nums ${cls}`}>
         <Icon className="h-3 w-3" />
         {pct >= 0 ? "+" : ""}{pct.toFixed(2)}
@@ -278,6 +278,68 @@ function RsCell({ pct }: { pct: number | null }) {
     </td>
   );
 }
+
+function ThWithTip({ label, tip, className }: { label: string; tip: string; className?: string }) {
+  return (
+    <th className={`px-2 py-2 text-right ${className ?? ""}`}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="cursor-help border-b border-dotted border-muted-foreground/40">{label}</span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-[240px] text-xs normal-case tracking-normal">{tip}</TooltipContent>
+      </Tooltip>
+    </th>
+  );
+}
+
+type SectorRow = { symbol: string; name: string; mom: number; rs1m: number | null; r1m: number | null };
+
+function LeaderLaggardCard({
+  title, subtitle, tone, icon, items,
+}: {
+  title: string;
+  subtitle: string;
+  tone: "bull" | "bear";
+  icon: React.ReactNode;
+  items: SectorRow[];
+}) {
+  const toneClasses = tone === "bull"
+    ? "border-bull/30 bg-bull/[0.06]"
+    : "border-bear/30 bg-bear/[0.06]";
+  const toneText = tone === "bull" ? "text-bull" : "text-bear";
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClasses}`}>
+      <div className="flex items-center gap-2">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-border/40 ${toneText}`}>{icon}</span>
+        <div>
+          <div className={`text-sm font-semibold ${toneText}`}>{title}</div>
+          <div className="text-[11px] text-muted-foreground">{subtitle}</div>
+        </div>
+      </div>
+      <ul className="mt-3 space-y-1.5">
+        {items.map((r, i) => (
+          <li key={r.symbol}>
+            <Link
+              to="/produkte/$symbol"
+              params={{ symbol: r.symbol }}
+              className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm transition hover:bg-background/40"
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold bg-background/60 text-muted-foreground">{i + 1}</span>
+                <span className="font-mono font-bold">{r.symbol}</span>
+                <span className="truncate text-xs text-muted-foreground">{r.name}</span>
+              </span>
+              <span className={`font-mono text-xs tabular-nums ${toneText}`}>
+                {r.r1m != null ? `${r.r1m >= 0 ? "+" : ""}${r.r1m.toFixed(2)}%` : "—"}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 
 function TypeBadge({ type }: { type: "cyclical" | "defensive" | "rate" | "growth" }) {
   const map = {
