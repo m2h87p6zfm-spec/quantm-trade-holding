@@ -123,6 +123,15 @@ function AppShell() {
     pathname === "/passwort-zuruecksetzen" ||
     pathname === "/onboarding";
 
+  // Keep <html lang> in sync with the user's chosen language so screen
+  // readers, browser translation, and SEO see the right locale.
+  const { settings } = useSettings();
+  React.useEffect(() => {
+    if (typeof document !== "undefined" && settings?.language) {
+      document.documentElement.lang = settings.language;
+    }
+  }, [settings?.language]);
+
   // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   if (!user || isAuthScreen) {
     return <Outlet />;
