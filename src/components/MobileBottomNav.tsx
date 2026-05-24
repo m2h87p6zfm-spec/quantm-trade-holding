@@ -45,7 +45,6 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
       { to: "/analyse", icon: Sigma, key: "nav.analyse" },
       { to: "/explain-trade", icon: Microscope, key: "nav.explain" },
       { to: "/track-record", icon: ShieldCheck, key: "nav.trackRecord" },
-      { to: "/ai-learning", icon: Brain, key: "nav.aiLearning" },
     ],
   },
   {
