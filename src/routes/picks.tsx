@@ -249,18 +249,20 @@ function PicksPage() {
             <button key={r} onClick={() => setRegion(r)} className={`rounded-md border px-2.5 py-1 text-xs ${region === r ? "border-primary text-primary" : "border-border hover:bg-accent/40"}`}>{r}</button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
-          {(["top", "extended", "all"] as const).map((u) => (
-            <button
-              key={u}
-              onClick={() => setUniverse(u)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
-            >
-              {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
-            </button>
-          ))}
-        </div>
+        {mode === "ki" && (
+          <div className="ml-auto flex items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
+            {(["top", "extended", "all"] as const).map((u) => (
+              <button
+                key={u}
+                onClick={() => setUniverse(u)}
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
+              >
+                {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {apiMissing && (
