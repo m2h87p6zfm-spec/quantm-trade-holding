@@ -71,7 +71,7 @@ function HeatCell({ cell, big }: { cell: Cell; big?: boolean }) {
   );
 }
 
-function HeatmapPage() {
+export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useT();
   const [range, setRange] = useState<Range>("D");
   const [mode, setMode] = useState<Mode>("sector");
