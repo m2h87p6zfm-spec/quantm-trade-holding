@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, BookOpen, Bot, Brain, Calendar, Compass, CreditCard, Flame, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Network, Newspaper, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
+import { Bell, BookOpen, Bot, Brain, Calendar, CreditCard, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Radar, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
