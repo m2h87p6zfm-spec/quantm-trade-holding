@@ -130,6 +130,10 @@ type Answers = {
   trusted_sources: NewsSource[];
   starter_watchlists: string[];
   ai_transparency_ack: boolean;
+  terms_accepted: boolean;
+  privacy_accepted: boolean;
+  risk_disclosure_accepted: boolean;
+  age_confirmed: boolean;
 };
 
 const initialAnswers: Answers = {
@@ -139,6 +143,10 @@ const initialAnswers: Answers = {
   trusted_sources: ["reuters", "bloomberg", "yahoo"],
   starter_watchlists: [],
   ai_transparency_ack: false,
+  terms_accepted: false,
+  privacy_accepted: false,
+  risk_disclosure_accepted: false,
+  age_confirmed: false,
 };
 
 /* Map trader_type → derived trading_goal + ai_style so the existing AI logic stays untouched. */
