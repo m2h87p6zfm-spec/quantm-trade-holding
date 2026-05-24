@@ -409,6 +409,12 @@ const DICT: Record<Lang, Dict> = {
     "common.delete": "Delete",
     "common.search": "Search",
     "common.back": "Back",
+    // Explain AI dialog
+    "explain.label": "Explain AI",
+    "explain.loading": "AI is explaining the concept…",
+    "explain.signInRequired": "Please sign in first to use the AI explanation.",
+    "explain.rateLimited": "Too many requests — please wait a moment.",
+    "explain.creditsOut": "AI credits exhausted.",
     // Settings
     "settings.title": "Settings",
     "settings.subtitle": "Tailor your trading agent — risk, appearance, notifications, and default targets.",
