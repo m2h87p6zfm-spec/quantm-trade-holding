@@ -1474,7 +1474,11 @@ function WorldMap({
                 <path
                   d={d}
                   fill={tint}
-                  fillOpacity={isAffected ? 0.45 : isSelected ? 0.34 : isHovered ? 0.26 : propagationActive ? 0.08 : 0.18}
+                  fillOpacity={
+                    heatV != null
+                      ? 0.18 + heatV * 0.55
+                      : isAffected ? 0.45 : isSelected ? 0.34 : isHovered ? 0.26 : propagationActive ? 0.08 : 0.18
+                  }
                   stroke="none"
                   pointerEvents="none"
                 />
