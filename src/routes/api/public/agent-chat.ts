@@ -741,7 +741,7 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           });
         } catch (e) {
           console.error("agent-chat error", e);
-          return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), { status: 500, headers: { "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ error: "Interner Fehler" }), { status: 500, headers: { "Content-Type": "application/json" } });
         }
       },
     },
