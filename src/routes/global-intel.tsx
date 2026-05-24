@@ -143,10 +143,16 @@ function GlobalIntelPage() {
     return { path: geoPath(projection), projection };
   }, [world]);
 
+  type AsideTab = "spotlight" | "country" | "event" | "feed";
+  const [asideTab, setAsideTab] = useState<AsideTab>("spotlight");
+
+  useEffect(() => { if (selected) setAsideTab("country"); }, [selected]);
+  useEffect(() => { if (selectedEvent) setAsideTab("event"); }, [selectedEvent]);
+
   return (
     <div className="min-h-screen bg-[oklch(0.09_0.014_260)] text-foreground">
       {/* Top command bar */}
-      <header className="relative overflow-hidden border-b border-white/[0.12]">
+      <header className="relative overflow-hidden border-b border-white/[0.14]">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.14_0.025_260)] via-[oklch(0.11_0.018_260)] to-transparent" />
           <div
@@ -174,7 +180,7 @@ function GlobalIntelPage() {
                   <span>Global Intelligence War Room</span>
                 </div>
                 <h1 className="font-display text-2xl font-bold tracking-tight sm:text-[1.7rem]">
-                  Global Market & Geopolitical Monitor
+                  Global Market &amp; Geopolitical Monitor
                 </h1>
               </div>
             </div>
@@ -191,17 +197,23 @@ function GlobalIntelPage() {
         </div>
       </header>
 
-      {/* Main grid: map + side panel + feed */}
-      <main className="mx-auto max-w-[1700px] px-4 py-5 sm:px-8">
-        <StrategicBriefing />
+      {/* Sticky in-page chip nav (TradingView-style) */}
+      <SectionNav />
 
-        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-          <div className="space-y-5">
+      <main className="mx-auto max-w-[1700px] space-y-6 px-4 py-6 sm:px-8">
+        {/* 1. BRIEFING */}
+        <Panel id="briefing" eyebrow="Today's narrative" title="Strategic Briefing" icon={Sparkles} collapsible defaultOpen>
+          <StrategicBriefing />
+        </Panel>
+
+        {/* 2. COMMAND CENTER (Map + tabbed aside) */}
+        <Panel id="command" eyebrow="Realtime" title="Global Intelligence Map" icon={Globe2} padded={false}>
+          <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_440px]">
             {/* Map */}
-            <section className="relative overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.09_0.014_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.8)]">
+            <div className="relative border-b border-white/[0.10] xl:border-b-0 xl:border-r">
               <CornerOrnaments />
 
-              <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/10 bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
+              <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/[0.14] bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
                 <Activity className="h-3 w-3 text-primary" />
                 <span>Intelligence Layer · 2D</span>
               </div>
@@ -209,7 +221,7 @@ function GlobalIntelPage() {
               <LayerControls layers={layers} setLayers={setLayers} />
 
               {hovered && (
-                <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-md border border-white/10 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
+                <div className="pointer-events-none absolute bottom-16 left-4 z-10 rounded-md border border-white/[0.14] bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-foreground/80 backdrop-blur-md">
                   {hovered}
                 </div>
               )}
@@ -239,52 +251,187 @@ function GlobalIntelPage() {
                     hovered={hovered}
                     layers={layers}
                     onHover={setHovered}
-                    onSelectCountry={(c) => {
-                      setSelected(c);
-                      setSelectedEvent(null);
-                    }}
+                    onSelectCountry={(c) => { setSelected(c); setSelectedEvent(null); }}
                     onSelectEvent={(e) => setSelectedEvent(e)}
                   />
                 )}
               </div>
 
               <MapLegend />
-            </section>
+            </div>
 
-            {/* Tracked countries — searchable */}
-            <CountryFinder
-              selected={selected}
-              onSelect={(c) => {
-                setSelected(c);
-                setSelectedEvent(null);
-              }}
-            />
+            {/* Tabbed side panel — replaces stacked aside, cuts vertical sprawl */}
+            <aside className="flex max-h-[calc(100vh-6rem)] min-h-[480px] flex-col">
+              <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-white/[0.10] bg-white/[0.02] px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <AsideTabBtn active={asideTab === "spotlight"} onClick={() => setAsideTab("spotlight")} icon={Flame} label="Spotlight" />
+                <AsideTabBtn
+                  active={asideTab === "country"}
+                  onClick={() => selected && setAsideTab("country")}
+                  icon={Compass}
+                  label={selected ? selected.name : "Country"}
+                  disabled={!selected}
+                />
+                <AsideTabBtn
+                  active={asideTab === "event"}
+                  onClick={() => selectedEvent && setAsideTab("event")}
+                  icon={Zap}
+                  label="Event"
+                  disabled={!selectedEvent}
+                />
+                <AsideTabBtn active={asideTab === "feed"} onClick={() => setAsideTab("feed")} icon={Newspaper} label="Live Feed" />
+              </div>
 
+              <div className="flex-1 overflow-y-auto p-4">
+                {asideTab === "spotlight" && (
+                  <ActiveFlashpoints
+                    onSelectEvent={(e) => setSelectedEvent(e)}
+                    onSelectCountry={(c) => setSelected(c)}
+                  />
+                )}
+                {asideTab === "country" && selected && (
+                  <CountryPanel country={selected} onClose={() => { setSelected(null); setAsideTab("spotlight"); }} />
+                )}
+                {asideTab === "event" && selectedEvent && (
+                  <EventPanel event={selectedEvent} onClose={() => { setSelectedEvent(null); setAsideTab("spotlight"); }} />
+                )}
+                {asideTab === "feed" && <IntelFeed />}
+              </div>
+            </aside>
           </div>
+        </Panel>
 
-          {/* Right column: flashpoints always on top, then context (country/event), then feed */}
-          <aside className="space-y-5 xl:sticky xl:top-4 xl:h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1">
-            {!selected && !selectedEvent && (
-              <ActiveFlashpoints
-                onSelectEvent={(e) => setSelectedEvent(e)}
-                onSelectCountry={(c) => setSelected(c)}
-              />
-            )}
-            {selected && (
-              <CountryPanel
-                country={selected}
-                onClose={() => setSelected(null)}
-              />
-            )}
-            {selectedEvent && (
-              <EventPanel event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-            )}
-            <IntelFeed />
-          </aside>
-        </div>
-
+        {/* 3. COUNTRIES */}
+        <Panel id="countries" eyebrow="Search and filter" title="Tracked Countries" icon={Search}>
+          <CountryFinder
+            selected={selected}
+            onSelect={(c) => {
+              setSelected(c);
+              setSelectedEvent(null);
+              if (typeof document !== "undefined") {
+                document.getElementById("command")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }
+            }}
+          />
+        </Panel>
       </main>
     </div>
+  );
+}
+
+/* ─────────────────── Panel + SectionNav + AsideTabBtn ─────────────────── */
+
+function Panel({
+  id,
+  eyebrow,
+  title,
+  icon: Icon,
+  action,
+  children,
+  padded = true,
+  collapsible = false,
+  defaultOpen = true,
+}: {
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+  padded?: boolean;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section
+      id={id}
+      className="scroll-mt-20 overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.015_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.85)]"
+    >
+      <header className="flex items-center gap-3 border-b border-white/[0.10] bg-white/[0.025] px-5 py-3">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
+          <Icon className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          {eyebrow && (
+            <div className="font-mono text-[9px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              {eyebrow}
+            </div>
+          )}
+          <h2 className="truncate text-sm font-semibold text-foreground">{title}</h2>
+        </div>
+        {action}
+        {collapsible && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex items-center gap-1 rounded-md border border-white/[0.10] bg-white/[0.02] px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+            aria-expanded={open}
+          >
+            {open ? "Hide" : "Show"}
+          </button>
+        )}
+      </header>
+      {open && <div className={padded ? "p-5" : ""}>{children}</div>}
+    </section>
+  );
+}
+
+function SectionNav() {
+  const items: { id: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "briefing", label: "Briefing", icon: Sparkles },
+    { id: "command", label: "Map & Intel", icon: Globe2 },
+    { id: "countries", label: "Countries", icon: Search },
+  ];
+  return (
+    <nav
+      className="sticky top-0 z-30 border-b border-white/[0.10] bg-[oklch(0.09_0.014_260)]/85 backdrop-blur-md"
+      aria-label="Section navigation"
+    >
+      <div className="mx-auto flex max-w-[1700px] items-center gap-1 overflow-x-auto px-4 py-2 sm:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {items.map((it) => (
+          <a
+            key={it.id}
+            href={`#${it.id}`}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.10] bg-white/[0.02] px-3 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground transition hover:border-primary/40 hover:bg-primary/[0.08] hover:text-primary"
+          >
+            <it.icon className="h-3 w-3" />
+            {it.label}
+          </a>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+function AsideTabBtn({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+  disabled,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider transition ${
+        active
+          ? "bg-primary/15 text-primary"
+          : disabled
+            ? "cursor-not-allowed text-muted-foreground/40"
+            : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+      }`}
+    >
+      <Icon className="h-3 w-3" />
+      <span className="max-w-[120px] truncate">{label}</span>
+    </button>
   );
 }
 
