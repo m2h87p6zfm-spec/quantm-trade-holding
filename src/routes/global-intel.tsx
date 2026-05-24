@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getCountryNews, type CountryNewsItem } from "@/lib/country-news.functions";
+import { getEventArticle } from "@/lib/event-article.functions";
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from "d3-geo";
 import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
