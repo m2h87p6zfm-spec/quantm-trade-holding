@@ -2147,15 +2147,17 @@ function LiveNews({ country }: { country: CountryIntel }) {
   const fetchNews = useServerFn(getCountryNews);
   const query = useQuery({
     queryKey: ["country-news", country.iso2, trusted.sort().join(",")],
-    queryFn: () => fetchNews({ data: { country: country.name, sources: trusted, limit: 3 } }),
-    enabled: trusted.length > 0,
-    staleTime: 10 * 60 * 1000, // 10 min
-    gcTime: 30 * 60 * 1000,
+    // Fresh daily, broad source pool (defaults to all 60+ tier-1/2/3 sources
+    // when the user hasn't narrowed). Limit 6 = World-Monitor-style depth.
+    queryFn: () => fetchNews({ data: { country: country.name, sources: trusted.length > 0 ? trusted : undefined, limit: 6 } }),
+    staleTime: 30 * 60 * 1000, // 30 min — daily-fresh feed
+    gcTime: 60 * 60 * 1000,
     retry: 1,
   });
 
-  if (trusted.length === 0) {
-    return (
+  // No hard gate on trusted-source selection any more — we default to a
+  // world-class pool of 60+ tier-1/2/3 sources so the feed is rich out of the box.
+
       <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-200">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         No trusted news sources selected. Choose your sources in settings.
@@ -2191,7 +2193,7 @@ function LiveNews({ country }: { country: CountryIntel }) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-white/[0.14] bg-white/[0.02] p-3 text-xs text-muted-foreground">
-        No fresh stories from your trusted sources for {country.name} in the past week.
+        No fresh stories on {country.name} in the past 24h. Daily feed refreshes automatically.
       </div>
     );
   }
@@ -2206,6 +2208,9 @@ function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
       <div className="space-y-2">
         {items.map((n) => {
           const meta = (AGENCY_META as Record<string, { label: string }>)[n.source] ?? { label: n.sourceLabel };
+          const fresh = (n.ageHours ?? 999) <= 24;
+          const tierLabel = n.tier === 1 ? "Tier 1 · Official" : n.tier === 2 ? "Tier 2 · Wire" : "Tier 3 · Regional";
+          const tierColor = n.tier === 1 ? "text-emerald-300 border-emerald-400/30 bg-emerald-400/5" : n.tier === 2 ? "text-cyan-300 border-cyan-400/30 bg-cyan-400/5" : "text-amber-200 border-amber-400/30 bg-amber-400/5";
           return (
             <button
               key={n.id}
@@ -2213,13 +2218,18 @@ function LiveNewsList({ items }: { items: CountryNewsItem[] }) {
               onClick={() => setOpenItem(n)}
               className="group block w-full rounded-xl border border-white/[0.14] bg-white/[0.02] p-3 text-left transition hover:border-primary/30 hover:bg-white/[0.04]"
             >
-              <div className="flex items-center justify-between gap-2">
-                <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
-                  {meta.label}
-                </Badge>
-                <span className="flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-emerald-400">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-                  Live · 7d
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="outline" className="border-white/10 bg-white/[0.03] font-mono text-[9px] uppercase tracking-wider">
+                    {meta.label}
+                  </Badge>
+                  <Badge variant="outline" className={`font-mono text-[9px] uppercase tracking-wider ${tierColor}`}>
+                    {tierLabel}
+                  </Badge>
+                </div>
+                <span className={`flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider ${fresh ? "text-emerald-400" : "text-muted-foreground"}`}>
+                  {fresh && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />}
+                  {n.ageHours != null ? (n.ageHours < 1 ? "Just now" : `${n.ageHours}h ago`) : "Recent"}
                 </span>
               </div>
               <div className="mt-1.5 text-xs font-semibold leading-snug text-foreground group-hover:text-primary">
