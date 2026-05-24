@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowLeft, Star, StarOff, TrendingUp, TrendingDown, ChevronDown } from "lucide-react";
 import { findProduct } from "@/lib/products";
 import { useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { useWatchlistLimit } from "@/lib/featureGate";
+import { useLang } from "@/lib/i18n";
 import { SignalBadge } from "@/components/SignalBadge";
 import { ProChart } from "@/components/ProChart";
 import { AssetChart } from "@/components/AssetChart";
@@ -13,7 +14,6 @@ import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DisclaimerInline } from "@/components/Disclaimer";
 
 export const Route = createFileRoute("/produkte/$symbol")({
@@ -38,12 +38,58 @@ export const Route = createFileRoute("/produkte/$symbol")({
   component: ProductDetail,
 });
 
+/* ─────────────────── Plain-language one-liner ─────────────────── */
+
+function plainVerdict(
+  verdict: "LONG" | "SHORT" | "HOLD",
+  confidence: number,
+  rsi: number,
+  zScore: number,
+  lang: "de" | "en",
+): string {
+  // Pick the ONE indicator currently driving the decision and explain it in 1 sentence.
+  const overbought = rsi > 70;
+  const oversold = rsi < 30;
+  const stretchedUp = zScore > 1.5;
+  const stretchedDown = zScore < -1.5;
+
+  if (lang === "en") {
+    if (verdict === "LONG") {
+      if (oversold) return `Price looks oversold (RSI ${rsi.toFixed(0)}). The model expects a bounce — confidence ${confidence}%.`;
+      if (stretchedDown) return `Price is unusually far below its recent average. Statistics favour a recovery — confidence ${confidence}%.`;
+      return `Momentum and trend align bullish — confidence ${confidence}%.`;
+    }
+    if (verdict === "SHORT") {
+      if (overbought) return `Price looks overbought (RSI ${rsi.toFixed(0)}). The model expects a pullback — confidence ${confidence}%.`;
+      if (stretchedUp) return `Price is unusually far above its recent average. Statistics favour a cooldown — confidence ${confidence}%.`;
+      return `Momentum and trend align bearish — confidence ${confidence}%.`;
+    }
+    return `No strong edge in either direction — sit tight or wait for confirmation.`;
+  }
+
+  // German
+  if (verdict === "LONG") {
+    if (oversold) return `Preis wirkt überverkauft (RSI ${rsi.toFixed(0)}). Das Modell erwartet eine Erholung — Konfidenz ${confidence}%.`;
+    if (stretchedDown) return `Preis liegt ungewöhnlich weit unter dem Schnitt. Statistik spricht für Rückkehr — Konfidenz ${confidence}%.`;
+    return `Momentum und Trend zeigen bullisch — Konfidenz ${confidence}%.`;
+  }
+  if (verdict === "SHORT") {
+    if (overbought) return `Preis wirkt überkauft (RSI ${rsi.toFixed(0)}). Das Modell erwartet einen Rücksetzer — Konfidenz ${confidence}%.`;
+    if (stretchedUp) return `Preis liegt ungewöhnlich weit über dem Schnitt. Statistik spricht für Abkühlung — Konfidenz ${confidence}%.`;
+    return `Momentum und Trend zeigen bärisch — Konfidenz ${confidence}%.`;
+  }
+  return `Keine klare Tendenz erkennbar — abwarten oder Bestätigung suchen.`;
+}
+
+/* ─────────────────── Component ─────────────────── */
+
 function ProductDetail() {
   const { symbol } = Route.useParams();
   const product = findProduct(symbol);
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
+  const lang = useLang();
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
@@ -52,21 +98,40 @@ function ProductDetail() {
   const prev = closes.at(-2) ?? last;
   const abs = last - prev;
   const change = prev ? (abs / prev) * 100 : 0;
-
   const changeUp = abs >= 0;
 
+  const t = {
+    back: lang === "en" ? "Back" : "Zurück",
+    watchlist: lang === "en" ? "Watchlist" : "Watchlist",
+    freeSymbol: lang === "en" ? "Free symbol" : "Freies Symbol",
+    ticker: lang === "en" ? "Ticker" : "Ticker",
+    updating: lang === "en" ? "Live data updating… last valid values shown." : "Live-Daten werden aktualisiert… letzte gültige Werte werden angezeigt.",
+    verdictLabel: lang === "en" ? "Today's read" : "Heutige Einschätzung",
+    deepDive: lang === "en" ? "Show full analysis" : "Vollständige Analyse anzeigen",
+    deepDiveOpen: lang === "en" ? "Hide full analysis" : "Vollständige Analyse ausblenden",
+    deepDiveHint: lang === "en" ? "Advanced chart, all indicators, raw values" : "Erweiterter Chart, alle Indikatoren, Rohdaten",
+    advChart: lang === "en" ? "Advanced chart" : "Erweiterter Chart",
+    advChartCtx: lang === "en" ? "Candles, EMAs, Bollinger, RSI, MACD" : "Candles, EMAs, Bollinger, RSI, MACD",
+    rawData: lang === "en" ? "Raw indicators" : "Rohdaten — Indikatoren",
+    eventsNews: lang === "en" ? "Events & News" : "Events & News",
+  };
+
   return (
-    <div className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
-      {/* Sticky compact header */}
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+      {/* ─── Sticky compact header ─── */}
       <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 border-b border-border/60 bg-background/85 px-4 py-3 backdrop-blur sm:px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <Link to="/produkte" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /></Link>
+          <Link to="/produkte" className="text-muted-foreground hover:text-foreground" aria-label={t.back}>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="truncate text-xl font-bold sm:text-2xl">{symbol}</h1>
-              <span className="hidden rounded bg-muted px-2 py-0.5 text-[10px] uppercase text-muted-foreground sm:inline">{product?.sector ?? "Ticker"}</span>
+              <span className="hidden rounded bg-muted px-2 py-0.5 text-[10px] uppercase text-muted-foreground sm:inline">
+                {product?.sector ?? t.ticker}
+              </span>
             </div>
-            <p className="truncate text-xs text-muted-foreground sm:text-sm">{product?.name ?? "Freies Symbol"}</p>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">{product?.name ?? t.freeSymbol}</p>
           </div>
 
           {indicators && (
@@ -79,78 +144,104 @@ function ProductDetail() {
             </div>
           )}
 
-          {sig && <div className="hidden sm:block"><SignalBadge verdict={sig.verdict} confidence={sig.confidence} /></div>}
-
-          <button onClick={() => guardedAdd(symbol)} className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent sm:text-sm">
-            {watched ? <><Star className="h-4 w-4 fill-current text-primary" /> Watchlist</> : <><StarOff className="h-4 w-4" /> Watchlist</>}
+          <button
+            onClick={() => guardedAdd(symbol)}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent sm:text-sm"
+          >
+            {watched ? <Star className="h-4 w-4 fill-current text-primary" /> : <StarOff className="h-4 w-4" />}
+            {t.watchlist}
           </button>
         </div>
-        {sig && <div className="mt-2 sm:hidden"><SignalBadge verdict={sig.verdict} confidence={sig.confidence} /></div>}
       </div>
 
       {(candles.isError || candles.data?.stale) && (
         <div className="flex items-center gap-2 rounded-md border border-border bg-card/60 px-4 py-2 text-xs text-muted-foreground">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-amber-400" />
-          Live-Daten werden aktualisiert… letzte gültige Werte werden angezeigt.
+          {t.updating}
         </div>
       )}
 
       {indicators && sig && (
-        <Tabs defaultValue="overview" className="w-full">
-          {/* Mobile: horizontal scroll · Desktop: 4-col grid · 44px touch target */}
-          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <TabsList className="inline-flex h-11 w-max min-w-full sm:grid sm:w-full sm:grid-cols-4">
-              <TabsTrigger value="overview" className="min-h-[44px] px-4 sm:px-3">Übersicht</TabsTrigger>
-              <TabsTrigger value="chart" className="min-h-[44px] px-4 sm:px-3">Chart</TabsTrigger>
-              <TabsTrigger value="analyse" className="min-h-[44px] px-4 sm:px-3">Analyse</TabsTrigger>
-              <TabsTrigger value="events" className="min-h-[44px] px-4 sm:px-3">Events & News</TabsTrigger>
-            </TabsList>
-          </div>
-
-          {/* ÜBERSICHT — schneller Eindruck */}
-          <TabsContent value="overview" className="mt-4 space-y-4">
-            <div className="rounded-xl border border-border/70 bg-gradient-to-br from-card/90 to-card/40 p-5 backdrop-blur">
-              <div className="mb-3 flex items-center justify-between">
-                <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
-                <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{symbol} · Yahoo Finance</div>
+        <>
+          {/* ─── 1. THE VERDICT — one signal, one sentence, one button ─── */}
+          <section className="rounded-2xl border border-border/70 bg-gradient-to-br from-card/95 to-card/40 p-6 backdrop-blur">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {t.verdictLabel}
               </div>
-              <AssetChart symbol={symbol} height={360} defaultTf="1Y" currency="$" />
+              <SignalBadge verdict={sig.verdict} confidence={sig.confidence} />
             </div>
+            <p className="text-lg leading-relaxed text-foreground sm:text-xl">
+              {plainVerdict(sig.verdict, sig.confidence, indicators.rsi, indicators.zScore, lang)}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <ExplainAiButton
+                topic={lang === "en" ? `Why ${symbol} is rated ${sig.verdict}` : `Warum ${symbol} als ${sig.verdict} bewertet wird`}
+                context={`RSI ${indicators.rsi.toFixed(1)}, Z-Score ${indicators.zScore.toFixed(2)}, MACD ${indicators.macd.macd.toFixed(2)}, Vol ${(indicators.volatility * 100).toFixed(1)}%, Confidence ${sig.confidence}%.`}
+                label={lang === "en" ? "Explain in detail" : "Im Detail erklären"}
+              />
+            </div>
+          </section>
+
+          {/* ─── 2. THE CHART — visual anchor, big and clean ─── */}
+          <section className="rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5">
+            <AssetChart symbol={symbol} height={380} defaultTf="1Y" currency="$" />
+          </section>
+
+          {/* ─── 3. SECOND OPINIONS — what others think ─── */}
+          <section className="grid gap-4 lg:grid-cols-2">
             <MarketConsensus symbol={symbol} indicators={indicators} />
-            <DisclaimerInline />
-          </TabsContent>
+            <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
+          </section>
 
-          {/* CHART — alle Indikatoren */}
-          <TabsContent value="chart" className="mt-4">
-            <div className="rounded-lg border border-border bg-card p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Pro-Chart · Candles, EMAs, Bollinger, RSI, MACD
+          {/* ─── 4. DEEP DIVE — collapsed by default ─── */}
+          <details className="group rounded-2xl border border-border/70 bg-card/40">
+            <summary className="flex cursor-pointer items-center justify-between gap-4 p-5 hover:bg-card/60">
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  <span className="group-open:hidden">{t.deepDive}</span>
+                  <span className="hidden group-open:inline">{t.deepDiveOpen}</span>
                 </div>
-                <ExplainAiButton topic="Advanced Chart mit Indikatoren" context={`Chart für ${symbol} mit EMA20, EMA50, SMA200, Bollinger Bands, Volumen, RSI und MACD.`} />
+                <div className="mt-0.5 text-xs text-muted-foreground">{t.deepDiveHint}</div>
               </div>
-              {candles.data && (
-                <ProChart
-                  data={candles.data}
-                  height={560}
-                  overlays={["ema20", "ema50", "sma200", "bbands"]}
-                  subcharts={["volume", "rsi", "macd"]}
-                  showZones
-                />
-              )}
-            </div>
-          </TabsContent>
+              <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+            </summary>
 
-          {/* ANALYSE — Broker + Rohdaten */}
-          <TabsContent value="analyse" className="mt-4">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
-              <div className="rounded-lg border border-border bg-card p-4">
+            <div className="space-y-4 border-t border-border/70 p-5">
+              {/* Advanced chart */}
+              <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rohdaten — Indikatoren</div>
-                  <ExplainAiButton topic="Technische Indikatoren Übersicht" context={`RSI ${indicators.rsi.toFixed(1)}, MACD ${indicators.macd.macd.toFixed(2)}, Vola ${(indicators.volatility*100).toFixed(1)}%`} />
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t.advChart}
+                  </div>
+                  <ExplainAiButton
+                    topic={t.advChart}
+                    context={`${t.advChartCtx} — ${symbol}.`}
+                  />
                 </div>
-                <div className="space-y-1.5 text-sm">
+                {candles.data && (
+                  <ProChart
+                    data={candles.data}
+                    height={520}
+                    overlays={["ema20", "ema50", "sma200", "bbands"]}
+                    subcharts={["volume", "rsi", "macd"]}
+                    showZones
+                  />
+                )}
+              </div>
+
+              {/* Raw indicators */}
+              <div className="rounded-lg border border-border/60 bg-background/40 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {t.rawData}
+                  </div>
+                  <ExplainAiButton
+                    topic={lang === "en" ? "Technical indicators overview" : "Technische Indikatoren Übersicht"}
+                    context={`RSI ${indicators.rsi.toFixed(1)}, MACD ${indicators.macd.macd.toFixed(2)}, Vola ${(indicators.volatility * 100).toFixed(1)}%`}
+                  />
+                </div>
+                <div className="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
                   <Row k="Z-Score (20)" v={indicators.zScore.toFixed(2)} explain="Z-Score" ctx={`Aktuell ${indicators.zScore.toFixed(2)} für ${symbol}.`} />
                   <Row k="RSI (14)" v={indicators.rsi.toFixed(1)} explain="RSI (Relative Strength Index)" ctx={`RSI aktuell ${indicators.rsi.toFixed(1)} für ${symbol}.`} />
                   <Row k="MACD" v={indicators.macd.macd.toFixed(3)} explain="MACD" ctx={`MACD-Linie ${indicators.macd.macd.toFixed(3)}, Signal ${indicators.macd.signal.toFixed(3)}.`} />
@@ -158,22 +249,25 @@ function ProductDetail() {
                   <Row k="MACD Histogramm" v={indicators.macd.histogram.toFixed(3)} />
                   <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} explain="Bollinger Bands" ctx={`Upper ${indicators.bollinger.upper.toFixed(2)}, Lower ${indicators.bollinger.lower.toFixed(2)}, Preis ${last.toFixed(2)}.`} />
                   <Row k="Bollinger Lower" v={indicators.bollinger.lower.toFixed(2)} />
-                  <Row k="Vola annualisiert" v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität (Volatility Score)" ctx={`Annualisierte Vola ${(indicators.volatility*100).toFixed(1)}% für ${symbol}.`} />
-                  <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum*100).toFixed(2)}%.`} />
+                  <Row k={lang === "en" ? "Volatility (annualised)" : "Vola annualisiert"} v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität" ctx={`Annualisierte Vola ${(indicators.volatility * 100).toFixed(1)}% für ${symbol}.`} />
+                  <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum * 100).toFixed(2)}%.`} />
                   <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} explain="Sharpe Ratio" ctx={`Sharpe Ratio ${indicators.sharpe.toFixed(2)}.`} />
                   <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
                   <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${indicators.sma20.toFixed(1)}, SMA50 ${indicators.sma50.toFixed(1)}, SMA200 ${indicators.sma200.toFixed(1)}.`} />
                 </div>
               </div>
             </div>
-          </TabsContent>
+          </details>
 
-          {/* EVENTS & NEWS */}
-          <TabsContent value="events" className="mt-4 space-y-4">
+          {/* ─── 5. EVENTS & NEWS ─── */}
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t.eventsNews}</h2>
             <AssetEventsPanel symbol={symbol} />
             <AssetNewsPanel symbol={symbol} />
-          </TabsContent>
-        </Tabs>
+          </section>
+
+          <DisclaimerInline />
+        </>
       )}
     </div>
   );
@@ -181,7 +275,7 @@ function ProductDetail() {
 
 function Row({ k, v, klass, explain, ctx }: { k: string; v: string; klass?: string; explain?: string; ctx?: string }) {
   return (
-    <div className="flex items-center justify-between border-b border-border/50 pb-1 last:border-0">
+    <div className="flex items-center justify-between border-b border-border/40 py-1.5 last:border-0">
       <span className="flex items-center gap-1.5 text-muted-foreground">
         {k}
         {explain && <ExplainAiButton topic={explain} context={ctx} variant="icon" />}
