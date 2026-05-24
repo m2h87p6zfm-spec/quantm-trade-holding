@@ -1,9 +1,9 @@
 import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "@/lib/finnhub";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
-// Live-Ticker-Band — horizontal scrollend, gespeist aus echten Yahoo-Candles
-// (letzter Close vs. vorheriger Close = Tagesveränderung).
+// Live-Ticker-Band — SSE-Stream alle 3s + Fallback auf Tageskerzen für %-Veränderung.
 const TICKER_SYMBOLS = [
   "SPY", "QQQ", "DIA", "IWM", "VTI",
   "EWG", "FEZ", "EWJ", "VEA",
@@ -13,6 +13,10 @@ const TICKER_SYMBOLS = [
 type Item = { symbol: string; price: number; change: number; ok: boolean };
 
 export function TickerBand() {
+  // Live-Stream (Pro-Plan: 3-Sekunden-Ticks via SSE)
+  const { quotes: live } = useLiveQuotes(TICKER_SYMBOLS);
+
+  // Tageskerzen als Fallback + Basis für Tagesveränderung (langer Cache)
   const results = useQueries({
     queries: TICKER_SYMBOLS.map((s) => ({
       queryKey: ["candles", s],
@@ -26,10 +30,14 @@ export function TickerBand() {
 
   const items: Item[] = TICKER_SYMBOLS.map((symbol, i) => {
     const closes = results[i].data?.c ?? [];
-    const last = closes.at(-1) ?? 0;
-    const prev = closes.at(-2) ?? last;
-    const change = prev ? ((last - prev) / prev) * 100 : 0;
-    return { symbol, price: last, change, ok: !!last };
+    const lastCandle = closes.at(-1) ?? 0;
+    const prevCandle = closes.at(-2) ?? lastCandle;
+    const liveQ = live[symbol];
+    const price = liveQ?.c ?? lastCandle;
+    // Wenn Live verfügbar: Live-Preis vs. gestriger Close, sonst Candle-vs-Candle
+    const baseline = liveQ ? (liveQ.pc || prevCandle) : prevCandle;
+    const change = baseline ? ((price - baseline) / baseline) * 100 : 0;
+    return { symbol, price, change, ok: !!price };
   });
 
   const ready = items.filter((x) => x.ok);
@@ -43,7 +51,6 @@ export function TickerBand() {
     );
   }
 
-  // duplizieren für nahtloses Loop-Scrolling
   const loop = [...ready, ...ready];
 
   return (

@@ -89,6 +89,30 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   }
 }
 
+// Batch quotes — eine TD-Anfrage liefert bis zu 120 Symbole auf einmal.
+// Schont das Rate-Limit dramatisch bei Watchlists / Tickerband.
+export async function getQuotesBatch(symbols: string[]): Promise<Record<string, TdQuote>> {
+  const list = Array.from(new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))).slice(0, 120);
+  if (!list.length) return {};
+  try {
+    const j = await tdFetch("/quote", { symbol: list.join(",") });
+    const out: Record<string, TdQuote> = {};
+    // TD: bei 1 Symbol direkt das Objekt, bei mehreren ein Map {SYMBOL: {...}}
+    if (list.length === 1) {
+      const v = parseQuote(j);
+      if (v) out[list[0]] = v;
+    } else {
+      for (const sym of list) {
+        const v = parseQuote(j?.[sym]);
+        if (v) out[sym] = v;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 // ===================== TIME SERIES (CANDLES) =====================
 export type TdCandles = { c: number[]; h: number[]; l: number[]; o: number[]; v: number[]; t: number[]; s: "ok" };
 

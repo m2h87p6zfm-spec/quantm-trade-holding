@@ -46,8 +46,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSignalChatRouteImport } from './routes/api/public/signal-chat'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
+import { Route as ApiPublicQuotesBatchRouteImport } from './routes/api/public/quotes-batch'
 import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicPortfolioExtractRouteImport } from './routes/api/public/portfolio-extract'
 import { Route as ApiPublicPortfolioChatRouteImport } from './routes/api/public/portfolio-chat'
@@ -246,6 +248,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStreamRoute = ApiPublicStreamRouteImport.update({
+  id: '/api/public/stream',
+  path: '/api/public/stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSignalChatRoute = ApiPublicSignalChatRouteImport.update({
   id: '/api/public/signal-chat',
   path: '/api/public/signal-chat',
@@ -254,6 +261,11 @@ const ApiPublicSignalChatRoute = ApiPublicSignalChatRouteImport.update({
 const ApiPublicSearchRoute = ApiPublicSearchRouteImport.update({
   id: '/api/public/search',
   path: '/api/public/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicQuotesBatchRoute = ApiPublicQuotesBatchRouteImport.update({
+  id: '/api/public/quotes-batch',
+  path: '/api/public/quotes-batch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicQuoteRoute = ApiPublicQuoteRouteImport.update({
@@ -368,8 +380,10 @@ export interface FileRoutesByFullPath {
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/quotes-batch': typeof ApiPublicQuotesBatchRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
+  '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -421,8 +435,10 @@ export interface FileRoutesByTo {
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/quotes-batch': typeof ApiPublicQuotesBatchRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
+  '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -475,8 +491,10 @@ export interface FileRoutesById {
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
   '/api/public/quote': typeof ApiPublicQuoteRoute
+  '/api/public/quotes-batch': typeof ApiPublicQuotesBatchRoute
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
+  '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -530,8 +548,10 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
+    | '/api/public/quotes-batch'
     | '/api/public/search'
     | '/api/public/signal-chat'
+    | '/api/public/stream'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -583,8 +603,10 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
+    | '/api/public/quotes-batch'
     | '/api/public/search'
     | '/api/public/signal-chat'
+    | '/api/public/stream'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
@@ -636,8 +658,10 @@ export interface FileRouteTypes {
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
     | '/api/public/quote'
+    | '/api/public/quotes-batch'
     | '/api/public/search'
     | '/api/public/signal-chat'
+    | '/api/public/stream'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -690,8 +714,10 @@ export interface RootRouteChildren {
   ApiPublicPortfolioChatRoute: typeof ApiPublicPortfolioChatRoute
   ApiPublicPortfolioExtractRoute: typeof ApiPublicPortfolioExtractRoute
   ApiPublicQuoteRoute: typeof ApiPublicQuoteRoute
+  ApiPublicQuotesBatchRoute: typeof ApiPublicQuotesBatchRoute
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
   ApiPublicSignalChatRoute: typeof ApiPublicSignalChatRoute
+  ApiPublicStreamRoute: typeof ApiPublicStreamRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -957,6 +983,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stream': {
+      id: '/api/public/stream'
+      path: '/api/public/stream'
+      fullPath: '/api/public/stream'
+      preLoaderRoute: typeof ApiPublicStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/signal-chat': {
       id: '/api/public/signal-chat'
       path: '/api/public/signal-chat'
@@ -969,6 +1002,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/search'
       fullPath: '/api/public/search'
       preLoaderRoute: typeof ApiPublicSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/quotes-batch': {
+      id: '/api/public/quotes-batch'
+      path: '/api/public/quotes-batch'
+      fullPath: '/api/public/quotes-batch'
+      preLoaderRoute: typeof ApiPublicQuotesBatchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/quote': {
@@ -1106,8 +1146,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPortfolioChatRoute: ApiPublicPortfolioChatRoute,
   ApiPublicPortfolioExtractRoute: ApiPublicPortfolioExtractRoute,
   ApiPublicQuoteRoute: ApiPublicQuoteRoute,
+  ApiPublicQuotesBatchRoute: ApiPublicQuotesBatchRoute,
   ApiPublicSearchRoute: ApiPublicSearchRoute,
   ApiPublicSignalChatRoute: ApiPublicSignalChatRoute,
+  ApiPublicStreamRoute: ApiPublicStreamRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

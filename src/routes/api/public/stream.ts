@@ -1,0 +1,92 @@
+// Server-Sent Events Stream — pusht Quote-Updates alle 3 Sekunden.
+// Eine einzige TD-Batch-Anfrage pro Tick versorgt beliebig viele Symbole.
+// Robuste Alternative zur WebSocket-Bridge auf Cloudflare Workers (kein DO nötig).
+import { createFileRoute } from "@tanstack/react-router";
+import { getQuotesBatch } from "@/lib/twelvedata.server";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+} as const;
+
+const TICK_MS = 3000;
+const MAX_DURATION_MS = 4 * 60_000; // 4 min, dann lässt der Client-EventSource auto-reconnect
+
+export const Route = createFileRoute("/api/public/stream")({
+  server: {
+    handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        const raw = (url.searchParams.get("symbols") || "").trim();
+        const symbols = raw
+          .split(",")
+          .map((s) => s.trim().toUpperCase())
+          .filter((s) => /^[A-Z0-9.\-^:/=]{1,20}$/.test(s))
+          .slice(0, 120);
+
+        if (!symbols.length) {
+          return new Response("missing symbols", { status: 400, headers: CORS });
+        }
+
+        const encoder = new TextEncoder();
+        const startedAt = Date.now();
+        let closed = false;
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            const send = (event: string, data: unknown) => {
+              if (closed) return;
+              try {
+                controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+              } catch { closed = true; }
+            };
+
+            // Initial-Hello, damit der Client weiß: Verbindung steht
+            send("ready", { symbols, tickMs: TICK_MS });
+
+            const tick = async () => {
+              if (closed) return;
+              const quotes = await getQuotesBatch(symbols);
+              send("quotes", { quotes, t: Date.now() });
+            };
+
+            // sofort einen Tick senden, dann periodisch
+            await tick();
+            const interval = setInterval(tick, TICK_MS);
+            const maxTimer = setTimeout(() => {
+              clearInterval(interval);
+              send("bye", { reason: "max-duration" });
+              closed = true;
+              try { controller.close(); } catch { /* noop */ }
+            }, MAX_DURATION_MS);
+
+            // Cleanup, wenn Client trennt
+            request.signal.addEventListener("abort", () => {
+              clearInterval(interval);
+              clearTimeout(maxTimer);
+              closed = true;
+              try { controller.close(); } catch { /* noop */ }
+            });
+          },
+          cancel() { closed = true; },
+        });
+
+        return new Response(stream, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            ...CORS,
+          },
+        });
+
+        // suppress unused warning
+        void startedAt;
+      },
+    },
+  },
+});
