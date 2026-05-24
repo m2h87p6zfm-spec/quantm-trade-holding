@@ -349,6 +349,7 @@ const DICT: Record<Lang, Dict> = {
     "nav.aiLearning.desc": "Self-learning",
     // Nav — Markets
     "nav.watchlist": "Watchlist",
+    "nav.marktRadar": "Market Radar",
     "nav.heatmap": "Heatmap",
     "nav.sectors": "Sector Rotation",
     "nav.sectors.desc": "Who's leading the market?",
