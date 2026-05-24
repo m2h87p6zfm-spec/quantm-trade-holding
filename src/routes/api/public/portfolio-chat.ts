@@ -336,7 +336,7 @@ export const Route = createFileRoute("/api/public/portfolio-chat")({
         } catch (e) {
           console.error("portfolio-chat error", e);
           return new Response(
-            JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }),
+            JSON.stringify({ error: "Interner Fehler" }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }

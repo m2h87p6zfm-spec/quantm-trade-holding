@@ -477,7 +477,8 @@ export const Route = createFileRoute("/api/public/portfolio-extract")({
               504,
             );
           }
-          return json({ error: e instanceof Error ? e.message : "Unknown" }, 500);
+          console.error("portfolio-extract error", e);
+          return json({ error: "Interner Fehler" }, 500);
         }
       },
     },

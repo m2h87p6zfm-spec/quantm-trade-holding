@@ -62,11 +62,13 @@ export const recordPrediction = createServerFn({ method: "POST" })
 export const getLearningContext = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => ContextSchema.parse(data))
-  .handler(async ({ data }) => {
-    // 1. Globale ähnliche Predictions (gleicher Scenario+Regime), join mit Outcomes
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    // 1. Eigene ähnliche Predictions (gleicher Scenario+Regime), join mit Outcomes
     const { data: preds } = await supabaseAdmin
       .from("ai_predictions")
       .select("id, created_at, symbol, verdict, confidence, ai_outcomes(correct, realized_return)")
+      .eq("user_id", userId)
       .eq("scenario_tag", data.scenarioTag)
       .eq("market_regime", data.marketRegime)
       .order("created_at", { ascending: false })
@@ -89,14 +91,18 @@ export const getLearningContext = createServerFn({ method: "POST" })
     const hits = evaluated.filter((s) => s.correct === true).length;
     const hitRate = evaluated.length > 0 ? hits / evaluated.length : null;
 
-    // 2. Letzte Learning-Events zu diesem Szenario
-    const { data: events } = await supabaseAdmin
-      .from("ai_learning_events")
-      .select("id, created_at, pattern_detected, before_belief, after_belief, weight_adjustment, sample_size, prior_accuracy")
-      .eq("scenario_tag", data.scenarioTag)
-      .eq("market_regime", data.marketRegime)
-      .order("created_at", { ascending: false })
-      .limit(3);
+    // 2. Letzte Learning-Events zu diesem Szenario, beschränkt auf eigene Predictions
+    const ownPredIds = (preds ?? []).map((p) => p.id);
+    const { data: events } = ownPredIds.length > 0
+      ? await supabaseAdmin
+          .from("ai_learning_events")
+          .select("id, created_at, pattern_detected, before_belief, after_belief, weight_adjustment, sample_size, prior_accuracy, trigger_prediction_ids")
+          .eq("scenario_tag", data.scenarioTag)
+          .eq("market_regime", data.marketRegime)
+          .overlaps("trigger_prediction_ids", ownPredIds)
+          .order("created_at", { ascending: false })
+          .limit(3)
+      : { data: [] as any[] };
 
     return {
       similar: similar.slice(0, 5),
@@ -121,12 +127,14 @@ export const getLearningContext = createServerFn({ method: "POST" })
 export const getPerformanceMetrics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => MetricsSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     const since = new Date(Date.now() - data.window * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: rows } = await supabaseAdmin
       .from("ai_predictions")
       .select("id, created_at, symbol, scenario_tag, market_regime, verdict, confidence, ai_outcomes(correct, realized_return, evaluated_at)")
+      .eq("user_id", userId)
       .gte("created_at", since)
       .order("created_at", { ascending: true });
 
@@ -220,13 +228,17 @@ export const getPerformanceMetrics = createServerFn({ method: "POST" })
       xs.length > 0 ? xs.reduce((s, x) => s + x.accuracy, 0) / xs.length : 0;
     const improvement = trend.length >= 4 ? avg(secondHalf) - avg(firstHalf) : 0;
 
-    // Learning Events Timeline
-    const { data: events } = await supabaseAdmin
-      .from("ai_learning_events")
-      .select("id, created_at, scenario_tag, market_regime, pattern_detected, before_belief, after_belief, sample_size, prior_accuracy")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    // Learning Events Timeline — beschränkt auf eigene Predictions
+    const ownPredIds = evaluated.map((e) => e.id);
+    const { data: events } = ownPredIds.length > 0
+      ? await supabaseAdmin
+          .from("ai_learning_events")
+          .select("id, created_at, scenario_tag, market_regime, pattern_detected, before_belief, after_belief, sample_size, prior_accuracy, trigger_prediction_ids")
+          .gte("created_at", since)
+          .overlaps("trigger_prediction_ids", ownPredIds)
+          .order("created_at", { ascending: false })
+          .limit(20)
+      : { data: [] as any[] };
 
     return {
       window: data.window,

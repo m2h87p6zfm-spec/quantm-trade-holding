@@ -95,7 +95,8 @@ export const Route = createFileRoute("/api/public/explain-concept")({
           const content = data.choices?.[0]?.message?.content ?? "";
           return Response.json({ content });
         } catch (e) {
-          return Response.json({ error: e instanceof Error ? e.message : "Unknown" }, { status: 500 });
+          console.error("explain-concept error", e);
+          return Response.json({ error: "Interner Fehler" }, { status: 500 });
         }
       },
     },

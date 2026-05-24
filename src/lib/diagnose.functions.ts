@@ -74,6 +74,7 @@ Warum schlägt das vermutlich fehl und was kann der Nutzer jetzt konkret tun?`;
       const text: string = j?.choices?.[0]?.message?.content?.trim() || "Keine Antwort vom Modell.";
       return { ok: true as const, text };
     } catch (e: any) {
-      return { ok: false as const, error: e?.message || "Netzwerkfehler bei AI-Diagnose." };
+      console.error("diagnose error", e);
+      return { ok: false as const, error: "Netzwerkfehler bei AI-Diagnose." };
     }
   });

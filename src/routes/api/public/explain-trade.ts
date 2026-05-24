@@ -352,7 +352,8 @@ export const Route = createFileRoute("/api/public/explain-trade")({
                 if (retry) analysis = retry;
               }
             } catch (e) {
-              aiError = e instanceof Error ? e.message : "AI-Fehler";
+              console.error("explain-trade AI error", e);
+              aiError = "AI-Fehler";
             }
           }
 
@@ -396,8 +397,9 @@ export const Route = createFileRoute("/api/public/explain-trade")({
             { headers: CORS },
           );
         } catch (e) {
+          console.error("explain-trade error", e);
           return Response.json(
-            { error: e instanceof Error ? e.message : "Unbekannter Fehler" },
+            { error: "Interner Fehler" },
             { status: 500, headers: CORS },
           );
         }

@@ -233,7 +233,7 @@ export const Route = createFileRoute("/api/public/signal-chat")({
         } catch (e) {
           console.error("signal-chat error", e);
           return new Response(
-            JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }),
+            JSON.stringify({ error: "Interner Fehler" }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
