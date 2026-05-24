@@ -1,30 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireCronSecret } from "@/lib/api-auth.server";
+import { getQuoteCached } from "@/lib/twelvedata.server";
 
 // ============================================================
 // Täglicher Cron: alle Predictions, deren Horizont abgelaufen ist
 // und die noch kein Outcome haben, gegen den aktuellen Kurs prüfen.
 // Danach: Pattern-Detection pro (scenario_tag, regime) anstoßen.
+// Marktdaten: Twelve Data (global, 70+ Börsen).
 // ============================================================
-
-const YAHOO = "https://query1.finance.yahoo.com/v8/finance/chart";
 
 async function fetchSpotPrice(symbol: string): Promise<number | null> {
   try {
-    const url = `${YAHOO}/${encodeURIComponent(symbol)}?range=1d&interval=1d`;
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 ApexCron/1.0" },
-    });
-    if (!res.ok) return null;
-    const json: unknown = await res.json();
-    const result = (json as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } }).chart?.result?.[0];
-    const px = result?.meta?.regularMarketPrice;
-    return typeof px === "number" && isFinite(px) ? px : null;
+    const r = await getQuoteCached(symbol, 300);
+    return r.value?.c ?? null;
   } catch {
     return null;
   }
 }
+
 
 function isCorrect(verdict: string, retPct: number): boolean {
   if (verdict === "LONG") return retPct > 0.005;
