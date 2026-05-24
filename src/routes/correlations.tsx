@@ -44,7 +44,7 @@ function corrColor(c: number | null): string {
   return `color-mix(in oklab, var(--bear) ${Math.round(a * 100)}%, transparent)`;
 }
 
-function CorrelationsPage() {
+export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const { settings } = useSettings();
   const [window, setWindow] = useState<Window>(60);
   const symbols = useMemo(() => {
