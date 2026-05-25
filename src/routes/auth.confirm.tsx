@@ -155,6 +155,8 @@ function AuthConfirmPage() {
           </>
         )}
       </div>
+        <LegalLinks className="mt-6" />
+      </div>
     </main>
   );
 }
