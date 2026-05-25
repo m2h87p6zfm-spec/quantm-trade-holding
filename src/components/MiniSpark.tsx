@@ -48,7 +48,7 @@ export function MiniSpark({
         },
         grid: { vertLines: { visible: false }, horzLines: { visible: false } },
         rightPriceScale: { visible: false, borderVisible: false },
-        timeScale: { visible: false, borderVisible: false },
+        timeScale: { visible: false, borderVisible: false, rightOffset: 0, barSpacing: 1, fixLeftEdge: true, fixRightEdge: true, lockVisibleTimeRangeOnResize: true },
         crosshair: { vertLine: { visible: false }, horzLine: { visible: false } },
         handleScroll: false,
         handleScale: false,
@@ -72,7 +72,10 @@ export function MiniSpark({
 
       ro = new ResizeObserver((entries) => {
         const cr = entries[0]?.contentRect;
-        if (cr) chart.resize(Math.max(20, cr.width), Math.max(16, cr.height));
+        if (cr) {
+          chart.resize(Math.max(20, cr.width), Math.max(16, cr.height));
+          chart.timeScale().fitContent();
+        }
       });
       ro.observe(el);
     })();
