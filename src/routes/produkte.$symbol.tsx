@@ -15,6 +15,8 @@ import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
+import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
 
 
