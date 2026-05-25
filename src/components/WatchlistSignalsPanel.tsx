@@ -103,12 +103,12 @@ export function WatchlistSignalsPanel() {
   if (symbols.length === 0) return null;
 
   return (
-    <div className="space-y-5 sm:space-y-8 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+    <div className="space-y-5 sm:space-y-8 text-foreground" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
         <div>
           <h2 className="text-[22px] sm:text-[28px] font-bold leading-tight tracking-tight">{t("watchlist.title")}</h2>
-          <p className="mt-1.5 text-[13px] text-white/50">
+          <p className="mt-1.5 text-[13px] text-muted-foreground">
             <span className="tabular-nums">{t("watchlist.subtitle.values", { n: symbols.length })}</span> • <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] shadow-[0_0_8px_#22FF88] animate-pulse" />{t("watchlist.subtitle.live")}</span>
           </p>
         </div>
@@ -116,17 +116,17 @@ export function WatchlistSignalsPanel() {
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           {/* Search — full width on mobile */}
           <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t("watchlist.search")}
-              className="h-11 sm:h-9 w-full sm:w-44 rounded-lg border border-[#1F1F1F] bg-[#111111] pl-9 pr-3 text-[14px] sm:text-[13px] text-white placeholder:text-white/30 focus:border-[#22FF88]/60 focus:outline-none"
+              className="h-11 sm:h-9 w-full sm:w-44 rounded-lg border border-border bg-card pl-9 pr-3 text-[14px] sm:text-[13px] text-foreground placeholder:text-muted-foreground/60 focus:border-[#22FF88]/60 focus:outline-none"
             />
           </div>
 
           {/* Filter chips — horizontal scroll on mobile */}
-          <div className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:rounded-lg sm:border sm:border-[#1F1F1F] sm:bg-[#111111] sm:p-1 sm:px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:rounded-lg sm:border sm:border-border sm:bg-card sm:p-1 sm:px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {([
               { k: "all", label: t("watchlist.filter.all") },
               { k: "LONG", label: t("watchlist.filter.long") },
@@ -134,12 +134,12 @@ export function WatchlistSignalsPanel() {
               { k: "NEUTRAL", label: t("watchlist.filter.neutral") },
             ] as { k: FilterKey; label: string }[]).map((f) => {
               const active = filter === f.k;
-              const tone = f.k === "LONG" ? "text-[#22FF88]" : f.k === "SHORT" ? "text-[#FF3B5C]" : f.k === "NEUTRAL" ? "text-[#8B9EFF]" : "text-white";
+              const tone = f.k === "LONG" ? "text-[#22FF88]" : f.k === "SHORT" ? "text-[#FF3B5C]" : f.k === "NEUTRAL" ? "text-[#8B9EFF]" : "text-foreground";
               return (
                 <button
                   key={f.k}
                   onClick={() => setFilter(f.k)}
-                  className={`shrink-0 rounded-full sm:rounded-md border border-[#1F1F1F] bg-[#111111] px-4 py-2 sm:border-0 sm:bg-transparent sm:px-3 sm:py-1.5 text-[13px] font-medium transition ${active ? `bg-white/5 ${tone} border-white/15 sm:border-0` : "text-white/60 hover:text-white"}`}
+                  className={`shrink-0 rounded-full sm:rounded-md border border-border bg-card px-4 py-2 sm:border-0 sm:bg-transparent sm:px-3 sm:py-1.5 text-[13px] font-medium transition ${active ? `bg-foreground/5 ${tone} border-border sm:border-0` : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {f.label}
                 </button>
@@ -150,7 +150,7 @@ export function WatchlistSignalsPanel() {
           <select
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="h-11 sm:h-9 w-full sm:w-auto rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 text-[14px] sm:text-[13px] text-white focus:border-[#22FF88]/60 focus:outline-none"
+            className="h-11 sm:h-9 w-full sm:w-auto rounded-lg border border-border bg-card px-3 text-[14px] sm:text-[13px] text-foreground focus:border-[#22FF88]/60 focus:outline-none"
           >
             <option value="confidence">{t("watchlist.sort.confidence")}</option>
             <option value="perf1d">{t("watchlist.sort.perf1d")}</option>
@@ -161,9 +161,9 @@ export function WatchlistSignalsPanel() {
       </div>
 
       {/* CARD GRID */}
-      {loading && <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.loading")}</div>}
+      {loading && <div className="py-12 text-center text-[13px] text-muted-foreground/70">{t("watchlist.loading")}</div>}
       {!loading && filtered.length === 0 && (
-        <div className="py-12 text-center text-[13px] text-white/40">{t("watchlist.empty")}</div>
+        <div className="py-12 text-center text-[13px] text-muted-foreground/70">{t("watchlist.empty")}</div>
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -177,11 +177,11 @@ export function WatchlistSignalsPanel() {
               key={r.p.symbol}
               to="/produkte/$symbol"
               params={{ symbol: r.p.symbol }}
-              className={`group relative flex flex-col rounded-2xl border border-[#1F1F1F] bg-[#111111] p-4 sm:p-5 transition-all duration-200 active:scale-[0.99] hover:-translate-y-0.5 hover:border-white/15 ${strong ? a.glow : ""}`}
+              className={`group relative flex flex-col rounded-2xl border border-border bg-card p-4 sm:p-5 transition-all duration-200 active:scale-[0.99] hover:-translate-y-0.5 hover:border-border ${strong ? a.glow : ""}`}
             >
               {/* MOBILE: compact horizontal row */}
               <div className="flex items-center gap-3 sm:hidden">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[12px] font-bold text-white ring-1 ring-white/10">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[12px] font-bold text-foreground ring-1 ring-white/10">
                   {initials}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -209,12 +209,12 @@ export function WatchlistSignalsPanel() {
               {/* DESKTOP: full card */}
               <div className="hidden sm:flex sm:flex-col">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[11px] font-bold text-white ring-1 ring-white/10">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-white/15 to-white/5 text-[11px] font-bold text-foreground ring-1 ring-white/10">
                     {initials}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[18px] font-bold leading-tight">{r.p.symbol}</div>
-                    <div className="truncate text-[13px] text-white/40">{r.p.name}</div>
+                    <div className="truncate text-[13px] text-muted-foreground/70">{r.p.name}</div>
                   </div>
                 </div>
 
@@ -224,7 +224,7 @@ export function WatchlistSignalsPanel() {
                   </div>
                   <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
                     <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
-                    <span className="font-mono text-white/50">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
+                    <span className="font-mono text-muted-foreground">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -245,7 +245,7 @@ export function WatchlistSignalsPanel() {
                   <Chip label={t("watchlist.metric.vol")} value={`${(r.ind.volatility * 100).toFixed(0)}%`} />
                 </div>
 
-                <div className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#1F1F1F] bg-transparent text-[13px] font-semibold text-white/80 transition group-hover:border-[#22FF88]/60 group-hover:bg-[#22FF88]/5 group-hover:text-[#22FF88]">
+                <div className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-transparent text-[13px] font-semibold text-foreground/80 transition group-hover:border-[#22FF88]/60 group-hover:bg-[#22FF88]/5 group-hover:text-[#22FF88]">
                   {t("watchlist.card.analyse")}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </div>
@@ -260,9 +260,9 @@ export function WatchlistSignalsPanel() {
 
 function Chip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md border border-[#1F1F1F] bg-[#0A0A0A] px-2 py-1 text-[11px] text-white/60">
-      <span className="text-white/40">{label}</span>
-      <span className="font-mono tabular-nums text-white/90">{value}</span>
+    <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground">
+      <span className="text-muted-foreground/70">{label}</span>
+      <span className="font-mono tabular-nums text-foreground/90">{value}</span>
     </span>
   );
 }

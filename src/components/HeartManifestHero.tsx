@@ -76,7 +76,7 @@ export function HeartManifestHero() {
       <section
         className={[
           // Mobile = bottom sheet; sm+ = right-side panel
-          "relative flex w-full flex-col overflow-hidden border-[#1F1F1F] bg-[#0A0A0A] shadow-2xl shadow-black/80",
+          "relative flex w-full flex-col overflow-hidden border-border bg-background shadow-2xl shadow-black/80",
           "max-h-[92vh] rounded-t-3xl border-t",
           "sm:my-4 sm:mr-4 sm:max-h-[calc(100vh-2rem)] sm:max-w-[420px] sm:rounded-2xl sm:border",
           "transition-all duration-300 ease-out",
@@ -113,7 +113,7 @@ export function HeartManifestHero() {
             type="button"
             onClick={close}
             aria-label={t("manifest.close")}
-            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#1F1F1F] bg-[#111111] text-white/60 transition hover:border-[#22FF88]/40 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22FF88]/60"
+            className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-[#22FF88]/40 hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-[#22FF88]/60"
           >
             <X className="h-4 w-4" />
           </button>
@@ -122,14 +122,14 @@ export function HeartManifestHero() {
         {/* Body */}
         <div className="relative flex-1 overflow-y-auto px-5 pb-5 pt-6 sm:px-6 sm:pt-7">
           {/* Headline */}
-          <h2 className="text-[34px] font-semibold leading-[1.02] tracking-tight text-white sm:text-[40px]">
+          <h2 className="text-[34px] font-semibold leading-[1.02] tracking-tight text-foreground sm:text-[40px]">
             {t("manifest.headline.a")}
             <br />
             <span className="bg-gradient-to-r from-[#22FF88] to-[#0E9F58] bg-clip-text text-transparent">
               {t("manifest.headline.b")}
             </span>
           </h2>
-          <p className="mt-3 text-sm text-white/55 sm:text-base">{t("manifest.lede")}</p>
+          <p className="mt-3 text-sm text-foreground/55 sm:text-base">{t("manifest.lede")}</p>
 
           {/* Stacked product cards */}
           <div className="mt-6 flex flex-col gap-3">
@@ -137,20 +137,20 @@ export function HeartManifestHero() {
             <Link
               to="/picks"
               onClick={close}
-              className="group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-[#1F1F1F] bg-gradient-to-br from-[#0F0F0F] to-[#0A0A0A] p-4 transition-all hover:border-[#22FF88]/50 sm:p-5"
+              className="group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-[#0F0F0F] to-[#0A0A0A] p-4 transition-all hover:border-[#22FF88]/50 sm:p-5"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#22FF88]/25 bg-[#22FF88]/10">
                 <Zap className="h-4.5 w-4.5 text-[#22FF88]" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-base font-semibold text-white">{t("manifest.picks.title")}</h3>
-                  <ArrowRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-[#22FF88]" />
+                  <h3 className="text-base font-semibold text-foreground">{t("manifest.picks.title")}</h3>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-[#22FF88]" />
                 </div>
-                <p className="mt-1 text-[13px] leading-snug text-white/55">{t("manifest.picks.desc")}</p>
+                <p className="mt-1 text-[13px] leading-snug text-foreground/55">{t("manifest.picks.desc")}</p>
                 <div className="mt-3 flex items-center gap-4">
                   <Metric label={t("manifest.picks.metricA")} value="68.4%" accent />
-                  <span className="h-6 w-px bg-[#1F1F1F]" />
+                  <span className="h-6 w-px bg-muted" />
                   <Metric label={t("manifest.picks.metricB")} value="12–15" />
                 </div>
               </div>
@@ -160,17 +160,17 @@ export function HeartManifestHero() {
             <Link
               to="/analyse"
               onClick={close}
-              className="group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-[#1F1F1F] bg-gradient-to-br from-[#0F0F0F] to-[#0A0A0A] p-4 transition-all hover:border-[#22FF88]/50 sm:p-5"
+              className="group relative flex items-start gap-4 overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-[#0F0F0F] to-[#0A0A0A] p-4 transition-all hover:border-[#22FF88]/50 sm:p-5"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
-                <BarChart3 className="h-4.5 w-4.5 text-white/80" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-foreground/5">
+                <BarChart3 className="h-4.5 w-4.5 text-foreground/80" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-base font-semibold text-white">{t("manifest.analyse.title")}</h3>
-                  <ArrowRight className="h-4 w-4 text-white/30 transition-transform group-hover:translate-x-0.5 group-hover:text-[#22FF88]" />
+                  <h3 className="text-base font-semibold text-foreground">{t("manifest.analyse.title")}</h3>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-[#22FF88]" />
                 </div>
-                <p className="mt-1 text-[13px] leading-snug text-white/55">{t("manifest.analyse.desc")}</p>
+                <p className="mt-1 text-[13px] leading-snug text-foreground/55">{t("manifest.analyse.desc")}</p>
                 <div className="mt-3 grid grid-cols-4 gap-1.5">
                   <Tag label={t("manifest.analyse.zscore")} />
                   <Tag label={t("manifest.analyse.sharpe")} />
@@ -182,20 +182,20 @@ export function HeartManifestHero() {
           </div>
 
           {/* Difference */}
-          <div className="mt-5 rounded-xl border border-[#1F1F1F]/70 bg-[#070707] px-4 py-3">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/35">
+          <div className="mt-5 rounded-xl border border-border/70 bg-background px-4 py-3">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-foreground/35">
               {t("manifest.diff.label")}
             </div>
             <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 text-sm">
-              <span className="text-white/40 line-through">{t("manifest.diff.others")}</span>
-              <span className="text-white/25">{t("manifest.diff.vs")}</span>
+              <span className="text-muted-foreground/70 line-through">{t("manifest.diff.others")}</span>
+              <span className="text-foreground/25">{t("manifest.diff.vs")}</span>
               <span className="font-semibold text-[#22FF88]">{t("manifest.diff.us")}</span>
             </div>
           </div>
         </div>
 
         {/* Footer CTA */}
-        <div className="relative border-t border-[#1F1F1F] bg-[#0A0A0A]/95 px-5 py-4 sm:px-6">
+        <div className="relative border-t border-border bg-background/95 px-5 py-4 sm:px-6">
           <Link
             to="/produkte"
             onClick={close}
@@ -207,7 +207,7 @@ export function HeartManifestHero() {
           <button
             type="button"
             onClick={close}
-            className="mt-2 block w-full text-center text-[12px] text-white/40 transition hover:text-white/70"
+            className="mt-2 block w-full text-center text-[12px] text-muted-foreground/70 transition hover:text-foreground/70"
           >
             {t("manifest.later")}
           </button>
@@ -220,8 +220,8 @@ export function HeartManifestHero() {
 function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
     <div className="flex flex-col">
-      <span className="text-[9px] uppercase tracking-wider text-white/40">{label}</span>
-      <span className={`font-mono text-base font-semibold ${accent ? "text-[#22FF88]" : "text-white"}`}>
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70">{label}</span>
+      <span className={`font-mono text-base font-semibold ${accent ? "text-[#22FF88]" : "text-foreground"}`}>
         {value}
       </span>
     </div>
@@ -234,7 +234,7 @@ function Tag({ label, accent = false }: { label: string; accent?: boolean }) {
       className={`rounded-md border px-1.5 py-1 text-center text-[10px] font-medium ${
         accent
           ? "border-[#22FF88]/30 bg-[#22FF88]/10 text-[#22FF88]"
-          : "border-white/10 bg-white/5 text-white/70"
+          : "border-border/60 bg-foreground/5 text-foreground/70"
       }`}
     >
       {label}

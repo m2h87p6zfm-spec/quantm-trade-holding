@@ -74,7 +74,7 @@ function Cockpit() {
   const sentimentTotal = (longCount + shortCount + neutralCount) || 1;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pb-16 text-white" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
+    <div className="min-h-screen bg-background pb-16 text-foreground" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       <TickerBand />
 
       <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:space-y-12 sm:px-6 sm:pt-10">
@@ -84,12 +84,12 @@ function Cockpit() {
         {/* Hero strip */}
         <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#1F1F1F] bg-[#111111] px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] animate-pulse" />
               {t("cockpit.live")}
             </div>
             <h1 className="mt-3 text-[24px] sm:text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
-            <p className="mt-1 text-[13px] text-white/40 tabular-nums">
+            <p className="mt-1 text-[13px] text-muted-foreground/70 tabular-nums">
               {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
             </p>
           </div>
@@ -97,11 +97,11 @@ function Cockpit() {
             <WatchlistSwitcher />
             <button
               onClick={() => setManageOpen(true)}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground"
             >
               <ListPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
             </button>
-            <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-[#1F1F1F] bg-[#111111] px-3 py-2 text-[13px] font-medium text-white/80 transition hover:border-[#22FF88]/40 hover:text-white">
+            <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground">
               <Search className="h-3.5 w-3.5" /> {t("cockpit.catalog")}
             </Link>
           </div>
@@ -111,16 +111,16 @@ function Cockpit() {
         {/* BEREICH 1 — Markt-Überblick (kompakt) */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-white/60">{t("cockpit.section.market")}</h2>
-            <span className="text-[12px] text-white/30 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
+            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("cockpit.section.market")}</h2>
+            <span className="text-[12px] text-muted-foreground/60 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
           </div>
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Sentiment */}
-            <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">{t("cockpit.sentiment.title")}</span>
+                <span className="text-[13px] font-medium text-muted-foreground">{t("cockpit.sentiment.title")}</span>
               </div>
-              <div className="flex h-2 overflow-hidden rounded-full bg-[#1F1F1F]">
+              <div className="flex h-2 overflow-hidden rounded-full bg-muted">
                 <div className="h-full bg-[#22FF88]" style={{ width: `${(longCount / sentimentTotal) * 100}%` }} />
                 <div className="h-full bg-white/30" style={{ width: `${(neutralCount / sentimentTotal) * 100}%` }} />
                 <div className="h-full bg-[#FF3B5C]" style={{ width: `${(shortCount / sentimentTotal) * 100}%` }} />
@@ -132,7 +132,7 @@ function Cockpit() {
                   { k: t("cockpit.sentiment.bearish"), v: shortCount, c: "#FF3B5C" },
                 ].map((s) => (
                   <div key={s.k} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-white/70">
+                    <span className="flex items-center gap-2 text-foreground/70">
                       <span className="h-2 w-2 rounded-full" style={{ background: s.c }} />
                       {s.k}
                     </span>
@@ -145,18 +145,18 @@ function Cockpit() {
             </div>
 
             {/* Indizes */}
-            <div className="rounded-2xl border border-[#1F1F1F] bg-[#111111] p-5">
+            <div className="rounded-2xl border border-border bg-card p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-white/60">{t("cockpit.indices.title")}</span>
+                <span className="text-[13px] font-medium text-muted-foreground">{t("cockpit.indices.title")}</span>
               </div>
               {/* Mobile: horizontal scroll chips */}
               <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {indices.map((i) => {
                   const up = (i.change ?? 0) >= 0;
                   return (
-                    <div key={i.symbol} className="flex shrink-0 flex-col gap-1 rounded-xl border border-[#1F1F1F] bg-[#0A0A0A] px-3 py-2 min-w-[120px]">
-                      <span className="text-[11px] text-white/50">{i.label}</span>
-                      <span className={`font-mono text-[14px] font-semibold tabular-nums ${i.change == null ? "text-white/30" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                    <div key={i.symbol} className="flex shrink-0 flex-col gap-1 rounded-xl border border-border bg-background px-3 py-2 min-w-[120px]">
+                      <span className="text-[11px] text-muted-foreground">{i.label}</span>
+                      <span className={`font-mono text-[14px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
                         {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
                       </span>
                     </div>
@@ -169,8 +169,8 @@ function Cockpit() {
                   const up = (i.change ?? 0) >= 0;
                   return (
                     <div key={i.symbol} className="flex items-center justify-between">
-                      <span className="text-[13px] text-white/70">{i.label}</span>
-                      <span className={`font-mono text-[13px] font-semibold tabular-nums ${i.change == null ? "text-white/30" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                      <span className="text-[13px] text-foreground/70">{i.label}</span>
+                      <span className={`font-mono text-[13px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
                         {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
                       </span>
                     </div>
@@ -188,13 +188,13 @@ function Cockpit() {
 
         {/* BEREICH 3 — Zusätzliche Insights (collapsible) */}
         <section>
-          <details className="group rounded-2xl border border-[#1F1F1F] bg-[#111111]/40 [&_summary::-webkit-details-marker]:hidden">
-            <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-white/60 transition hover:text-white">
+          <details className="group rounded-2xl border border-border bg-card/40 [&_summary::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-[13px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition hover:text-foreground">
               <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-[#8B9EFF]" /> {t("cockpit.insights.title")}</span>
-              <span className="text-[11px] font-normal tracking-normal text-white/40 group-open:hidden">{t("cockpit.insights.expand")}</span>
-              <span className="hidden text-[11px] font-normal tracking-normal text-white/40 group-open:inline">{t("cockpit.insights.collapse")}</span>
+              <span className="text-[11px] font-normal tracking-normal text-muted-foreground/70 group-open:hidden">{t("cockpit.insights.expand")}</span>
+              <span className="hidden text-[11px] font-normal tracking-normal text-muted-foreground/70 group-open:inline">{t("cockpit.insights.collapse")}</span>
             </summary>
-            <div className="space-y-8 border-t border-[#1F1F1F] p-5">
+            <div className="space-y-8 border-t border-border p-5">
               {featured && (
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                   <div className="lg:col-span-8">
