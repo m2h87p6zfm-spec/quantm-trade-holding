@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
+import { useT } from "@/lib/i18n";
 import { AuthGate } from "@/components/AuthGate";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -38,11 +39,12 @@ import { MarketRegimePill } from "@/components/MarketRegimePill";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
+  const t = useT();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="text-center">
         <h1 className="text-6xl font-bold">404</h1>
-        <p className="mt-2 text-muted-foreground">Seite nicht gefunden.</p>
+        <p className="mt-2 text-muted-foreground">{t("shell.notFound")}</p>
       </div>
     </div>
   );
@@ -50,13 +52,14 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
+  const t = useT();
   console.error(error);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">Etwas ist schiefgelaufen</h1>
+        <h1 className="text-xl font-semibold">{t("shell.errorTitle")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <button onClick={() => { router.invalidate(); reset(); }} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Erneut versuchen</button>
+        <button onClick={() => { router.invalidate(); reset(); }} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{t("shell.retry")}</button>
       </div>
     </div>
   );
