@@ -7,11 +7,13 @@ import { useSettings, NEWS_SOURCES, type NewsSource } from "@/lib/settings";
 import { AgencyLogo } from "@/components/AgencyLogo";
 import { fetchNewsSentiment, type NewsSentimentItem } from "@/lib/news-sentiment";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useT } from "@/lib/i18n";
 
 type Item = NewsSentimentItem & { source: NewsSource | "other" };
 
 export function BreakingNewsTicker() {
   const { settings } = useSettings();
+  const t = useT();
   const { isPro, loading: subLoading } = useSubscription();
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
@@ -54,7 +56,7 @@ export function BreakingNewsTicker() {
       toast(`${b.publisher} · ${b.symbol}`, {
         description: b.title,
         duration: 8000,
-        action: { label: "Öffnen", onClick: () => window.open(b.link, "_blank", "noopener,noreferrer") },
+        action: { label: t("common.openOriginal"), onClick: () => window.open(b.link, "_blank", "noopener,noreferrer") },
       });
     }
   }, [breaking, settings.notifBreakingNews]);

@@ -1,6 +1,7 @@
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { getStripe, getStripeEnvironment } from "@/lib/stripe";
 import { createCheckoutSession } from "@/utils/payments.functions";
+import { useT } from "@/lib/i18n";
 
 interface Props {
   priceId: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function StripeEmbeddedCheckout({ priceId, quantity, returnUrl }: Props) {
+  const t = useT();
   const fetchClientSecret = async (): Promise<string> => {
     const secret = await createCheckoutSession({
       data: {
@@ -22,7 +24,7 @@ export function StripeEmbeddedCheckout({ priceId, quantity, returnUrl }: Props) 
         environment: getStripeEnvironment(),
       },
     });
-    if (!secret) throw new Error("Konnte Checkout-Session nicht erstellen");
+    if (!secret) throw new Error(t("pricing.portalErr"));
     return secret;
   };
 

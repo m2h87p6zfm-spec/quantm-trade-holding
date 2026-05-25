@@ -6,8 +6,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getAnalysisCreditStatus } from "@/lib/credits.functions";
 import { creditLabel } from "@/lib/credits";
+import { useT } from "@/lib/i18n";
 
 export function AnalysisCreditBadge() {
+  const t = useT();
   const { user } = useAuth();
   const getStatus = useServerFn(getAnalysisCreditStatus);
   const { data } = useQuery({
@@ -35,7 +37,7 @@ export function AnalysisCreditBadge() {
         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-[11px] text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
       >
         <Coins className="h-3 w-3" />
-        Einloggen für Credits
+        {t("credits.signIn")}
       </Link>
     );
   }
@@ -43,7 +45,7 @@ export function AnalysisCreditBadge() {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-2.5 py-1 text-[11px] text-muted-foreground">
         <Coins className="h-3 w-3" />
-        Credits laden…
+        {t("credits.loading")}
       </span>
     );
   }
@@ -60,7 +62,7 @@ export function AnalysisCreditBadge() {
     <Link
       to="/preise"
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition hover:opacity-90 ${tone}`}
-      title={`${creditLabel(data.tier)}-Plan · ${data.used} von ${data.limit} Analysen diesen Monat genutzt`}
+      title={t("credits.title", { tier: creditLabel(data.tier), used: data.used, limit: data.limit })}
     >
       <Coins className="h-3 w-3" />
       {data.remaining} / {data.limit} Credits
