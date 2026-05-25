@@ -6,8 +6,9 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
-import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
+import { formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals, formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
 import { chartCssVar, resolveChartColor } from "@/lib/chartColors";
+import { useLang } from "@/lib/i18n";
 
 /**
  * Premium interactive chart with timeframe switcher.
@@ -57,6 +58,7 @@ export const AssetChart = memo(function AssetChart({
   height = 380,
   defaultTf = "1Y",
 }: AssetChartProps) {
+  const lang = useLang();
   const [tf, setTf] = useState<Timeframe>(defaultTf);
   const cfg = useMemo(() => TIMEFRAMES.find((t) => t.id === tf)!, [tf]);
 
@@ -87,10 +89,15 @@ export const AssetChart = memo(function AssetChart({
   const changePct = pctChange(first, last);
   const up = changeAbs >= 0;
 
-  const perfLabel = {
+  const displayLast = convertFromUsd(last, currency);
+  const displayChangeAbs = convertFromUsd(changeAbs, currency);
+  const perfLabel = (lang === "en" ? {
+    "1D": "today", "1W": "last week", "1M": "last month", "3M": "last 3 months",
+    "YTD": "year to date", "1Y": "last year", "5Y": "last 5 years", "MAX": "full history",
+  } : {
     "1D": "heute", "1W": "letzte Woche", "1M": "letzten Monat", "3M": "letzte 3 Monate",
     "YTD": "seit Jahresanfang", "1Y": "letztes Jahr", "5Y": "letzte 5 Jahre", "MAX": "gesamter Verlauf",
-  }[tf];
+  })[tf];
 
   /* ------------ lightweight-charts setup (dynamic import; client-only) ------------ */
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -258,22 +265,22 @@ export const AssetChart = memo(function AssetChart({
       <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
         <div>
           <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
-            {formatPrice(last, currency)}
+            {formatCurrencyFromUsd(last, currency)}
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-sm tabular-nums">
             <span className={up ? "text-bull" : "text-bear"}>
-              {formatSignedAbs(changeAbs, axisDecimals(last))} ({formatPercent(changePct)})
+              {formatSignedAbs(displayChangeAbs, axisDecimals(displayLast))} ({formatPercent(changePct)})
             </span>
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{perfLabel}</span>
             {q.data?.stale && (
               <span className="ml-1 flex items-center gap-1 text-[10px] text-amber-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                stale
+                {lang === "en" ? "stale" : "verzögert"}
               </span>
             )}
           </div>
         </div>
-        <TimeframeBar value={tf} onChange={setTf} loading={q.isFetching} />
+        <TimeframeBar value={tf} onChange={setTf} loading={q.isFetching} lang={lang} />
       </div>
 
       {/* Chart */}
@@ -286,7 +293,7 @@ export const AssetChart = memo(function AssetChart({
         {/* Hover overlay */}
         {hover && (
           <div className="pointer-events-none absolute left-3 top-3 min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
-            <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} />
+            <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} lang={lang} />
           </div>
         )}
       </div>

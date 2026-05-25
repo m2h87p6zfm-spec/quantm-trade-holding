@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowUpRight, Minus, BookOpen, Target, Shield, Activity
 import { useState } from "react";
 import type { IndicatorSet } from "@/lib/indicators";
 import type { Signal } from "@/lib/analysis";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 type Tone = "bull" | "bear" | "neutral";
 
@@ -142,7 +143,7 @@ const toneStyles = {
   neutral: { border: "border-border", bg: "bg-muted/20", badge: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground", icon: Minus, label: "Neutral" },
 } as const;
 
-export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol: string; name: string; indicators: IndicatorSet; signal: Signal }) {
+export function BrokerAssessment({ symbol, name, indicators, signal, currency = "USD", lang = "de" }: { symbol: string; name: string; indicators: IndicatorSet; signal: Signal; currency?: string; lang?: "de" | "en" }) {
   const [openGlossary, setOpenGlossary] = useState(false);
   const sections = buildSections(indicators);
   const bullCount = sections.filter((x) => x.tone === "bull").length;
@@ -150,10 +151,10 @@ export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol:
   const neutralCount = sections.filter((x) => x.tone === "neutral").length;
 
   const verdictMeta = signal.verdict === "LONG"
-    ? { label: "KAUFEN", sub: "Long-Position", tone: "bull" as Tone, headline: "Die Mehrheit der statistischen Signale spricht für steigende Kurse." }
+    ? { label: lang === "en" ? "BUY" : "KAUFEN", sub: lang === "en" ? "Long position" : "Long-Position", tone: "bull" as Tone, headline: lang === "en" ? "Most statistical signals point to rising prices." : "Die Mehrheit der statistischen Signale spricht für steigende Kurse." }
     : signal.verdict === "SHORT"
-    ? { label: "VERKAUFEN", sub: "Short-Position", tone: "bear" as Tone, headline: "Die Mehrheit der Signale deutet auf fallende Kurse hin." }
-    : { label: "HALTEN", sub: "Kein Setup", tone: "neutral" as Tone, headline: "Signale sind gemischt — keine klare Wahrscheinlichkeit für eine Richtung." };
+    ? { label: lang === "en" ? "SELL" : "VERKAUFEN", sub: lang === "en" ? "Short position" : "Short-Position", tone: "bear" as Tone, headline: lang === "en" ? "Most signals point to falling prices." : "Die Mehrheit der Signale deutet auf fallende Kurse hin." }
+    : { label: lang === "en" ? "HOLD" : "HALTEN", sub: lang === "en" ? "No setup" : "Kein Setup", tone: "neutral" as Tone, headline: lang === "en" ? "Signals are mixed — no clear probability edge." : "Signale sind gemischt — keine klare Wahrscheinlichkeit für eine Richtung." };
   const vStyle = toneStyles[verdictMeta.tone];
 
   return (
@@ -161,11 +162,11 @@ export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol:
       {/* HEADER — Executive Summary */}
       <div className={`rounded-lg border-2 ${vStyle.border} ${vStyle.bg} p-4`}>
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Sparkles className="h-3 w-3" /> Apex Research Note
+          <Sparkles className="h-3 w-3" /> {lang === "en" ? "Quantm Research Note" : "Quantm Research-Notiz"}
         </div>
         <div className="mt-1.5 flex items-baseline gap-2">
           <h3 className="text-base font-bold">{name}</h3>
-          <span className="text-xs text-muted-foreground">({symbol}) · {fmt(indicators.price)} USD</span>
+          <span className="text-xs text-muted-foreground">({symbol}) · {formatCurrencyFromUsd(indicators.price, currency)}</span>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className={`flex items-center gap-2 rounded-md border px-3 py-1.5 ${vStyle.badge}`}>
@@ -176,7 +177,7 @@ export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol:
             </div>
           </div>
           <div className="leading-tight">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Konfidenz</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "Confidence" : "Konfidenz"}</div>
             <div className="font-mono text-base font-semibold">{signal.confidence.toFixed(0)}%</div>
           </div>
           <div className="ml-auto hidden gap-1.5 sm:flex">
