@@ -127,6 +127,7 @@ function AppShell() {
     pathname === "/login" ||
     pathname === "/passwort-vergessen" ||
     pathname === "/passwort-zuruecksetzen" ||
+    pathname === "/auth/confirm" ||
     pathname === "/onboarding";
 
   // Keep <html lang> in sync with the user's chosen language so screen
