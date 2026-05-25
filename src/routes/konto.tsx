@@ -260,6 +260,60 @@ function AccountPage() {
                   <Link to="/preise">Auf Elite upgraden</Link>
                 </Button>
               )}
+              {cancelAtPeriodEnd ? (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={resumeBusy}>
+                      {resumeBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                      Kündigung zurücknehmen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Abo fortsetzen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Dein Abo wird nicht beendet und verlängert sich wie gewohnt am{" "}
+                        {currentPeriodEnd ? new Date(currentPeriodEnd).toLocaleDateString("de-DE") : "Periodenende"}.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                      <AlertDialogAction onClick={(e) => { e.preventDefault(); void onResume(); }}>
+                        Fortsetzen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={cancelBusy} className="text-destructive hover:text-destructive">
+                      {cancelBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+                      Abo kündigen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Abo wirklich kündigen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Du behältst alle Premium-Vorteile bis zum Ende des aktuellen Abrechnungszeitraums
+                        {currentPeriodEnd ? ` (${new Date(currentPeriodEnd).toLocaleDateString("de-DE")})` : ""}.
+                        Danach wirst du automatisch auf den kostenlosen Plan zurückgesetzt. Es wird keine weitere Zahlung
+                        eingezogen. Du kannst die Kündigung jederzeit vor Ablauf zurücknehmen.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Doch behalten</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={(e) => { e.preventDefault(); void onCancel(); }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Zum Periodenende kündigen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </>
           )}
         </div>
