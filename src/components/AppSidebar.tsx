@@ -221,6 +221,7 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <AuthSection collapsed={collapsed} />
+        {!collapsed && <LegalLinks className="px-1 pb-1" />}
       </SidebarFooter>
     </Sidebar>
   );
