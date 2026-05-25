@@ -232,7 +232,7 @@ export function BrokerAssessment({ symbol, name, indicators, signal, currency = 
       {/* HEADER — Executive Summary */}
       <div className={`rounded-lg border-2 ${vStyle.border} ${vStyle.bg} p-4`}>
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Sparkles className="h-3 w-3" /> {lang === "en" ? "Quantm Research Note" : "Quantm Research-Notiz"}
+          <Sparkles className="h-3 w-3" /> Quantm Research-Notiz
         </div>
         <div className="mt-1.5 flex items-baseline gap-2">
           <h3 className="text-base font-bold">{name}</h3>
@@ -247,7 +247,7 @@ export function BrokerAssessment({ symbol, name, indicators, signal, currency = 
             </div>
           </div>
           <div className="leading-tight">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "Confidence" : "Konfidenz"}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Konfidenz</div>
             <div className="font-mono text-base font-semibold">{signal.confidence.toFixed(0)}%</div>
           </div>
           <div className="ml-auto hidden gap-1.5 sm:flex">
@@ -305,9 +305,9 @@ export function BrokerAssessment({ symbol, name, indicators, signal, currency = 
             <Target className="h-3 w-3" /> Trade-Plan · Risk/Reward 1 : {signal.rr.toFixed(1)}
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <PlanCell label="Entry" value={fmt(signal.entry)} sub="Einstieg" />
-            <PlanCell label="Stop" value={fmt(signal.stop)} sub="Notausgang" tone="bear" />
-            <PlanCell label="Target" value={fmt(signal.target)} sub="Gewinnmitnahme" tone="bull" />
+            <PlanCell label="Entry" value={formatCurrencyFromUsd(signal.entry, currency)} sub="Einstieg" />
+            <PlanCell label="Stop" value={formatCurrencyFromUsd(signal.stop, currency)} sub="Notausgang" tone="bear" />
+            <PlanCell label="Target" value={formatCurrencyFromUsd(signal.target, currency)} sub="Gewinnmitnahme" tone="bull" />
           </div>
           <p className="mt-2.5 text-[12px] leading-relaxed text-muted-foreground">
             Pro 1 € Risiko stehen {signal.rr.toFixed(1)} € potenzieller Gewinn gegenüber. Faustregel: nie mehr als <strong className="text-foreground">1–2% des eigenen Kapitals</strong> pro Trade riskieren.
