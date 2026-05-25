@@ -77,6 +77,7 @@ function ForgotPage() {
             </>
           )}
         </Card>
+        <LegalLinks className="mt-6" />
       </div>
     </div>
   );
