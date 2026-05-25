@@ -9,6 +9,7 @@ import type { Candles, Quote } from "@/lib/finnhub";
 import type { DecisionReport } from "@/lib/analysis";
 import type { MarketRegime } from "@/lib/ai-learning";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
+import { QuantFinancePanel } from "@/components/QuantFinancePanel";
 import { fetchNewsSentiment } from "@/lib/news-sentiment";
 import { useSubscription } from "@/hooks/useSubscription";
 
@@ -333,6 +334,9 @@ export function ApexDashboard({
           </span>
         </div>
       </SectionCard>
+
+      {/* QUANTITATIVE FINANCE & MONTE CARLO */}
+      <QuantFinancePanel symbol={symbol} candleObjs={candleObjs} price={indicators.price} />
 
       {/* FUNDAMENTALANALYSE */}
       <SectionCard icon={Landmark} title="💰 Fundamentalanalyse">
