@@ -74,27 +74,58 @@ function classifyPublisher(p: string): NewsItem["source"] {
 
 const BREAKING_RX = /\b(breaking|halts?|halted|surges?|plunges?|crashes?|soars?|tumbles?|beat[s]? estimates|misses estimates|downgrades?|upgrades?|guidance cut|profit warning|recall|lawsuit|merger|acquires?|acquisition|bankruptcy|files for|sec probe)\b/i;
 
+// Optionaler Firmenname pro Symbol — wird genutzt, um Headlines auch dann
+// zuzulassen, wenn Yahoo den Ticker nicht in relatedTickers listet, aber die
+// Firma im Titel erwähnt (z. B. "Apple unveils …").
+import { resolveCompanyName } from "@/lib/ticker-resolver";
+
 async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
-  const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=10&quotesCount=0`;
+  const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=15&quotesCount=0`;
   try {
     const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 ApexMarkets" } });
     if (!res.ok) return [];
     const json = (await res.json()) as { news?: Array<{ uuid: string; title: string; publisher: string; link: string; providerPublishTime: number; relatedTickers?: string[] }> };
-    return (json.news ?? []).slice(0, 10).map((n) => {
+
+    const sym = symbol.toUpperCase();
+    const companyName = (() => {
+      try { return resolveCompanyName?.(sym) ?? null; } catch { return null; }
+    })();
+    const nameRx = companyName
+      ? new RegExp(`\\b${companyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
+      : null;
+
+    const all = (json.news ?? []).map((n) => {
       const source = classifyPublisher(n.publisher);
-      const tickers = Array.from(new Set([symbol, ...(n.relatedTickers ?? []).map((t) => t.toUpperCase())]));
+      const related = (n.relatedTickers ?? []).map((t) => t.toUpperCase());
+      const tickers = Array.from(new Set([sym, ...related]));
       return {
-        uuid: n.uuid,
-        title: n.title,
-        publisher: n.publisher,
-        source,
-        link: n.link,
-        publishedAt: (n.providerPublishTime ?? 0) * 1000,
-        symbol,
-        tickers,
-        breaking: BREAKING_RX.test(n.title),
-      } satisfies NewsItem;
+        item: {
+          uuid: n.uuid,
+          title: n.title,
+          publisher: n.publisher,
+          source,
+          link: n.link,
+          publishedAt: (n.providerPublishTime ?? 0) * 1000,
+          symbol: sym,
+          tickers,
+          breaking: BREAKING_RX.test(n.title),
+        } satisfies NewsItem,
+        related,
+      };
     });
+
+    // Strikter Relevanzfilter: behalte nur News, die das Symbol wirklich
+    // betreffen. Verhindert generische Markt-Headlines ("Italian Stocks…")
+    // auf einer Einzelaktien-Seite.
+    const filtered = all.filter(({ item, related }) => {
+      if (related.includes(sym)) return true;
+      const t = item.title || "";
+      if (new RegExp(`\\b${sym}\\b`).test(t)) return true;
+      if (nameRx && nameRx.test(t)) return true;
+      return false;
+    });
+
+    return filtered.slice(0, 10).map((x) => x.item);
   } catch {
     return [];
   }
