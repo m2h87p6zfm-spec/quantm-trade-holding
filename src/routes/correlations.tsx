@@ -210,7 +210,7 @@ export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = 
                     return (
                       <td
                         key={j}
-                        className="rounded text-center text-[10px] font-mono tabular-nums w-10 h-10 transition-transform hover:scale-110"
+                        className="rounded text-center font-mono tabular-nums text-[8px] md:text-[10px] w-7 h-7 md:w-10 md:h-10 transition-transform hover:scale-110"
                         style={{
                           background: isDiag ? "color-mix(in oklab, var(--primary) 30%, transparent)" : corrColor(c),
                           color: isDiag || (c != null && Math.abs(c) > 0.45) ? "white" : "var(--foreground)",
