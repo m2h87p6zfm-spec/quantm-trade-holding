@@ -2088,7 +2088,22 @@ export const COUNTRY_COORDS: Record<string, [number, number]> = {
   "New Zealand": [172, -41],
   "Papua New Guinea": [145, -6],
   "Fiji": [178, -18],
-
+  // ── 56 additional coords ──
+  "Yemen": [44, 15.5], "Maldives": [73, 3.2], "Bhutan": [90.5, 27.5], "Brunei": [114.7, 4.5],
+  "Timor-Leste": [125.7, -8.8], "Solomon Is.": [160, -9], "Vanuatu": [167, -16], "Samoa": [-172, -13.7],
+  "Tonga": [-175, -21], "Kiribati": [173, 1.4], "Micronesia": [150, 7.5], "Marshall Is.": [168, 7.1],
+  "Palau": [134.5, 7.5], "Cabo Verde": [-24, 16], "Gambia": [-15.4, 13.4], "Guinea-Bissau": [-15.2, 12],
+  "Guinea": [-10.9, 9.9], "Sierra Leone": [-11.8, 8.5], "Liberia": [-9.4, 6.4], "Togo": [1, 8.6],
+  "Benin": [2.3, 9.3], "Burkina Faso": [-1.5, 12.2], "Mali": [-4, 17], "Niger": [8, 17.6],
+  "Mauritania": [-10, 20], "Chad": [19, 15.5], "Central African Rep.": [21, 6.6], "Gabon": [11.7, -0.8],
+  "Congo": [15.8, -0.7], "Eq. Guinea": [10.3, 1.6], "Eritrea": [39.8, 15.2], "Djibouti": [42.6, 11.8],
+  "Somalia": [46.2, 5.2], "Burundi": [29.9, -3.4], "Malawi": [34, -13.3], "Lesotho": [28.2, -29.6],
+  "Eswatini": [31.5, -26.5], "Mauritius": [57.6, -20.3], "Guyana": [-58.9, 5.5], "Suriname": [-56, 4],
+  "Belize": [-88.7, 17.2], "Bahamas": [-77.4, 25], "Barbados": [-59.5, 13.2], "Georgia": [43.5, 42],
+  "Armenia": [45, 40.1], "Azerbaijan": [47.6, 40.4], "Andorra": [1.5, 42.5], "Monaco": [7.4, 43.7],
+  "Liechtenstein": [9.5, 47.2], "San Marino": [12.5, 43.9], "Greenland": [-42, 72], "Hong Kong": [114.2, 22.3],
+  "Macao": [113.5, 22.2], "Puerto Rico": [-66.6, 18.2], "New Caledonia": [165.5, -21.5],
+  "North Korea": [127, 40],
 };
 
 /* ───────── Global Events (clickable dots) ───────── */
