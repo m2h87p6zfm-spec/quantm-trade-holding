@@ -46,8 +46,9 @@ export function WatchlistSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setCustomizing(null); }} />
-          <div className="absolute right-0 z-50 mt-1 w-80 rounded-lg border border-border bg-popover shadow-xl">
+          <div className="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-w-[20rem] rounded-lg border border-border bg-popover shadow-xl">
             <ul className="py-1 max-h-80 overflow-auto">
+
               {lists.map((w) => {
                 const isActive = w.id === settings.activeWatchlistId;
                 const isEditing = editing === w.id;
