@@ -15,6 +15,7 @@ import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
+import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
 
 
 export const Route = createFileRoute("/produkte/$symbol")({
@@ -100,6 +101,8 @@ function ProductDetail() {
   const abs = last - prev;
   const change = prev ? (abs / prev) * 100 : 0;
   const changeUp = abs >= 0;
+  const displayLast = convertFromUsd(last, settings.currency);
+  const displayAbs = convertFromUsd(abs, settings.currency);
 
   const t = {
     back: lang === "en" ? "Back" : "Zurück",
@@ -111,6 +114,8 @@ function ProductDetail() {
     advChart: lang === "en" ? "Advanced chart" : "Erweiterter Chart",
     advChartCtx: lang === "en" ? "Candles, EMAs, Bollinger, RSI, MACD" : "Candles, EMAs, Bollinger, RSI, MACD",
     rawData: lang === "en" ? "Raw indicators" : "Rohdaten — Indikatoren",
+    volatility: lang === "en" ? "Volatility (annualised)" : "Vola annualisiert",
+    momentum: lang === "en" ? "Momentum 10 periods" : "Momentum 10P",
     tabs: {
       overview: lang === "en" ? "Overview" : "Übersicht",
       chart: lang === "en" ? "Chart & Analysis" : "Chart & Analyse",
@@ -151,10 +156,10 @@ function ProductDetail() {
 
           {indicators && (
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold tabular-nums sm:text-2xl">${last.toFixed(2)}</span>
+              <span className="text-xl font-bold tabular-nums sm:text-2xl">{formatCurrencyFromUsd(last, settings.currency)}</span>
               <span className={`inline-flex items-center gap-1 text-sm font-medium tabular-nums ${changeUp ? "text-emerald-400" : "text-rose-400"}`}>
                 {changeUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-                {changeUp ? "+" : ""}{abs.toFixed(2)} ({changeUp ? "+" : ""}{change.toFixed(2)}%)
+                {formatSignedAbs(displayAbs, axisDecimals(displayLast))} ({changeUp ? "+" : ""}{change.toFixed(2)}%)
               </span>
             </div>
           )}
@@ -221,12 +226,12 @@ function ProductDetail() {
               </section>
 
               <section className="rounded-2xl border border-border/70 bg-card/60 p-4 sm:p-5">
-                <AssetChart symbol={symbol} height={320} defaultTf="1Y" currency="$" />
+                <AssetChart symbol={symbol} height={320} defaultTf="1Y" currency={settings.currency} />
               </section>
 
               <section className="grid gap-4 lg:grid-cols-2">
                 <MarketConsensus symbol={symbol} indicators={indicators} />
-                <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} />
+                <BrokerAssessment symbol={symbol} name={product?.name ?? symbol} indicators={indicators} signal={sig} currency={settings.currency} lang={lang} />
               </section>
             </>
           )}
@@ -280,13 +285,13 @@ function ProductDetail() {
                 <Row k="MACD" v={indicators.macd.macd.toFixed(3)} explain="MACD" ctx={`MACD-Linie ${indicators.macd.macd.toFixed(3)}, Signal ${indicators.macd.signal.toFixed(3)}.`} />
                 <Row k="MACD Signal" v={indicators.macd.signal.toFixed(3)} />
                 <Row k="MACD Histogramm" v={indicators.macd.histogram.toFixed(3)} />
-                <Row k="Bollinger Upper" v={indicators.bollinger.upper.toFixed(2)} explain="Bollinger Bands" ctx={`Upper ${indicators.bollinger.upper.toFixed(2)}, Lower ${indicators.bollinger.lower.toFixed(2)}, Preis ${last.toFixed(2)}.`} />
-                <Row k="Bollinger Lower" v={indicators.bollinger.lower.toFixed(2)} />
-                <Row k={lang === "en" ? "Volatility (annualised)" : "Vola annualisiert"} v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität" ctx={`Annualisierte Vola ${(indicators.volatility * 100).toFixed(1)}% für ${symbol}.`} />
-                <Row k="Momentum 10P" v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum * 100).toFixed(2)}%.`} />
+                <Row k="Bollinger Upper" v={formatCurrencyFromUsd(indicators.bollinger.upper, settings.currency)} explain="Bollinger Bands" ctx={`Upper ${formatCurrencyFromUsd(indicators.bollinger.upper, settings.currency)}, Lower ${formatCurrencyFromUsd(indicators.bollinger.lower, settings.currency)}, Preis ${formatCurrencyFromUsd(last, settings.currency)}.`} />
+                <Row k="Bollinger Lower" v={formatCurrencyFromUsd(indicators.bollinger.lower, settings.currency)} />
+                <Row k={t.volatility} v={(indicators.volatility * 100).toFixed(1) + "%"} explain="Volatilität" ctx={`Annualisierte Vola ${(indicators.volatility * 100).toFixed(1)}% für ${symbol}.`} />
+                <Row k={t.momentum} v={(indicators.momentum * 100).toFixed(2) + "%"} explain="Momentum" ctx={`10-Perioden-Momentum ${(indicators.momentum * 100).toFixed(2)}%.`} />
                 <Row k="Sharpe Ratio" v={indicators.sharpe.toFixed(2)} explain="Sharpe Ratio" ctx={`Sharpe Ratio ${indicators.sharpe.toFixed(2)}.`} />
                 <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
-                <Row k="SMA 20 / 50 / 200" v={`${indicators.sma20.toFixed(1)} / ${isNaN(indicators.sma50) ? "—" : indicators.sma50.toFixed(1)} / ${isNaN(indicators.sma200) ? "—" : indicators.sma200.toFixed(1)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${indicators.sma20.toFixed(1)}, SMA50 ${indicators.sma50.toFixed(1)}, SMA200 ${indicators.sma200.toFixed(1)}.`} />
+                <Row k="SMA 20 / 50 / 200" v={`${formatCurrencyFromUsd(indicators.sma20, settings.currency)} / ${isNaN(indicators.sma50) ? "—" : formatCurrencyFromUsd(indicators.sma50, settings.currency)} / ${isNaN(indicators.sma200) ? "—" : formatCurrencyFromUsd(indicators.sma200, settings.currency)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${formatCurrencyFromUsd(indicators.sma20, settings.currency)}, SMA50 ${formatCurrencyFromUsd(indicators.sma50, settings.currency)}, SMA200 ${formatCurrencyFromUsd(indicators.sma200, settings.currency)}.`} />
               </div>
             </section>
           )}
