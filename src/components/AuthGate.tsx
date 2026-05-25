@@ -56,7 +56,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   // Block protected content from flashing while we redirect to /onboarding.
-  if (user && profile?.onboarding_completed === false && pathname !== "/onboarding") {
+  // Treat a missing profile as "needs onboarding" so a freshly verified user
+  // (whose profile row may not exist yet) is always sent to /onboarding
+  // instead of landing on a route that crashes on a null profile.
+  const needsOnboarding =
+    user && pathname !== "/onboarding" && (profile === null || profile.onboarding_completed === false);
+  if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 

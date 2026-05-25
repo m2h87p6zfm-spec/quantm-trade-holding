@@ -48,13 +48,13 @@ function LoginPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: window.location.origin + "/konto" },
+      options: { emailRedirectTo: window.location.origin + "/" },
     });
     setBusy(false);
     if (error) return toast.error(error.message);
     if (data.session) {
       toast.success(t("login.welcomeNew"));
-      navigate({ to: "/konto" });
+      navigate({ to: "/" });
     } else {
       toast.success(t("login.created"));
     }
