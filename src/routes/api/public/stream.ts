@@ -69,7 +69,8 @@ export const Route = createFileRoute("/api/public/stream")({
             };
 
             // Initial-Hello, damit der Client weiß: Verbindung steht
-            send("ready", { symbols, tickMs: TICK_MS });
+            const initialTickMs = currentTickMs();
+            send("ready", { symbols, tickMs: initialTickMs });
 
             const tick = async () => {
               if (closed) return;
@@ -77,11 +78,21 @@ export const Route = createFileRoute("/api/public/stream")({
               send("quotes", { quotes, t: Date.now() });
             };
 
-            // sofort einen Tick senden, dann periodisch
+            // sofort einen Tick senden, dann adaptiv (Re-Check pro Tick).
+            // Per `setTimeout`-Schleife statt `setInterval`, damit Markt-Öffnung
+            // mitten im Connection-Fenster (~10 min) korrekt aufgenommen wird.
             await tick();
-            const interval = setInterval(tick, TICK_MS);
+            let cancelTimer: ReturnType<typeof setTimeout> | null = null;
+            const scheduleNext = () => {
+              if (closed) return;
+              cancelTimer = setTimeout(async () => {
+                await tick();
+                scheduleNext();
+              }, currentTickMs());
+            };
+            scheduleNext();
             const maxTimer = setTimeout(() => {
-              clearInterval(interval);
+              if (cancelTimer) clearTimeout(cancelTimer);
               send("bye", { reason: "max-duration" });
               closed = true;
               try { controller.close(); } catch { /* noop */ }
