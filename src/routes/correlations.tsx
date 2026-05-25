@@ -146,30 +146,30 @@ export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = 
 
 
       <div className="grid grid-cols-3 gap-2 md:gap-4">
-        <div className="card-glow rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Ø Korrelation</div>
-          <div className={`mt-2 font-mono text-2xl font-bold ${(avgCorr ?? 0) > 0.6 ? "text-bear" : (avgCorr ?? 0) > 0.3 ? "text-gold" : "text-bull"}`}>
+        <div className="card-glow rounded-xl p-3 md:p-4">
+          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground">Ø Korrelation</div>
+          <div className={`mt-2 font-mono text-lg md:text-2xl font-bold ${(avgCorr ?? 0) > 0.6 ? "text-bear" : (avgCorr ?? 0) > 0.3 ? "text-gold" : "text-bull"}`}>
             {avgCorr != null ? avgCorr.toFixed(2) : "—"}
           </div>
-          <div className="text-[11px] text-muted-foreground mt-1">
+          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
             {avgCorr != null && avgCorr > 0.6 ? "Sehr hoch — wenig Diversifikation" : avgCorr != null && avgCorr > 0.3 ? "Moderat" : "Gut diversifiziert"}
           </div>
         </div>
-        <div className="card-glow rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3 text-gold" /> Klumpen ({"|ρ|"} {">"} 0.8)
+        <div className="card-glow rounded-xl p-3 md:p-4">
+          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3 text-gold" /> Klumpen
           </div>
-          <div className="mt-2 font-mono text-2xl font-bold text-gold">{clusters.length}</div>
-          <div className="text-[11px] text-muted-foreground mt-1">
+          <div className="mt-2 font-mono text-lg md:text-2xl font-bold text-gold">{clusters.length}</div>
+          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
             Paare mit nahezu identischer Bewegung
           </div>
         </div>
-        <div className="card-glow rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+        <div className="card-glow rounded-xl p-3 md:p-4">
+          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
             <Shuffle className="h-3 w-3 text-primary" /> Werte
           </div>
-          <div className="mt-2 font-mono text-2xl font-bold">{symbols.length}</div>
-          <div className="text-[11px] text-muted-foreground mt-1">
+          <div className="mt-2 font-mono text-lg md:text-2xl font-bold">{symbols.length}</div>
+          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
             aus aktiver Watchlist
           </div>
         </div>
