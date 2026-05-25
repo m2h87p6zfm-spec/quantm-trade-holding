@@ -103,6 +103,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  // Canonical host redirect: www.quantmtrade.com → quantmtrade.com.
+  // Without this, the Supabase session stored in localStorage on one
+  // host is invisible on the other, forcing users to log in again.
+  if (typeof window !== "undefined" && window.location.hostname === "www.quantmtrade.com") {
+    window.location.replace(
+      window.location.protocol + "//quantmtrade.com" + window.location.pathname + window.location.search + window.location.hash,
+    );
+  }
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
