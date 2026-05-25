@@ -37,6 +37,8 @@ function AccountPage() {
   const { tier, status, currentPeriodEnd, cancelAtPeriodEnd, priceId, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [resumeBusy, setResumeBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [displayName, setDisplayName] = useState<string>("");
@@ -44,6 +46,8 @@ function AccountPage() {
   const [nameDraft, setNameDraft] = useState("");
   const [nameBusy, setNameBusy] = useState(false);
   const openPortal = useServerFn(createPortalSession);
+  const callCancel = useServerFn(cancelSubscription);
+  const callResume = useServerFn(resumeSubscription);
   const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
