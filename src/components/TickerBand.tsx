@@ -23,6 +23,16 @@ export function TickerBand() {
 
   // Batch-Quote — EIN Twelve-Data-Call für alle 16 Symbole statt 16 einzelne
   // Candles-Calls. Spart ~94 % Credits gegenüber dem alten useQueries-Ansatz.
+  // Adaptiv: bei geschlossenem US-Markt nur alle 5 Minuten pollen.
+  // Kurse bewegen sich nachts kaum – spart massiv TD-Credits.
+  const marketOpen = (() => {
+    const n = new Date();
+    const d = n.getUTCDay();
+    if (d === 0 || d === 6) return false;
+    const m = n.getUTCHours() * 60 + n.getUTCMinutes();
+    return m >= 12 * 60 + 30 && m <= 21 * 60;
+  })();
+  const pollMs = marketOpen ? 60_000 : 300_000;
   const { data } = useQuery<BatchResp>({
     queryKey: ["ticker-band-batch", TICKER_SYMBOLS.join(",")],
     queryFn: async () => {
@@ -31,10 +41,10 @@ export function TickerBand() {
       if (!res.ok) throw new Error("batch failed");
       return res.json();
     },
-    staleTime: 60 * 1000,
+    staleTime: pollMs,
     gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
-    refetchInterval: 60 * 1000,
+    refetchInterval: pollMs,
     retry: 1,
   });
 

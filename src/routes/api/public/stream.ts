@@ -12,12 +12,11 @@ const CORS = {
 } as const;
 
 // Adaptive Tick-Frequenz:
-//   - US-Markt offen (13:30–20:00 UTC, Mo–Fr) → 10 s
-//   - Sonst (Nachts/Wochenende) → 60 s
-// Spart außerhalb der Handelszeit ~85 % der TD-Credits, ohne
-// dass User es bemerken (Kurse bewegen sich nachts kaum).
+//   - US-Markt offen → 10 s (Live-Feel)
+//   - Sonst (Nachts/Wochenende) → 5 min (Kurse bewegen sich kaum)
+// Spart außerhalb der Handelszeit ~97 % der TD-Credits.
 const TICK_FAST_MS = 10_000;
-const TICK_SLOW_MS = 60_000;
+const TICK_SLOW_MS = 300_000;
 
 function isUsMarketOpen(): boolean {
   const now = new Date();

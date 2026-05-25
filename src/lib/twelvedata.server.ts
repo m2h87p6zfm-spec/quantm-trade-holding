@@ -23,6 +23,11 @@ function getKey(): string {
 type Entry<T> = { value: T; expires: number; lastUpdated: number };
 const CACHE = new Map<string, Entry<any>>();
 
+// In-Flight-Dedup: gleichzeitige Requests auf denselben Key teilen sich
+// EINE Twelve-Data-Anfrage. Spart Credits bei Burst-Traffic (z. B. SSE-Tick
+// trifft mit Polling zusammen, mehrere User mit derselben Watchlist).
+const INFLIGHT = new Map<string, Promise<any>>();
+
 function cacheGet<T>(key: string): Entry<T> | null {
   const e = CACHE.get(key) as Entry<T> | undefined;
   if (!e) return null;
@@ -30,6 +35,20 @@ function cacheGet<T>(key: string): Entry<T> | null {
 }
 function cacheSet<T>(key: string, value: T, ttlSec: number) {
   CACHE.set(key, { value, expires: Date.now() + ttlSec * 1000, lastUpdated: Date.now() });
+}
+
+// Markt-aware TTL: bei geschlossenem US-Markt bewegen sich Kurse kaum →
+// längere TTLs sind unmerklich für User, sparen aber dramatisch Credits.
+function isUsMarketOpenUtc(): boolean {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return false;
+  const m = now.getUTCHours() * 60 + now.getUTCMinutes();
+  // Weite Fenster-Definition (12:30–21:00 UTC) deckt EST und EDT ab.
+  return m >= 12 * 60 + 30 && m <= 21 * 60;
+}
+export function adaptiveQuoteTtl(baseSec: number): number {
+  return isUsMarketOpenUtc() ? baseSec : Math.max(baseSec, 300);
 }
 
 async function tdFetch(path: string, params: Record<string, string>): Promise<any> {
@@ -82,6 +101,7 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   value: TdQuote | null; stale: boolean; lastUpdated: number;
 }> {
   const key = `q:${symbol}`;
+  const ttl = adaptiveQuoteTtl(ttlSec);
   const hit = cacheGet<TdQuote | null>(key);
   if (hit && hit.expires > Date.now()) {
     return { value: hit.value, stale: false, lastUpdated: hit.lastUpdated };
@@ -89,14 +109,32 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   // Schicht 2: geteilter Supabase-Cache
   const shared = await sharedGet<TdQuote | null>(key);
   if (shared && !shared.stale) {
-    cacheSet(key, shared.value, ttlSec);
+    cacheSet(key, shared.value, ttl);
     return { value: shared.value, stale: false, lastUpdated: shared.lastUpdated };
   }
+  // In-Flight-Dedup: parallele Aufrufer warten auf denselben Fetch
+  const inflightKey = `fetch:${key}`;
+  const existing = INFLIGHT.get(inflightKey);
+  if (existing) {
+    try {
+      const v = (await existing) as TdQuote | null;
+      return { value: v, stale: false, lastUpdated: Date.now() };
+    } catch { /* fall through */ }
+  }
+  const p = (async () => {
+    try {
+      const j = await tdFetch("/quote", { symbol });
+      const v = parseQuote(j);
+      cacheSet(key, v, ttl);
+      void sharedSet(key, v, ttl);
+      return v;
+    } finally {
+      INFLIGHT.delete(inflightKey);
+    }
+  })();
+  INFLIGHT.set(inflightKey, p);
   try {
-    const j = await tdFetch("/quote", { symbol });
-    const v = parseQuote(j);
-    cacheSet(key, v, ttlSec);
-    void sharedSet(key, v, ttlSec);
+    const v = await p;
     return { value: v, stale: false, lastUpdated: Date.now() };
   } catch {
     if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
@@ -108,13 +146,13 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
 // Batch quotes — eine TD-Anfrage liefert bis zu 120 Symbole auf einmal.
 // Schont das Rate-Limit dramatisch bei Watchlists / Tickerband.
 // Nutzt den geteilten Cache pro Symbol, damit zwei User mit überlappenden
-// Watchlists nicht doppelt zahlen.
+// Watchlists nicht doppelt zahlen. TTL ist markt-aware (5 min wenn Markt zu).
 export async function getQuotesBatch(symbols: string[]): Promise<Record<string, TdQuote>> {
   const list = Array.from(new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))).slice(0, 120);
   if (!list.length) return {};
   const out: Record<string, TdQuote> = {};
   const missing: string[] = [];
-  const QUOTE_TTL = 30; // 30 s — Quotes sind sehr volatil
+  const QUOTE_TTL = adaptiveQuoteTtl(30);
 
   // Erst geteilten + lokalen Cache pro Symbol abfragen
   await Promise.all(list.map(async (sym) => {
@@ -132,28 +170,52 @@ export async function getQuotesBatch(symbols: string[]): Promise<Record<string, 
 
   if (!missing.length) return out;
 
-  try {
-    const j = await tdFetch("/quote", { symbol: missing.join(",") });
-    if (missing.length === 1) {
-      const v = parseQuote(j);
-      if (v) {
-        out[missing[0]] = v;
-        cacheSet(`q:${missing[0]}`, v, QUOTE_TTL);
-        void sharedSet(`q:${missing[0]}`, v, QUOTE_TTL);
-      }
-    } else {
-      for (const sym of missing) {
-        const v = parseQuote(j?.[sym]);
+  // In-Flight-Dedup pro Batch-Kombination: wenn dieselben "missing" Symbole
+  // parallel angefragt werden, läuft nur eine TD-Anfrage.
+  const inflightKey = `batch:${missing.join(",")}`;
+  const existing = INFLIGHT.get(inflightKey);
+  if (existing) {
+    try {
+      const shared = (await existing) as Record<string, TdQuote>;
+      for (const sym of missing) if (shared[sym]) out[sym] = shared[sym];
+      return out;
+    } catch { return out; }
+  }
+
+  const p = (async () => {
+    const filled: Record<string, TdQuote> = {};
+    try {
+      const j = await tdFetch("/quote", { symbol: missing.join(",") });
+      if (missing.length === 1) {
+        const v = parseQuote(j);
         if (v) {
-          out[sym] = v;
-          cacheSet(`q:${sym}`, v, QUOTE_TTL);
-          void sharedSet(`q:${sym}`, v, QUOTE_TTL);
+          filled[missing[0]] = v;
+          cacheSet(`q:${missing[0]}`, v, QUOTE_TTL);
+          void sharedSet(`q:${missing[0]}`, v, QUOTE_TTL);
+        }
+      } else {
+        for (const sym of missing) {
+          const v = parseQuote(j?.[sym]);
+          if (v) {
+            filled[sym] = v;
+            cacheSet(`q:${sym}`, v, QUOTE_TTL);
+            void sharedSet(`q:${sym}`, v, QUOTE_TTL);
+          }
         }
       }
+    } finally {
+      INFLIGHT.delete(inflightKey);
     }
+    return filled;
+  })();
+  INFLIGHT.set(inflightKey, p);
+
+  try {
+    const filled = await p;
+    for (const sym of missing) if (filled[sym]) out[sym] = filled[sym];
     return out;
   } catch {
-    return out; // gib zurück was wir aus Cache haben
+    return out;
   }
 }
 
@@ -241,16 +303,35 @@ export async function getCandlesCached(
     cacheSet(key, shared.value, ttlSec);
     return { value: shared.value, stale: false, lastUpdated: shared.lastUpdated };
   }
+  // In-Flight-Dedup: gleichzeitige Anfragen auf denselben Candle-Key
+  // teilen sich eine TD-Anfrage (z. B. Picks-Scan über mehrere User).
+  const inflightKey = `fetch:${key}`;
+  const existing = INFLIGHT.get(inflightKey);
+  if (existing) {
+    try {
+      const v = (await existing) as TdCandles | null;
+      return { value: v, stale: false, lastUpdated: Date.now() };
+    } catch { /* fall through */ }
+  }
+  const p = (async () => {
+    try {
+      const j = await tdFetch("/time_series", {
+        symbol,
+        interval: tdInterval,
+        outputsize: String(outputsize),
+        order: "DESC",
+      });
+      const v = parseTimeSeries(j);
+      cacheSet(key, v, ttlSec);
+      void sharedSet(key, v, ttlSec);
+      return v;
+    } finally {
+      INFLIGHT.delete(inflightKey);
+    }
+  })();
+  INFLIGHT.set(inflightKey, p);
   try {
-    const j = await tdFetch("/time_series", {
-      symbol,
-      interval: tdInterval,
-      outputsize: String(outputsize),
-      order: "DESC",
-    });
-    const v = parseTimeSeries(j);
-    cacheSet(key, v, ttlSec);
-    void sharedSet(key, v, ttlSec);
+    const v = await p;
     return { value: v, stale: false, lastUpdated: Date.now() };
   } catch {
     if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
