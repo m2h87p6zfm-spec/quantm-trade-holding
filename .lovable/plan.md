@@ -1,93 +1,118 @@
-# QUANTM Causal Engine — Implementierungsplan
+## Entscheidungen vorweg
 
-Ein eigenständiges Modul, das parallel zur bestehenden Analyse läuft. Bestehender Code wird nicht angefasst.
+Da du die Klarfragen übersprungen hast, treffe ich folgende technische Entscheidungen — pragmatisch, ressourcenschonend, ohne Cloudflare-Durable-Objects-Risiko:
 
-## Wichtige Anpassung gegenüber Spec
+**1. „WebSocket-Feel" ohne echten TD-WS-Bridge.**
+Cloudflare Workers (auf dem deine App läuft) können keine geteilte, dauerhafte TD-WebSocket-Verbindung halten, ohne Durable Objects einzuführen (großer Umbau, Migration, Test-Risiko). Statt dessen:
+- **Premium (Pro/Elite):** Bestehender SSE-Stream tickt während der US-Handelszeit alle **2 Sekunden** (statt 10s), außerhalb 5 min. Fühlt sich für den Nutzer wie Live an, nutzt **0 TD-WebSocket-Credits**, nur normale Batch-Quote-API.
+- **Free:** SSE wird serverseitig abgewiesen → Client fällt automatisch auf Polling alle **30 s** zurück.
+- **Echter TD-WS via Durable Objects** bleibt als optionaler Folge-Schritt dokumentiert, sobald die Premium-Userbasis das rechtfertigt.
 
-Der Prompt fordert **Supabase Edge Functions**. Dieses Projekt nutzt jedoch ausschließlich **TanStack Server Functions / Server Routes** (siehe Projekt-Stack). Edge Functions sind hier explizit verboten. Ich implementiere die gleiche Logik 1:1 als:
+**2. Push-Reichweite: voll (Web Push mit VAPID).**
+Damit Alerts auch bei geschlossenem Tab/Hintergrund auf iPhone/iPad feuern können, brauchen wir Service Worker + VAPID + Push-Subscriptions-Tabelle + serverseitigen Cron-Evaluator. iOS verlangt PWA-Installation auf dem Homescreen — wird im UI klar kommuniziert.
 
-- `createServerFn` für client-getriggerte Calls (`fetch-causal-events`, finaler Score)
-- Server Route unter `/api/public/hooks/causal-outcomes` für den täglichen Cron Job
-- pg_cron ruft diese Route täglich um 02:00 UTC auf
+## Was gebaut wird
 
-Funktional identisch zur Spec, nur stack-konform.
+### A. Tier-Gate für Echtzeit-Stream
+- `src/lib/api-auth.server.ts`: bestehende `requireUserId` um `requirePro` ergänzen (existiert ggf. schon — wiederverwenden).
+- `src/routes/api/public/stream.ts`: bei nicht-Premium-User mit `402 Payment Required` antworten. Premium-Tick = 2 s während US-Markt offen, 5 min sonst.
+- `src/hooks/useLiveQuotes.ts`: bei `402` automatisch in Polling-Modus (30 s, via `/api/public/quotes-batch`).
+- Symbol-Limit serverseitig: max. 10 Symbole pro SSE-Verbindung (verhindert versehentliches Abonnieren ganzer Watchlists).
 
-## Phase 1 — Datenbank
+### B. UI: LIVE-Badge & Free-Hinweis
+- Neue Komponente `<RealtimeStatusBadge />`: grüner Pulse + „LIVE" für Premium, grauer Punkt + „Verzögert · Upgrade" für Free (Link auf `/preise`).
+- Eingebaut in `produkte.$symbol.tsx` (Header neben Preis) und `WatchlistSignalsPanel`.
+- Bestehendes Design/Layout bleibt unverändert — nur Badge eingefügt.
 
-Migration mit allen 4 Tabellen:
-- `causal_events` (event log)
-- `causal_outcomes` (preis-snapshots & returns, FK auf events)
-- `causal_patterns` (aggregierte muster, UNIQUE ticker+event_type)
-- `causal_analysis_results` (analyse-snapshots)
+### C. Alerts: LocalStorage → Supabase
+- Neue Tabelle `price_alerts` (id, user_id, symbol, kind, threshold, note, active, triggered_at, created_at) + RLS „own only".
+- `src/lib/alerts.ts` ersetzt: liest/schreibt über Supabase (mit LocalStorage-Migration für bestehende Alerts beim ersten Login).
+- `src/routes/alerts.tsx`: UI unverändert, nur Datenquelle.
 
-RLS:
-- `causal_events`, `causal_patterns`, `causal_outcomes`, `causal_analysis_results`: public read (anon+authenticated). Writes nur serverseitig via service role.
+### D. Web Push Infrastruktur
+1. **VAPID-Keys generieren** (lokal via `bun add web-push` Script) → `VITE_VAPID_PUBLIC_KEY` als Code-Konstante, `VAPID_PRIVATE_KEY` + `VAPID_SUBJECT` als Secrets. **→ ich frage dich nach Bestätigung, bevor die Secrets gesetzt werden.**
+2. **Service Worker** `public/sw.js`: empfängt `push` events, zeigt Notification, öffnet Asset-Seite bei Klick.
+3. **Registrierung-Hook** `src/hooks/usePushSubscription.ts`: bei Premium + erstem Alert → Permission-Prompt → Subscription speichern.
+4. **Tabelle** `push_subscriptions` (id, user_id, endpoint, p256dh, auth, user_agent, created_at) + RLS.
+5. **Server-Endpoint** `src/routes/api/public/push-subscribe.ts` (POST mit `requirePro`).
+6. **Cron-Evaluator** `src/routes/api/public/hooks/evaluate-alerts.ts`: läuft jede Minute, lädt aktive Alerts, batched Quotes von TD, prüft Trigger, sendet Push via Web-Push-Bibliothek, markiert `triggered_at`. Mit `requireCronSecret` geschützt.
+7. **pg_cron-Schedule** (per `supabase--insert`, nicht migration): jede Minute während Marktzeiten.
 
-Index auf `causal_events(ticker, event_date)`, `causal_outcomes(event_id)`, `causal_patterns(ticker)`.
+### E. Symbol-Scope-Management
+- Premium-Stream abonniert nur Symbole der aktiven Seite (Detail = 1, Watchlist = max. 8, Chart = 1).
+- Bei Navigation alter SSE schließt automatisch (bestehende Cleanup-Logik in `useLiveQuotes`).
+- Alert-Symbole laufen **nicht** über den SSE, sondern über den 60-s-Cron-Evaluator → schont WS-Quota, funktioniert auch wenn User offline ist.
 
-## Phase 2 — Backend
+## Technische Details
 
-### `src/lib/causal-engine.server.ts`
-Kernlogik (server-only):
-- `classifyEvent(text)` → mapped Suchergebnis-Snippet auf einen der 16 erlaubten `event_type` Werte (Keyword-basiert, "unklar" → skip)
-- `fetchHistoricalPrice(ticker, date)` → nutzt bestehende Twelve-Data Integration
-- `recordEventsForTicker(ticker, companyName)` → Firecrawl-Search × 6 queries, klassifiziert, dedupiziert (gleicher ticker+type ±3d), upsert in `causal_events`, preis-snapshot in `causal_outcomes`
-- `backfillOutcomes()` → täglicher Job: lädt pending outcomes, holt 3/7/14/30/90d preise, berechnet returns
-- `recalcPatternsFor(ticker)` → aggregiert, berechnet `repeatability_score`, UPSERT in `causal_patterns`
-- `computeCausalScore(ticker)` → lädt events der letzten 30d + patterns, berechnet causal_score+verdict, speichert in `causal_analysis_results`
-
-### `src/lib/causal-engine.functions.ts`
-- `runCausalAnalysis({ ticker, companyName })` server fn → ruft `recordEventsForTicker` → `recalcPatternsFor` → `computeCausalScore` und gibt komplettes Ergebnis-Objekt für UI zurück.
-
-### `src/routes/api/public/hooks/causal-outcomes.ts`
-POST-Route, verifiziert `apikey` Header gegen `SUPABASE_PUBLISHABLE_KEY`, ruft `backfillOutcomes()` auf.
-
-### pg_cron
-```sql
-select cron.schedule('causal-outcomes-daily', '0 2 * * *',
-  $$ select net.http_post(url:='…/api/public/hooks/causal-outcomes',
-       headers:='{"Content-Type":"application/json","apikey":"…"}'::jsonb,
-       body:='{}'::jsonb) $$);
+**Auth-Gating-Pattern:**
+```ts
+// stream.ts
+const auth = await requirePro(request); // statt requireUserId
+if (auth instanceof Response) {
+  return new Response(JSON.stringify({ tier: "free", upgrade: true }),
+    { status: 402, headers: { ... } });
+}
 ```
 
-## Phase 3 — Score-Berechnung
+**Tick-Adapter:**
+```ts
+const TICK_PREMIUM_OPEN_MS = 2_000;
+const TICK_PREMIUM_CLOSED_MS = 300_000;
+```
 
-Eingebaut in `computeCausalScore` (Spec 1:1).
+**Web Push Send (Cron):**
+- `web-push` npm-Paket ist Node-only → ich nutze **direkt die VAPID-JWT-Signatur via `jose` + `crypto.subtle`**, das läuft auf Cloudflare Workers (workerd).
 
-## Phase 4 — UI
+**Schema:**
+```sql
+create table public.price_alerts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  symbol text not null check (length(symbol) between 1 and 20),
+  kind text not null check (kind in ('price_above','price_below')),
+  threshold numeric not null,
+  note text,
+  active boolean not null default true,
+  triggered_at timestamptz,
+  last_checked_price numeric,
+  created_at timestamptz not null default now()
+);
+create index price_alerts_active_symbol_idx on price_alerts(active, symbol) where active = true;
 
-### `src/components/CausalEngineCard.tsx`
-Neue Karte mit den 6 Elementen aus der Spec:
-1. Header mit Icon + Timestamp + Trennlinie (volle Karten-Breite, `w-full`)
-2. Verdict-Badge (große Pille, farbcodiert nach Spec)
-3. Zwei Score-Boxen nebeneinander (`grid-cols-2`) mit Score + Progress-Bar (rot/gelb/grün-Schwellen)
-4. Aktuell erkannte Ereignisse (Liste mit farbigem Dot je type)
-5. Historische Muster (nur types mit ≥3 Occurrences)
-6. Disclaimer
+create table public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+```
 
-Empty-States: bei `KEINE_DATEN` einheitliche Meldung statt leerer Bereiche. Mobile: alles `min-w-0` + `truncate`/`break-words`, getestet bei 375px.
+Beide Tabellen: RLS aktiv, Policy `user_id = auth.uid()` für select/insert/update/delete.
 
-### Integration
-In `src/routes/analyse.tsx` nach dem bestehenden `AiSummaryCard` rendern:
-- nutzt `useServerFn(runCausalAnalysis)` mit `useQuery`, getriggert wenn ein Ticker erkannt wurde
-- Lädt asynchron parallel zur Haupt-Analyse, blockiert nichts
-- Loading-Skeleton während fetch
+## Was bewusst NICHT gemacht wird
 
-## Phase 5 — QA
+- **Echter TD-WebSocket-Bridge** (Durable Objects). Begründung oben.
+- **Indikator-/Score-Alerts**: bleiben wie bisher in LocalStorage (Out of Scope dieser Runde).
+- **Android-spezifische Push-Optimierungen** (Channels) — Web Push-Standard ausreichend.
+- **iOS-Notifikation ohne PWA-Install**: technisch nicht möglich, Apple-Limitation.
 
-Nach Build prüfe ich:
-- Migration angewendet, alle 4 Tabellen mit Constraints sichtbar
-- Card overflow-frei (`overflow-hidden` + `w-full` auf Trennlinie)
-- Mobile 375px responsive
-- Cron job in `cron.job` registriert
-- Edge Cases: KEINE_DATEN zeigt definierte Meldung
-- Bestehende Komponenten unverändert (diff-check)
+## Reihenfolge der Ausführung
 
-## Reihenfolge der Tool-Calls
+1. DB-Migration (`price_alerts`, `push_subscriptions`)
+2. Tier-Gate in `/api/public/stream` + `useLiveQuotes`-Fallback
+3. `<RealtimeStatusBadge />` + Einbau
+4. `alerts.ts` Refactor auf Supabase + Migration aus LocalStorage
+5. Stop und **dich nach VAPID-Generierung fragen** (du gibst mir Go, ich generiere und setze Secrets)
+6. Service Worker, Push-Subscribe-Endpoint, usePushSubscription-Hook
+7. Cron-Evaluator + pg_cron-Schedule
+8. Smoke-Test: invoke-server-function gegen /stream (free vs pro), gegen Cron-Endpoint
 
-1. `supabase--migration` für die 4 Tabellen (warte auf Approval)
-2. Server-Code: `causal-engine.server.ts`, `causal-engine.functions.ts`, hook-route
-3. UI: `CausalEngineCard.tsx`
-4. Integration in `analyse.tsx`
-5. `supabase--insert` für pg_cron schedule
-6. QA-Check
+## Risiken
+
+- **TD-Batch-Quote-Credits**: 2-s-Tick × N Premium-Connections × M Symbole. Bei 10 Premium-Usern, 5 Symbolen, 6.5h US-Markt → ~58k Calls/Tag. Bleibt im üblichen TD-Pro-Plan-Budget. Falls Userbasis wächst: Window verlängern oder Caching pro Symbol auf 5 s anheben.
+- **iOS Web Push**: Funktioniert nur als installierte PWA. UI muss das klar sagen, sonst Support-Anfragen.
+- **VAPID-Key-Rotation**: Wenn der private Key später ausgetauscht wird, müssen alle Subscriptions neu registriert werden. Akzeptabel.
