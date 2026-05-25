@@ -24,16 +24,16 @@ function MarktRadarPage() {
     navigate({ search: { tab: v as Tab }, replace: true });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    <div className="mx-auto max-w-7xl space-y-6 md:space-y-8 p-4 md:p-6 pb-24 lg:pb-6">
       {/* Unified Hero */}
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Radar className="h-3 w-3 text-primary" /> Markt-Radar
         </div>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">
+        <h1 className="mt-3 text-2xl md:text-4xl font-bold tracking-tight">
           Wo bewegt sich der Markt — und warum?
         </h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-2 max-w-2xl text-xs md:text-sm text-muted-foreground">
           Drei Perspektiven auf eine Frage: Welche Werte laufen, welche Sektoren führen
           und welche Positionen bewegen sich praktisch identisch. Zusammen ergeben sie ein
           vollständiges Bild der Marktstruktur.
@@ -42,7 +42,7 @@ function MarktRadarPage() {
 
       {/* Tab-Navigation als visuell ansprechende Karten */}
       <Tabs value={active} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid w-full h-auto grid-cols-3 gap-2 rounded-2xl border border-border bg-card/40 p-2 backdrop-blur">
+        <TabsList className="grid w-full h-auto grid-cols-3 gap-1 md:gap-2 rounded-2xl border border-border bg-card/40 p-1.5 md:p-2 backdrop-blur">
           <TabTriggerCard
             value="heatmap"
             icon={<Flame className="h-4 w-4" />}
