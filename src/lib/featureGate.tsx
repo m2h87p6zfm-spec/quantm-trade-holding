@@ -7,6 +7,7 @@ import { useSettings } from "@/lib/settings";
 import { useAlerts } from "@/lib/alerts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useT } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Feature → benötigter Mindest-Tier
@@ -64,6 +65,7 @@ export const LIMITS = {
 
 
 export function useWatchlistLimit() {
+  const t = useT();
   const { tier } = useSubscription();
   const { settings, toggleWatch } = useSettings();
   const max = LIMITS.watchlist[tier];
@@ -71,9 +73,9 @@ export function useWatchlistLimit() {
   const guardedAdd = (symbol: string) => {
     const exists = settings.watchlist.includes(symbol);
     if (!exists && count >= max) {
-      toast.error(`Watchlist-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Watchlist-Werte.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.watchlist.title", { max }), {
+        description: t("limit.watchlist.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return false;
     }
@@ -84,15 +86,16 @@ export function useWatchlistLimit() {
 }
 
 export function useAlertsLimit() {
+  const t = useT();
   const { tier } = useSubscription();
   const { alerts, add } = useAlerts();
   const max = LIMITS.alerts[tier];
   const active = alerts.filter((a) => !a.triggeredAt).length;
   const guardedAdd: typeof add = (rule) => {
     if (active >= max) {
-      toast.error(`Alert-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Smart Alerts.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.alert.title", { max }), {
+        description: t("limit.alert.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return;
     }
@@ -102,14 +105,15 @@ export function useAlertsLimit() {
 }
 
 export function usePortfolioLimit(count: number) {
+  const t = useT();
   const { tier } = useSubscription();
   const max = LIMITS.portfolio[tier];
   const atLimit = count >= max;
   const guard = () => {
     if (atLimit) {
-      toast.error(`Portfolio-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Positionen.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.portfolio.title", { max }), {
+        description: t("limit.portfolio.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return false;
     }
