@@ -101,15 +101,15 @@ function TabTriggerCard({
   return (
     <TabsTrigger
       value={value}
-      className="group flex h-auto flex-col items-start gap-1 rounded-xl px-4 py-3 text-left data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+      className="group flex h-auto flex-col items-center sm:items-start gap-1 rounded-xl px-2 py-2 md:px-4 md:py-3 text-center sm:text-left data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
     >
-      <div className="flex items-center gap-2">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 ring-1 ring-border/60 ${toneText}`}>
+      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 min-w-0 w-full justify-center sm:justify-start">
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/40 ring-1 ring-border/60 ${toneText}`}>
           {icon}
         </span>
-        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-[11px] sm:text-sm font-semibold leading-tight truncate max-w-full">{label}</span>
       </div>
-      <span className="text-[11px] text-muted-foreground hidden sm:block">{sub}</span>
+      <span className="text-[11px] text-muted-foreground hidden md:block">{sub}</span>
     </TabsTrigger>
   );
 }
