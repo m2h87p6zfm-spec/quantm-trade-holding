@@ -17,6 +17,27 @@
 
 const MINUS = "\u2212"; // proper minus sign, not hyphen
 const NBSP = "\u00A0";
+export type DisplayCurrency = "USD" | "EUR" | "GBP" | "CHF" | "AUD" | "CAD" | "JPY";
+
+const CURRENCY_SYMBOLS: Record<DisplayCurrency, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  CHF: "CHF",
+  AUD: "A$",
+  CAD: "C$",
+  JPY: "¥",
+};
+
+const USD_TO_DISPLAY_RATE: Record<DisplayCurrency, number> = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.79,
+  CHF: 0.89,
+  AUD: 1.51,
+  CAD: 1.36,
+  JPY: 157,
+};
 
 function safe(n: number): number {
   return Number.isFinite(n) ? n : 0;
@@ -29,6 +50,18 @@ export function priceDecimals(n: number): number {
   if (a >= 1) return 2;
   if (a >= 0.01) return 4;
   return 6;
+}
+
+export function currencySymbol(currency: string): string {
+  return CURRENCY_SYMBOLS[(currency as DisplayCurrency)] ?? currency;
+}
+
+export function convertFromUsd(n: number, currency: string): number {
+  return safe(n) * (USD_TO_DISPLAY_RATE[(currency as DisplayCurrency)] ?? 1);
+}
+
+export function formatCurrencyFromUsd(n: number, currency: string, decimals?: number): string {
+  return formatPrice(convertFromUsd(n, currency), currencySymbol(currency), decimals);
 }
 
 /** Auto-decide decimals for chart axis ticks (denser, less precise). */
@@ -117,6 +150,7 @@ export const fmt = {
   number: formatNumber,
   decimal: formatDecimal,
   price: formatPrice,
+  currencyFromUsd: formatCurrencyFromUsd,
   percent: formatPercent,
   signedAbs: formatSignedAbs,
   compact: formatCompact,

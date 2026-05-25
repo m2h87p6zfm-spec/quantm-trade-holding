@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowUpRight, Minus, BookOpen, Target, Shield, Activity
 import { useState } from "react";
 import type { IndicatorSet } from "@/lib/indicators";
 import type { Signal } from "@/lib/analysis";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 type Tone = "bull" | "bear" | "neutral";
 
@@ -142,7 +143,7 @@ const toneStyles = {
   neutral: { border: "border-border", bg: "bg-muted/20", badge: "bg-muted text-muted-foreground border-border", dot: "bg-muted-foreground", icon: Minus, label: "Neutral" },
 } as const;
 
-export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol: string; name: string; indicators: IndicatorSet; signal: Signal }) {
+export function BrokerAssessment({ symbol, name, indicators, signal, currency = "USD", lang = "de" }: { symbol: string; name: string; indicators: IndicatorSet; signal: Signal; currency?: string; lang?: "de" | "en" }) {
   const [openGlossary, setOpenGlossary] = useState(false);
   const sections = buildSections(indicators);
   const bullCount = sections.filter((x) => x.tone === "bull").length;
@@ -150,22 +151,92 @@ export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol:
   const neutralCount = sections.filter((x) => x.tone === "neutral").length;
 
   const verdictMeta = signal.verdict === "LONG"
-    ? { label: "KAUFEN", sub: "Long-Position", tone: "bull" as Tone, headline: "Die Mehrheit der statistischen Signale spricht für steigende Kurse." }
+    ? { label: lang === "en" ? "BUY" : "KAUFEN", sub: lang === "en" ? "Long position" : "Long-Position", tone: "bull" as Tone, headline: lang === "en" ? "Most statistical signals point to rising prices." : "Die Mehrheit der statistischen Signale spricht für steigende Kurse." }
     : signal.verdict === "SHORT"
-    ? { label: "VERKAUFEN", sub: "Short-Position", tone: "bear" as Tone, headline: "Die Mehrheit der Signale deutet auf fallende Kurse hin." }
-    : { label: "HALTEN", sub: "Kein Setup", tone: "neutral" as Tone, headline: "Signale sind gemischt — keine klare Wahrscheinlichkeit für eine Richtung." };
+    ? { label: lang === "en" ? "SELL" : "VERKAUFEN", sub: lang === "en" ? "Short position" : "Short-Position", tone: "bear" as Tone, headline: lang === "en" ? "Most signals point to falling prices." : "Die Mehrheit der Signale deutet auf fallende Kurse hin." }
+    : { label: lang === "en" ? "HOLD" : "HALTEN", sub: lang === "en" ? "No setup" : "Kein Setup", tone: "neutral" as Tone, headline: lang === "en" ? "Signals are mixed — no clear probability edge." : "Signale sind gemischt — keine klare Wahrscheinlichkeit für eine Richtung." };
   const vStyle = toneStyles[verdictMeta.tone];
+
+  if (lang === "en") {
+    return (
+      <div className="space-y-4">
+        <div className={`rounded-lg border-2 ${vStyle.border} ${vStyle.bg} p-4`}>
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <Sparkles className="h-3 w-3" /> Quantm Research Note
+          </div>
+          <div className="mt-1.5 flex items-baseline gap-2">
+            <h3 className="text-base font-bold">{name}</h3>
+            <span className="text-xs text-muted-foreground">({symbol}) · {formatCurrencyFromUsd(indicators.price, currency)}</span>
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <div className={`flex items-center gap-2 rounded-md border px-3 py-1.5 ${vStyle.badge}`}>
+              <vStyle.icon className="h-4 w-4" />
+              <div className="leading-tight">
+                <div className="text-sm font-bold">{verdictMeta.label}</div>
+                <div className="text-[10px] opacity-80">{verdictMeta.sub}</div>
+              </div>
+            </div>
+            <div className="leading-tight">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</div>
+              <div className="font-mono text-base font-semibold">{signal.confidence.toFixed(0)}%</div>
+            </div>
+          </div>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{verdictMeta.headline}</p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+            <Activity className="h-3 w-3" /> Broker view
+          </div>
+          <p className="text-sm leading-relaxed text-foreground/90">
+            {verdictMeta.tone === "bull"
+              ? `The setup is constructive: ${bullCount} bullish versus ${bearCount} bearish signals. That does not guarantee a win, but it is the kind of controlled probability edge professionals look for.`
+              : verdictMeta.tone === "bear"
+              ? `The setup is defensive: ${bearCount} bearish versus ${bullCount} bullish signals. Existing longs should be managed actively; new entries need tight risk control.`
+              : `Signals are mixed: ${bullCount} bullish versus ${bearCount} bearish. The cleanest decision is to wait for a clearer edge.`}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
+          <PlanCell label="RSI" value={fmt(indicators.rsi, 1)} sub="Momentum" />
+          <PlanCell label="Z-Score" value={fmt(indicators.zScore)} sub="Mean reversion" />
+          <PlanCell label="Volatility" value={`${fmt(indicators.volatility * 100, 1)}%`} sub="Annualised" />
+          <PlanCell label="Sharpe" value={fmt(indicators.sharpe)} sub="Risk-adjusted" />
+        </div>
+
+        {signal.verdict !== "NEUTRAL" && (
+          <div className="rounded-lg border border-primary/30 bg-primary/[0.04] p-4">
+            <div className="mb-2.5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+              <Target className="h-3 w-3" /> Trade plan · Risk/Reward 1 : {signal.rr.toFixed(1)}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <PlanCell label="Entry" value={formatCurrencyFromUsd(signal.entry, currency)} sub="Entry" />
+              <PlanCell label="Stop" value={formatCurrencyFromUsd(signal.stop, currency)} sub="Emergency exit" tone="bear" />
+              <PlanCell label="Target" value={formatCurrencyFromUsd(signal.target, currency)} sub="Take profit" tone="bull" />
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.04] p-3 text-[12px] leading-relaxed text-foreground/85">
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-500">
+            <AlertTriangle className="h-3 w-3" /> Risk note
+          </div>
+          Not investment advice. Statistical models describe probabilities, not certainties. Every trade can lose.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {/* HEADER — Executive Summary */}
       <div className={`rounded-lg border-2 ${vStyle.border} ${vStyle.bg} p-4`}>
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Sparkles className="h-3 w-3" /> Apex Research Note
+          <Sparkles className="h-3 w-3" /> Quantm Research-Notiz
         </div>
         <div className="mt-1.5 flex items-baseline gap-2">
           <h3 className="text-base font-bold">{name}</h3>
-          <span className="text-xs text-muted-foreground">({symbol}) · {fmt(indicators.price)} USD</span>
+          <span className="text-xs text-muted-foreground">({symbol}) · {formatCurrencyFromUsd(indicators.price, currency)}</span>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className={`flex items-center gap-2 rounded-md border px-3 py-1.5 ${vStyle.badge}`}>
@@ -234,9 +305,9 @@ export function BrokerAssessment({ symbol, name, indicators, signal }: { symbol:
             <Target className="h-3 w-3" /> Trade-Plan · Risk/Reward 1 : {signal.rr.toFixed(1)}
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <PlanCell label="Entry" value={fmt(signal.entry)} sub="Einstieg" />
-            <PlanCell label="Stop" value={fmt(signal.stop)} sub="Notausgang" tone="bear" />
-            <PlanCell label="Target" value={fmt(signal.target)} sub="Gewinnmitnahme" tone="bull" />
+            <PlanCell label="Entry" value={formatCurrencyFromUsd(signal.entry, currency)} sub="Einstieg" />
+            <PlanCell label="Stop" value={formatCurrencyFromUsd(signal.stop, currency)} sub="Notausgang" tone="bear" />
+            <PlanCell label="Target" value={formatCurrencyFromUsd(signal.target, currency)} sub="Gewinnmitnahme" tone="bull" />
           </div>
           <p className="mt-2.5 text-[12px] leading-relaxed text-muted-foreground">
             Pro 1 € Risiko stehen {signal.rr.toFixed(1)} € potenzieller Gewinn gegenüber. Faustregel: nie mehr als <strong className="text-foreground">1–2% des eigenen Kapitals</strong> pro Trade riskieren.

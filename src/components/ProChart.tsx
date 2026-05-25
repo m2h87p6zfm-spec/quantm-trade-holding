@@ -11,6 +11,7 @@ import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
 import { formatNumber, formatPercent, axisDecimals } from "@/lib/format";
 import { chartCssVar } from "@/lib/chartColors";
+import { useLang } from "@/lib/i18n";
 
 type CandlesIn = { c: number[]; o?: number[]; h?: number[]; l?: number[]; v?: number[]; t: number[] };
 type Overlay = "ema20" | "ema50" | "sma200" | "bbands";
@@ -37,6 +38,7 @@ export function ProChart({
   showZones = true,
   compact = false,
 }: ProChartProps) {
+  const lang = useLang();
   const wrapRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const subRefs = useRef<Record<Sub, HTMLDivElement | null>>({ volume: null, rsi: null, macd: null });
@@ -309,10 +311,10 @@ export function ProChart({
               <span className="ml-2">H <b className="text-foreground">{formatNumber(hover.h, axisDecimals(hover.h))}</b></span>
               <span className="ml-2">L <b className="text-foreground">{formatNumber(hover.l, axisDecimals(hover.l))}</b></span>
               <span className="ml-2">C <b className="text-foreground">{formatNumber(hover.c, axisDecimals(hover.c))}</b></span>
-              <span className="ml-3 opacity-60">{new Date(hover.t * 1000).toLocaleDateString("de-DE")}</span>
+              <span className="ml-3 opacity-60">{new Date(hover.t * 1000).toLocaleDateString(lang === "en" ? "en-US" : "de-DE")}</span>
             </>
           ) : (
-            <span className="opacity-60">Bewege den Cursor über den Chart für OHLC.</span>
+            <span className="opacity-60">{lang === "en" ? "Move the cursor over the chart for OHLC." : "Bewege den Cursor über den Chart für OHLC."}</span>
           )}
         </div>
       </div>
@@ -324,7 +326,7 @@ export function ProChart({
       {subcharts.map((sub) => (
         <div key={sub} className="mt-1">
           <div className="px-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {sub === "volume" ? "Volume" : sub === "rsi" ? "RSI (14)" : "MACD (12/26/9)"}
+            {sub === "volume" ? (lang === "en" ? "Volume" : "Volumen") : sub === "rsi" ? "RSI (14)" : "MACD (12/26/9)"}
           </div>
           <div
             ref={(el) => { subRefs.current[sub] = el; }}
@@ -337,19 +339,19 @@ export function ProChart({
       {/* Legend */}
       <div className="mt-2 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground">
         {overlays.includes("ema20") && (
-          <Legend swatch="var(--chart-1)" label="EMA 20" info="Exponentieller gleitender Durchschnitt der letzten 20 Perioden. Reagiert schneller als die SMA — kurzfristiger Trend-Indikator. Kurs darüber = kurzfristig bullish." />
+          <Legend swatch="var(--chart-1)" label="EMA 20" info={lang === "en" ? "Exponential moving average of the last 20 periods. Faster than the SMA — short-term trend indicator. Price above it = short-term bullish." : "Exponentieller gleitender Durchschnitt der letzten 20 Perioden. Reagiert schneller als die SMA — kurzfristiger Trend-Indikator. Kurs darüber = kurzfristig bullish."} />
         )}
         {overlays.includes("ema50") && (
-          <Legend swatch="var(--chart-2)" label="EMA 50" info="Mittelfristiger Trend-Filter. Institutionelle nutzen ihn als dynamische Support-/Resistance-Linie." />
+          <Legend swatch="var(--chart-2)" label="EMA 50" info={lang === "en" ? "Medium-term trend filter. Institutions often use it as a dynamic support/resistance line." : "Mittelfristiger Trend-Filter. Institutionelle nutzen ihn als dynamische Support-/Resistance-Linie."} />
         )}
         {overlays.includes("sma200") && (
-          <Legend swatch="var(--chart-3)" label="SMA 200" info="Wichtigster Langfrist-Trendmarker. Kurs über SMA 200 = Bullenmarkt-Bias, darunter = Bärenmarkt-Bias." />
+          <Legend swatch="var(--chart-3)" label="SMA 200" info={lang === "en" ? "Key long-term trend marker. Price above SMA 200 = bullish market bias, below = bearish bias." : "Wichtigster Langfrist-Trendmarker. Kurs über SMA 200 = Bullenmarkt-Bias, darunter = Bärenmarkt-Bias."} />
         )}
         {overlays.includes("bbands") && (
-          <Legend swatch="var(--chart-4)" label="Bollinger 20·2σ" info="Bänder rund um die 20-Perioden-SMA, ±2 σ. Eng = ruhig (oft vor Ausbruch), weit = hohe Volatilität." />
+          <Legend swatch="var(--chart-4)" label="Bollinger 20·2σ" info={lang === "en" ? "Bands around the 20-period SMA, ±2σ. Narrow = calm, often before a breakout; wide = high volatility." : "Bänder rund um die 20-Perioden-SMA, ±2 σ. Eng = ruhig (oft vor Ausbruch), weit = hohe Volatilität."} />
         )}
         {showZones && zones.length > 0 && (
-          <Legend swatch="var(--bull)" label={`${zones.length} Smart-Zones`} info="Algorithmisch erkannte Support-/Resistance-Zonen aus Kursreaktionen und Volumen-Clustern." />
+          <Legend swatch="var(--bull)" label={`${zones.length} Smart-Zones`} info={lang === "en" ? "Algorithmically detected support/resistance zones from price reactions and volume clusters." : "Algorithmisch erkannte Support-/Resistance-Zonen aus Kursreaktionen und Volumen-Clustern."} />
         )}
       </div>
     </div>

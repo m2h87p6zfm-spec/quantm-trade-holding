@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { TrendingUp, TrendingDown } from "lucide-react";
+import { useSettings } from "@/lib/settings";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 // Live-Ticker-Band — SSE-Stream alle 3s + Batch-Quote als Fallback/Baseline.
 const TICKER_SYMBOLS = [
@@ -15,6 +17,7 @@ type BatchQuote = { c: number; pc: number; dp?: number };
 type BatchResp = { quotes: Record<string, BatchQuote> };
 
 export function TickerBand() {
+  const { settings } = useSettings();
   // Live-Stream (Pro-Plan: 3-Sekunden-Ticks via SSE)
   const { quotes: live } = useLiveQuotes(TICKER_SYMBOLS);
 
@@ -67,7 +70,7 @@ export function TickerBand() {
         {loop.map((it, i) => (
           <div key={i} className="flex items-center gap-2 px-5 border-r border-border/40">
             <span className="font-bold text-xs tracking-tight">{it.symbol}</span>
-            <span className="font-mono text-xs tabular-nums text-muted-foreground">{it.price.toFixed(2)}</span>
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">{formatCurrencyFromUsd(it.price, settings.currency)}</span>
             <span className={`flex items-center gap-0.5 font-mono text-xs tabular-nums font-semibold ${it.change >= 0 ? "text-bull" : "text-bear"}`}>
               {it.change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
               {it.change >= 0 ? "+" : ""}{it.change.toFixed(2)}%

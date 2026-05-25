@@ -58,15 +58,15 @@ export function upcomingEvents(now = Date.now()): EconEvent[] {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-export function timeUntil(iso: string, now = Date.now()): { label: string; live: boolean; past: boolean } {
+export function timeUntil(iso: string, now = Date.now(), lang: "de" | "en" = "de"): { label: string; live: boolean; past: boolean } {
   const t = new Date(iso).getTime();
   const diff = t - now;
-  if (diff < -2 * 60 * 60 * 1000) return { label: "abgeschlossen", live: false, past: true };
-  if (diff < 0 && diff > -2 * 60 * 60 * 1000) return { label: "läuft", live: true, past: false };
+  if (diff < -2 * 60 * 60 * 1000) return { label: lang === "en" ? "completed" : "abgeschlossen", live: false, past: true };
+  if (diff < 0 && diff > -2 * 60 * 60 * 1000) return { label: lang === "en" ? "live" : "läuft", live: true, past: false };
   const m = Math.floor(diff / 60000);
   if (m < 60) return { label: `in ${m} min`, live: false, past: false };
   const h = Math.floor(m / 60);
   if (h < 48) return { label: `in ${h} h ${m % 60} min`, live: false, past: false };
   const d = Math.floor(h / 24);
-  return { label: `in ${d} Tagen`, live: false, past: false };
+  return { label: lang === "en" ? `in ${d} days` : `in ${d} Tagen`, live: false, past: false };
 }

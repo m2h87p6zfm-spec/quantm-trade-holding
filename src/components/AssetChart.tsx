@@ -6,8 +6,9 @@ import type {
   UTCTimestamp,
 } from "lightweight-charts";
 import { MarketDataReconnectingError } from "@/lib/finnhub";
-import { formatPrice, formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals } from "@/lib/format";
+import { formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals, formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
 import { chartCssVar, resolveChartColor } from "@/lib/chartColors";
+import { useLang } from "@/lib/i18n";
 
 /**
  * Premium interactive chart with timeframe switcher.
@@ -57,6 +58,7 @@ export const AssetChart = memo(function AssetChart({
   height = 380,
   defaultTf = "1Y",
 }: AssetChartProps) {
+  const lang = useLang();
   const [tf, setTf] = useState<Timeframe>(defaultTf);
   const cfg = useMemo(() => TIMEFRAMES.find((t) => t.id === tf)!, [tf]);
 
@@ -87,10 +89,15 @@ export const AssetChart = memo(function AssetChart({
   const changePct = pctChange(first, last);
   const up = changeAbs >= 0;
 
-  const perfLabel = {
+  const displayLast = convertFromUsd(last, currency);
+  const displayChangeAbs = convertFromUsd(changeAbs, currency);
+  const perfLabel = (lang === "en" ? {
+    "1D": "today", "1W": "last week", "1M": "last month", "3M": "last 3 months",
+    "YTD": "year to date", "1Y": "last year", "5Y": "last 5 years", "MAX": "full history",
+  } : {
     "1D": "heute", "1W": "letzte Woche", "1M": "letzten Monat", "3M": "letzte 3 Monate",
     "YTD": "seit Jahresanfang", "1Y": "letztes Jahr", "5Y": "letzte 5 Jahre", "MAX": "gesamter Verlauf",
-  }[tf];
+  })[tf];
 
   /* ------------ lightweight-charts setup (dynamic import; client-only) ------------ */
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -258,22 +265,22 @@ export const AssetChart = memo(function AssetChart({
       <div className="flex flex-wrap items-end justify-between gap-3 pb-3">
         <div>
           <div className="font-mono text-3xl font-bold tabular-nums text-foreground">
-            {formatPrice(last, currency)}
+            {formatCurrencyFromUsd(last, currency)}
           </div>
           <div className="mt-1 flex items-center gap-2 font-mono text-sm tabular-nums">
             <span className={up ? "text-bull" : "text-bear"}>
-              {formatSignedAbs(changeAbs, axisDecimals(last))} ({formatPercent(changePct)})
+              {formatSignedAbs(displayChangeAbs, axisDecimals(displayLast))} ({formatPercent(changePct)})
             </span>
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{perfLabel}</span>
             {q.data?.stale && (
               <span className="ml-1 flex items-center gap-1 text-[10px] text-amber-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                stale
+                {lang === "en" ? "stale" : "verzögert"}
               </span>
             )}
           </div>
         </div>
-        <TimeframeBar value={tf} onChange={setTf} loading={q.isFetching} />
+        <TimeframeBar value={tf} onChange={setTf} loading={q.isFetching} lang={lang} />
       </div>
 
       {/* Chart */}
@@ -286,7 +293,7 @@ export const AssetChart = memo(function AssetChart({
         {/* Hover overlay */}
         {hover && (
           <div className="pointer-events-none absolute left-3 top-3 min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
-            <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} />
+            <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} lang={lang} />
           </div>
         )}
       </div>
@@ -296,12 +303,12 @@ export const AssetChart = memo(function AssetChart({
 
 /* --- Timeframe bar --- */
 const TimeframeBar = memo(function TimeframeBar({
-  value, onChange, loading,
-}: { value: Timeframe; onChange: (v: Timeframe) => void; loading: boolean }) {
+  value, onChange, loading, lang,
+}: { value: Timeframe; onChange: (v: Timeframe) => void; loading: boolean; lang: "de" | "en" }) {
   return (
     <div
       role="tablist"
-      aria-label="Zeitraum"
+      aria-label={lang === "en" ? "Time range" : "Zeitraum"}
       className="inline-flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/60 p-0.5 backdrop-blur"
     >
       {TIMEFRAMES.map((t) => {
@@ -332,34 +339,37 @@ const TimeframeBar = memo(function TimeframeBar({
 
 /* --- Tooltip --- */
 function HoverTooltip({
-  hover, base, currency, tf,
+  hover, base, currency, tf, lang,
 }: {
   hover: { time: number; close: number; volume: number };
   base: number;
   currency: string;
   tf: Timeframe;
+  lang: "de" | "en";
 }) {
   const pct = pctChange(base, hover.close);
   const abs = absChange(base, hover.close);
   const up = pct >= 0;
+  const displayClose = convertFromUsd(hover.close, currency);
+  const displayAbs = convertFromUsd(abs, currency);
   const d = new Date(hover.time * 1000);
   const dateStr =
     tf === "1D" || tf === "1W" || tf === "1M"
-      ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-      : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+      ? d.toLocaleString(lang === "en" ? "en-US" : "de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+      : d.toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <>
       <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
       <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
-        {formatPrice(hover.close, currency)}
+        {formatCurrencyFromUsd(hover.close, currency)}
       </div>
       <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-        <span>{formatSignedAbs(abs, axisDecimals(hover.close))}</span>
+        <span>{formatSignedAbs(displayAbs, axisDecimals(displayClose))}</span>
         <span>·</span>
         <span>{formatPercent(pct)}</span>
       </div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">seit Periodenstart</div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "since period start" : "seit Periodenstart"}</div>
       {hover.volume > 0 && (
         <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
           <span className="uppercase tracking-wider">Vol</span>

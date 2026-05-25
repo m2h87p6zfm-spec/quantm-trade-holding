@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ExternalLink, Sparkles, TrendingUp, TrendingDown, Minus, Loader2, Newspaper, Lock } from "lucide-react";
 import { fetchNewsSentiment, type NewsSentimentItem } from "@/lib/news-sentiment";
 import { Link } from "@tanstack/react-router";
+import { useLang } from "@/lib/i18n";
 
 type Category = "all" | "earnings" | "analyst" | "insider" | "macro" | "other";
 
@@ -19,15 +20,15 @@ function classifyCategory(title: string): Exclude<Category, "all"> {
   return "other";
 }
 
-function timeAgo(ts: number): string {
+function timeAgo(ts: number, lang: "de" | "en"): string {
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
-  if (s < 60) return `${s}s`;
+  if (s < 60) return lang === "en" ? `${s}s` : `${s} s`;
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h} h`;
   const d = Math.floor(h / 24);
-  return `${d} T`;
+  return lang === "en" ? `${d} d` : `${d} T`;
 }
 
 function sentimentClasses(s: NewsSentimentItem["sentiment"]) {
@@ -36,16 +37,13 @@ function sentimentClasses(s: NewsSentimentItem["sentiment"]) {
   return { wrap: "border-border bg-muted/40 text-muted-foreground", icon: Minus };
 }
 
-const CATEGORY_LABEL: Record<Category, string> = {
-  all: "Alle",
-  earnings: "Earnings",
-  analyst: "Analyst",
-  insider: "Insider",
-  macro: "Makro",
-  other: "Sonstige",
+const CATEGORY_LABEL: Record<"de" | "en", Record<Category, string>> = {
+  de: { all: "Alle", earnings: "Earnings", analyst: "Analyst", insider: "Insider", macro: "Makro", other: "Sonstige" },
+  en: { all: "All", earnings: "Earnings", analyst: "Analyst", insider: "Insider", macro: "Macro", other: "Other" },
 };
 
 export function AssetNewsPanel({ symbol }: { symbol: string }) {
+  const lang = useLang();
   const [items, setItems] = useState<NewsSentimentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [gated, setGated] = useState(false);
@@ -86,7 +84,7 @@ export function AssetNewsPanel({ symbol }: { symbol: string }) {
     return Math.round(((counts.bullish - counts.bearish) / total) * 50 + 50);
   }, [counts]);
 
-  const gaugeLabel = sentimentScore >= 65 ? "Bullish" : sentimentScore <= 35 ? "Bearish" : "Neutral";
+  const gaugeLabel = sentimentScore >= 65 ? (lang === "en" ? "Bullish" : "Bullisch") : sentimentScore <= 35 ? (lang === "en" ? "Bearish" : "Bärisch") : "Neutral";
   const gaugeTone = sentimentScore >= 65 ? "text-emerald-300" : sentimentScore <= 35 ? "text-rose-300" : "text-muted-foreground";
 
   const visible = useMemo(
@@ -109,9 +107,9 @@ export function AssetNewsPanel({ symbol }: { symbol: string }) {
             <Newspaper className="h-5 w-5" />
           </div>
           <div>
-            <div className="text-sm font-semibold">News & KI-Sentiment</div>
+            <div className="text-sm font-semibold">{lang === "en" ? "News & AI sentiment" : "News & KI-Sentiment"}</div>
             <div className="text-xs text-muted-foreground">
-              {loading ? "Lade Schlagzeilen…" : `${enriched.length} aktuelle Meldungen · KI-analysiert`}
+              {loading ? (lang === "en" ? "Loading headlines…" : "Lade Schlagzeilen…") : lang === "en" ? `${enriched.length} current headlines · AI analysed` : `${enriched.length} aktuelle Meldungen · KI-analysiert`}
             </div>
           </div>
         </div>
@@ -130,7 +128,7 @@ export function AssetNewsPanel({ symbol }: { symbol: string }) {
       {/* Filters */}
       {!loading && !gated && enriched.length > 0 && (
         <div className="flex flex-wrap gap-1.5 border-b border-border/60 px-5 py-3">
-          {(Object.keys(CATEGORY_LABEL) as Category[]).map((k) => (
+          {(Object.keys(CATEGORY_LABEL[lang]) as Category[]).map((k) => (
             <button
               key={k}
               onClick={() => setCat(k)}
@@ -140,7 +138,7 @@ export function AssetNewsPanel({ symbol }: { symbol: string }) {
                   : "border-border bg-card text-muted-foreground hover:border-border/80 hover:text-foreground"
               }`}
             >
-              {CATEGORY_LABEL[k]} <span className="ml-1 text-[10px] opacity-60">{categoryCounts[k]}</span>
+              {CATEGORY_LABEL[lang][k]} <span className="ml-1 text-[10px] opacity-60">{categoryCounts[k]}</span>
             </button>
           ))}
         </div>
@@ -150,21 +148,21 @@ export function AssetNewsPanel({ symbol }: { symbol: string }) {
       <div className="p-5">
         {loading ? (
           <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> KI analysiert Schlagzeilen für {symbol}…
+            <Loader2 className="h-4 w-4 animate-spin" /> {lang === "en" ? `AI is analysing headlines for ${symbol}…` : `KI analysiert Schlagzeilen für ${symbol}…`}
           </div>
         ) : gated ? (
           <GatedHint />
         ) : enriched.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            Aktuell keine News zu {symbol} verfügbar.
+            {lang === "en" ? `No news available for ${symbol} right now.` : `Aktuell keine News zu ${symbol} verfügbar.`}
           </div>
         ) : visible.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            Keine Meldungen in dieser Kategorie.
+            {lang === "en" ? "No headlines in this category." : "Keine Meldungen in dieser Kategorie."}
           </div>
         ) : (
           <ul className="space-y-3">
-            {visible.map((item) => <NewsCard key={item.uuid} item={item} />)}
+            {visible.map((item) => <NewsCard key={item.uuid} item={item} lang={lang} />)}
           </ul>
         )}
       </div>
@@ -191,27 +189,28 @@ function SentimentBars({ counts }: { counts: { bullish: number; bearish: number;
   );
 }
 
-function NewsCard({ item }: { item: NewsSentimentItem & { category: Exclude<Category, "all"> } }) {
+function NewsCard({ item, lang }: { item: NewsSentimentItem & { category: Exclude<Category, "all"> }; lang: "de" | "en" }) {
   const s = sentimentClasses(item.sentiment);
   const Icon = s.icon;
+  const sentimentLabel = item.sentiment === "bullish" ? (lang === "en" ? "bullish" : "bullisch") : item.sentiment === "bearish" ? (lang === "en" ? "bearish" : "bärisch") : "neutral";
   return (
     <li className="group rounded-lg border border-border/70 bg-background/30 p-4 transition-colors hover:border-border hover:bg-background/60">
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground/80">{item.publisher}</span>
         <span>·</span>
-        <span>{timeAgo(item.publishedAt)} ago</span>
+        <span>{timeAgo(item.publishedAt, lang)} {lang === "en" ? "ago" : "her"}</span>
         {item.breaking && (
           <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
             Breaking
           </span>
         )}
         <span className="rounded border border-border/60 bg-card px-1.5 py-0.5 text-[10px] uppercase tracking-wider">
-          {CATEGORY_LABEL[item.category]}
+          {CATEGORY_LABEL[lang][item.category]}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${s.wrap}`}>
             <Icon className="h-3 w-3" />
-            {item.sentiment ?? "neutral"}
+            {sentimentLabel}
             {typeof item.score === "number" && (
               <span className="opacity-70">· {Math.round(item.score * 100)}%</span>
             )}
