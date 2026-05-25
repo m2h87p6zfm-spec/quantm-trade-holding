@@ -56,101 +56,103 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Dark first — Quantm Focus System
-   Research-driven palette: a near-black base with the faintest indigo
-   undertone (less fatiguing than pure #000), layered card surfaces for
-   depth without distraction, and a single refined mint accent that
-   guides the eye without overstimulating. Warm-tinted neutrals avoid
-   the cold "spreadsheet" feel of pure greys. */
+/* === DARK: Trading Floor ===
+   Tiefes Anthrazit mit warmen Ember-/Gold-Akzenten — Bloomberg-inspiriert,
+   ohne kalte Greys. Primary = amber ember, secondary accent = warmes Gold. */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.09 0.008 250);
-  --foreground: oklch(0.97 0.004 250);
-  --card: oklch(0.135 0.009 250);
-  --card-foreground: oklch(0.97 0.004 250);
-  --popover: oklch(0.155 0.01 250);
-  --popover-foreground: oklch(0.97 0.004 250);
-  --primary: oklch(0.84 0.17 158);
-  --primary-foreground: oklch(0.10 0.01 250);
-  --secondary: oklch(0.19 0.008 250);
-  --secondary-foreground: oklch(0.97 0.004 250);
-  --muted: oklch(0.17 0.008 250);
-  --muted-foreground: oklch(0.68 0.012 250);
-  --accent: oklch(0.21 0.012 250);
-  --accent-foreground: oklch(0.97 0.004 250);
-  --destructive: oklch(0.66 0.22 22);
+  --radius: 0.625rem;
+  --background: oklch(0.13 0.005 60);
+  --foreground: oklch(0.96 0.012 80);
+  --card: oklch(0.165 0.006 60);
+  --card-foreground: oklch(0.96 0.012 80);
+  --popover: oklch(0.18 0.007 60);
+  --popover-foreground: oklch(0.96 0.012 80);
+  --primary: oklch(0.78 0.17 58);            /* ember orange #fb923c */
+  --primary-foreground: oklch(0.14 0.01 60);
+  --secondary: oklch(0.22 0.008 60);
+  --secondary-foreground: oklch(0.96 0.012 80);
+  --muted: oklch(0.20 0.007 60);
+  --muted-foreground: oklch(0.70 0.015 70);
+  --accent: oklch(0.24 0.020 70);
+  --accent-foreground: oklch(0.97 0.012 80);
+  --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.23 0.008 250);
-  --input: oklch(0.19 0.008 250);
-  --ring: oklch(0.84 0.17 158);
-  --bull: oklch(0.84 0.17 158);
-  --bear: oklch(0.66 0.22 22);
-  --neutral-signal: oklch(0.72 0.08 270);
-  --cyan-accent: oklch(0.78 0.09 220);
-  --gold: oklch(0.80 0.12 88);
-  --ticker: oklch(0.84 0.15 95);
-  --violet-accent: oklch(0.70 0.13 295);
-  --chart-grid: color-mix(in oklab, var(--border) 50%, transparent);
+  --border: oklch(0.26 0.010 60);
+  --input: oklch(0.22 0.008 60);
+  --ring: oklch(0.78 0.17 58);
+  --bull: oklch(0.76 0.16 145);              /* mit warmem Unterton */
+  --bear: oklch(0.65 0.22 25);
+  --neutral-signal: oklch(0.72 0.04 70);
+  --cyan-accent: oklch(0.78 0.10 200);
+  --gold: oklch(0.82 0.15 85);               /* #f59e0b */
+  --ticker: oklch(0.85 0.16 75);
+  --violet-accent: oklch(0.68 0.12 30);      /* warmer copper, kein lila */
+  --chart-grid: color-mix(in oklab, var(--border) 55%, transparent);
   --chart-axis: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 96%, transparent);
-  --chart-1: oklch(0.84 0.17 158);
-  --chart-2: oklch(0.80 0.12 88);
-  --chart-3: oklch(0.70 0.13 295);
-  --chart-4: oklch(0.78 0.09 220);
-  --chart-5: oklch(0.62 0.06 245);
-  --sidebar: oklch(0.07 0.008 250);
-  --sidebar-foreground: oklch(0.92 0.004 250);
-  --sidebar-primary: oklch(0.84 0.17 158);
-  --sidebar-primary-foreground: oklch(0.10 0.01 250);
-  --sidebar-accent: oklch(0.14 0.009 250);
-  --sidebar-accent-foreground: oklch(0.97 0.004 250);
-  --sidebar-border: oklch(0.22 0.008 250);
-  --sidebar-ring: oklch(0.84 0.17 158);
+  --chart-1: oklch(0.78 0.17 58);
+  --chart-2: oklch(0.82 0.15 85);
+  --chart-3: oklch(0.76 0.16 145);
+  --chart-4: oklch(0.78 0.10 200);
+  --chart-5: oklch(0.65 0.22 25);
+  --sidebar: oklch(0.10 0.005 60);
+  --sidebar-foreground: oklch(0.93 0.012 80);
+  --sidebar-primary: oklch(0.78 0.17 58);
+  --sidebar-primary-foreground: oklch(0.14 0.01 60);
+  --sidebar-accent: oklch(0.17 0.006 60);
+  --sidebar-accent-foreground: oklch(0.97 0.012 80);
+  --sidebar-border: oklch(0.24 0.008 60);
+  --sidebar-ring: oklch(0.78 0.17 58);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
+/* === LIGHT: Nordic Mist ===
+   Kühles Blaugrau mit tiefem Marine-Primary und sanftem Sage-Akzent.
+   Klar, ruhig, skandinavisch. */
 .light {
-  --background: oklch(0.985 0.003 240);
-  --foreground: oklch(0.20 0.02 250);
+  --background: oklch(0.975 0.008 230);      /* #f0f4f8 */
+  --foreground: oklch(0.24 0.03 245);        /* #1e3a5f deep navy */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.20 0.02 250);
+  --card-foreground: oklch(0.24 0.03 245);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.20 0.02 250);
-  --primary: oklch(0.50 0.16 240);
-  --primary-foreground: oklch(0.99 0.003 240);
-  --secondary: oklch(0.96 0.008 240);
-  --secondary-foreground: oklch(0.20 0.02 250);
-  --muted: oklch(0.96 0.008 240);
-  --muted-foreground: oklch(0.45 0.018 250);
-  --accent: oklch(0.93 0.025 215);
-  --accent-foreground: oklch(0.20 0.02 250);
-  --border: oklch(0.91 0.008 240);
-  --input: oklch(0.94 0.008 240);
-  --ring: oklch(0.50 0.16 240);
-  --bull: oklch(0.52 0.16 152);
-  --bear: oklch(0.54 0.20 28);
-  --neutral-signal: oklch(0.55 0.015 245);
-  --cyan-accent: oklch(0.55 0.12 210);
-  --gold: oklch(0.65 0.13 85);
-  --ticker: oklch(0.58 0.16 95);
-  --violet-accent: oklch(0.52 0.17 295);
+  --popover-foreground: oklch(0.24 0.03 245);
+  --primary: oklch(0.34 0.07 245);           /* deep marine */
+  --primary-foreground: oklch(0.98 0.005 230);
+  --secondary: oklch(0.93 0.015 230);
+  --secondary-foreground: oklch(0.24 0.03 245);
+  --muted: oklch(0.91 0.012 230);            /* #cbd5e1 */
+  --muted-foreground: oklch(0.45 0.025 240);
+  --accent: oklch(0.82 0.06 155);            /* sage #84a98c */
+  --accent-foreground: oklch(0.22 0.03 245);
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.86 0.014 230);
+  --input: oklch(0.93 0.012 230);
+  --ring: oklch(0.34 0.07 245);
+  --bull: oklch(0.55 0.10 155);              /* sage-aligned green */
+  --bear: oklch(0.55 0.20 25);
+  --neutral-signal: oklch(0.55 0.02 240);
+  --cyan-accent: oklch(0.55 0.12 220);
+  --gold: oklch(0.70 0.13 80);
+  --ticker: oklch(0.50 0.15 245);
+  --violet-accent: oklch(0.55 0.08 200);
   --chart-grid: color-mix(in oklab, var(--border) 80%, transparent);
   --chart-axis: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 98%, transparent);
-  --chart-1: oklch(0.55 0.13 210);
-  --chart-2: oklch(0.62 0.14 75);
-  --chart-3: oklch(0.52 0.17 295);
-  --chart-4: oklch(0.55 0.12 200);
-  --chart-5: oklch(0.50 0.10 250);
-  --sidebar: oklch(0.97 0.005 240);
-  --sidebar-foreground: oklch(0.18 0.02 250);
-  --sidebar-primary: oklch(0.55 0.18 240);
-  --sidebar-primary-foreground: oklch(0.99 0.003 240);
-  --sidebar-accent: oklch(0.93 0.01 240);
-  --sidebar-accent-foreground: oklch(0.18 0.02 250);
-  --sidebar-border: oklch(0.90 0.01 240);
+  --chart-1: oklch(0.34 0.07 245);
+  --chart-2: oklch(0.55 0.10 155);
+  --chart-3: oklch(0.55 0.12 220);
+  --chart-4: oklch(0.65 0.10 200);
+  --chart-5: oklch(0.50 0.06 245);
+  --sidebar: oklch(0.96 0.010 230);
+  --sidebar-foreground: oklch(0.24 0.03 245);
+  --sidebar-primary: oklch(0.34 0.07 245);
+  --sidebar-primary-foreground: oklch(0.98 0.005 230);
+  --sidebar-accent: oklch(0.91 0.014 230);
+  --sidebar-accent-foreground: oklch(0.24 0.03 245);
+  --sidebar-border: oklch(0.86 0.014 230);
 }
 
 @layer base {
@@ -163,16 +165,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Sanfter Übergang beim automatischen Theme-Wechsel zum Sonnenuntergang */
+    transition: background-color 0.6s ease, color 0.6s ease;
   }
-  /* Ambient app-wide backdrop — very subtle, adds depth without distraction */
   body::before {
     content: "";
     position: fixed; inset: 0;
     pointer-events: none;
     z-index: 0;
     background-image:
-      radial-gradient(ellipse 70% 50% at 15% 0%, color-mix(in oklab, var(--primary) 5%, transparent) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 45% at 85% 100%, color-mix(in oklab, var(--violet-accent) 4%, transparent) 0%, transparent 65%);
+      radial-gradient(ellipse 70% 50% at 15% 0%, color-mix(in oklab, var(--primary) 7%, transparent) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 45% at 85% 100%, color-mix(in oklab, var(--gold) 5%, transparent) 0%, transparent 65%);
   }
   h1, h2, h3, h4, h5, h6, .font-display {
     font-family: var(--font-display);
@@ -183,7 +186,6 @@
     font-family: var(--font-mono);
     font-feature-settings: "tnum" 1, "zero" 1, "ss02" 1;
   }
-  /* Calmer section labels */
   .label-eyebrow {
     font-family: var(--font-display);
     font-size: 0.65rem;
@@ -192,18 +194,15 @@
     text-transform: uppercase;
     color: color-mix(in oklab, var(--muted-foreground) 90%, transparent);
   }
-  /* Selection — uses brand mint at low opacity */
   ::selection {
     background: color-mix(in oklab, var(--primary) 30%, transparent);
     color: var(--foreground);
   }
-  /* Focus ring — visible but elegant */
   :focus-visible {
     outline: 2px solid color-mix(in oklab, var(--primary) 70%, transparent);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
-  /* Scrollbars — slim, themed, fade in on hover */
   * { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--border) 80%, transparent) transparent; }
   *::-webkit-scrollbar { width: 8px; height: 8px; }
   *::-webkit-scrollbar-track { background: transparent; }
@@ -224,7 +223,6 @@
 .flash-up { animation: flash-up 700ms ease-out; }
 .flash-down { animation: flash-down 700ms ease-out; }
 
-/* === Visual upgrades === */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -246,22 +244,19 @@
 .animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
 
 .text-gradient-primary {
-  background-image: linear-gradient(135deg, var(--primary) 0%, var(--cyan-accent) 60%, color-mix(in oklab, var(--primary) 60%, white) 100%);
+  background-image: linear-gradient(135deg, var(--primary) 0%, var(--gold) 60%, color-mix(in oklab, var(--primary) 60%, white) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Ambient mesh — softer, deeper, multi-layer for cinematic depth.
-   Research: subtle radial gradients add perceived "atmosphere" which
-   increases dwell time without competing with content. */
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 55% 40% at 10% -5%, color-mix(in oklab, var(--primary) 9%, transparent) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 38% at 92% 5%, color-mix(in oklab, var(--cyan-accent) 6%, transparent) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 42% at 50% 105%, color-mix(in oklab, var(--violet-accent) 5%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 90% 60% at 50% 50%, transparent 40%, color-mix(in oklab, black 25%, transparent) 100%);
+    radial-gradient(ellipse 55% 40% at 10% -5%, color-mix(in oklab, var(--primary) 11%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 38% at 92% 5%, color-mix(in oklab, var(--gold) 8%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 42% at 50% 105%, color-mix(in oklab, var(--accent) 6%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 60% at 50% 50%, transparent 40%, color-mix(in oklab, black 22%, transparent) 100%);
 }
 
 .bg-grid {
@@ -290,7 +285,7 @@
   pointer-events: none;
 }
 .card-glow:hover::before { opacity: 1; }
-.card-glow:hover { transform: translateY(-1px); box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 22%, transparent); border-color: color-mix(in oklab, var(--primary) 35%, var(--border)); }
+.card-glow:hover { transform: translateY(-1px); box-shadow: 0 10px 30px -14px color-mix(in oklab, var(--primary) 28%, transparent); border-color: color-mix(in oklab, var(--primary) 38%, var(--border)); }
 
 .shimmer-text {
   background: linear-gradient(90deg, var(--muted-foreground) 20%, var(--foreground) 50%, var(--muted-foreground) 80%);
@@ -305,27 +300,24 @@
 .tick-glow-bear { box-shadow: 0 0 12px color-mix(in oklab, var(--bear) 50%, transparent); }
 
 
-/* Trading-themed accents */
 .text-gold { color: var(--gold); }
 .text-ticker { color: var(--ticker); }
 .text-violet-accent { color: var(--violet-accent); }
 .text-gradient-gold {
-  background-image: linear-gradient(135deg, var(--gold) 0%, var(--ticker) 50%, color-mix(in oklab, var(--gold) 70%, white) 100%);
+  background-image: linear-gradient(135deg, var(--gold) 0%, var(--primary) 50%, color-mix(in oklab, var(--gold) 70%, white) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .text-gradient-bull {
-  background-image: linear-gradient(135deg, var(--bull) 0%, var(--cyan-accent) 100%);
+  background-image: linear-gradient(135deg, var(--bull) 0%, var(--gold) 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 
-/* Ticker tape scroll */
 @keyframes ticker-scroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 .animate-ticker { animation: ticker-scroll 60s linear infinite; }
 
-/* Heatmap cells */
 .heat-cell {
   position: relative;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -339,7 +331,6 @@
   pointer-events: none;
 }
 
-/* === Institutional Bento System === */
 .surface {
   background: linear-gradient(180deg, color-mix(in oklab, var(--card) 96%, transparent), var(--card));
   border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
