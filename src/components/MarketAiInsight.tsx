@@ -26,7 +26,7 @@ export function MarketAiInsight({ rows }: { rows: CockpitRow[] }) {
             {lang === "en" ? "Aggregated from your watchlist · not investment advice" : "Aggregiert aus deiner Watchlist · keine Anlageempfehlung"}
           </div>
         </div>
-        <RegimeChip regime={insight.regime} />
+        <RegimeChip regime={insight.regime} lang={lang} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3 mb-3">
@@ -66,12 +66,12 @@ function Stat({ label, value, total, tone }: { label: string; value: number; tot
   );
 }
 
-function RegimeChip({ regime }: { regime: "bullish" | "bearish" | "mixed" | "quiet" }) {
+function RegimeChip({ regime, lang }: { regime: "bullish" | "bearish" | "mixed" | "quiet"; lang: "de" | "en" }) {
   const cfg = {
     bullish: { icon: <TrendingUp className="h-3 w-3" />, label: "Risk-On", style: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
     bearish: { icon: <TrendingDown className="h-3 w-3" />, label: "Risk-Off", style: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
-    mixed: { icon: <Minus className="h-3 w-3" />, label: "Mixed", style: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-    quiet: { icon: <Minus className="h-3 w-3" />, label: "Quiet", style: "bg-muted/40 text-muted-foreground border-border" },
+    mixed: { icon: <Minus className="h-3 w-3" />, label: lang === "en" ? "Mixed" : "Gemischt", style: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+    quiet: { icon: <Minus className="h-3 w-3" />, label: lang === "en" ? "Quiet" : "Ruhig", style: "bg-muted/40 text-muted-foreground border-border" },
   }[regime];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cfg.style}`}>
