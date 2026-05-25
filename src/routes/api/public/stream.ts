@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/public/stream")({
 
             // Cleanup, wenn Client trennt
             request.signal.addEventListener("abort", () => {
-              clearInterval(interval);
+              if (cancelTimer) clearTimeout(cancelTimer);
               clearTimeout(maxTimer);
               closed = true;
               try { controller.close(); } catch { /* noop */ }
