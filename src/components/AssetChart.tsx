@@ -303,12 +303,12 @@ export const AssetChart = memo(function AssetChart({
 
 /* --- Timeframe bar --- */
 const TimeframeBar = memo(function TimeframeBar({
-  value, onChange, loading,
-}: { value: Timeframe; onChange: (v: Timeframe) => void; loading: boolean }) {
+  value, onChange, loading, lang,
+}: { value: Timeframe; onChange: (v: Timeframe) => void; loading: boolean; lang: "de" | "en" }) {
   return (
     <div
       role="tablist"
-      aria-label="Zeitraum"
+      aria-label={lang === "en" ? "Time range" : "Zeitraum"}
       className="inline-flex items-center gap-0.5 rounded-lg border border-border/60 bg-card/60 p-0.5 backdrop-blur"
     >
       {TIMEFRAMES.map((t) => {
@@ -339,34 +339,37 @@ const TimeframeBar = memo(function TimeframeBar({
 
 /* --- Tooltip --- */
 function HoverTooltip({
-  hover, base, currency, tf,
+  hover, base, currency, tf, lang,
 }: {
   hover: { time: number; close: number; volume: number };
   base: number;
   currency: string;
   tf: Timeframe;
+  lang: "de" | "en";
 }) {
   const pct = pctChange(base, hover.close);
   const abs = absChange(base, hover.close);
   const up = pct >= 0;
+  const displayClose = convertFromUsd(hover.close, currency);
+  const displayAbs = convertFromUsd(abs, currency);
   const d = new Date(hover.time * 1000);
   const dateStr =
     tf === "1D" || tf === "1W" || tf === "1M"
-      ? d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
-      : d.toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" });
+      ? d.toLocaleString(lang === "en" ? "en-US" : "de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
+      : d.toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
     <>
       <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
       <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
-        {formatPrice(hover.close, currency)}
+        {formatCurrencyFromUsd(hover.close, currency)}
       </div>
       <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
-        <span>{formatSignedAbs(abs, axisDecimals(hover.close))}</span>
+        <span>{formatSignedAbs(displayAbs, axisDecimals(displayClose))}</span>
         <span>·</span>
         <span>{formatPercent(pct)}</span>
       </div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">seit Periodenstart</div>
+      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "since period start" : "seit Periodenstart"}</div>
       {hover.volume > 0 && (
         <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
           <span className="uppercase tracking-wider">Vol</span>
