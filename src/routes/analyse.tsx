@@ -443,6 +443,16 @@ function AnalysePage() {
     { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX*, oder *Soll ich Tesla kaufen*." },
   ];
   const [messages, setMessages] = useState(initial);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastUserCountRef = useRef(0);
+  useEffect(() => {
+    const userCount = messages.filter((m) => m.role === "user").length;
+    if (userCount > lastUserCountRef.current) {
+      const el = scrollRef.current;
+      if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    }
+    lastUserCountRef.current = userCount;
+  }, [messages]);
   const [conversations, setConversations] = useState<AnalyseConv[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
