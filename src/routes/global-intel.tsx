@@ -826,17 +826,15 @@ function StatusPill({
 }) {
   const t = PILL_TONE[tone];
   return (
-    <div className={`flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] ${t.bg} px-3.5 py-2.5 ring-1 ${t.ring} backdrop-blur-sm`}>
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/40 ${t.fg}`}>
-        <Icon className="h-3.5 w-3.5" />
-      </div>
-      <div className="min-w-0">
-        <div className="font-mono text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+    <div className="flex min-w-0 items-center gap-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] px-3 py-2.5">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </div>
-        <div className="mt-0.5 flex items-center gap-1.5">
+        <div className="mt-1 flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />
-          <span className={`text-sm font-semibold leading-none ${t.fg}`}>{status}</span>
+          <span className={`text-[13px] font-semibold leading-none ${t.fg}`}>{status}</span>
         </div>
       </div>
     </div>
@@ -859,27 +857,15 @@ function DriverCard({
   const t = PILL_TONE[dirTone];
 
   return (
-    <article className="group flex flex-col rounded-2xl border border-white/[0.09] bg-white/[0.015] p-5 transition hover:border-white/[0.16] hover:bg-white/[0.03]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] text-foreground/80 ring-1 ring-white/[0.08]">
-            <Icon className="h-3.5 w-3.5" />
-          </div>
-          <div className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {label}
-          </div>
+    <article className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.01] px-4 py-3 transition hover:border-white/[0.12]">
+      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
         </div>
-        <div className={`flex h-7 w-7 items-center justify-center rounded-full ${t.bg} ${t.fg} ring-1 ${t.ring}`}>
-          <Arrow className="h-3.5 w-3.5" />
-        </div>
+        <div className={`mt-1 text-[15px] font-semibold leading-none ${t.fg}`}>{status}</div>
       </div>
-
-      <div className="mt-5 flex items-baseline gap-2">
-        <span className={`text-2xl font-bold leading-none ${t.fg}`}>{status}</span>
-      </div>
-      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary/80">
-        Tap to see today's reasoning →
-      </div>
+      <Arrow className={`h-4 w-4 shrink-0 ${t.fg}`} />
     </article>
   );
 }
@@ -897,15 +883,15 @@ function ContextAccordion({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.015]">
+    <div className="overflow-hidden border-b border-white/[0.06] last:border-b-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.02]"
+        className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:text-primary"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2.5">
-          <Icon className="h-3.5 w-3.5 text-foreground/70" />
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-[13px] font-medium text-foreground/90">{title}</span>
         </div>
         <ChevronDown
@@ -913,7 +899,7 @@ function ContextAccordion({
         />
       </button>
       {open && (
-        <div className="border-t border-white/[0.06] px-4 py-4 text-[13px] leading-relaxed text-foreground/80">
+        <div className="pb-4 pl-6 pr-2 text-[13px] leading-relaxed text-foreground/75">
           {children}
         </div>
       )}
