@@ -55,7 +55,7 @@ function CalendarPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Calendar className="h-3 w-3 text-primary" /> Macro Calendar
+          <Calendar className="h-3 w-3 text-primary" /> {t("calendar.badge")}
         </div>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
           {t("page.calendar.title")}
@@ -68,7 +68,7 @@ function CalendarPage() {
           {(["all", "high", "medium", "low"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition ${filter === f ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-              {f === "all" ? "Alle" : f === "high" ? "Hoch" : f === "medium" ? "Mittel" : "Niedrig"}
+              {f === "all" ? t("calendar.filter.all") : f === "high" ? t("calendar.filter.high") : f === "medium" ? t("calendar.filter.medium") : t("calendar.filter.low")}
             </button>
           ))}
         </div>
@@ -76,22 +76,22 @@ function CalendarPage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="card-glow rounded-xl p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Heute (Hoch-Impact)</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("calendar.todayHigh")}</div>
           <div className="mt-1 font-mono text-2xl font-bold text-bear">{highToday}</div>
         </div>
         <div className="card-glow rounded-xl p-4 md:col-span-2">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Nächstes Event</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("calendar.nextEvent")}</div>
           {next ? (
             <div className="mt-1 flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold">{next.title}</div>
-                <div className="text-[11px] text-muted-foreground">{fmtDate(next.date)} · {COUNTRY_FLAG[next.country]} {next.country}</div>
+                <div className="text-[11px] text-muted-foreground">{fmtDate(next.date, lang)} · {COUNTRY_FLAG[next.country]} {next.country}</div>
               </div>
               <span className="font-mono text-sm font-bold text-primary animate-pulse-glow rounded-md bg-primary/10 px-2 py-1">
                 {timeUntil(next.date, now).label}
               </span>
             </div>
-          ) : <div className="mt-1 text-sm text-muted-foreground">Keine Events.</div>}
+          ) : <div className="mt-1 text-sm text-muted-foreground">{t("calendar.noEvents")}</div>}
         </div>
       </div>
 
@@ -109,7 +109,7 @@ function CalendarPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     <span className="text-base leading-none">{COUNTRY_FLAG[e.country]}</span>
-                    <span className="font-mono">{fmtDate(e.date)}</span>
+                    <span className="font-mono">{fmtDate(e.date, lang)}</span>
                     <span>·</span>
                     <span>{e.category}</span>
                     <span className={`ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase ring-1 ${IMPACT_STYLE[e.impact]}`}>
