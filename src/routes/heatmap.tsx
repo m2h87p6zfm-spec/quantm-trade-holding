@@ -215,10 +215,11 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
 }
 
 function Legend({ topDown }: { topDown?: Cell }) {
+  const t = useT();
   return (
     <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-        <span>Stärker fallend</span>
+        <span>{t("heatmap.strongerDown")}</span>
         <div className="flex h-3 w-40 rounded-full overflow-hidden ring-1 ring-border">
           <div className="flex-1" style={{ background: "color-mix(in oklab, var(--bear) 70%, transparent)" }} />
           <div className="flex-1" style={{ background: "color-mix(in oklab, var(--bear) 35%, transparent)" }} />
@@ -226,11 +227,11 @@ function Legend({ topDown }: { topDown?: Cell }) {
           <div className="flex-1" style={{ background: "color-mix(in oklab, var(--bull) 35%, transparent)" }} />
           <div className="flex-1" style={{ background: "color-mix(in oklab, var(--bull) 70%, transparent)" }} />
         </div>
-        <span>Stärker steigend</span>
+        <span>{t("heatmap.strongerUp")}</span>
       </div>
       {topDown && (
         <div className="text-[11px] text-muted-foreground">
-          Schwächstes Symbol: <span className="font-mono text-bear">{topDown.p.symbol} {(topDown.pct ?? 0).toFixed(2)}%</span>
+          {t("heatmap.weakest")} <span className="font-mono text-bear">{topDown.p.symbol} {(topDown.pct ?? 0).toFixed(2)}%</span>
         </div>
       )}
     </div>
