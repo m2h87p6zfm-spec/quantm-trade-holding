@@ -289,7 +289,8 @@ export function ApexDashboard({
   const probs = decision.decision === "BUY" ? [50, 35, 15] : decision.decision === "SELL" ? [15, 35, 50] : [25, 50, 25];
 
   return (
-    <div className="space-y-4 [&_>_div]:break-inside-avoid">
+    <div className="space-y-4">
+
 
       {/* APEX VERDICT */}
       <div className={`rounded-2xl border-2 p-5 shadow-md ${verdictColor.bg}`}>
