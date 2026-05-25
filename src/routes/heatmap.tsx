@@ -135,7 +135,7 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
       {!embedded && (
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Flame className="h-3 w-3 text-bear" /> Marktpuls
+          <Flame className="h-3 w-3 text-bear" /> {t("heatmap.badge")}
         </div>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
           {t("page.heatmap.title")}
@@ -151,29 +151,29 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
           {(["D", "W", "M"] as const).map((r) => (
             <button key={r} onClick={() => setRange(r)}
               className={`rounded-md px-3 py-1 text-xs font-medium transition ${range === r ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-              {r === "D" ? "1 Tag" : r === "W" ? "1 Woche" : "1 Monat"}
+              {r === "D" ? t("heatmap.range.day") : r === "W" ? t("heatmap.range.week") : t("heatmap.range.month")}
             </button>
           ))}
         </div>
         <div className="inline-flex rounded-lg border border-border bg-card p-1">
           <button onClick={() => setMode("sector")}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "sector" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-            <Boxes className="h-3 w-3" /> Sektoren
+            <Boxes className="h-3 w-3" /> {t("heatmap.mode.sectors")}
           </button>
           <button onClick={() => setMode("grid")}
             className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition ${mode === "grid" ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground hover:text-foreground"}`}>
-            <LayoutGrid className="h-3 w-3" /> Grid
+            <LayoutGrid className="h-3 w-3" /> {t("heatmap.mode.grid")}
           </button>
         </div>
       </div>
 
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Steigend" value={rising.toString()} hint={`von ${loaded.length}`} icon={<TrendingUp className="h-4 w-4" />} tint="bull" />
-        <StatCard label="Fallend"  value={falling.toString()} hint={`von ${loaded.length}`} icon={<TrendingDown className="h-4 w-4" />} tint="bear" />
-        <StatCard label="Ø Bewegung" value={`${avg >= 0 ? "+" : ""}${avg.toFixed(2)}%`} hint="Marktbreite" icon={<Activity className="h-4 w-4" />} tint={avg >= 0 ? "bull" : "bear"} />
+        <StatCard label={t("heatmap.rising")} value={rising.toString()} hint={t("heatmap.of", { n: loaded.length })} icon={<TrendingUp className="h-4 w-4" />} tint="bull" />
+        <StatCard label={t("heatmap.falling")}  value={falling.toString()} hint={t("heatmap.of", { n: loaded.length })} icon={<TrendingDown className="h-4 w-4" />} tint="bear" />
+        <StatCard label={t("heatmap.avgMove")} value={`${avg >= 0 ? "+" : ""}${avg.toFixed(2)}%`} hint={t("heatmap.breadth")} icon={<Activity className="h-4 w-4" />} tint={avg >= 0 ? "bull" : "bear"} />
         <StatCard
-          label="Top Mover"
+          label={t("heatmap.topMover")}
           value={topUp ? `${topUp.p.symbol}` : "—"}
           hint={topUp ? `+${(topUp.pct ?? 0).toFixed(2)}%` : ""}
           icon={<Zap className="h-4 w-4" />}
@@ -196,7 +196,7 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full" style={{ backgroundColor: avgPct >= 0 ? "var(--bull)" : "var(--bear)", boxShadow: `0 0 12px color-mix(in oklab, ${avgPct >= 0 ? "var(--bull)" : "var(--bear)"} 60%, transparent)` }} />
                   <h2 className="text-sm font-semibold uppercase tracking-wider">{sector}</h2>
-                  <span className="text-[11px] text-muted-foreground">{list.length} Werte</span>
+                  <span className="text-[11px] text-muted-foreground">{list.length} {t("common.values")}</span>
                 </div>
                 <span className={`font-mono text-sm font-bold ${avgPct >= 0 ? "text-bull" : "text-bear"}`}>
                   {avgPct >= 0 ? "+" : ""}{avgPct.toFixed(2)}% Ø
