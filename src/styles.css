@@ -57,36 +57,36 @@
 }
 
 /* === DARK: Trading Floor ===
-   Tiefes Anthrazit mit warmen Ember-/Gold-Akzenten — Bloomberg-inspiriert,
-   ohne kalte Greys. Primary = amber ember, secondary accent = warmes Gold. */
+   Tiefes Mitternachts-Indigo statt Schwarz, warmes Champagner-Foreground
+   statt reinem Weiß. Primary = Ember-Orange, Akzent = warmes Gold. */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.13 0.005 60);
-  --foreground: oklch(0.96 0.012 80);
-  --card: oklch(0.165 0.006 60);
-  --card-foreground: oklch(0.96 0.012 80);
-  --popover: oklch(0.18 0.007 60);
-  --popover-foreground: oklch(0.96 0.012 80);
-  --primary: oklch(0.78 0.17 58);            /* ember orange #fb923c */
-  --primary-foreground: oklch(0.14 0.01 60);
-  --secondary: oklch(0.22 0.008 60);
-  --secondary-foreground: oklch(0.96 0.012 80);
-  --muted: oklch(0.20 0.007 60);
-  --muted-foreground: oklch(0.70 0.015 70);
-  --accent: oklch(0.24 0.020 70);
-  --accent-foreground: oklch(0.97 0.012 80);
+  --background: oklch(0.16 0.025 265);       /* deep indigo midnight */
+  --foreground: oklch(0.94 0.025 80);        /* warm champagne */
+  --card: oklch(0.20 0.028 265);
+  --card-foreground: oklch(0.94 0.025 80);
+  --popover: oklch(0.22 0.030 265);
+  --popover-foreground: oklch(0.94 0.025 80);
+  --primary: oklch(0.78 0.17 58);            /* ember orange */
+  --primary-foreground: oklch(0.18 0.025 265);
+  --secondary: oklch(0.26 0.030 265);
+  --secondary-foreground: oklch(0.94 0.025 80);
+  --muted: oklch(0.24 0.028 265);
+  --muted-foreground: oklch(0.72 0.030 80);
+  --accent: oklch(0.28 0.040 60);
+  --accent-foreground: oklch(0.95 0.025 80);
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.26 0.010 60);
-  --input: oklch(0.22 0.008 60);
+  --border: oklch(0.30 0.030 265);
+  --input: oklch(0.26 0.030 265);
   --ring: oklch(0.78 0.17 58);
-  --bull: oklch(0.76 0.16 145);              /* mit warmem Unterton */
+  --bull: oklch(0.76 0.16 145);
   --bear: oklch(0.65 0.22 25);
   --neutral-signal: oklch(0.72 0.04 70);
   --cyan-accent: oklch(0.78 0.10 200);
-  --gold: oklch(0.82 0.15 85);               /* #f59e0b */
+  --gold: oklch(0.82 0.15 85);
   --ticker: oklch(0.85 0.16 75);
-  --violet-accent: oklch(0.68 0.12 30);      /* warmer copper, kein lila */
+  --violet-accent: oklch(0.68 0.12 30);
   --chart-grid: color-mix(in oklab, var(--border) 55%, transparent);
   --chart-axis: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 96%, transparent);
@@ -95,13 +95,13 @@
   --chart-3: oklch(0.76 0.16 145);
   --chart-4: oklch(0.78 0.10 200);
   --chart-5: oklch(0.65 0.22 25);
-  --sidebar: oklch(0.10 0.005 60);
-  --sidebar-foreground: oklch(0.93 0.012 80);
+  --sidebar: oklch(0.13 0.030 265);
+  --sidebar-foreground: oklch(0.92 0.025 80);
   --sidebar-primary: oklch(0.78 0.17 58);
-  --sidebar-primary-foreground: oklch(0.14 0.01 60);
-  --sidebar-accent: oklch(0.17 0.006 60);
-  --sidebar-accent-foreground: oklch(0.97 0.012 80);
-  --sidebar-border: oklch(0.24 0.008 60);
+  --sidebar-primary-foreground: oklch(0.18 0.025 265);
+  --sidebar-accent: oklch(0.21 0.028 265);
+  --sidebar-accent-foreground: oklch(0.95 0.025 80);
+  --sidebar-border: oklch(0.28 0.030 265);
   --sidebar-ring: oklch(0.78 0.17 58);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
@@ -109,13 +109,13 @@
 }
 
 /* === LIGHT: Nordic Mist ===
-   Kühles Blaugrau mit tiefem Marine-Primary und sanftem Sage-Akzent.
-   Klar, ruhig, skandinavisch. */
+   Warmes Pergament-Sand statt Weiß, tiefes Teal-Navy statt Schwarz.
+   Klar, ruhig, mit deutlich farbigem Charakter. */
 .light {
-  --background: oklch(0.975 0.008 230);      /* #f0f4f8 */
-  --foreground: oklch(0.24 0.03 245);        /* #1e3a5f deep navy */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.03 245);
+  --background: oklch(0.95 0.025 85);        /* warm sand / parchment */
+  --foreground: oklch(0.28 0.05 220);        /* deep teal-navy */
+  --card: oklch(0.97 0.020 85);
+  --card-foreground: oklch(0.28 0.05 220);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.24 0.03 245);
   --primary: oklch(0.34 0.07 245);           /* deep marine */
