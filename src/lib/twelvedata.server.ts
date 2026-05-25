@@ -2,6 +2,14 @@
 // Wird von /api/public/quote, /api/public/candles und /api/public/search genutzt.
 // Hält dieselbe Response-Shape wie der frühere Yahoo-Proxy, damit das Frontend
 // (src/lib/finnhub.ts, useMarketData, TickerBand) ohne Änderung weiterläuft.
+//
+// Cache-Schichten:
+//   1. In-Memory pro Isolate (< 1 ms, kurze TTL)
+//   2. Supabase market_cache (geteilt zwischen ALLEN Isolates, ~50 ms)
+//   3. Twelve Data API (kostet Credits)
+// Erst wenn beide Cache-Schichten miss sind, geht ein Request raus.
+
+import { sharedGet, sharedSet } from "@/lib/shared-cache.server";
 
 const BASE = "https://api.twelvedata.com";
 
