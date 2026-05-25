@@ -694,7 +694,7 @@ function AnalysePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-background/40 to-transparent" aria-hidden />
         <div className="h-full space-y-4 overflow-y-auto p-5">
           {messages.map((m, i) => {
-            const prevUser = m.role === "agent" ? [...messages.slice(0, i)].reverse().find((x) => x.role === "user")?.text ?? "" : "";
+            const prevUser = m.role === "agent" ? ([...messages.slice(0, i)].reverse().find((x) => x.role === "user")?.text ?? "") : "";
             return (
             <div key={i} className={`flex items-start gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               {m.role === "agent" && (
