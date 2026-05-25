@@ -300,23 +300,26 @@ function ProductDetail() {
                 <Row k="Beta vs. SPY" v={indicators.beta.toFixed(2)} explain="Beta" ctx={`Beta ${indicators.beta.toFixed(2)} gegen S&P 500.`} />
                 <Row k="SMA 20 / 50 / 200" v={`${formatCurrencyFromUsd(indicators.sma20, settings.currency)} / ${isNaN(indicators.sma50) ? "—" : formatCurrencyFromUsd(indicators.sma50, settings.currency)} / ${isNaN(indicators.sma200) ? "—" : formatCurrencyFromUsd(indicators.sma200, settings.currency)}`} explain="SMA & EMA (Gleitende Durchschnitte)" ctx={`SMA20 ${formatCurrencyFromUsd(indicators.sma20, settings.currency)}, SMA50 ${formatCurrencyFromUsd(indicators.sma50, settings.currency)}, SMA200 ${formatCurrencyFromUsd(indicators.sma200, settings.currency)}.`} />
               </div>
+
+              {candles.data && candles.data.c.length >= 30 && (
+                <div className="mt-5">
+                  <QuantFinancePanel
+                    symbol={symbol}
+                    candleObjs={candles.data.t.map((t, i) => ({
+                      t,
+                      o: candles.data!.o[i],
+                      h: candles.data!.h[i],
+                      l: candles.data!.l[i],
+                      c: candles.data!.c[i],
+                      v: candles.data!.v[i],
+                    }))}
+                    price={indicators.price}
+                  />
+                </div>
+              )}
             </section>
           )}
 
-          {indicators && candles.data && candles.data.c.length >= 30 && (
-            <QuantFinancePanel
-              symbol={symbol}
-              candleObjs={candles.data.t.map((t, i) => ({
-                t,
-                o: candles.data!.o[i],
-                h: candles.data!.h[i],
-                l: candles.data!.l[i],
-                c: candles.data!.c[i],
-                v: candles.data!.v[i],
-              }))}
-              price={indicators.price}
-            />
-          )}
         </>
       )}
     </div>
