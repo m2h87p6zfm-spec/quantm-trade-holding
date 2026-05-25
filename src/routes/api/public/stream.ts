@@ -1,9 +1,9 @@
-// Server-Sent Events Stream — pusht Quote-Updates alle 3 Sekunden.
-// Eine einzige TD-Batch-Anfrage pro Tick versorgt beliebig viele Symbole.
-// Robuste Alternative zur WebSocket-Bridge auf Cloudflare Workers (kein DO nötig).
+// Server-Sent Events Stream — pusht Quote-Updates an Premium-Nutzer.
+// Pro/Elite-User: 2 s während US-Markt offen, sonst 5 min.
+// Free-User: 402 Payment Required → Client fällt auf Polling zurück.
 import { createFileRoute } from "@tanstack/react-router";
 import { getQuotesBatch } from "@/lib/twelvedata.server";
-import { requireUserId } from "@/lib/api-auth.server";
+import { requirePro } from "@/lib/api-auth.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -11,21 +11,17 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 } as const;
 
-// Adaptive Tick-Frequenz:
-//   - US-Markt offen → 10 s (Live-Feel)
+// Adaptive Tick-Frequenz (Premium):
+//   - US-Markt offen → 2 s (echtes Live-Feel ohne TD-WebSocket-Credits)
 //   - Sonst (Nachts/Wochenende) → 5 min (Kurse bewegen sich kaum)
-// Spart außerhalb der Handelszeit ~97 % der TD-Credits.
-const TICK_FAST_MS = 10_000;
+const TICK_FAST_MS = 2_000;
 const TICK_SLOW_MS = 300_000;
 
 function isUsMarketOpen(): boolean {
   const now = new Date();
-  const day = now.getUTCDay(); // 0 = So, 6 = Sa
+  const day = now.getUTCDay();
   if (day === 0 || day === 6) return false;
   const minutes = now.getUTCHours() * 60 + now.getUTCMinutes();
-  // 13:30 UTC = 9:30 ET (EST), 20:00 UTC = 16:00 ET
-  // Bei Sommerzeit (EDT) verschiebt sich das um 1h; wir nehmen die weitere
-  // Fenster-Definition, um auch EDT abzudecken: 12:30–21:00 UTC.
   return minutes >= 12 * 60 + 30 && minutes <= 21 * 60;
 }
 
