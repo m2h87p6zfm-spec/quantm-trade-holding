@@ -2,6 +2,20 @@ import { useEffect, useRef } from "react";
 import type { IChartApi, ISeriesApi, UTCTimestamp } from "lightweight-charts";
 import { resolveChartColor } from "@/lib/chartColors";
 
+function fillTimeScale(chart: IChartApi, width: number, points: number) {
+  const safePoints = Math.max(points, 2);
+  const barSpacing = Math.max(1, width / safePoints);
+  chart.timeScale().applyOptions({
+    rightOffset: 0,
+    minBarSpacing: 0.5,
+    barSpacing,
+    fixLeftEdge: true,
+    fixRightEdge: true,
+    lockVisibleTimeRangeOnResize: true,
+  });
+  chart.timeScale().fitContent();
+}
+
 /**
  * Tiny dependency-free sparkline backed by lightweight-charts.
  * Library is dynamically imported on the client to keep SSR safe.
@@ -48,7 +62,7 @@ export function MiniSpark({
         },
         grid: { vertLines: { visible: false }, horzLines: { visible: false } },
         rightPriceScale: { visible: false, borderVisible: false },
-        timeScale: { visible: false, borderVisible: false, rightOffset: 0, barSpacing: 1, fixLeftEdge: true, fixRightEdge: true, lockVisibleTimeRangeOnResize: true },
+        timeScale: { visible: false, borderVisible: false },
         crosshair: { vertLine: { visible: false }, horzLine: { visible: false } },
         handleScroll: false,
         handleScale: false,
@@ -68,13 +82,13 @@ export function MiniSpark({
           value: v,
         })),
       );
-      chart.timeScale().fitContent();
+      fillTimeScale(chart, el.clientWidth || 100, dataRef.current.length);
 
       ro = new ResizeObserver((entries) => {
         const cr = entries[0]?.contentRect;
         if (cr) {
           chart.resize(Math.max(20, cr.width), Math.max(16, cr.height));
-          chart.timeScale().fitContent();
+          fillTimeScale(chart, Math.max(20, cr.width), dataRef.current.length);
         }
       });
       ro.observe(el);
@@ -105,7 +119,7 @@ export function MiniSpark({
         value: v,
       })),
     );
-    chartRef.current.timeScale().fitContent();
+    fillTimeScale(chartRef.current, ref.current?.clientWidth || 100, data.length);
   }, [data]);
 
   return <div ref={ref} className={className} />;
