@@ -10,7 +10,7 @@ import { whyNow } from "@/lib/analysis";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
-import { useT } from "@/lib/i18n";
+import { useLang, useT, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
@@ -32,8 +32,8 @@ type SignalState = {
   detail: string;
 };
 
-function deriveSignalState(pos: Position, row?: CockpitRow): SignalState {
-  if (!row) return { kind: "loading", label: "lädt…", detail: "" };
+function deriveSignalState(pos: Position, row: CockpitRow | undefined, t: ReturnType<typeof useT>): SignalState {
+  if (!row) return { kind: "loading", label: t("portfolio.loading"), detail: "" };
   const v = row.sig.verdict;
   const trigger = whyNow(row.ind, row.sig);
   if (v === "NEUTRAL") return { kind: "neutral", label: "Neutral", detail: trigger };
@@ -41,12 +41,12 @@ function deriveSignalState(pos: Position, row?: CockpitRow): SignalState {
   if (aligned)
     return {
       kind: "aligned",
-      label: v === "LONG" ? "BUY · aligned" : "SELL · aligned",
+      label: v === "LONG" ? t("portfolio.buyAligned") : t("portfolio.sellAligned"),
       detail: trigger,
     };
   return {
     kind: "conflict",
-    label: v === "SHORT" ? "Signal: SELL" : "Signal: BUY",
+    label: v === "SHORT" ? t("portfolio.signalSell") : t("portfolio.signalBuy"),
     detail: trigger,
   };
 }
@@ -60,12 +60,13 @@ function PositionRow({
   row?: CockpitRow;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   const q = useQuote(pos.symbol, 30_000);
   const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
-  const sig = deriveSignalState(pos, row);
+  const sig = deriveSignalState(pos, row, t);
 
   const sigStyles =
     sig.kind === "conflict"
@@ -134,7 +135,7 @@ function PositionRow({
           <button
             onClick={() => onRemove(pos.id)}
             className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10 transition-colors"
-            aria-label="Löschen"
+            aria-label={t("portfolio.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -153,12 +154,13 @@ function PositionCard({
   row?: CockpitRow;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   const q = useQuote(pos.symbol, 30_000);
   const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
-  const sig = deriveSignalState(pos, row);
+  const sig = deriveSignalState(pos, row, t);
   const sigStyles =
     sig.kind === "conflict"
       ? "bg-bear/15 text-bear border-bear/40"
@@ -196,11 +198,11 @@ function PositionCard({
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
         <div>
-          <div className="text-muted-foreground">Menge</div>
+          <div className="text-muted-foreground">{t("portfolio.qty")}</div>
           <div className="tabular-nums">{pos.qty}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Einstand</div>
+          <div className="text-muted-foreground">{t("portfolio.entry")}</div>
           <div className="tabular-nums">{pos.entry.toFixed(2)}</div>
         </div>
         <div className="text-right">
@@ -230,7 +232,7 @@ function PositionCard({
           <button
             onClick={() => onRemove(pos.id)}
             className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10"
-            aria-label="Löschen"
+            aria-label={t("portfolio.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
