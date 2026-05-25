@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
 import { FEATURE_TIERS, tierAllows, type Feature } from "@/lib/featureGate";
 import { useT } from "@/lib/i18n";
+import { LegalLinks } from "@/components/LegalLinks";
 
 type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: string; feature?: Feature };
 
