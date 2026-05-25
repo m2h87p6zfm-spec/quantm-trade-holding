@@ -3,8 +3,10 @@ import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 function ApexLoadingScreen() {
+  const t = useT();
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
       <div className="text-center">
@@ -12,7 +14,7 @@ function ApexLoadingScreen() {
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
         <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Quantm Trade</p>
-        <p className="mt-1 text-sm text-muted-foreground">Trading-Cockpit wird vorbereitet …</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("common.loadingApp")}</p>
       </div>
     </main>
   );

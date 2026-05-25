@@ -6,12 +6,14 @@ import { createPortalSession } from "@/utils/payments.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 /**
  * Wird angezeigt, wenn Stripe die Zahlung nicht einziehen konnte.
  * Zugriff bleibt während der Stripe-Retry-Periode (typisch 7 Tage) erhalten.
  */
 export function DunningBanner() {
+  const t = useT();
   const { status, tier, loading } = useSubscription();
   const [busy, setBusy] = useState(false);
   const openPortal = useServerFn(createPortalSession);
@@ -26,7 +28,7 @@ export function DunningBanner() {
       });
       window.open(url, "_blank");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Portal konnte nicht geöffnet werden");
+      toast.error(e instanceof Error ? e.message : t("dunning.portalError"));
     } finally {
       setBusy(false);
     }
@@ -36,11 +38,10 @@ export function DunningBanner() {
     <div className="w-full bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-sm text-amber-200 flex flex-wrap items-center justify-center gap-3">
       <AlertTriangle className="h-4 w-4 shrink-0" />
       <span>
-        <strong>Zahlung fehlgeschlagen.</strong> Wir versuchen es automatisch erneut — bitte aktualisiere deine Zahlungsmethode,
-        damit dein Zugriff aktiv bleibt.
+        <strong>{t("dunning.failed")}</strong> {t("dunning.body")}
       </span>
       <Button size="sm" variant="outline" onClick={onFix} disabled={busy} className="h-7 border-amber-500/40 hover:bg-amber-500/15">
-        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : "Karte aktualisieren"}
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : t("dunning.updateCard")}
       </Button>
     </div>
   );

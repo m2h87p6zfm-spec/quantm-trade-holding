@@ -1,13 +1,15 @@
 import { useMemo } from "react";
 import { Brain, Sparkles, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { CockpitRow } from "@/lib/cockpit";
+import { useLang } from "@/lib/i18n";
 
 /**
  * Lightweight, deterministic AI-style market insight panel.
  * Reuses cockpit signal/indicator data — no extra backend calls.
  */
 export function MarketAiInsight({ rows }: { rows: CockpitRow[] }) {
-  const insight = useMemo(() => buildInsight(rows), [rows]);
+  const lang = useLang();
+  const insight = useMemo(() => buildInsight(rows, lang), [rows, lang]);
 
   return (
     <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-primary/[0.07] via-card to-violet-accent/[0.05] p-5">
@@ -17,14 +19,14 @@ export function MarketAiInsight({ rows }: { rows: CockpitRow[] }) {
         </div>
         <div className="flex-1">
           <div className="text-sm font-semibold flex items-center gap-1.5">
-            QUANT-X · Markt-Einschätzung
+            {lang === "en" ? "QUANT-X · Market Assessment" : "QUANT-X · Markt-Einschätzung"}
             <Sparkles className="h-3 w-3 text-gold" />
           </div>
           <div className="text-[10px] text-muted-foreground">
-            Aggregiert aus deiner Watchlist · keine Anlageempfehlung
+            {lang === "en" ? "Aggregated from your watchlist · not investment advice" : "Aggregiert aus deiner Watchlist · keine Anlageempfehlung"}
           </div>
         </div>
-        <RegimeChip regime={insight.regime} />
+        <RegimeChip regime={insight.regime} lang={lang} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3 mb-3">
@@ -64,12 +66,12 @@ function Stat({ label, value, total, tone }: { label: string; value: number; tot
   );
 }
 
-function RegimeChip({ regime }: { regime: "bullish" | "bearish" | "mixed" | "quiet" }) {
+function RegimeChip({ regime, lang }: { regime: "bullish" | "bearish" | "mixed" | "quiet"; lang: "de" | "en" }) {
   const cfg = {
     bullish: { icon: <TrendingUp className="h-3 w-3" />, label: "Risk-On", style: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" },
     bearish: { icon: <TrendingDown className="h-3 w-3" />, label: "Risk-Off", style: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
-    mixed: { icon: <Minus className="h-3 w-3" />, label: "Gemischt", style: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-    quiet: { icon: <Minus className="h-3 w-3" />, label: "Ruhig", style: "bg-muted/40 text-muted-foreground border-border" },
+    mixed: { icon: <Minus className="h-3 w-3" />, label: lang === "en" ? "Mixed" : "Gemischt", style: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+    quiet: { icon: <Minus className="h-3 w-3" />, label: lang === "en" ? "Quiet" : "Ruhig", style: "bg-muted/40 text-muted-foreground border-border" },
   }[regime];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cfg.style}`}>
@@ -78,7 +80,7 @@ function RegimeChip({ regime }: { regime: "bullish" | "bearish" | "mixed" | "qui
   );
 }
 
-function buildInsight(rows: CockpitRow[]) {
+function buildInsight(rows: CockpitRow[], lang: "de" | "en") {
   const total = rows.length;
   const bullish = rows.filter((r) => r.sig.verdict === "LONG").length;
   const bearish = rows.filter((r) => r.sig.verdict === "SHORT").length;
@@ -98,24 +100,24 @@ function buildInsight(rows: CockpitRow[]) {
   const bullets: { tone: "good" | "bad" | "info"; text: string }[] = [];
 
   if (total === 0) {
-    bullets.push({ tone: "info", text: "Füge Werte zur Watchlist hinzu, damit QUANT-X eine echte Einschätzung berechnen kann." });
+    bullets.push({ tone: "info", text: lang === "en" ? "Add symbols to your watchlist so QUANT-X can calculate a real assessment." : "Füge Werte zur Watchlist hinzu, damit QUANT-X eine echte Einschätzung berechnen kann." });
     return { regime, total, bullish, bearish, neutral, bullets };
   }
 
   // Breadth
   if (advancers > decliners * 2) {
-    bullets.push({ tone: "good", text: `Starke Breite: ${advancers}/${total} Werte im Plus (Ø ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Marktbreite stützt den Trend.` });
+    bullets.push({ tone: "good", text: lang === "en" ? `Strong breadth: ${advancers}/${total} symbols up (avg ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Breadth supports the trend.` : `Starke Breite: ${advancers}/${total} Werte im Plus (Ø ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Marktbreite stützt den Trend.` });
   } else if (decliners > advancers * 2) {
-    bullets.push({ tone: "bad", text: `Schwache Breite: ${decliners}/${total} Werte im Minus (Ø ${avgChange.toFixed(2)}%). Defensive Haltung bevorzugt.` });
+    bullets.push({ tone: "bad", text: lang === "en" ? `Weak breadth: ${decliners}/${total} symbols down (avg ${avgChange.toFixed(2)}%). Defensive stance preferred.` : `Schwache Breite: ${decliners}/${total} Werte im Minus (Ø ${avgChange.toFixed(2)}%). Defensive Haltung bevorzugt.` });
   } else {
-    bullets.push({ tone: "info", text: `Gemischtes Bild: ${advancers}↑ / ${decliners}↓ (Ø ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Selektives Vorgehen ratsam.` });
+    bullets.push({ tone: "info", text: lang === "en" ? `Mixed picture: ${advancers}↑ / ${decliners}↓ (avg ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Selective approach recommended.` : `Gemischtes Bild: ${advancers}↑ / ${decliners}↓ (Ø ${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(2)}%). Selektives Vorgehen ratsam.` });
   }
 
   // Signal density
   if (bullish > bearish && bullish >= total * 0.4) {
-    bullets.push({ tone: "good", text: `${bullish} LONG-Signale dominieren — bevorzugte Setups statt breitem Markt-Exposure prüfen.` });
+    bullets.push({ tone: "good", text: lang === "en" ? `${bullish} LONG signals dominate — review preferred setups instead of broad market exposure.` : `${bullish} LONG-Signale dominieren — bevorzugte Setups statt breitem Markt-Exposure prüfen.` });
   } else if (bearish > bullish && bearish >= total * 0.4) {
-    bullets.push({ tone: "bad", text: `${bearish} SHORT-Signale aktiv — Hedge oder Cash-Quote erhöhen ist statistisch konsistent.` });
+    bullets.push({ tone: "bad", text: lang === "en" ? `${bearish} SHORT signals active — raising hedge or cash allocation is statistically consistent.` : `${bearish} SHORT-Signale aktiv — Hedge oder Cash-Quote erhöhen ist statistisch konsistent.` });
   }
 
   // Top opportunity
@@ -125,7 +127,7 @@ function buildInsight(rows: CockpitRow[]) {
   if (top && top.sig.verdict !== "NEUTRAL") {
     bullets.push({
       tone: top.sig.verdict === "LONG" ? "good" : "bad",
-      text: `Stärkstes Setup: ${top.symbol} (${top.sig.verdict}, Confidence ${(top.sig.confidence * 100).toFixed(0)}%) — Detail-Analyse im Analyse-Agent öffnen.`,
+      text: lang === "en" ? `Strongest setup: ${top.symbol} (${top.sig.verdict}, confidence ${(top.sig.confidence * 100).toFixed(0)}%) — open the detailed analysis in the Analysis Agent.` : `Stärkstes Setup: ${top.symbol} (${top.sig.verdict}, Confidence ${(top.sig.confidence * 100).toFixed(0)}%) — Detail-Analyse im Analyse-Agent öffnen.`,
     });
   }
 

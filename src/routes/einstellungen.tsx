@@ -52,7 +52,7 @@ function SettingsPage() {
       soundOnAlert: true,
       defaultTakeProfit: 8,
       defaultStopLoss: 4,
-      language: "de",
+      language: settings.language,
       hideLowConfidence: true,
     });
     toast.success(t("settings.reset.toast"));

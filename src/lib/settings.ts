@@ -64,7 +64,7 @@ export type Settings = Omit<StoredSettings, "watchlist"> & { watchlist: string[]
 
 const DEFAULT_LIST: Watchlist = {
   id: "default",
-  name: "Hauptliste",
+  name: "Main list",
   symbols: ["AAPL", "NVDA", "TSLA", "MSFT", "SPY"],
   emoji: "📊",
   color: "#3b82f6",
@@ -106,7 +106,7 @@ function migrate(raw: any): StoredSettings {
   const merged: StoredSettings = { ...DEFAULT, ...raw };
   if (!Array.isArray(merged.watchlists) || merged.watchlists.length === 0) {
     const legacy = Array.isArray(raw?.watchlist) ? raw.watchlist : DEFAULT_LIST.symbols;
-    merged.watchlists = [{ id: "default", name: "Hauptliste", symbols: legacy }];
+    merged.watchlists = [{ id: "default", name: "Main list", symbols: legacy }];
     merged.activeWatchlistId = "default";
   }
   if (!merged.watchlists.find((w) => w.id === merged.activeWatchlistId)) {
@@ -208,7 +208,7 @@ export function useSettings() {
     setStored((prev) => {
       const next: StoredSettings = {
         ...prev,
-        watchlists: [...prev.watchlists, { id, name: name.trim() || "Neue Liste", symbols: [] }],
+        watchlists: [...prev.watchlists, { id, name: name.trim() || "New list", symbols: [] }],
         activeWatchlistId: id,
       };
       write(next);
@@ -224,7 +224,7 @@ export function useSettings() {
     setStored((prev) => {
       const next: StoredSettings = {
         ...prev,
-        watchlists: [...prev.watchlists, { id, name: name.trim() || "Neue Liste", symbols: clean }],
+        watchlists: [...prev.watchlists, { id, name: name.trim() || "New list", symbols: clean }],
         activeWatchlistId: id,
       };
       write(next);

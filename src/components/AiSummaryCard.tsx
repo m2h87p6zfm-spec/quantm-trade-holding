@@ -16,6 +16,7 @@ import {
   Minus,
 } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 
 /* ---------- Score & Verdict parsing ---------- */
 
@@ -222,6 +223,7 @@ export function AiSummaryCard({
   text: string;
   streaming?: boolean;
 }) {
+  const t = useT();
   const score = useMemo(() => extractScore(text), [text]);
   const sections = useMemo(() => parseSections(text), [text]);
 
@@ -254,7 +256,7 @@ export function AiSummaryCard({
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           </span>
           <span className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-            Quantm · KI-Einschätzung
+            {t("aiSummary.label")}
           </span>
         </div>
         {streaming && (
@@ -289,7 +291,7 @@ export function AiSummaryCard({
               )}
               {!quick?.body && score != null && (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Gesamtscore aus Momentum, Trend, Volatilität und Risiko-Komponenten.
+                  {t("aiSummary.scoreFallback")}
                 </p>
               )}
             </div>
@@ -302,7 +304,7 @@ export function AiSummaryCard({
         {hasStructure ? (
           <>
             {metrics && (
-              <SectionCard icon={Gauge} title="Kennzahlen" accent="primary">
+              <SectionCard icon={Gauge} title={t("aiSummary.metrics")} accent="primary">
                 <MD>{metrics.body}</MD>
               </SectionCard>
             )}
@@ -329,7 +331,7 @@ export function AiSummaryCard({
             )}
 
             {risks && (
-              <SectionCard icon={AlertTriangle} title="Risiken" accent="gold">
+              <SectionCard icon={AlertTriangle} title={t("aiSummary.risks")} accent="gold">
                 <MD>{risks.body}</MD>
               </SectionCard>
             )}
@@ -339,7 +341,7 @@ export function AiSummaryCard({
                 <div className="mb-1.5 flex items-center gap-2">
                   <Flag className="h-3.5 w-3.5 text-primary" />
                   <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                    Fazit
+                    {t("aiSummary.conclusion")}
                   </h3>
                 </div>
                 <p className="text-sm leading-relaxed text-foreground">{fazit.body}</p>
@@ -356,7 +358,7 @@ export function AiSummaryCard({
         {streaming && (
           <div className="flex items-center gap-2 pt-1 text-[10px] text-muted-foreground">
             <Zap className="h-3 w-3 animate-pulse text-primary" />
-            schreibt …
+            {t("aiSummary.writing")}
           </div>
         )}
       </div>
