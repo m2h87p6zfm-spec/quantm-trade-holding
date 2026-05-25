@@ -165,8 +165,10 @@ function ProductDetail() {
                 {changeUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
                 {formatSignedAbs(displayAbs, axisDecimals(displayLast))} ({changeUp ? "+" : ""}{change.toFixed(2)}%)
               </span>
+              <RealtimeStatusBadge tier={live.tier} connected={live.connected} compact />
             </div>
           )}
+
 
           <button
             onClick={() => guardedAdd(symbol)}
