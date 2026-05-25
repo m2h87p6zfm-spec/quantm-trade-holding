@@ -264,7 +264,7 @@ function AlertsPage() {
           >
             <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
             <BellRing className="relative h-4 w-4" />
-            <span className="relative">Push aktivieren</span>
+            <span className="relative">{pushStatus === "subscribed" ? "Push aktiv · deaktivieren" : "Push aktivieren"}</span>
           </button>
         </div>
 
