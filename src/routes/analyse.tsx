@@ -443,6 +443,16 @@ function AnalysePage() {
     { role: "agent", text: "Bereit. Frag mich nach einem Ticker oder Namen — z. B. *Analysiere NVDA*, *Wie steht der DAX*, oder *Soll ich Tesla kaufen*." },
   ];
   const [messages, setMessages] = useState(initial);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastUserCountRef = useRef(0);
+  useEffect(() => {
+    const userCount = messages.filter((m) => m.role === "user").length;
+    if (userCount > lastUserCountRef.current) {
+      const el = scrollRef.current;
+      if (el) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    }
+    lastUserCountRef.current = userCount;
+  }, [messages]);
   const [conversations, setConversations] = useState<AnalyseConv[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
 
@@ -692,7 +702,7 @@ function AnalysePage() {
       {/* Chat-Fläche mit subtilem Verlauf */}
       <div className="relative flex-1 overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/60 to-card/20 shadow-inner">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-background/40 to-transparent" aria-hidden />
-        <div className="h-full space-y-4 overflow-y-auto p-5">
+        <div ref={scrollRef} className="h-full space-y-4 overflow-y-auto p-5">
           {messages.map((m, i) => {
             const prevUser = m.role === "agent" ? ([...messages.slice(0, i)].reverse().find((x) => x.role === "user")?.text ?? "") : "";
             return (
