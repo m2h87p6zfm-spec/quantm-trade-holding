@@ -165,7 +165,7 @@ function AppShell() {
             <AppSidebar />
             <div className="flex flex-1 flex-col relative min-w-0">
               <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
-                <SidebarTrigger className="shrink-0 hidden md:flex" />
+                <SidebarTrigger className="shrink-0 hidden lg:flex" />
                 <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
@@ -183,7 +183,7 @@ function AppShell() {
                   <AuthHeaderButton />
                 </div>
               </header>
-              <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+              <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
                 <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
                 <div className="relative z-10">
                   <Outlet />
