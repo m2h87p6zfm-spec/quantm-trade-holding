@@ -408,8 +408,10 @@ export function ApexDashboard({
           })}
         </div>
       </SectionCard>
+      </div>
 
       {/* PREISPROGNOSE */}
+
       <SectionCard icon={Target} title="🔮 APEX Preisprognose · 30 Handelstage">
         <div className="divide-y divide-border/40">
           {[
