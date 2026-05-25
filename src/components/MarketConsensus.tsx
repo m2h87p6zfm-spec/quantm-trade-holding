@@ -1,5 +1,6 @@
 import { Users, Building2, LineChart as LineChartIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
+import { useLang } from "@/lib/i18n";
 
 interface MarketConsensusProps {
   symbol: string;
@@ -49,13 +50,14 @@ function deriveSentiment(symbol: string, biasRaw: number, salt: number): Sentime
   return { bull, bear: bearRaw, neutral };
 }
 
-function verdictFor(s: Sentiment): { label: string; tone: "bull" | "bear" | "neutral" } {
-  if (s.bull >= s.bear + 12) return { label: "Bullish", tone: "bull" };
-  if (s.bear >= s.bull + 12) return { label: "Bearish", tone: "bear" };
+function verdictFor(s: Sentiment, lang: "de" | "en"): { label: string; tone: "bull" | "bear" | "neutral" } {
+  if (s.bull >= s.bear + 12) return { label: lang === "en" ? "Bullish" : "Bullisch", tone: "bull" };
+  if (s.bear >= s.bull + 12) return { label: lang === "en" ? "Bearish" : "Bärisch", tone: "bear" };
   return { label: "Neutral", tone: "neutral" };
 }
 
 export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
+  const lang = useLang();
   // Derive bias from indicators if present, otherwise neutral
   let bias = 0;
   if (indicators) {
@@ -79,7 +81,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
   const overallBull = Math.round((analyst.bull + retail.bull + institutional.bull) / 3);
   const overallBear = Math.round((analyst.bear + retail.bear + institutional.bear) / 3);
   const overallNeutral = Math.max(0, 100 - overallBull - overallBear);
-  const overall = verdictFor({ bull: overallBull, bear: overallBear, neutral: overallNeutral });
+  const overall = verdictFor({ bull: overallBull, bear: overallBear, neutral: overallNeutral }, lang);
 
   // Gauge: 0..100 (bullish score)
   const gaugeValue = Math.round(overallBull + overallNeutral * 0.5);
@@ -92,9 +94,9 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
     <section className="rounded-xl border border-border/70 bg-gradient-to-br from-card/90 to-card/40 p-5 backdrop-blur">
       <header className="mb-4 flex items-start justify-between gap-2">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Market Consensus</div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{lang === "en" ? "Market Consensus" : "Markt-Konsens"}</div>
           <div className="mt-0.5 flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold">Stimmungsbild · {symbol}</h2>
+            <h2 className="text-lg font-semibold">{lang === "en" ? "Sentiment picture" : "Stimmungsbild"} · {symbol}</h2>
             <VerdictPill tone={overall.tone} label={overall.label} />
             <span className={`font-mono text-xs tabular-nums ${net > 0 ? "text-bull" : net < 0 ? "text-bear" : "text-muted-foreground"}`}>
               Net {net > 0 ? "+" : ""}{net}
@@ -111,12 +113,12 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
       <div className="mb-5 mt-3 grid grid-cols-1 gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-border/60 bg-background/40 p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Bull-Score (0–100)</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Bull-Score (0–100)</span>
             <ExplainAiButton topic="Sentiment Gauge" variant="icon" context={ctx} />
           </div>
           <Gauge value={gaugeValue} />
           <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] uppercase tracking-wider">
-            <span className="text-bear">Bear</span>
+            <span className="text-bear">{lang === "en" ? "Bear" : "Bär"}</span>
             <span className="text-muted-foreground">Neutral</span>
             <span className="text-bull">Bull</span>
           </div>
@@ -124,17 +126,17 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
 
         <div className="md:col-span-2 rounded-lg border border-border/60 bg-background/40 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Aggregierte Verteilung</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "Aggregated distribution" : "Aggregierte Verteilung"}</span>
             <ExplainAiButton topic="Bullish vs. Bearish Verteilung" variant="icon" context={ctx} />
           </div>
           <StackedBar bull={overallBull} neutral={overallNeutral} bear={overallBear} />
           <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-            <Pct label="Bullish" value={overallBull} tone="bull" icon={<TrendingUp className="h-3.5 w-3.5" />} />
+            <Pct label={lang === "en" ? "Bullish" : "Bullisch"} value={overallBull} tone="bull" icon={<TrendingUp className="h-3.5 w-3.5" />} />
             <Pct label="Neutral" value={overallNeutral} tone="neutral" icon={<Minus className="h-3.5 w-3.5" />} />
-            <Pct label="Bearish" value={overallBear} tone="bear" icon={<TrendingDown className="h-3.5 w-3.5" />} />
+            <Pct label={lang === "en" ? "Bearish" : "Bärisch"} value={overallBear} tone="bear" icon={<TrendingDown className="h-3.5 w-3.5" />} />
           </div>
           <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-            Net-Score = Bullish − Bearish. Positiv = überwiegend optimistische Stimmung, negativ = pessimistisch.
+            {lang === "en" ? "Net score = bullish − bearish. Positive means mostly optimistic sentiment, negative means pessimistic." : "Net-Score = Bullish − Bearish. Positiv = überwiegend optimistische Stimmung, negativ = pessimistisch."}
           </p>
         </div>
       </div>
@@ -143,7 +145,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <GroupCard
           icon={<LineChartIcon className="h-3.5 w-3.5" />}
-          title="Analysten"
+          title={lang === "en" ? "Analysts" : "Analysten"}
           subtitle="Sell-Side · Research"
           s={analyst}
           topic="Analyst Sentiment"
@@ -151,7 +153,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
         />
         <GroupCard
           icon={<Users className="h-3.5 w-3.5" />}
-          title="Privatanleger"
+          title={lang === "en" ? "Retail investors" : "Privatanleger"}
           subtitle="Retail · Social"
           s={retail}
           topic="Retail Sentiment"
@@ -159,7 +161,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
         />
         <GroupCard
           icon={<Building2 className="h-3.5 w-3.5" />}
-          title="Institutionelle"
+          title={lang === "en" ? "Institutional" : "Institutionelle"}
           subtitle="Funds · Banks · Quant"
           s={institutional}
           topic="Institutional Sentiment"
@@ -168,7 +170,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
       </div>
 
       <p className="mt-4 text-[10px] leading-relaxed text-muted-foreground">
-        Modellbasierter Konsens, aggregiert aus technischen Faktoren & Sentiment-Proxies. Keine Anlageberatung — Wahrscheinlichkeiten, keine Garantien.
+        {lang === "en" ? "Model-based consensus aggregated from technical factors and sentiment proxies. Not investment advice — probabilities, not guarantees." : "Modellbasierter Konsens, aggregiert aus technischen Faktoren & Sentiment-Proxies. Keine Anlageberatung — Wahrscheinlichkeiten, keine Garantien."}
       </p>
     </section>
   );
