@@ -11,6 +11,7 @@ import { computeZones, type Zone } from "@/lib/zones";
 import { ema, sma, bollinger as bb, rsi as rsiCalc } from "@/lib/indicators";
 import { formatNumber, formatPercent, axisDecimals } from "@/lib/format";
 import { chartCssVar } from "@/lib/chartColors";
+import { attachTimeScaleContainment, configureContainedTimeScale, showFullDataRange } from "@/lib/chartTimeScale";
 import { useLang } from "@/lib/i18n";
 
 type CandlesIn = { c: number[]; o?: number[]; h?: number[]; l?: number[]; v?: number[]; t: number[] };
@@ -98,6 +99,7 @@ export function ProChart({
     let cancelled = false;
     let ro: ResizeObserver | undefined;
     let createdSnapshot: { chart: IChartApi; key: string }[] = [];
+    const timeScaleCleanups: Array<() => void> = [];
     const el = mainRef.current;
 
     (async () => {
@@ -145,6 +147,8 @@ export function ProChart({
         timeScale: { borderVisible: false, timeVisible: false, secondsVisible: false },
         crosshair: baseCrosshair,
       });
+      configureContainedTimeScale(main);
+      timeScaleCleanups.push(attachTimeScaleContainment(main, () => data.t.length));
       created.push({ chart: main, key: "main" });
 
       const candles = main.addSeries(CandlestickSeries, {
@@ -217,6 +221,8 @@ export function ProChart({
           timeScale: { borderVisible: false, timeVisible: false, visible: sub === subcharts[subcharts.length - 1] },
           crosshair: baseCrosshair,
         });
+        configureContainedTimeScale(subChart);
+        timeScaleCleanups.push(attachTimeScaleContainment(subChart, () => data.t.length));
         created.push({ chart: subChart, key: sub });
 
         if (sub === "volume") {
@@ -265,7 +271,7 @@ export function ProChart({
         });
       });
 
-      main.timeScale().fitContent();
+      created.forEach(({ chart }) => showFullDataRange(chart, data.t.length));
 
       ro = new ResizeObserver((entries) => {
         const cr = entries[0]?.contentRect;
@@ -284,6 +290,7 @@ export function ProChart({
     return () => {
       cancelled = true;
       ro?.disconnect();
+      timeScaleCleanups.forEach((cleanup) => cleanup());
       createdSnapshot.forEach((c) => { try { c.chart.remove(); } catch { /* noop */ } });
       chartsRef.current = [];
       candleSeriesRef.current = null;
