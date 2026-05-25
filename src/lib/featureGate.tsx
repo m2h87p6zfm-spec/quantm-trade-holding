@@ -91,7 +91,7 @@ export function useAlertsLimit() {
   const { alerts, add } = useAlerts();
   const max = LIMITS.alerts[tier];
   const active = alerts.filter((a) => !a.triggeredAt).length;
-  const guardedAdd: typeof add = (rule) => {
+  const guardedAdd = async (rule: Parameters<typeof add>[0]) => {
     if (active >= max) {
       toast.error(t("limit.alert.title", { max }), {
         description: t("limit.alert.description"),
@@ -99,7 +99,7 @@ export function useAlertsLimit() {
       });
       return;
     }
-    add(rule);
+    await add(rule);
   };
   return { tier, max, count: active, atLimit: active >= max, guardedAdd };
 }

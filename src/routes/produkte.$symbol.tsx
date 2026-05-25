@@ -15,6 +15,8 @@ import { MarketConsensus } from "@/components/MarketConsensus";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
+import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
 
 
@@ -92,6 +94,8 @@ function ProductDetail() {
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
   const lang = useLang();
+  // Echtzeit-Feed: nur das aktuell geöffnete Symbol abonnieren.
+  const live = useLiveQuotes([symbol], true);
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
@@ -161,8 +165,10 @@ function ProductDetail() {
                 {changeUp ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
                 {formatSignedAbs(displayAbs, axisDecimals(displayLast))} ({changeUp ? "+" : ""}{change.toFixed(2)}%)
               </span>
+              <RealtimeStatusBadge tier={live.tier} connected={live.connected} compact />
             </div>
           )}
+
 
           <button
             onClick={() => guardedAdd(symbol)}
