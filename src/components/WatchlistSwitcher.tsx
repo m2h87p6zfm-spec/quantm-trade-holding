@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ChevronDown, Plus, Trash2, Check, Edit2, Palette } from "lucide-react";
 import { useSettings, WATCHLIST_COLORS, WATCHLIST_EMOJIS } from "@/lib/settings";
+import { useT } from "@/lib/i18n";
 
 export function WatchlistSwitcher() {
+  const t = useT();
   const {
     settings,
     createWatchlist,
@@ -20,12 +22,12 @@ export function WatchlistSwitcher() {
   const active = lists.find((w) => w.id === settings.activeWatchlistId) ?? lists[0];
 
   function startCreate() {
-    const id = createWatchlist(`Liste ${lists.length + 1}`);
+    const id = createWatchlist(`List ${lists.length + 1}`);
     // Give it a random color so each list looks distinct
     const color = WATCHLIST_COLORS[lists.length % WATCHLIST_COLORS.length];
     updateWatchlistMeta(id, { emoji: "📈", color });
     setEditing(id);
-    setDraft(`Liste ${lists.length + 1}`);
+    setDraft(`List ${lists.length + 1}`);
   }
 
   return (
@@ -56,8 +58,8 @@ export function WatchlistSwitcher() {
                       <button
                         onClick={() => setCustomizing(isCustom ? null : w.id)}
                         className="text-base leading-none px-0.5 hover:scale-110 transition-transform"
-                        aria-label="Symbol & Farbe ändern"
-                        title="Symbol & Farbe"
+                        aria-label={t("watchlist.switcher.changeSymbolColor")}
+                        title={t("watchlist.switcher.symbolColor")}
                       >
                         {w.emoji ?? "📊"}
                       </button>
@@ -85,7 +87,7 @@ export function WatchlistSwitcher() {
                           <button
                             onClick={() => { setEditing(w.id); setDraft(w.name); }}
                             className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-foreground"
-                            aria-label="Umbenennen"
+                            aria-label={t("watchlist.switcher.rename")}
                           >
                             <Edit2 className="h-3 w-3" />
                           </button>
@@ -93,7 +95,7 @@ export function WatchlistSwitcher() {
                             <button
                               onClick={() => deleteWatchlist(w.id)}
                               className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-bear"
-                              aria-label="Löschen"
+                              aria-label={t("watchlist.switcher.delete")}
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -105,7 +107,7 @@ export function WatchlistSwitcher() {
                     {isCustom && (
                       <div className="mt-1 mb-2 rounded-md border border-border/60 bg-background/60 p-2 space-y-2">
                         <div>
-                          <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Symbol</div>
+                          <div className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{t("watchlist.switcher.symbol")}</div>
                           <div className="grid grid-cols-8 gap-1">
                             {WATCHLIST_EMOJIS.map((e) => (
                               <button
@@ -120,7 +122,7 @@ export function WatchlistSwitcher() {
                         </div>
                         <div>
                           <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                            <Palette className="h-3 w-3" /> Farbe
+                            <Palette className="h-3 w-3" /> {t("watchlist.switcher.color")}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {WATCHLIST_COLORS.map((c) => (
@@ -129,7 +131,7 @@ export function WatchlistSwitcher() {
                                 onClick={() => updateWatchlistMeta(w.id, { color: c })}
                                 className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${w.color === c ? "border-foreground" : "border-transparent"}`}
                                 style={{ backgroundColor: c }}
-                                aria-label={`Farbe ${c}`}
+                                aria-label={t("watchlist.switcher.colorLabel", { color: c })}
                               />
                             ))}
                           </div>
@@ -145,7 +147,7 @@ export function WatchlistSwitcher() {
                 onClick={startCreate}
                 className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-primary hover:bg-accent/40"
               >
-                <Plus className="h-3.5 w-3.5" /> Neue Watchlist
+                <Plus className="h-3.5 w-3.5" /> {t("watchlist.switcher.new")}
               </button>
             </div>
           </div>
