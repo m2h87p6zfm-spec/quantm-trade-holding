@@ -18,6 +18,7 @@ import { AssetEventsPanel } from "@/components/AssetEventsPanel";
 import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
+import { QuantFinancePanel } from "@/components/QuantFinancePanel";
 
 
 export const Route = createFileRoute("/produkte/$symbol")({
@@ -302,7 +303,20 @@ function ProductDetail() {
             </section>
           )}
 
-          
+          {indicators && candles.data && candles.data.c.length >= 30 && (
+            <QuantFinancePanel
+              symbol={symbol}
+              candleObjs={candles.data.t.map((t, i) => ({
+                t,
+                o: candles.data!.o[i],
+                h: candles.data!.h[i],
+                l: candles.data!.l[i],
+                c: candles.data!.c[i],
+                v: candles.data!.v[i],
+              }))}
+              price={indicators.price}
+            />
+          )}
         </>
       )}
     </div>
