@@ -234,6 +234,13 @@ export async function getCandlesCached(
   if (hit && hit.expires > Date.now()) {
     return { value: hit.value, stale: false, lastUpdated: hit.lastUpdated };
   }
+  // Schicht 2: geteilter Supabase-Cache — der größte Hebel für Picks-Scans.
+  // 2 User mit demselben Universum bezahlen nur 1× pro TTL-Fenster.
+  const shared = await sharedGet<TdCandles | null>(key);
+  if (shared && !shared.stale) {
+    cacheSet(key, shared.value, ttlSec);
+    return { value: shared.value, stale: false, lastUpdated: shared.lastUpdated };
+  }
   try {
     const j = await tdFetch("/time_series", {
       symbol,
@@ -243,9 +250,11 @@ export async function getCandlesCached(
     });
     const v = parseTimeSeries(j);
     cacheSet(key, v, ttlSec);
+    void sharedSet(key, v, ttlSec);
     return { value: v, stale: false, lastUpdated: Date.now() };
   } catch {
     if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
+    if (shared) return { value: shared.value, stale: true, lastUpdated: shared.lastUpdated };
     return { value: null, stale: true, lastUpdated: 0 };
   }
 }
