@@ -3,6 +3,7 @@
 // Robuste Alternative zur WebSocket-Bridge auf Cloudflare Workers (kein DO nötig).
 import { createFileRoute } from "@tanstack/react-router";
 import { getQuotesBatch } from "@/lib/twelvedata.server";
+import { requireUserId } from "@/lib/api-auth.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/api/public/stream")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async ({ request }) => {
+        const auth = await requireUserId(request);
+        if (auth instanceof Response) return auth;
         const url = new URL(request.url);
         const raw = (url.searchParams.get("symbols") || "").trim();
         const symbols = raw

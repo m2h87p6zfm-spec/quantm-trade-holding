@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   recordEventsForTicker,
   recalcPatternsFor,
@@ -8,6 +9,7 @@ import {
 } from "./causal-engine.server";
 
 export const runCausalAnalysis = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
       .object({
