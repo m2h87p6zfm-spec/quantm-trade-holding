@@ -57,6 +57,7 @@ import { Route as ApiPublicQuoteRouteImport } from './routes/api/public/quote'
 import { Route as ApiPublicPortfolioExtractRouteImport } from './routes/api/public/portfolio-extract'
 import { Route as ApiPublicPortfolioChatRouteImport } from './routes/api/public/portfolio-chat'
 import { Route as ApiPublicNewsSentimentRouteImport } from './routes/api/public/news-sentiment'
+import { Route as ApiPublicFixPriceTaxRouteImport } from './routes/api/public/fix-price-tax'
 import { Route as ApiPublicExplainTradeRouteImport } from './routes/api/public/explain-trade'
 import { Route as ApiPublicExplainConceptRouteImport } from './routes/api/public/explain-concept'
 import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/cron-evaluate'
@@ -308,6 +309,11 @@ const ApiPublicNewsSentimentRoute = ApiPublicNewsSentimentRouteImport.update({
   path: '/api/public/news-sentiment',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicFixPriceTaxRoute = ApiPublicFixPriceTaxRouteImport.update({
+  id: '/api/public/fix-price-tax',
+  path: '/api/public/fix-price-tax',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicExplainTradeRoute = ApiPublicExplainTradeRouteImport.update({
   id: '/api/public/explain-trade',
   path: '/api/public/explain-trade',
@@ -404,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
+  '/api/public/fix-price-tax': typeof ApiPublicFixPriceTaxRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
@@ -463,6 +470,7 @@ export interface FileRoutesByTo {
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
+  '/api/public/fix-price-tax': typeof ApiPublicFixPriceTaxRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
@@ -523,6 +531,7 @@ export interface FileRoutesById {
   '/api/public/cron-evaluate': typeof ApiPublicCronEvaluateRoute
   '/api/public/explain-concept': typeof ApiPublicExplainConceptRoute
   '/api/public/explain-trade': typeof ApiPublicExplainTradeRoute
+  '/api/public/fix-price-tax': typeof ApiPublicFixPriceTaxRoute
   '/api/public/news-sentiment': typeof ApiPublicNewsSentimentRoute
   '/api/public/portfolio-chat': typeof ApiPublicPortfolioChatRoute
   '/api/public/portfolio-extract': typeof ApiPublicPortfolioExtractRoute
@@ -584,6 +593,7 @@ export interface FileRouteTypes {
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
     | '/api/public/explain-trade'
+    | '/api/public/fix-price-tax'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
@@ -643,6 +653,7 @@ export interface FileRouteTypes {
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
     | '/api/public/explain-trade'
+    | '/api/public/fix-price-tax'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
@@ -702,6 +713,7 @@ export interface FileRouteTypes {
     | '/api/public/cron-evaluate'
     | '/api/public/explain-concept'
     | '/api/public/explain-trade'
+    | '/api/public/fix-price-tax'
     | '/api/public/news-sentiment'
     | '/api/public/portfolio-chat'
     | '/api/public/portfolio-extract'
@@ -762,6 +774,7 @@ export interface RootRouteChildren {
   ApiPublicCronEvaluateRoute: typeof ApiPublicCronEvaluateRoute
   ApiPublicExplainConceptRoute: typeof ApiPublicExplainConceptRoute
   ApiPublicExplainTradeRoute: typeof ApiPublicExplainTradeRoute
+  ApiPublicFixPriceTaxRoute: typeof ApiPublicFixPriceTaxRoute
   ApiPublicNewsSentimentRoute: typeof ApiPublicNewsSentimentRoute
   ApiPublicPortfolioChatRoute: typeof ApiPublicPortfolioChatRoute
   ApiPublicPortfolioExtractRoute: typeof ApiPublicPortfolioExtractRoute
@@ -1113,6 +1126,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicNewsSentimentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/fix-price-tax': {
+      id: '/api/public/fix-price-tax'
+      path: '/api/public/fix-price-tax'
+      fullPath: '/api/public/fix-price-tax'
+      preLoaderRoute: typeof ApiPublicFixPriceTaxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/explain-trade': {
       id: '/api/public/explain-trade'
       path: '/api/public/explain-trade'
@@ -1226,6 +1246,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronEvaluateRoute: ApiPublicCronEvaluateRoute,
   ApiPublicExplainConceptRoute: ApiPublicExplainConceptRoute,
   ApiPublicExplainTradeRoute: ApiPublicExplainTradeRoute,
+  ApiPublicFixPriceTaxRoute: ApiPublicFixPriceTaxRoute,
   ApiPublicNewsSentimentRoute: ApiPublicNewsSentimentRoute,
   ApiPublicPortfolioChatRoute: ApiPublicPortfolioChatRoute,
   ApiPublicPortfolioExtractRoute: ApiPublicPortfolioExtractRoute,
