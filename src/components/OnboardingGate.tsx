@@ -559,7 +559,7 @@ function WelcomeStep({
           checked={age}
           onChange={setAge}
           label={
-            <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 18 Jahre alt</span> und voll geschäftsfähig bin.</>
+            <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 4 Jahre alt</span> bin.</>
           }
         />
         <ConsentRow
