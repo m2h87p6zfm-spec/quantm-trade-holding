@@ -70,7 +70,7 @@ export function AssetEventsPanel({ symbol }: { symbol: string }) {
                   {earnings.impact === "high" ? (lang === "en" ? "High move" : "Hohe Bewegung") : earnings.impact === "medium" ? (lang === "en" ? "Medium" : "Mittel") : (lang === "en" ? "Low" : "Niedrig")}
                 </span>
                 <span className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {timeUntil(earnings.date, now).label}
+                  {timeUntil(earnings.date, now, lang).label}
                 </span>
               </div>
 
@@ -111,7 +111,7 @@ export function AssetEventsPanel({ symbol }: { symbol: string }) {
           ) : (
             <ul className="space-y-2">
               {macros.map((e) => {
-                const tu = timeUntil(e.date, now);
+                const tu = timeUntil(e.date, now, lang);
                 return (
                   <li key={e.id} className="flex items-start gap-3 rounded-md border border-border/50 bg-card/40 p-2.5">
                     <span className="text-base leading-none">{COUNTRY_FLAG[e.country]}</span>
