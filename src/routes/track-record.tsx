@@ -14,8 +14,9 @@ import { Progress } from "@/components/ui/progress";
 import { Search, TrendingUp, TrendingDown, Trophy, AlertTriangle, ArrowUpDown, Brain, BarChart3 } from "lucide-react";
 import { AiLearningPage } from "./ai-learning";
 import { FeatureGate } from "@/lib/featureGate";
-import { formatPercent, formatNumber, formatPrice } from "@/lib/format";
+import { formatPercent, formatNumber, formatCurrencyFromUsd } from "@/lib/format";
 import { IndicatorInfoButton } from "@/components/IndicatorInfo";
+import { useSettings } from "@/lib/settings";
 
 export const Route = createFileRoute("/track-record")({
   head: () => ({
@@ -84,6 +85,7 @@ function TrackRecordPage() {
 }
 
 function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
+  const { settings } = useSettings();
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["id"]>("all");
   const [verdict, setVerdict] = useState<(typeof VERDICTS)[number]>("Alle");
   const [sector, setSector] = useState<(typeof SECTORS)[number]>("Alle");
@@ -558,9 +560,9 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
                   </td>
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">{new Date(a.analyzed_at).toLocaleDateString("de-DE")}</td>
                   <td className="px-4 py-3"><Badge variant="outline" className={verdictColor(a.verdict)}>{a.verdict}</Badge></td>
-                  <td className="px-4 py-3 text-right tabular-nums">{formatPrice(a.price_at_analysis)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">{formatCurrencyFromUsd(a.price_at_analysis, settings.currency)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-xs">
-                    <span className="text-muted-foreground">{fmtOpt(a.outcome?.price_after_30d)} / {fmtOpt(a.outcome?.price_after_60d)} / {fmtOpt(a.outcome?.price_after_90d)}</span>
+                    <span className="text-muted-foreground">{fmtOpt(a.outcome?.price_after_30d, settings.currency)} / {fmtOpt(a.outcome?.price_after_60d, settings.currency)} / {fmtOpt(a.outcome?.price_after_90d, settings.currency)}</span>
                   </td>
                   <td className={`px-4 py-3 text-right tabular-nums font-medium ${returnColor(a.outcome?.return_30d ?? null)}`}>
                     {a.outcome?.return_30d != null ? formatPercent(a.outcome.return_30d, 2) : "—"}
@@ -771,7 +773,7 @@ function CTA() {
 
 function avg(xs: number[]): number | null { return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null; }
 function returnColor(r: number | null) { if (r == null) return "text-muted-foreground"; if (r > 0) return "text-emerald-400"; if (r < 0) return "text-red-400"; return ""; }
-function fmtOpt(n: number | null | undefined) { return n != null ? formatPrice(n) : "—"; }
+function fmtOpt(n: number | null | undefined, currency: string) { return n != null ? formatCurrencyFromUsd(n, currency) : "—"; }
 function sortVal(a: Analysis, k: SortKey): string | number | null {
   if (k === "analyzed_at") return new Date(a.analyzed_at).getTime();
   if (k === "ticker") return a.ticker;
