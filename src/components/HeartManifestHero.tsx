@@ -1,21 +1,81 @@
-import { ArrowRight, Zap, BarChart3 } from "lucide-react";
+import { ArrowRight, Zap, BarChart3, X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
+
+const DISMISS_KEY = "qt.manifest.dismissed.v1";
 
 /**
  * HeartManifestHero
- * Manifest-styled hero block highlighting the two core products
- * (Quantm Picks + Analysis Agent) as the market-gap filler.
- * Rendered above the watchlist cockpit on the homepage.
+ * Dismissible manifest popup highlighting the two core products
+ * (Quantm Picks + Analysis Agent). Shown once per browser until the
+ * user closes it with the X.
  */
 export function HeartManifestHero() {
   const t = useT();
+  const [open, setOpen] = useState(false);
+
+  // Open on mount unless previously dismissed (client-only to avoid SSR mismatch)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && !localStorage.getItem(DISMISS_KEY)) {
+        setOpen(true);
+      }
+    } catch {
+      setOpen(true);
+    }
+  }, []);
+
+  // Lock body scroll while open + close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (!open) return null;
 
   return (
-    <section
+    <div
+      role="dialog"
+      aria-modal="true"
       aria-label="Quantm manifest"
-      className="relative overflow-hidden rounded-3xl border border-[#1F1F1F] bg-gradient-to-b from-[#0B0B0B] via-[#0A0A0A] to-[#0A0A0A] px-5 py-10 sm:px-8 sm:py-14"
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/80 px-4 py-8 backdrop-blur-sm sm:items-center sm:py-12"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) close();
+      }}
     >
+      <section
+        className="relative my-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-[#1F1F1F] bg-gradient-to-b from-[#0B0B0B] via-[#0A0A0A] to-[#0A0A0A] px-5 py-10 shadow-2xl shadow-black/60 sm:px-8 sm:py-12"
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={close}
+          aria-label={t("manifest.close")}
+          className="absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#1F1F1F] bg-[#111111] text-white/60 transition hover:border-[#22FF88]/40 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
       {/* soft brand glow */}
       <div
         aria-hidden
