@@ -826,17 +826,15 @@ function StatusPill({
 }) {
   const t = PILL_TONE[tone];
   return (
-    <div className={`flex min-w-0 items-center gap-3 rounded-2xl border border-white/[0.08] ${t.bg} px-3.5 py-2.5 ring-1 ${t.ring} backdrop-blur-sm`}>
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/40 ${t.fg}`}>
-        <Icon className="h-3.5 w-3.5" />
-      </div>
-      <div className="min-w-0">
-        <div className="font-mono text-[9.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+    <div className="flex min-w-0 items-center gap-2.5 rounded-lg border border-white/[0.06] bg-white/[0.01] px-3 py-2.5">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
           {label}
         </div>
-        <div className="mt-0.5 flex items-center gap-1.5">
+        <div className="mt-1 flex items-center gap-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${t.dot}`} />
-          <span className={`text-sm font-semibold leading-none ${t.fg}`}>{status}</span>
+          <span className={`text-[13px] font-semibold leading-none ${t.fg}`}>{status}</span>
         </div>
       </div>
     </div>
@@ -859,27 +857,15 @@ function DriverCard({
   const t = PILL_TONE[dirTone];
 
   return (
-    <article className="group flex flex-col rounded-2xl border border-white/[0.09] bg-white/[0.015] p-5 transition hover:border-white/[0.16] hover:bg-white/[0.03]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] text-foreground/80 ring-1 ring-white/[0.08]">
-            <Icon className="h-3.5 w-3.5" />
-          </div>
-          <div className="font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {label}
-          </div>
+    <article className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.01] px-4 py-3 transition hover:border-white/[0.12]">
+      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
+          {label}
         </div>
-        <div className={`flex h-7 w-7 items-center justify-center rounded-full ${t.bg} ${t.fg} ring-1 ${t.ring}`}>
-          <Arrow className="h-3.5 w-3.5" />
-        </div>
+        <div className={`mt-1 text-[15px] font-semibold leading-none ${t.fg}`}>{status}</div>
       </div>
-
-      <div className="mt-5 flex items-baseline gap-2">
-        <span className={`text-2xl font-bold leading-none ${t.fg}`}>{status}</span>
-      </div>
-      <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-primary/80">
-        Tap to see today's reasoning →
-      </div>
+      <Arrow className={`h-4 w-4 shrink-0 ${t.fg}`} />
     </article>
   );
 }
@@ -897,15 +883,15 @@ function ContextAccordion({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.015]">
+    <div className="overflow-hidden border-b border-white/[0.06] last:border-b-0">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.02]"
+        className="flex w-full items-center justify-between gap-3 py-3 text-left transition hover:text-primary"
         aria-expanded={open}
       >
         <div className="flex items-center gap-2.5">
-          <Icon className="h-3.5 w-3.5 text-foreground/70" />
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-[13px] font-medium text-foreground/90">{title}</span>
         </div>
         <ChevronDown
@@ -913,7 +899,7 @@ function ContextAccordion({
         />
       </button>
       {open && (
-        <div className="border-t border-white/[0.06] px-4 py-4 text-[13px] leading-relaxed text-foreground/80">
+        <div className="pb-4 pl-6 pr-2 text-[13px] leading-relaxed text-foreground/75">
           {children}
         </div>
       )}
@@ -961,18 +947,18 @@ function StrategicBriefing() {
   const expl = explData?.explanations ?? {};
 
   return (
-    <section aria-label="Global market overview" className="space-y-6">
+    <section aria-label="Global market overview" className="space-y-8">
       {/* ── LAYER 1 · Global Snapshot ─────────────────────────────── */}
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Global Snapshot
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap any tile for today's reasoning
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap for reasoning
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           <ExplainPopover metricKey="globalRisk" label="Global Risk" status={snap.globalRisk.label} loading={explLoading} explanation={expl.globalRisk}>
             <StatusPill icon={Gauge}      label="Global Risk"   status={snap.globalRisk.label}  tone={snap.globalRisk.tone} />
           </ExplainPopover>
@@ -997,11 +983,11 @@ function StrategicBriefing() {
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Core Market Drivers
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap any card for today's reasoning
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap for reasoning
           </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <ExplainPopover metricKey="positioning" label="Investor Positioning" status={snap.globalRisk.label} loading={explLoading} explanation={expl.positioning}>
             <DriverCard icon={Users}      label="Investor Positioning"   status={snap.globalRisk.label} direction={positioningDir} />
           </ExplainPopover>
@@ -1017,22 +1003,20 @@ function StrategicBriefing() {
         </div>
       </div>
 
-
-
       {/* ── LAYER 3 · Market Context (expandable) ─────────────────── */}
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Market Context
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap to go deeper
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap to expand
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.01] px-4">
           <ContextAccordion icon={Eye} title="Why markets are reacting this way" defaultOpen>
             <p>{s.headline}</p>
-            <p className="mt-2 text-foreground/70">
+            <p className="mt-2 text-foreground/65">
               The combination of a firm dollar, sticky inflation pressure and decelerating
               global growth is driving capital toward US assets and away from the rest of the
               world. Investors are paying a premium for liquidity, quality and short-duration
@@ -1041,7 +1025,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={ShieldCheck} title="Key geopolitical influences">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· Middle East tensions keep an oil-risk premium baked into Brent and gold.</li>
               <li>· US–China tech and tariff posture is the single biggest swing factor for global capital flows.</li>
               <li>· European political risk (France / Germany) is widening sovereign spreads inside the eurozone.</li>
@@ -1050,7 +1034,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={Flame} title="Commodity pressure drivers">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· <span className="text-foreground">Oil:</span> OPEC+ discipline + Middle East risk = firm floor; demand softening at the margin.</li>
               <li>· <span className="text-foreground">Gold:</span> Central-bank buying + safe-haven flows offset a strong dollar.</li>
               <li>· <span className="text-foreground">Industrial metals:</span> Chinese demand remains the swing variable; AI capex lifts copper.</li>
@@ -1059,7 +1043,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={Globe2} title="Regional breakdown">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· <span className="text-foreground">United States:</span> Earnings resilience and AI capex keep equities supported despite restrictive rates.</li>
               <li>· <span className="text-foreground">Europe:</span> Industrial weakness in Germany / France; energy gap to the US persists.</li>
               <li>· <span className="text-foreground">China:</span> Property unwind continues to drag goods inflation and commodity demand lower.</li>
@@ -1072,6 +1056,7 @@ function StrategicBriefing() {
     </section>
   );
 }
+
 
 /* ───────── Event cause→effect chains (drives EventPanel + map propagation) ───────── */
 
