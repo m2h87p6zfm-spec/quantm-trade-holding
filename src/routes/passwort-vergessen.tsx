@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, MailCheck } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useT } from "@/lib/i18n";
+import { LegalLinks } from "@/components/LegalLinks";
 
 export const Route = createFileRoute("/passwort-vergessen")({
   head: () => ({
