@@ -182,11 +182,19 @@ function AlertsPage() {
   const triggeredCount = history.length;
   const quotaPct = Number.isFinite(max) ? Math.min(100, (count / Number(max)) * 100) : Math.min(100, count * 5);
 
+  const { status: pushStatus, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+
   async function requestPush() {
-    if (typeof Notification === "undefined") return toast.error("Browser unterstützt keine Benachrichtigungen.");
-    const p = await Notification.requestPermission();
-    if (p === "granted") toast.success("Push-Benachrichtigungen aktiviert.");
-    else toast.error("Push abgelehnt — Toasts bleiben aktiv.");
+    if (pushStatus === "unsupported") return toast.error("Browser unterstützt keine Web-Push-Benachrichtigungen.");
+    if (pushStatus === "denied") return toast.error("Push wurde blockiert. Aktiviere Benachrichtigungen in den Browser-Einstellungen.");
+    if (pushStatus === "subscribed") {
+      const ok = await unsubscribePush();
+      if (ok) toast.success("Push deaktiviert.");
+      return;
+    }
+    const ok = await subscribePush();
+    if (ok) toast.success("Push aktiviert — du bekommst Benachrichtigungen auch bei geschlossenem Tab.");
+    else toast.error("Push konnte nicht aktiviert werden.");
   }
 
   function onAdd(e: React.FormEvent) {
