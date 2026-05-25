@@ -5,6 +5,7 @@ import { pnl } from "@/lib/portfolio";
 import type { CockpitRow } from "@/lib/cockpit";
 import { findProduct } from "@/lib/products";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
+import { useLang, type Lang } from "@/lib/i18n";
 
 type Metrics = {
   totalValue: number;
@@ -140,6 +141,10 @@ export function PortfolioAnalytics({ positions, rowMap }: { positions: Position[
 }
 
 function RiskScoreCard({ m }: { m: Metrics }) {
+  const lang = useLang();
+  const riskBand = lang === "en"
+    ? ({ Niedrig: "Low", Mittel: "Medium", Erhöht: "Elevated", Hoch: "High", "Sehr hoch": "Very high" } as const)[m.riskBand]
+    : m.riskBand;
   const color =
     m.riskScore < 40 ? "text-emerald-400" :
     m.riskScore < 60 ? "text-amber-400" :
@@ -174,14 +179,14 @@ function RiskScoreCard({ m }: { m: Metrics }) {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <div className={`text-sm font-semibold ${color}`}>{m.riskBand}</div>
+          <div className={`text-sm font-semibold ${color}`}>{riskBand}</div>
           <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-            Setzt sich zusammen aus Vola (σ ann.), Konzentration (HHI) und Signal-Konflikten.
+            {lang === "en" ? "Composed of volatility (annual σ), concentration (HHI), and signal conflicts." : "Setzt sich zusammen aus Vola (σ ann.), Konzentration (HHI) und Signal-Konflikten."}
           </p>
           <div className="mt-2 space-y-1 text-[10px]">
-            <RiskBar label="Volatilität" value={Math.min(100, (m.weightedVol / 60) * 100)} display={`${m.weightedVol.toFixed(1)}%`} />
-            <RiskBar label="Konzentration" value={Math.min(100, m.hhi * 200)} display={`HHI ${(m.hhi * 10000).toFixed(0)}`} />
-            <RiskBar label="Signal-Konflikt" value={Math.min(100, (m.conflicts / Math.max(1, m.bullish + m.bearish + m.conflicts)) * 100)} display={`${m.conflicts}`} />
+            <RiskBar label={lang === "en" ? "Volatility" : "Volatilität"} value={Math.min(100, (m.weightedVol / 60) * 100)} display={`${m.weightedVol.toFixed(1)}%`} />
+            <RiskBar label={lang === "en" ? "Concentration" : "Konzentration"} value={Math.min(100, m.hhi * 200)} display={`HHI ${(m.hhi * 10000).toFixed(0)}`} />
+            <RiskBar label={lang === "en" ? "Signal conflict" : "Signal-Konflikt"} value={Math.min(100, (m.conflicts / Math.max(1, m.bullish + m.bearish + m.conflicts)) * 100)} display={`${m.conflicts}`} />
           </div>
         </div>
       </div>
