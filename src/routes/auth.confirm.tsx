@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LegalLinks } from "@/components/LegalLinks";
 
 export const Route = createFileRoute("/auth/confirm")({
   head: () => ({
