@@ -94,6 +94,8 @@ function ProductDetail() {
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
   const lang = useLang();
+  // Echtzeit-Feed: nur das aktuell geöffnete Symbol abonnieren.
+  const live = useLiveQuotes([symbol], true);
 
   const watched = settings.watchlist.includes(symbol);
   const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
