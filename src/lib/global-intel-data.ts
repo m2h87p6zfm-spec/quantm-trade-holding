@@ -2089,7 +2089,7 @@ export const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Papua New Guinea": [145, -6],
   "Fiji": [178, -18],
   // ── 56 additional coords ──
-  "Yemen": [44, 15.5], "Maldives": [73, 3.2], "Bhutan": [90.5, 27.5], "Brunei": [114.7, 4.5],
+  "Maldives": [73, 3.2], "Bhutan": [90.5, 27.5], "Brunei": [114.7, 4.5],
   "Timor-Leste": [125.7, -8.8], "Solomon Is.": [160, -9], "Vanuatu": [167, -16], "Samoa": [-172, -13.7],
   "Tonga": [-175, -21], "Kiribati": [173, 1.4], "Micronesia": [150, 7.5], "Marshall Is.": [168, 7.1],
   "Palau": [134.5, 7.5], "Cabo Verde": [-24, 16], "Gambia": [-15.4, 13.4], "Guinea-Bissau": [-15.2, 12],
@@ -2103,7 +2103,6 @@ export const COUNTRY_COORDS: Record<string, [number, number]> = {
   "Armenia": [45, 40.1], "Azerbaijan": [47.6, 40.4], "Andorra": [1.5, 42.5], "Monaco": [7.4, 43.7],
   "Liechtenstein": [9.5, 47.2], "San Marino": [12.5, 43.9], "Greenland": [-42, 72], "Hong Kong": [114.2, 22.3],
   "Macao": [113.5, 22.2], "Puerto Rico": [-66.6, 18.2], "New Caledonia": [165.5, -21.5],
-  "North Korea": [127, 40],
 };
 
 /* ───────── Global Events (clickable dots) ───────── */
