@@ -86,38 +86,74 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   if (hit && hit.expires > Date.now()) {
     return { value: hit.value, stale: false, lastUpdated: hit.lastUpdated };
   }
+  // Schicht 2: geteilter Supabase-Cache
+  const shared = await sharedGet<TdQuote | null>(key);
+  if (shared && !shared.stale) {
+    cacheSet(key, shared.value, ttlSec);
+    return { value: shared.value, stale: false, lastUpdated: shared.lastUpdated };
+  }
   try {
     const j = await tdFetch("/quote", { symbol });
     const v = parseQuote(j);
     cacheSet(key, v, ttlSec);
+    void sharedSet(key, v, ttlSec);
     return { value: v, stale: false, lastUpdated: Date.now() };
   } catch {
     if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
+    if (shared) return { value: shared.value, stale: true, lastUpdated: shared.lastUpdated };
     return { value: null, stale: true, lastUpdated: 0 };
   }
 }
 
 // Batch quotes — eine TD-Anfrage liefert bis zu 120 Symbole auf einmal.
 // Schont das Rate-Limit dramatisch bei Watchlists / Tickerband.
+// Nutzt den geteilten Cache pro Symbol, damit zwei User mit überlappenden
+// Watchlists nicht doppelt zahlen.
 export async function getQuotesBatch(symbols: string[]): Promise<Record<string, TdQuote>> {
   const list = Array.from(new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))).slice(0, 120);
   if (!list.length) return {};
+  const out: Record<string, TdQuote> = {};
+  const missing: string[] = [];
+  const QUOTE_TTL = 30; // 30 s — Quotes sind sehr volatil
+
+  // Erst geteilten + lokalen Cache pro Symbol abfragen
+  await Promise.all(list.map(async (sym) => {
+    const k = `q:${sym}`;
+    const hit = cacheGet<TdQuote | null>(k);
+    if (hit && hit.expires > Date.now() && hit.value) { out[sym] = hit.value; return; }
+    const shared = await sharedGet<TdQuote | null>(k);
+    if (shared && !shared.stale && shared.value) {
+      out[sym] = shared.value;
+      cacheSet(k, shared.value, QUOTE_TTL);
+      return;
+    }
+    missing.push(sym);
+  }));
+
+  if (!missing.length) return out;
+
   try {
-    const j = await tdFetch("/quote", { symbol: list.join(",") });
-    const out: Record<string, TdQuote> = {};
-    // TD: bei 1 Symbol direkt das Objekt, bei mehreren ein Map {SYMBOL: {...}}
-    if (list.length === 1) {
+    const j = await tdFetch("/quote", { symbol: missing.join(",") });
+    if (missing.length === 1) {
       const v = parseQuote(j);
-      if (v) out[list[0]] = v;
+      if (v) {
+        out[missing[0]] = v;
+        cacheSet(`q:${missing[0]}`, v, QUOTE_TTL);
+        void sharedSet(`q:${missing[0]}`, v, QUOTE_TTL);
+      }
     } else {
-      for (const sym of list) {
+      for (const sym of missing) {
         const v = parseQuote(j?.[sym]);
-        if (v) out[sym] = v;
+        if (v) {
+          out[sym] = v;
+          cacheSet(`q:${sym}`, v, QUOTE_TTL);
+          void sharedSet(`q:${sym}`, v, QUOTE_TTL);
+        }
       }
     }
     return out;
   } catch {
-    return {};
+    return out; // gib zurück was wir aus Cache haben
   }
 }
 
