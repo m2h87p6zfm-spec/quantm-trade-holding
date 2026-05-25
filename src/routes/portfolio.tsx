@@ -10,7 +10,7 @@ import { whyNow } from "@/lib/analysis";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
-import { useLang, useT, type Lang } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
