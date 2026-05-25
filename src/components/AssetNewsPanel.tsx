@@ -189,27 +189,28 @@ function SentimentBars({ counts }: { counts: { bullish: number; bearish: number;
   );
 }
 
-function NewsCard({ item }: { item: NewsSentimentItem & { category: Exclude<Category, "all"> } }) {
+function NewsCard({ item, lang }: { item: NewsSentimentItem & { category: Exclude<Category, "all"> }; lang: "de" | "en" }) {
   const s = sentimentClasses(item.sentiment);
   const Icon = s.icon;
+  const sentimentLabel = item.sentiment === "bullish" ? (lang === "en" ? "bullish" : "bullisch") : item.sentiment === "bearish" ? (lang === "en" ? "bearish" : "bärisch") : "neutral";
   return (
     <li className="group rounded-lg border border-border/70 bg-background/30 p-4 transition-colors hover:border-border hover:bg-background/60">
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
         <span className="font-medium text-foreground/80">{item.publisher}</span>
         <span>·</span>
-        <span>{timeAgo(item.publishedAt)} ago</span>
+        <span>{timeAgo(item.publishedAt, lang)} {lang === "en" ? "ago" : "her"}</span>
         {item.breaking && (
           <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
             Breaking
           </span>
         )}
         <span className="rounded border border-border/60 bg-card px-1.5 py-0.5 text-[10px] uppercase tracking-wider">
-          {CATEGORY_LABEL[item.category]}
+          {CATEGORY_LABEL[lang][item.category]}
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${s.wrap}`}>
             <Icon className="h-3 w-3" />
-            {item.sentiment ?? "neutral"}
+            {sentimentLabel}
             {typeof item.score === "number" && (
               <span className="opacity-70">· {Math.round(item.score * 100)}%</span>
             )}
