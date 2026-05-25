@@ -316,7 +316,9 @@ export function ApexDashboard({
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">{decision.reasoning}</p>
       </div>
 
-      {/* TECHNISCHE & STATISTISCHE ANALYSE */}
+      {/* TECHNISCHE & STATISTISCHE ANALYSE — 2-Spalten-Layout für bessere Raumnutzung */}
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:h-full">
+
       <SectionCard icon={BarChart3} title="📈 Technische & statistische Analyse">
         <div className="divide-y divide-border/40">
           {techRows.map((r) => (
