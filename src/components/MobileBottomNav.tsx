@@ -2,16 +2,18 @@ import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
-  Brain,
+  BookOpen,
   Calendar,
   CreditCard,
   Flame,
   Globe2,
+  Info,
   LineChart,
   ListOrdered,
   Microscope,
   MoreHorizontal,
   Newspaper,
+  Radar,
   Settings as SettingsIcon,
   ShieldCheck,
   Sigma,
@@ -38,6 +40,7 @@ const primary: PrimaryItem[] = [
 ];
 
 // Everything not in the bottom bar lives in the "More" sheet.
+// Mirrors AppSidebar exactly so phone & tablet have full feature parity.
 const moreSections: { labelKey: string; items: MoreItem[] }[] = [
   {
     labelKey: "side.quantCore",
@@ -50,6 +53,7 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
   {
     labelKey: "side.markets",
     items: [
+      { to: "/markt-radar", icon: Radar, key: "nav.marktRadar" },
       { to: "/heatmap", icon: Flame, key: "nav.heatmap" },
       { to: "/news", icon: Newspaper, key: "nav.news" },
       { to: "/global-intel", icon: Globe2, key: "nav.global" },
@@ -61,6 +65,8 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
     items: [
       { to: "/produkte", icon: LineChart, key: "nav.catalog" },
       { to: "/preise", icon: CreditCard, key: "nav.pricing" },
+      { to: "/methodology", icon: BookOpen, key: "nav.methodology" },
+      { to: "/about", icon: Info, key: "nav.about" },
       { to: "/einstellungen", icon: SettingsIcon, key: "nav.settings" },
     ],
   },
@@ -79,23 +85,23 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-xl"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         aria-label="Primary"
       >
-        <ul className="grid grid-cols-5">
+        <ul className="mx-auto grid max-w-3xl grid-cols-5">
           {primary.map((it) => {
             const active = isActive(it);
             return (
               <li key={it.to}>
                 <Link
                   to={it.to}
-                  className={`flex min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium transition ${
+                  className={`flex min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
                     active ? "text-[#22FF88]" : "text-white/55"
                   }`}
                 >
                   <it.icon
-                    className={`h-5 w-5 ${active ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
+                    className={`h-5 w-5 md:h-6 md:w-6 ${active ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
                   />
                   <span className="truncate leading-none">{t(it.key)}</span>
                 </Link>
@@ -106,13 +112,13 @@ export function MobileBottomNav() {
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
-              className={`flex w-full min-h-[56px] flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-medium transition ${
+              className={`flex w-full min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
                 moreActive ? "text-[#22FF88]" : "text-white/55"
               }`}
               aria-label={t("nav.more")}
             >
               <MoreHorizontal
-                className={`h-5 w-5 ${moreActive ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
+                className={`h-5 w-5 md:h-6 md:w-6 ${moreActive ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
               />
               <span className="truncate leading-none">{t("nav.more")}</span>
             </button>
@@ -122,7 +128,7 @@ export function MobileBottomNav() {
 
       {moreOpen && (
         <div
-          className="md:hidden fixed inset-0 z-50 flex flex-col"
+          className="lg:hidden fixed inset-0 z-50 flex flex-col"
           role="dialog"
           aria-modal="true"
         >
@@ -133,31 +139,31 @@ export function MobileBottomNav() {
             onClick={() => setMoreOpen(false)}
           />
           <div
-            className="rounded-t-2xl border-t border-border bg-card max-h-[80vh] overflow-y-auto"
+            className="rounded-t-2xl border-t border-border bg-card max-h-[85vh] overflow-y-auto"
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
-              <div className="text-sm font-semibold tracking-wide">
+              <div className="text-sm md:text-base font-semibold tracking-wide">
                 {t("nav.more")}
               </div>
               <button
                 type="button"
                 onClick={() => setMoreOpen(false)}
-                className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                className="rounded-full p-1.5 md:p-2 text-muted-foreground hover:bg-muted"
                 aria-label="Close"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 md:h-6 md:w-6" />
               </button>
             </div>
             <div className="mx-auto -mt-1 mb-2 h-1 w-10 rounded-full bg-border" />
 
-            <div className="space-y-5 px-4 pb-2">
+            <div className="mx-auto max-w-3xl space-y-5 md:space-y-6 px-4 md:px-6 pb-2">
               {moreSections.map((section) => (
                 <div key={section.labelKey}>
-                  <div className="px-1 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  <div className="px-1 pb-2 text-[10px] md:text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                     {t(section.labelKey)}
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
                     {section.items.map((it) => {
                       const active = path.startsWith(it.to);
                       return (
@@ -165,13 +171,13 @@ export function MobileBottomNav() {
                           key={it.to}
                           to={it.to}
                           onClick={() => setMoreOpen(false)}
-                          className={`flex min-h-[80px] flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-[11px] font-medium transition ${
+                          className={`flex min-h-[80px] md:min-h-[96px] flex-col items-center justify-center gap-1.5 md:gap-2 rounded-xl border px-2 py-3 md:py-4 text-center text-[11px] md:text-[13px] font-medium transition ${
                             active
                               ? "border-[#22FF88]/40 bg-[#22FF88]/10 text-[#22FF88]"
                               : "border-border bg-muted/30 text-foreground/80 hover:bg-muted/50"
                           }`}
                         >
-                          <it.icon className="h-5 w-5" />
+                          <it.icon className="h-5 w-5 md:h-6 md:w-6" />
                           <span className="leading-tight">{t(it.key)}</span>
                         </Link>
                       );
