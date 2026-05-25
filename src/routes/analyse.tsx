@@ -681,11 +681,13 @@ function AnalysePage() {
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight">QUANTM <span className="text-muted-foreground font-normal text-base">· by Quantm Trade</span></h1>
-            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-              LIVE
-            </span>
             <AnalysisCreditBadge />
+          </div>
+
+          <p className="text-sm text-muted-foreground">Dein statistischer Analyse-Agent. Klare Urteile, datengetrieben.</p>
+
+        </div>
+      </div>
           </div>
 
           <p className="text-sm text-muted-foreground">Dein statistischer Analyse-Agent. Klare Urteile, datengetrieben.</p>
