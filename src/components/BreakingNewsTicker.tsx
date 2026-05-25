@@ -11,23 +11,33 @@ import { useT } from "@/lib/i18n";
 
 type Item = NewsSentimentItem & { source: NewsSource | "other" };
 
+// Default benchmark symbols to enrich the ticker when the watchlist is small.
+// Always merged in so the strip stays lively and varied.
+const BENCHMARK_SYMBOLS = ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA", "META", "GOOGL", "AMZN", "BTC-USD"];
+
 export function BreakingNewsTicker() {
   const { settings } = useSettings();
   const t = useT();
   const { isPro, loading: subLoading } = useSubscription();
+
+  // Use ALL configured news sources by default; respect user opt-outs.
   const enabledSources = useMemo(
     () => NEWS_SOURCES.filter((k) => settings.newsSources[k]),
-    [settings.newsSources]
+    [settings.newsSources],
   );
-  const symbols = useMemo(
-    () => (settings.watchlist.length > 0 ? settings.watchlist : ["AAPL", "MSFT", "NVDA", "SPY", "TSLA"]).slice(0, 8),
-    [settings.watchlist]
-  );
+
+  // Merge watchlist with benchmark symbols for a fuller, more varied feed.
+  const symbols = useMemo(() => {
+    const wl = settings.watchlist ?? [];
+    const merged = Array.from(new Set([...wl, ...BENCHMARK_SYMBOLS]));
+    return merged.slice(0, 12);
+  }, [settings.watchlist]);
 
   const { data } = useQuery({
     queryKey: ["news-ticker", symbols.join(","), enabledSources.join(",")],
     queryFn: async () => {
-      const res = await fetchNewsSentiment({ symbols, sources: enabledSources, tier1Only: true });
+      // tier1Only=false → use every enabled source, not only "premium" wires.
+      const res = await fetchNewsSentiment({ symbols, sources: enabledSources, tier1Only: false });
       return res.items as Item[];
     },
     refetchInterval: 60_000,
@@ -35,9 +45,33 @@ export function BreakingNewsTicker() {
     enabled: !subLoading && isPro && enabledSources.length > 0,
   });
 
-  const items = (data ?? []).slice(0, 20);
+  // De-duplicate by uuid and normalized title, sort by recency, cap at 30.
+  const items = useMemo<Item[]>(() => {
+    const raw = data ?? [];
+    const seenUuid = new Set<string>();
+    const seenTitle = new Set<string>();
+    const out: Item[] = [];
+    for (const it of raw) {
+      const titleKey = (it.title || "").toLowerCase().replace(/\s+/g, " ").trim().slice(0, 120);
+      if (!titleKey) continue;
+      if (it.uuid && seenUuid.has(it.uuid)) continue;
+      if (seenTitle.has(titleKey)) continue;
+      if (it.uuid) seenUuid.add(it.uuid);
+      seenTitle.add(titleKey);
+      out.push(it);
+    }
+    out.sort((a, b) => (b.publishedAt ?? 0) - (a.publishedAt ?? 0));
+    return out.slice(0, 30);
+  }, [data]);
+
   const breaking = items.filter((i) => i.breaking);
-  const marquee = items.length > 0 ? items : [];
+
+  // Speed: scale duration with item count so density feels constant.
+  // ~3 seconds per headline, clamped 25–55s.
+  const animationDuration = useMemo(() => {
+    const perItem = 3;
+    return `${Math.max(25, Math.min(55, items.length * perItem))}s`;
+  }, [items.length]);
 
   // Desktop toast on new breaking headline
   const seen = useRef<Set<string>>(new Set());
@@ -45,7 +79,6 @@ export function BreakingNewsTicker() {
   useEffect(() => {
     if (!settings.notifBreakingNews) return;
     if (!initialized.current) {
-      // Mark all current items as seen on first load (no spam on mount)
       breaking.forEach((b) => seen.current.add(b.uuid));
       initialized.current = true;
       return;
@@ -56,12 +89,15 @@ export function BreakingNewsTicker() {
       toast(`${b.publisher} · ${b.symbol}`, {
         description: b.title,
         duration: 8000,
-        action: { label: t("common.openOriginal"), onClick: () => window.open(b.link, "_blank", "noopener,noreferrer") },
+        action: {
+          label: t("common.openOriginal"),
+          onClick: () => window.open(b.link, "_blank", "noopener,noreferrer"),
+        },
       });
     }
-  }, [breaking, settings.notifBreakingNews]);
+  }, [breaking, settings.notifBreakingNews, t]);
 
-  if (marquee.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="border-b border-border/60 bg-card/60 backdrop-blur">
@@ -69,12 +105,24 @@ export function BreakingNewsTicker() {
         <div className="flex shrink-0 items-center gap-1.5 bg-bear/15 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-bear ring-1 ring-bear/30">
           <Zap className="h-3 w-3 animate-pulse" /> Live
         </div>
-        <div className="relative flex-1 overflow-hidden">
-          <div className="flex animate-ticker whitespace-nowrap py-1.5 will-change-transform" style={{ animationDuration: "90s" }}>
-            {[...marquee, ...marquee].map((it, i) => (
+        <div className="group relative flex-1 overflow-hidden">
+          {/* edge fades */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-card/90 to-transparent"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-card/90 to-transparent"
+          />
+          <div
+            className="flex animate-ticker whitespace-nowrap py-1.5 will-change-transform group-hover:[animation-play-state:paused]"
+            style={{ animationDuration }}
+          >
+            {[...items, ...items].map((it, i) => (
               <span
                 key={`${it.uuid}-${i}`}
-                className="mx-4 inline-flex items-center gap-2 text-[12px] text-foreground/90 hover:text-primary transition-colors"
+                className="mx-4 inline-flex items-center gap-2 text-[12px] text-foreground/90 transition-colors hover:text-primary"
               >
                 <AgencyLogo source={it.source} size="xs" />
                 <Link
@@ -88,12 +136,14 @@ export function BreakingNewsTicker() {
                   href={it.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate max-w-[480px] hover:text-primary"
+                  className="max-w-[480px] truncate hover:text-primary"
                 >
                   {it.title}
                 </a>
                 {it.breaking && (
-                  <span className="rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">Breaking</span>
+                  <span className="rounded bg-bear/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-bear">
+                    Breaking
+                  </span>
                 )}
               </span>
             ))}
