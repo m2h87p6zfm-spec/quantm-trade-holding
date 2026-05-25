@@ -10,7 +10,7 @@ import { whyNow } from "@/lib/analysis";
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
@@ -32,8 +32,8 @@ type SignalState = {
   detail: string;
 };
 
-function deriveSignalState(pos: Position, row?: CockpitRow): SignalState {
-  if (!row) return { kind: "loading", label: "lädt…", detail: "" };
+function deriveSignalState(pos: Position, row: CockpitRow | undefined, t: ReturnType<typeof useT>): SignalState {
+  if (!row) return { kind: "loading", label: t("portfolio.loading"), detail: "" };
   const v = row.sig.verdict;
   const trigger = whyNow(row.ind, row.sig);
   if (v === "NEUTRAL") return { kind: "neutral", label: "Neutral", detail: trigger };
@@ -41,12 +41,12 @@ function deriveSignalState(pos: Position, row?: CockpitRow): SignalState {
   if (aligned)
     return {
       kind: "aligned",
-      label: v === "LONG" ? "BUY · aligned" : "SELL · aligned",
+      label: v === "LONG" ? t("portfolio.buyAligned") : t("portfolio.sellAligned"),
       detail: trigger,
     };
   return {
     kind: "conflict",
-    label: v === "SHORT" ? "Signal: SELL" : "Signal: BUY",
+    label: v === "SHORT" ? t("portfolio.signalSell") : t("portfolio.signalBuy"),
     detail: trigger,
   };
 }
@@ -60,12 +60,13 @@ function PositionRow({
   row?: CockpitRow;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   const q = useQuote(pos.symbol, 30_000);
   const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
-  const sig = deriveSignalState(pos, row);
+  const sig = deriveSignalState(pos, row, t);
 
   const sigStyles =
     sig.kind === "conflict"
@@ -134,7 +135,7 @@ function PositionRow({
           <button
             onClick={() => onRemove(pos.id)}
             className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10 transition-colors"
-            aria-label="Löschen"
+            aria-label={t("portfolio.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -153,12 +154,13 @@ function PositionCard({
   row?: CockpitRow;
   onRemove: (id: string) => void;
 }) {
+  const t = useT();
   const q = useQuote(pos.symbol, 30_000);
   const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
-  const sig = deriveSignalState(pos, row);
+  const sig = deriveSignalState(pos, row, t);
   const sigStyles =
     sig.kind === "conflict"
       ? "bg-bear/15 text-bear border-bear/40"
@@ -196,11 +198,11 @@ function PositionCard({
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-[11px]">
         <div>
-          <div className="text-muted-foreground">Menge</div>
+          <div className="text-muted-foreground">{t("portfolio.qty")}</div>
           <div className="tabular-nums">{pos.qty}</div>
         </div>
         <div>
-          <div className="text-muted-foreground">Einstand</div>
+          <div className="text-muted-foreground">{t("portfolio.entry")}</div>
           <div className="tabular-nums">{pos.entry.toFixed(2)}</div>
         </div>
         <div className="text-right">
@@ -230,7 +232,7 @@ function PositionCard({
           <button
             onClick={() => onRemove(pos.id)}
             className="rounded-md p-1.5 text-muted-foreground hover:text-rose-400 hover:bg-rose-400/10"
-            aria-label="Löschen"
+            aria-label={t("portfolio.delete")}
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -269,8 +271,8 @@ function PortfolioPage() {
           </p>
         </div>
         <div className="text-xs text-muted-foreground">
-          {positions.length} / {max === Infinity ? "∞" : max} Positionen
-          {tier === "free" && " · Free"}
+          {positions.length} / {max === Infinity ? "∞" : max} {t("common.positions")}
+          {tier === "free" && ` · ${t("portfolio.limit.free")}`}
         </div>
       </div>
 
@@ -280,18 +282,18 @@ function PortfolioPage() {
       {/* 2. Holdings — die Positionen sind das Herzstück, also gleich nach oben */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="border-b border-border px-4 md:px-5 py-3 flex items-center justify-between">
-          <div className="text-sm font-semibold">Holdings</div>
+          <div className="text-sm font-semibold">{t("portfolio.holdings")}</div>
           <div className="text-[11px] text-muted-foreground">
-            {positions.length} {positions.length === 1 ? "Position" : "Positionen"}
+            {positions.length} {positions.length === 1 ? t("common.position") : t("common.positions")}
           </div>
         </div>
 
         {positions.length === 0 ? (
           <div className="px-4 py-16 text-center text-muted-foreground">
             <Wallet className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <div className="text-sm">Noch keine Positionen.</div>
+            <div className="text-sm">{t("portfolio.empty.title")}</div>
             <div className="text-xs mt-1">
-              Füge unten eine Aktie hinzu — alle Analytics werden automatisch berechnet.
+              {t("portfolio.empty.body")}
             </div>
           </div>
         ) : (
@@ -313,14 +315,14 @@ function PortfolioPage() {
               <table className="w-full text-sm min-w-[920px]">
                 <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2 text-left">Asset</th>
-                    <th className="px-3 py-2 text-left">Side</th>
-                    <th className="px-3 py-2 text-right">Menge</th>
-                    <th className="px-3 py-2 text-right">Einstand</th>
-                    <th className="px-3 py-2 text-right">Aktuell</th>
-                    <th className="px-3 py-2 text-right">Wert</th>
+                    <th className="px-3 py-2 text-left">{t("portfolio.table.asset")}</th>
+                    <th className="px-3 py-2 text-left">{t("portfolio.table.side")}</th>
+                    <th className="px-3 py-2 text-right">{t("portfolio.table.qty")}</th>
+                    <th className="px-3 py-2 text-right">{t("portfolio.table.entry")}</th>
+                    <th className="px-3 py-2 text-right">{t("portfolio.table.current")}</th>
+                    <th className="px-3 py-2 text-right">{t("portfolio.table.value")}</th>
                     <th className="px-3 py-2 text-right">P&L</th>
-                    <th className="px-3 py-2 text-left">Quant-Signal</th>
+                    <th className="px-3 py-2 text-left">{t("portfolio.table.signal")}</th>
                     <th className="px-3 py-2"></th>
                   </tr>
                 </thead>
@@ -358,6 +360,8 @@ function Summary({
   positions: Position[];
   rowMap: Map<string, CockpitRow>;
 }) {
+  const t = useT();
+  const lang = useLang();
   // IMPORTANT: do NOT call useQuote() in a loop — hook count must be stable.
   // Use the cockpit rowMap (already fetched by the parent) for live prices.
   let total = 0,
@@ -373,25 +377,25 @@ function Summary({
   const plPct = basis ? (pl / basis) * 100 : 0;
   const up = pl >= 0;
   const fmt = (n: number) =>
-    n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    n.toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="grid gap-3 md:grid-cols-4">
       <Stat
-        label="Portfolio-Wert"
+        label={t("portfolio.value")}
         value={`€ ${fmt(total)}`}
         accent="primary"
         icon={<Wallet className="h-4 w-4" />}
       />
-      <Stat label="Einstand" value={`€ ${fmt(basis)}`} sub="Eingesetztes Kapital" />
+      <Stat label={t("portfolio.capital")} value={`€ ${fmt(basis)}`} sub={t("portfolio.capitalSub")} />
       <Stat
-        label="Unrealisierter P&L"
+        label={t("portfolio.unrealized")}
         value={`${up ? "+" : "−"}€ ${fmt(Math.abs(pl))}`}
         tone={up ? "up" : "down"}
         icon={up ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
       />
       <Stat
-        label="Performance"
+        label={t("portfolio.performance")}
         value={`${up ? "+" : ""}${plPct.toFixed(2)} %`}
         tone={up ? "up" : "down"}
       />

@@ -7,6 +7,7 @@ import { useSettings } from "@/lib/settings";
 import { useAlerts } from "@/lib/alerts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useT } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Feature → benötigter Mindest-Tier
@@ -64,6 +65,7 @@ export const LIMITS = {
 
 
 export function useWatchlistLimit() {
+  const t = useT();
   const { tier } = useSubscription();
   const { settings, toggleWatch } = useSettings();
   const max = LIMITS.watchlist[tier];
@@ -71,9 +73,9 @@ export function useWatchlistLimit() {
   const guardedAdd = (symbol: string) => {
     const exists = settings.watchlist.includes(symbol);
     if (!exists && count >= max) {
-      toast.error(`Watchlist-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Watchlist-Werte.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.watchlist.title", { max }), {
+        description: t("limit.watchlist.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return false;
     }
@@ -84,15 +86,16 @@ export function useWatchlistLimit() {
 }
 
 export function useAlertsLimit() {
+  const t = useT();
   const { tier } = useSubscription();
   const { alerts, add } = useAlerts();
   const max = LIMITS.alerts[tier];
   const active = alerts.filter((a) => !a.triggeredAt).length;
   const guardedAdd: typeof add = (rule) => {
     if (active >= max) {
-      toast.error(`Alert-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Smart Alerts.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.alert.title", { max }), {
+        description: t("limit.alert.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return;
     }
@@ -102,14 +105,15 @@ export function useAlertsLimit() {
 }
 
 export function usePortfolioLimit(count: number) {
+  const t = useT();
   const { tier } = useSubscription();
   const max = LIMITS.portfolio[tier];
   const atLimit = count >= max;
   const guard = () => {
     if (atLimit) {
-      toast.error(`Portfolio-Limit erreicht (${max})`, {
-        description: "Upgrade auf Pro für unlimitierte Positionen.",
-        action: { label: "Upgrade", onClick: () => (window.location.href = "/preise") },
+      toast.error(t("limit.portfolio.title", { max }), {
+        description: t("limit.portfolio.description"),
+        action: { label: t("common.upgrade"), onClick: () => (window.location.href = "/preise") },
       });
       return false;
     }
@@ -135,6 +139,7 @@ export function FeatureGate({
   description?: string;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const { allowed, required, loading } = useFeature(feature);
   const { user } = useAuth();
 
@@ -159,23 +164,23 @@ export function FeatureGate({
           <Lock className="h-6 w-6" />
         </div>
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {TIER_LABEL[required]} Feature
+          {t("gate.feature", { tier: TIER_LABEL[required] })}
         </div>
         <h2 className="text-2xl font-bold tracking-tight">
-          {title ?? "Dieses Feature ist gesperrt"}
+          {title ?? t("gate.locked")}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          {description ?? `Upgrade auf den ${TIER_LABEL[required]}-Plan, um diesen Bereich freizuschalten.`}
+          {description ?? t("gate.description", { tier: TIER_LABEL[required] })}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Button asChild>
             <Link to="/preise">
-              <Icon className="mr-1.5 h-4 w-4" /> Auf {TIER_LABEL[required]} upgraden
+              <Icon className="mr-1.5 h-4 w-4" /> {t("gate.upgrade", { tier: TIER_LABEL[required] })}
             </Link>
           </Button>
           {!user && (
             <Button asChild variant="outline">
-              <Link to="/login">Anmelden</Link>
+              <Link to="/login">{t("common.signIn")}</Link>
             </Button>
           )}
         </div>

@@ -142,7 +142,7 @@ function write(s: StoredSettings) {
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
 export function useSettings() {
-  const [stored, setStored] = useState<StoredSettings>(DEFAULT);
+  const [stored, setStored] = useState<StoredSettings>(() => read());
   useEffect(() => {
     setStored(read());
     const h = () => setStored(read());
