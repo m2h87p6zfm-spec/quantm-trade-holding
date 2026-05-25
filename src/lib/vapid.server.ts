@@ -73,7 +73,7 @@ export async function sendPushTo(
   const res = await fetch(subscription.endpoint, {
     method: built.method,
     headers: built.headers,
-    body: built.body,
+    body: built.body as unknown as BodyInit,
   });
   return {
     ok: res.ok,
