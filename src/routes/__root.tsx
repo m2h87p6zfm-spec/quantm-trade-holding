@@ -191,6 +191,7 @@ function AppShell() {
 }
 
 function AuthHeaderButton() {
+  const t = useT();
   const { user, loading, signOut } = useAuth();
   const { tier } = useSubscription();
   const navigate = useNavigate();
@@ -198,14 +199,14 @@ function AuthHeaderButton() {
   if (!user) {
     return (
       <div className="flex items-center gap-1">
-        <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">Anmelden</Link></Button>
-        <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">Upgrade</Link></Button>
+        <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">{t("common.signIn")}</Link></Button>
+        <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">{t("common.upgrade")}</Link></Button>
       </div>
     );
   }
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const displayName = (meta.full_name as string) || (meta.name as string) || user.email?.split("@")[0] || "Konto";
+  const displayName = (meta.full_name as string) || (meta.name as string) || user.email?.split("@")[0] || t("shell.accountFallback");
   const avatarUrl = (meta.avatar_url as string) || (meta.picture as string) || undefined;
   const initials = displayName.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "A";
   const tierLabel = tier === "elite" ? "Quantm Elite" : tier === "pro" ? "Quantm Pro" : "Free";
@@ -213,7 +214,7 @@ function AuthHeaderButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/50 transition-colors" aria-label="Profilmenü">
+        <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/50 transition-colors" aria-label={t("shell.profileMenu")}>
           <Avatar className="h-7 w-7">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
             <AvatarFallback className="text-[10px] bg-primary/15 text-primary">{initials}</AvatarFallback>
@@ -239,25 +240,25 @@ function AuthHeaderButton() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate({ to: "/konto" })}>
-          <UserIcon className="h-4 w-4 mr-2" /> Profil & Konto
+          <UserIcon className="h-4 w-4 mr-2" /> {t("shell.profileAccount")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate({ to: "/konto" })}>
-          <CreditCard className="h-4 w-4 mr-2" /> Abo verwalten
+          <CreditCard className="h-4 w-4 mr-2" /> {t("shell.manageSubscription")}
         </DropdownMenuItem>
         {tier === "free" ? (
           <DropdownMenuItem onSelect={() => navigate({ to: "/preise" })}>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Auf Pro upgraden
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> {t("shell.upgradePro")}
           </DropdownMenuItem>
         ) : tier === "pro" ? (
           <DropdownMenuItem onSelect={() => navigate({ to: "/preise" })}>
-            <Sparkles className="h-4 w-4 mr-2 text-primary" /> Auf Elite upgraden
+            <Sparkles className="h-4 w-4 mr-2 text-primary" /> {t("shell.upgradeElite")}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem onSelect={() => navigate({ to: "/einstellungen" })}>
-          <Settings className="h-4 w-4 mr-2" /> Einstellungen
+          <Settings className="h-4 w-4 mr-2" /> {t("nav.settings")}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate({ to: "/handelsprofil" })}>
-          <Sparkles className="h-4 w-4 mr-2" /> Handelsprofil
+          <Sparkles className="h-4 w-4 mr-2" /> {t("shell.tradingProfile")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -267,7 +268,7 @@ function AuthHeaderButton() {
           }}
           className="text-destructive focus:text-destructive"
         >
-          <LogOut className="h-4 w-4 mr-2" /> Abmelden
+          <LogOut className="h-4 w-4 mr-2" /> {t("shell.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
