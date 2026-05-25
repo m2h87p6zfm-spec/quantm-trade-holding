@@ -145,7 +145,7 @@ export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = 
       </div>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         <div className="card-glow rounded-xl p-4">
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Ø Korrelation</div>
           <div className={`mt-2 font-mono text-2xl font-bold ${(avgCorr ?? 0) > 0.6 ? "text-bear" : (avgCorr ?? 0) > 0.3 ? "text-gold" : "text-bull"}`}>
