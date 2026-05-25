@@ -103,9 +103,14 @@ export function useAlerts() {
       refresh();
     });
 
-    // Realtime: andere Tabs / Cron-Trigger
+    // Realtime: andere Tabs / Cron-Trigger.
+    // Eindeutiger Channelname pro Mount — sonst wirft Supabase Realtime
+    // beim zweiten Mount (StrictMode / Route-Remount) den Fehler
+    // "cannot add `postgres_changes` callbacks ... after subscribe()",
+    // weil ein bestehender Channel mit gleichem Namen wiederverwendet wird.
+    const channelName = `price_alerts_self:${Math.random().toString(36).slice(2)}`;
     const ch = supabase
-      .channel("price_alerts_self")
+      .channel(channelName)
       .on("postgres_changes", { event: "*", schema: "public", table: "price_alerts" }, () => refresh())
       .subscribe();
 
