@@ -4,19 +4,24 @@ import { upcomingEvents, timeUntil, type EconEvent } from "@/lib/calendar";
 import { Calendar, AlertTriangle, Activity, ChevronRight, X } from "lucide-react";
 
 import { FeatureGate } from "@/lib/featureGate";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/kalender")({
-  component: () => (
+  component: CalendarRoute,
+});
+
+function CalendarRoute() {
+  const t = useT();
+  return (
     <FeatureGate
       feature="calendar"
-      title="Economic Calendar ist Pro"
-      description="Kuratierte Makro-Events mit Marktwirkung — Zinsentscheidungen, CPI, NFP und mehr."
+      title={t("gate.calendar.title")}
+      description={t("gate.calendar.description")}
     >
       <CalendarPage />
     </FeatureGate>
-  ),
-});
+  );
+}
 
 const COUNTRY_FLAG: Record<EconEvent["country"], string> = { US: "🇺🇸", EU: "🇪🇺", DE: "🇩🇪", JP: "🇯🇵", UK: "🇬🇧", CN: "🇨🇳" };
 const IMPACT_STYLE: Record<EconEvent["impact"], string> = {
@@ -25,13 +30,14 @@ const IMPACT_STYLE: Record<EconEvent["impact"], string> = {
   low: "bg-muted text-muted-foreground ring-border",
 };
 
-function fmtDate(iso: string) {
+function fmtDate(iso: string, lang: "de" | "en") {
   const d = new Date(iso);
-  return d.toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(lang === "en" ? "en-US" : "de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function CalendarPage() {
   const t = useT();
+  const lang = useLang();
   const [now, setNow] = useState(() => Date.now());
   const [filter, setFilter] = useState<"all" | EconEvent["impact"]>("all");
   const [openEvent, setOpenEvent] = useState<EconEvent | null>(null);
