@@ -12,6 +12,7 @@ import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
 import { useT } from "@/lib/i18n";
+import { HeartManifestHero } from "@/components/HeartManifestHero";
 
 
 
