@@ -688,12 +688,6 @@ function AnalysePage() {
 
         </div>
       </div>
-          </div>
-
-          <p className="text-sm text-muted-foreground">Dein statistischer Analyse-Agent. Klare Urteile, datengetrieben.</p>
-
-        </div>
-      </div>
 
       {/* Chat-Fläche mit subtilem Verlauf */}
       <div className="relative flex-1 overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card/60 to-card/20 shadow-inner">
