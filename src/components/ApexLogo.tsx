@@ -1,3 +1,5 @@
+import logoUrl from "@/assets/quantm-trade-logo.png";
+
 type Props = {
   className?: string;
   /** Kept for API compatibility. */
@@ -5,63 +7,17 @@ type Props = {
 };
 
 /**
- * Quantm Trade wordmark — custom SVG lockup.
- * Bracket frame + bold geometric type = recognizable, sharp, theme-aware.
- * Uses currentColor so it inherits foreground; brand mint accent on the brackets.
+ * Quantm Trade brand lockup — Q-orbit monogram + wordmark.
+ * Logo asset is white on transparent; in light mode it's inverted to dark
+ * via a CSS filter so it stays legible on both themes.
  */
-export function ApexLogo({ className = "h-5 w-auto" }: Props) {
+export function ApexLogo({ className = "h-6 w-auto" }: Props) {
   return (
-    <svg
-      viewBox="0 0 220 40"
-      role="img"
-      aria-label="Quantm Trade AI"
-      className={className}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Left bracket */}
-      <path
-        d="M10 6 H4 V34 H10"
-        stroke="var(--primary)"
-        strokeWidth="2.5"
-        strokeLinecap="square"
-        fill="none"
-      />
-      {/* Right bracket */}
-      <path
-        d="M210 6 H216 V34 H210"
-        stroke="var(--primary)"
-        strokeWidth="2.5"
-        strokeLinecap="square"
-        fill="none"
-      />
-      {/* Wordmark */}
-      <text
-        x="110"
-        y="26"
-        textAnchor="middle"
-        fontFamily="var(--font-display), 'Space Grotesk', sans-serif"
-        fontSize="18"
-        fontWeight="700"
-        letterSpacing="2"
-        fill="currentColor"
-      >
-        QUANTM
-        <tspan fill="var(--primary)" dx="6">TRADE</tspan>
-      </text>
-      {/* AI tag */}
-      <text
-        x="110"
-        y="37"
-        textAnchor="middle"
-        fontFamily="var(--font-mono), monospace"
-        fontSize="6"
-        fontWeight="600"
-        letterSpacing="4"
-        fill="var(--muted-foreground)"
-      >
-        · AI ·
-      </text>
-    </svg>
+    <img
+      src={logoUrl}
+      alt="Quantm Trade"
+      className={`${className} select-none [.light_&]:invert`}
+      draggable={false}
+    />
   );
 }
