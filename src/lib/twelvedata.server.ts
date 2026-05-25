@@ -23,6 +23,11 @@ function getKey(): string {
 type Entry<T> = { value: T; expires: number; lastUpdated: number };
 const CACHE = new Map<string, Entry<any>>();
 
+// In-Flight-Dedup: gleichzeitige Requests auf denselben Key teilen sich
+// EINE Twelve-Data-Anfrage. Spart Credits bei Burst-Traffic (z. B. SSE-Tick
+// trifft mit Polling zusammen, mehrere User mit derselben Watchlist).
+const INFLIGHT = new Map<string, Promise<any>>();
+
 function cacheGet<T>(key: string): Entry<T> | null {
   const e = CACHE.get(key) as Entry<T> | undefined;
   if (!e) return null;
@@ -30,6 +35,20 @@ function cacheGet<T>(key: string): Entry<T> | null {
 }
 function cacheSet<T>(key: string, value: T, ttlSec: number) {
   CACHE.set(key, { value, expires: Date.now() + ttlSec * 1000, lastUpdated: Date.now() });
+}
+
+// Markt-aware TTL: bei geschlossenem US-Markt bewegen sich Kurse kaum →
+// längere TTLs sind unmerklich für User, sparen aber dramatisch Credits.
+function isUsMarketOpenUtc(): boolean {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return false;
+  const m = now.getUTCHours() * 60 + now.getUTCMinutes();
+  // Weite Fenster-Definition (12:30–21:00 UTC) deckt EST und EDT ab.
+  return m >= 12 * 60 + 30 && m <= 21 * 60;
+}
+export function adaptiveQuoteTtl(baseSec: number): number {
+  return isUsMarketOpenUtc() ? baseSec : Math.max(baseSec, 300);
 }
 
 async function tdFetch(path: string, params: Record<string, string>): Promise<any> {
