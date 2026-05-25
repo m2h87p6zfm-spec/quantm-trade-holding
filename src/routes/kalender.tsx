@@ -137,19 +137,12 @@ function CalendarPage() {
   );
 }
 
-const CATEGORY_INFO: Record<EconEvent["category"], string> = {
-  Inflation: "Inflationsdaten beeinflussen Zinserwartungen — höher als erwartet ist meist bearish für Bonds und Tech, bullish für USD.",
-  Zinsen: "Zinsentscheidungen bewegen FX, Bonds und Aktien stark. Achte besonders auf Forward Guidance.",
-  Arbeit: "Arbeitsmarktdaten signalisieren Wirtschaftsstärke. Starke Daten = hawkische Fed = USD-stark, Bonds schwach.",
-  Wachstum: "Wachstumsindikatoren (BIP, PMI, ifo) zeigen die Konjunkturlage und beeinflussen zyklische Sektoren.",
-  Earnings: "Quartalszahlen können Einzelaktien zweistellig bewegen — Guidance ist oft wichtiger als die reinen Zahlen.",
-  Notenbank: "Notenbank-Kommunikation (FOMC, EZB) setzt den Ton für globale Risikobereitschaft.",
-};
-
 function EventDetailModal({ event, now, onClose }: { event: EconEvent; now: number; onClose: () => void }) {
+  const t = useT();
+  const lang = useLang();
   const tu = timeUntil(event.date, now);
   const d = new Date(event.date);
-  const longDate = d.toLocaleString("de-DE", {
+  const longDate = d.toLocaleString(lang === "en" ? "en-US" : "de-DE", {
     weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
   });
 
@@ -165,7 +158,7 @@ function EventDetailModal({ event, now, onClose }: { event: EconEvent; now: numb
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:bg-accent/40 hover:text-foreground"
-          aria-label="Schließen"
+          aria-label={t("calendar.close")}
         >
           <X className="h-4 w-4" />
         </button>
@@ -185,11 +178,11 @@ function EventDetailModal({ event, now, onClose }: { event: EconEvent; now: numb
 
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-border bg-background/40 p-3">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Termin</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("calendar.date")}</div>
             <div className="mt-1 text-sm font-semibold">{longDate}</div>
           </div>
           <div className="rounded-xl border border-border bg-background/40 p-3">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Status</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("calendar.status")}</div>
             <div className={`mt-1 font-mono text-sm font-bold ${tu.live ? "text-bear" : tu.past ? "text-muted-foreground" : "text-primary"}`}>
               {tu.label}
             </div>
@@ -198,18 +191,18 @@ function EventDetailModal({ event, now, onClose }: { event: EconEvent; now: numb
 
         {event.detail && (
           <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
-            <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">Hintergrund</div>
+            <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">{t("calendar.background")}</div>
             <p className="text-sm leading-relaxed text-foreground/90">{event.detail}</p>
           </div>
         )}
 
         <div className="mt-4 rounded-xl border border-primary/30 bg-primary/5 p-4">
-          <div className="mb-1 text-[10px] uppercase tracking-widest text-primary">Marktwirkung · {event.category}</div>
-          <p className="text-sm leading-relaxed text-foreground/85">{CATEGORY_INFO[event.category]}</p>
+          <div className="mb-1 text-[10px] uppercase tracking-widest text-primary">{t("calendar.marketImpact", { category: event.category })}</div>
+          <p className="text-sm leading-relaxed text-foreground/85">{t(`calendar.info.${event.category}`)}</p>
         </div>
 
         <p className="mt-4 text-[10px] text-muted-foreground/70">
-          Kuratierte Makro-Events. Reale Veröffentlichungen können Indizes, Zinsen und Volatilität signifikant bewegen.
+          {t("calendar.disclaimer")}
         </p>
       </div>
     </div>
