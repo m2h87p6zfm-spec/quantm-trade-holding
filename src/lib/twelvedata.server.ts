@@ -303,16 +303,35 @@ export async function getCandlesCached(
     cacheSet(key, shared.value, ttlSec);
     return { value: shared.value, stale: false, lastUpdated: shared.lastUpdated };
   }
+  // In-Flight-Dedup: gleichzeitige Anfragen auf denselben Candle-Key
+  // teilen sich eine TD-Anfrage (z. B. Picks-Scan über mehrere User).
+  const inflightKey = `fetch:${key}`;
+  const existing = INFLIGHT.get(inflightKey);
+  if (existing) {
+    try {
+      const v = (await existing) as TdCandles | null;
+      return { value: v, stale: false, lastUpdated: Date.now() };
+    } catch { /* fall through */ }
+  }
+  const p = (async () => {
+    try {
+      const j = await tdFetch("/time_series", {
+        symbol,
+        interval: tdInterval,
+        outputsize: String(outputsize),
+        order: "DESC",
+      });
+      const v = parseTimeSeries(j);
+      cacheSet(key, v, ttlSec);
+      void sharedSet(key, v, ttlSec);
+      return v;
+    } finally {
+      INFLIGHT.delete(inflightKey);
+    }
+  })();
+  INFLIGHT.set(inflightKey, p);
   try {
-    const j = await tdFetch("/time_series", {
-      symbol,
-      interval: tdInterval,
-      outputsize: String(outputsize),
-      order: "DESC",
-    });
-    const v = parseTimeSeries(j);
-    cacheSet(key, v, ttlSec);
-    void sharedSet(key, v, ttlSec);
+    const v = await p;
     return { value: v, stale: false, lastUpdated: Date.now() };
   } catch {
     if (hit) return { value: hit.value, stale: true, lastUpdated: hit.lastUpdated };
