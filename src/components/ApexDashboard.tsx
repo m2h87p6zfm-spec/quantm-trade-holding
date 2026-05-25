@@ -290,6 +290,8 @@ export function ApexDashboard({
 
   return (
     <div className="space-y-4">
+
+
       {/* APEX VERDICT */}
       <div className={`rounded-2xl border-2 p-5 shadow-md ${verdictColor.bg}`}>
         <div className="flex items-center justify-between gap-3">
@@ -314,7 +316,9 @@ export function ApexDashboard({
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">{decision.reasoning}</p>
       </div>
 
-      {/* TECHNISCHE & STATISTISCHE ANALYSE */}
+      {/* TECHNISCHE & STATISTISCHE ANALYSE — 2-Spalten-Layout für bessere Raumnutzung */}
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:h-full">
+
       <SectionCard icon={BarChart3} title="📈 Technische & statistische Analyse">
         <div className="divide-y divide-border/40">
           {techRows.map((r) => (
@@ -404,8 +408,10 @@ export function ApexDashboard({
           })}
         </div>
       </SectionCard>
+      </div>
 
       {/* PREISPROGNOSE */}
+
       <SectionCard icon={Target} title="🔮 APEX Preisprognose · 30 Handelstage">
         <div className="divide-y divide-border/40">
           {[
