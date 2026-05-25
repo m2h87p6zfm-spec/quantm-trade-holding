@@ -94,9 +94,7 @@ async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
     const json = (await res.json()) as { news?: Array<{ uuid: string; title: string; publisher: string; link: string; providerPublishTime: number; relatedTickers?: string[] }> };
 
     const sym = symbol.toUpperCase();
-    const companyName = (() => {
-      try { return resolveCompanyName?.(sym) ?? null; } catch { return null; }
-    })();
+    const companyName = resolveCompanyName(sym);
     const nameRx = companyName
       ? new RegExp(`\\b${companyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
       : null;
