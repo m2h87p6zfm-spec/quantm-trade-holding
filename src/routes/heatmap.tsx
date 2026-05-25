@@ -182,27 +182,27 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
       </div>
 
       {mode === "grid" ? (
-        <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
+        <div className="rounded-2xl border border-border bg-card/60 p-3 md:p-4 backdrop-blur">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2 md:grid-cols-6 lg:grid-cols-8">
             {cells.map((c) => <HeatCell key={c.p.symbol} cell={c} />)}
           </div>
           <Legend topDown={topDown} />
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {sectors.map(({ sector, list, avgPct }) => (
-            <div key={sector} className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur animate-fade-up">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: avgPct >= 0 ? "var(--bull)" : "var(--bear)", boxShadow: `0 0 12px color-mix(in oklab, ${avgPct >= 0 ? "var(--bull)" : "var(--bear)"} 60%, transparent)` }} />
-                  <h2 className="text-sm font-semibold uppercase tracking-wider">{sector}</h2>
-                  <span className="text-[11px] text-muted-foreground">{list.length} {t("common.values")}</span>
+            <div key={sector} className="rounded-2xl border border-border bg-card/60 p-3 md:p-4 backdrop-blur animate-fade-up">
+              <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: avgPct >= 0 ? "var(--bull)" : "var(--bear)", boxShadow: `0 0 12px color-mix(in oklab, ${avgPct >= 0 ? "var(--bull)" : "var(--bear)"} 60%, transparent)` }} />
+                  <h2 className="text-xs md:text-sm font-semibold uppercase tracking-wider truncate">{sector}</h2>
+                  <span className="text-[11px] text-muted-foreground shrink-0">{list.length} {t("common.values")}</span>
                 </div>
-                <span className={`font-mono text-sm font-bold ${avgPct >= 0 ? "text-bull" : "text-bear"}`}>
+                <span className={`font-mono text-xs md:text-sm font-bold ${avgPct >= 0 ? "text-bull" : "text-bear"}`}>
                   {avgPct >= 0 ? "+" : ""}{avgPct.toFixed(2)}% Ø
                 </span>
               </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-8">
+              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5 sm:gap-2 lg:grid-cols-8">
                 {list.map((c, i) => <HeatCell key={c.p.symbol} cell={c} big={i === 0 && Math.abs(c.pct ?? 0) > 0.5} />)}
               </div>
             </div>
