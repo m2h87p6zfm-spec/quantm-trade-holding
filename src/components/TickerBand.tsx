@@ -23,7 +23,8 @@ export function TickerBand() {
   const { data } = useQuery<BatchResp>({
     queryKey: ["ticker-band-batch", TICKER_SYMBOLS.join(",")],
     queryFn: async () => {
-      const res = await fetch(`/api/public/quotes-batch?symbols=${TICKER_SYMBOLS.join(",")}`);
+      const { authedFetch } = await import("@/lib/authed-fetch");
+      const res = await authedFetch(`/api/public/quotes-batch?symbols=${TICKER_SYMBOLS.join(",")}`);
       if (!res.ok) throw new Error("batch failed");
       return res.json();
     },

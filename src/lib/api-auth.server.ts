@@ -62,14 +62,25 @@ const JSON_HEADERS = {
 } as const;
 
 export async function resolveUserId(request: Request): Promise<string | null> {
+  let token: string | null = null;
   const auth = request.headers.get("Authorization");
-  if (!auth?.startsWith("Bearer ")) return null;
+  if (auth?.startsWith("Bearer ")) {
+    token = auth.slice("Bearer ".length);
+  } else {
+    // SSE/EventSource cannot set custom headers — accept token via query param.
+    try {
+      const url = new URL(request.url);
+      const q = url.searchParams.get("token");
+      if (q) token = q;
+    } catch { /* noop */ }
+  }
+  if (!token) return null;
   try {
     const sb = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_PUBLISHABLE_KEY!,
       {
-        global: { headers: { Authorization: auth } },
+        global: { headers: { Authorization: `Bearer ${token}` } },
         auth: { persistSession: false },
       },
     );
