@@ -132,61 +132,72 @@ function AppShell() {
   // Keep <html lang> in sync with the user's chosen language so screen
   // readers, browser translation, and SEO see the right locale.
   const { settings } = useSettings();
+  const lang = settings?.language || "en";
   useEffect(() => {
-    if (typeof document !== "undefined" && settings?.language) {
-      document.documentElement.lang = settings.language;
+    if (typeof document !== "undefined" && lang) {
+      document.documentElement.lang = lang;
     }
-  }, [settings?.language]);
+  }, [lang]);
 
   // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
+  // The `key={lang}` on the Fragment forces a full remount of the entire
+  // subtree whenever the user switches language. This guarantees every
+  // component (including memoized children, loaders and locale-derived
+  // state captured at mount time) re-evaluates strings in the new locale.
   if (!user || isAuthScreen) {
-    return <Outlet />;
+    return (
+      <Fragment key={lang}>
+        <Outlet />
+      </Fragment>
+    );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
-        <PaymentTestModeBanner />
-        <DunningBanner />
-        <BreakingNewsTicker />
+    <Fragment key={lang}>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background text-foreground flex-col">
+          <PaymentTestModeBanner />
+          <DunningBanner />
+          <BreakingNewsTicker />
 
-        <div className="flex flex-1 w-full min-w-0">
-          <AppSidebar />
-          <div className="flex flex-1 flex-col relative min-w-0">
-            <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
-              <SidebarTrigger className="shrink-0 hidden md:flex" />
-              <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-bull tick-glow-bull" />
-                </span>
-                <span className="font-medium hidden md:inline">Yahoo Finance</span>
-              </div>
-              <div className="mx-4 hidden xl:block h-5 w-px bg-border/60 shrink-0" />
-              <div className="hidden xl:flex min-w-0 flex-1 overflow-hidden">
-                <MarketClock />
-              </div>
-              <div className="ml-auto flex items-center gap-2 shrink-0">
-                <MarketRegimePill />
-                <CommandPalette />
-                <AuthHeaderButton />
-              </div>
-            </header>
-            <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
-              <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
-              <div className="relative z-10">
-                <Outlet />
-              </div>
-            </main>
-            <DisclaimerBanner />
-            <Footer />
+          <div className="flex flex-1 w-full min-w-0">
+            <AppSidebar />
+            <div className="flex flex-1 flex-col relative min-w-0">
+              <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
+                <SidebarTrigger className="shrink-0 hidden md:flex" />
+                <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-bull tick-glow-bull" />
+                  </span>
+                  <span className="font-medium hidden md:inline">Yahoo Finance</span>
+                </div>
+                <div className="mx-4 hidden xl:block h-5 w-px bg-border/60 shrink-0" />
+                <div className="hidden xl:flex min-w-0 flex-1 overflow-hidden">
+                  <MarketClock />
+                </div>
+                <div className="ml-auto flex items-center gap-2 shrink-0">
+                  <MarketRegimePill />
+                  <CommandPalette />
+                  <AuthHeaderButton />
+                </div>
+              </header>
+              <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
+                <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
+                <div className="relative z-10">
+                  <Outlet />
+                </div>
+              </main>
+              <DisclaimerBanner />
+              <Footer />
+            </div>
           </div>
+          <MobileBottomNav />
         </div>
-        <MobileBottomNav />
-      </div>
-      <QuickPanel />
-      <UpgradeModal />
-    </SidebarProvider>
+        <QuickPanel />
+        <UpgradeModal />
+      </SidebarProvider>
+    </Fragment>
   );
 }
 
