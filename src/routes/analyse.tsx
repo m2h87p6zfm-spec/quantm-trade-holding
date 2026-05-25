@@ -680,7 +680,7 @@ function AnalysePage() {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold tracking-tight">QUANTM <span className="text-muted-foreground font-normal text-base">· by Quantm Trade</span></h1>
+            <h1 className="text-2xl font-bold tracking-tight">QUANTM</h1>
             <AnalysisCreditBadge />
           </div>
 
