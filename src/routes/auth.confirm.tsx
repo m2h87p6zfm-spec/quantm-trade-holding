@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LegalLinks } from "@/components/LegalLinks";
 
 export const Route = createFileRoute("/auth/confirm")({
   head: () => ({
@@ -110,7 +111,8 @@ function AuthConfirmPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-center shadow-xl shadow-primary/5">
+      <div className="w-full max-w-md">
+      <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-xl shadow-primary/5">
         {status === "verifying" && (
           <>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-background">
@@ -152,6 +154,8 @@ function AuthConfirmPage() {
             </div>
           </>
         )}
+      </div>
+        <LegalLinks className="mt-6" />
       </div>
     </main>
   );

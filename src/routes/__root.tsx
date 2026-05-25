@@ -273,6 +273,16 @@ function AuthHeaderButton() {
           <Sparkles className="h-4 w-4 mr-2" /> {t("shell.tradingProfile")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => navigate({ to: "/impressum" })}>
+          Impressum
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/agb" })}>
+          AGB
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/datenschutz" })}>
+          Datenschutz
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
             await signOut();
