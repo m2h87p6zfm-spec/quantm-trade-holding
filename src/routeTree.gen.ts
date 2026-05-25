@@ -49,6 +49,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as AuthConfirmRouteImport } from './routes/auth.confirm'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSignalChatRouteImport } from './routes/api/public/signal-chat'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
@@ -267,6 +268,11 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthConfirmRoute = AuthConfirmRouteImport.update({
+  id: '/auth/confirm',
+  path: '/auth/confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStreamRoute = ApiPublicStreamRouteImport.update({
   id: '/api/public/stream',
   path: '/api/public/stream',
@@ -395,6 +401,7 @@ export interface FileRoutesByFullPath {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte': typeof ProdukteIndexRoute
@@ -514,6 +522,7 @@ export interface FileRoutesById {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
   '/produkte/': typeof ProdukteIndexRoute
@@ -575,6 +584,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -634,6 +644,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte'
@@ -693,6 +704,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
     | '/produkte/'
@@ -753,6 +765,7 @@ export interface RootRouteChildren {
   TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
+  AuthConfirmRoute: typeof AuthConfirmRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
   ProdukteIndexRoute: typeof ProdukteIndexRoute
@@ -1057,6 +1070,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/confirm': {
+      id: '/auth/confirm'
+      path: '/auth/confirm'
+      fullPath: '/auth/confirm'
+      preLoaderRoute: typeof AuthConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stream': {
       id: '/api/public/stream'
       path: '/api/public/stream'
@@ -1217,6 +1237,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
+  AuthConfirmRoute: AuthConfirmRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
   ProdukteIndexRoute: ProdukteIndexRoute,

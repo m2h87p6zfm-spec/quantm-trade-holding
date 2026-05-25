@@ -28,6 +28,7 @@ const PUBLIC_PATHS = new Set<string>([
   "/passwort-vergessen",
   "/passwort-zuruecksetzen",
   "/checkout/return",
+  "/auth/confirm",
 ]);
 
 function isPublic(pathname: string): boolean {
