@@ -321,6 +321,7 @@ const DICT: Record<Lang, Dict> = {
     "manifest.diff.us": "Quantm Agent Intelligence",
     "manifest.cta": "Jetzt analysieren",
     "manifest.transition": "Dein Live-Cockpit",
+    "manifest.close": "Schließen",
     "cockpit.setupScore": "Setup-Score · {symbol}",
     // Watchlist panel
     "watchlist.title": "Meine Watchlist",
@@ -868,6 +869,7 @@ const DICT: Record<Lang, Dict> = {
     "manifest.diff.us": "Quantm Agent Intelligence",
     "manifest.cta": "Analyse now",
     "manifest.transition": "Your live cockpit",
+    "manifest.close": "Close",
     "cockpit.setupScore": "Setup Score · {symbol}",
     // Watchlist panel
     "watchlist.title": "My Watchlist",
