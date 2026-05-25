@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/public/stream")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async ({ request }) => {
-        const auth = await requireUserId(request);
+        const auth = await requirePro(request);
         if (auth instanceof Response) return auth;
         const url = new URL(request.url);
         const raw = (url.searchParams.get("symbols") || "").trim();
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/public/stream")({
           .split(",")
           .map((s) => s.trim().toUpperCase())
           .filter((s) => /^[A-Z0-9.\-^:/=]{1,20}$/.test(s))
-          .slice(0, 120);
+          .slice(0, 10);
 
         if (!symbols.length) {
           return new Response("missing symbols", { status: 400, headers: CORS });
