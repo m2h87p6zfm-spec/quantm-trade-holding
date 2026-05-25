@@ -65,7 +65,7 @@ function TrackRecordPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full border-4 border-cyan-500/30 border-t-cyan-400 animate-spin" />
           <p className="text-sm text-muted-foreground tracking-widest uppercase">Quantm lädt Track Record-Daten…</p>
@@ -75,7 +75,7 @@ function TrackRecordPage() {
   }
   if (isError || !data) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] text-foreground flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <p className="text-muted-foreground">Daten konnten nicht geladen werden.</p>
       </div>
     );
@@ -114,11 +114,11 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
   const avgBuyReturn90 = avg(buyAnalyses.map((a) => a.outcome?.return_90d ?? a.outcome?.return_30d).filter((x): x is number => x != null));
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       <PublicHeader />
       <Hero correct={correct} total={completed.length} accuracy={accuracy} avgBuyReturn={avgBuyReturn90} />
       <main className="max-w-7xl mx-auto px-4 md:px-6 pb-20 space-y-10">
-        <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1 w-fit">
+        <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/[0.03] p-1 w-fit">
           <button
             onClick={() => setTab("record")}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
@@ -130,7 +130,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
           <button
             onClick={() => setTab("learning")}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
-              tab === "learning" ? "bg-violet-500 text-white" : "text-muted-foreground hover:text-foreground"
+              tab === "learning" ? "bg-violet-500 text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Brain className="h-3.5 w-3.5" /> AI Learning
@@ -174,7 +174,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
 
 function PublicHeader() {
   return (
-    <header className="sticky top-0 z-40 backdrop-blur bg-[#0d0d0d]/80 border-b border-white/5">
+    <header className="sticky top-0 z-40 backdrop-blur bg-background/80 border-b border-border/60">
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <ApexLogo className="h-7 w-7" />
@@ -194,7 +194,7 @@ function PublicHeader() {
 
 function PublicFooter() {
   return (
-    <footer className="border-t border-white/5 py-6 text-center text-xs text-muted-foreground">
+    <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
       © {new Date().getFullYear()} Quantm Trade. Keine Anlageberatung.
     </footer>
   );
@@ -204,7 +204,7 @@ function PublicFooter() {
 
 function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; total: number; accuracy: number; avgBuyReturn: number | null }) {
   return (
-    <section className="relative overflow-hidden border-b border-white/5">
+    <section className="relative overflow-hidden border-b border-border/60">
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-emerald-500/5 pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-14 md:py-20 relative">
         <div className="flex items-center gap-2 mb-4">
@@ -241,7 +241,7 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
 function KpiCard({ label, value, accent, children }: { label: string; value: string; accent: "cyan" | "emerald" | "red"; children?: React.ReactNode }) {
   const color = accent === "cyan" ? "text-cyan-400" : accent === "emerald" ? "text-emerald-400" : "text-red-400";
   return (
-    <Card className="bg-white/[0.03] border-white/10 p-5">
+    <Card className="bg-white/[0.03] border-border/60 p-5">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className={`text-4xl md:text-5xl font-bold tabular-nums mt-2 ${color}`}>{value}</p>
       {children}
@@ -271,7 +271,7 @@ function FilterBar(props: {
   result: (typeof RESULTS)[number]; setResult: (v: (typeof RESULTS)[number]) => void;
 }) {
   return (
-    <Card className="bg-white/[0.03] border-white/10 p-4 space-y-3">
+    <Card className="bg-white/[0.03] border-border/60 p-4 space-y-3">
       <FilterRow label="Zeitraum">
         {PERIODS.map((p) => <Chip key={p.id} active={props.period === p.id} onClick={() => props.setPeriod(p.id)}>{p.label}</Chip>)}
       </FilterRow>
@@ -303,7 +303,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     <button
       onClick={onClick}
       className={`px-3 py-1 rounded-full text-xs border transition ${
-        active ? "bg-cyan-500 text-black border-cyan-400 font-semibold" : "border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20"
+        active ? "bg-cyan-500 text-black border-cyan-400 font-semibold" : "border-border/60 text-muted-foreground hover:text-foreground hover:border-white/20"
       }`}
     >
       {children}
@@ -411,7 +411,7 @@ function PerformanceChart({ analyses }: { analyses: Analysis[] }) {
   return (
     <section>
       <h2 className="text-xl font-semibold mb-4">Performance über Zeit</h2>
-      <Card className="bg-white/[0.03] border-white/10 p-4">
+      <Card className="bg-white/[0.03] border-border/60 p-4">
         <div className="h-80">
           {series.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Noch keine ausreichenden Daten.</div>
@@ -463,7 +463,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
   return (
     <section>
       <h2 className="text-xl font-semibold mb-4">Quantm vs. Markt</h2>
-      <Card className="bg-white/[0.03] border-white/10 overflow-hidden">
+      <Card className="bg-white/[0.03] border-border/60 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/[0.04] text-xs uppercase tracking-widest text-muted-foreground">
             <tr>
@@ -532,10 +532,10 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
         <h2 className="text-xl font-semibold">Alle Vorhersagen</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Suche Aktie oder Ticker…" className="pl-9 w-64 bg-white/[0.03] border-white/10" />
+          <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Suche Aktie oder Ticker…" className="pl-9 w-64 bg-white/[0.03] border-border/60" />
         </div>
       </div>
-      <Card className="bg-white/[0.03] border-white/10 overflow-hidden">
+      <Card className="bg-white/[0.03] border-border/60 overflow-hidden">
         {/* Desktop */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
@@ -659,7 +659,7 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
             <button
               key={s.sector}
               onClick={() => onPick(s.sector)}
-              className={`${colorFor(s.accuracy)} ${sizeClass} rounded-lg p-3 text-left transition text-white`}
+              className={`${colorFor(s.accuracy)} ${sizeClass} rounded-lg p-3 text-left transition text-foreground`}
             >
               <p className="text-xs uppercase tracking-widest opacity-80">{s.sector}</p>
               <p className="text-2xl font-bold tabular-nums mt-1">{formatNumber(s.accuracy, 0)} %</p>
@@ -723,7 +723,7 @@ function Methodology() {
   return (
     <section>
       <h2 className="text-xl font-semibold mb-4">Wie bewertet Quantm?</h2>
-      <Card className="bg-white/[0.03] border-white/10 p-2">
+      <Card className="bg-white/[0.03] border-border/60 p-2">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="indikatoren">
             <AccordionTrigger className="px-4">Welche Indikatoren fließen ein?</AccordionTrigger>
@@ -759,7 +759,7 @@ function Methodology() {
 
 function CTA() {
   return (
-    <section className="text-center py-12 border-t border-white/10">
+    <section className="text-center py-12 border-t border-border/60">
       <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Du siehst was Quantm kann.</h2>
       <p className="text-muted-foreground mt-2">Jetzt selbst analysieren.</p>
       <div className="flex justify-center gap-3 mt-6">
