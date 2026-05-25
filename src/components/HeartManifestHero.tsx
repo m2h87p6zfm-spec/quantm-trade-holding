@@ -208,16 +208,11 @@ export function HeartManifestHero() {
         </div>
       </div>
 
-      {/* seamless transition into cockpit */}
-      <div className="relative mt-8 flex flex-col items-center gap-2 opacity-40">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">
-          {t("manifest.transition")}
-        </span>
-        <div className="h-10 w-px bg-gradient-to-b from-[#22FF88] to-transparent" />
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
+
 
 function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
