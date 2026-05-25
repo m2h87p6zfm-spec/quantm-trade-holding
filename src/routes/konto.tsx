@@ -118,6 +118,30 @@ function AccountPage() {
     }
   };
 
+  const onCancel = async () => {
+    setCancelBusy(true);
+    try {
+      await callCancel({ data: { environment: getStripeEnvironment() } });
+      toast.success("Abo gekündigt. Du behältst deinen Plan bis zum Ende des Abrechnungszeitraums.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Kündigung fehlgeschlagen");
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const onResume = async () => {
+    setResumeBusy(true);
+    try {
+      await callResume({ data: { environment: getStripeEnvironment() } });
+      toast.success("Abo fortgesetzt.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fortsetzen fehlgeschlagen");
+    } finally {
+      setResumeBusy(false);
+    }
+  };
+
   const onDelete = async () => {
     setDeleteBusy(true);
     try {
