@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useT, useLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/konto")({
   head: () => ({
@@ -33,6 +34,11 @@ export const Route = createFileRoute("/konto")({
 });
 
 function AccountPage() {
+  const t = useT();
+  const lang = useLang();
+  const locale = lang === "de" ? "de-DE" : "en-US";
+  const fmtDate = (d: string | number | Date) => new Date(d).toLocaleDateString(locale);
+
   const { user, loading, signOut } = useAuth();
   const { tier, status, currentPeriodEnd, cancelAtPeriodEnd, priceId, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
@@ -78,14 +84,16 @@ function AccountPage() {
     );
   }
 
+  const deleteKeyword = t("account.deleteKeyword");
+
   const saveName = async () => {
     const trimmed = nameDraft.trim();
     if (!trimmed) {
-      toast.error("Name darf nicht leer sein");
+      toast.error(t("account.nameEmpty"));
       return;
     }
     if (trimmed.length > 60) {
-      toast.error("Max. 60 Zeichen");
+      toast.error(t("account.nameTooLong"));
       return;
     }
     setNameBusy(true);
@@ -95,12 +103,12 @@ function AccountPage() {
       .eq("id", user.id);
     setNameBusy(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error(t("account.nameSaveFailed"));
       return;
     }
     setDisplayName(trimmed);
     setEditingName(false);
-    toast.success("Name aktualisiert");
+    toast.success(t("account.nameUpdated"));
   };
 
 
@@ -112,7 +120,7 @@ function AccountPage() {
       });
       window.open(url, "_blank");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Konnte Billing-Portal nicht öffnen");
+      toast.error(e instanceof Error ? e.message : t("account.portalFailed"));
     } finally {
       setPortalBusy(false);
     }
@@ -122,9 +130,9 @@ function AccountPage() {
     setCancelBusy(true);
     try {
       await callCancel({ data: { environment: getStripeEnvironment() } });
-      toast.success("Abo gekündigt. Du behältst deinen Plan bis zum Ende des Abrechnungszeitraums.");
+      toast.success(t("account.cancelSuccess"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Kündigung fehlgeschlagen");
+      toast.error(e instanceof Error ? e.message : t("account.cancelFailed"));
     } finally {
       setCancelBusy(false);
     }
@@ -134,9 +142,9 @@ function AccountPage() {
     setResumeBusy(true);
     try {
       await callResume({ data: { environment: getStripeEnvironment() } });
-      toast.success("Abo fortgesetzt.");
+      toast.success(t("account.resumeSuccess"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Fortsetzen fehlgeschlagen");
+      toast.error(e instanceof Error ? e.message : t("account.resumeFailed"));
     } finally {
       setResumeBusy(false);
     }
@@ -147,10 +155,10 @@ function AccountPage() {
     try {
       await callDelete({ data: undefined });
       await supabase.auth.signOut();
-      toast.success("Konto und alle Daten gelöscht.");
+      toast.success(t("account.deleteSuccess"));
       navigate({ to: "/" });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Löschen fehlgeschlagen");
+      toast.error(e instanceof Error ? e.message : t("account.deleteFailed"));
     } finally {
       setDeleteBusy(false);
     }
@@ -159,8 +167,8 @@ function AccountPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Konto</h1>
-        <p className="text-sm text-muted-foreground">Profil & Abo verwalten.</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t("account.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("account.subtitle")}</p>
       </div>
 
       <Card className="p-5 border-border/60 bg-card/60">
@@ -200,18 +208,18 @@ function AccountPage() {
                     setNameDraft(displayName);
                     setEditingName(true);
                   }}
-                  aria-label="Namen ändern"
+                  aria-label={t("account.editName")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               </div>
             )}
             <div className="text-xs text-muted-foreground truncate">{user.email}</div>
-            <div className="text-xs text-muted-foreground">Angemeldet seit {new Date(user.created_at).toLocaleDateString("de-DE")}</div>
+            <div className="text-xs text-muted-foreground">{t("account.signedInSince", { date: fmtDate(user.created_at) })}</div>
           </div>
         </div>
         <Button onClick={() => signOut().then(() => navigate({ to: "/" }))} variant="outline" size="sm">
-          <LogOut className="h-4 w-4 mr-2" /> Abmelden
+          <LogOut className="h-4 w-4 mr-2" /> {t("account.signOut")}
         </Button>
       </Card>
 
@@ -219,22 +227,22 @@ function AccountPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="font-semibold">Aktueller Plan</h2>
+              <h2 className="font-semibold">{t("account.currentPlan")}</h2>
               <Badge variant={tier === "free" ? "outline" : "default"} className={tier === "elite" ? "bg-primary" : ""}>
                 {tier === "free" ? "Free" : tier === "pro" ? "Quantm Pro" : "Quantm Elite"}
               </Badge>
             </div>
             {subLoading ? (
-              <p className="text-xs text-muted-foreground">Lade…</p>
+              <p className="text-xs text-muted-foreground">{t("account.planLoading")}</p>
             ) : tier === "free" ? (
-              <p className="text-sm text-muted-foreground">Schalte alle Premium-Signale und Features frei.</p>
+              <p className="text-sm text-muted-foreground">{t("account.freeCta")}</p>
             ) : (
               <div className="text-xs text-muted-foreground space-y-0.5">
-                <div>Status: <span className="text-foreground">{status}</span></div>
-                {priceId && <div>Tarif: {priceId.includes("yearly") ? "Jährlich" : "Monatlich"}</div>}
+                <div>{t("account.status")}: <span className="text-foreground">{status}</span></div>
+                {priceId && <div>{t("account.cycle")}: {priceId.includes("yearly") ? t("account.cycle.yearly") : t("account.cycle.monthly")}</div>}
                 {currentPeriodEnd && (
                   <div>
-                    {cancelAtPeriodEnd ? "Endet am" : "Verlängert am"}: {new Date(currentPeriodEnd).toLocaleDateString("de-DE")}
+                    {cancelAtPeriodEnd ? t("account.endsOn") : t("account.renewsOn")}: {fmtDate(currentPeriodEnd)}
                   </div>
                 )}
               </div>
@@ -246,18 +254,18 @@ function AccountPage() {
           {tier === "free" ? (
             <Button asChild>
               <Link to="/preise">
-                Pläne ansehen <ArrowUpRight className="h-4 w-4 ml-1" />
+                {t("account.viewPlans")} <ArrowUpRight className="h-4 w-4 ml-1" />
               </Link>
             </Button>
           ) : (
             <>
               <Button onClick={onPortal} disabled={portalBusy} variant="outline">
                 {portalBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CreditCard className="h-4 w-4 mr-2" />}
-                Abo & Rechnungen verwalten
+                {t("account.managePortal")}
               </Button>
               {tier === "pro" && (
                 <Button asChild variant="default">
-                  <Link to="/preise">Auf Elite upgraden</Link>
+                  <Link to="/preise">{t("account.upgradeElite")}</Link>
                 </Button>
               )}
               {cancelAtPeriodEnd ? (
@@ -265,21 +273,20 @@ function AccountPage() {
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" disabled={resumeBusy}>
                       {resumeBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2" />}
-                      Kündigung zurücknehmen
+                      {t("account.resumeBtn")}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Abo fortsetzen?</AlertDialogTitle>
+                      <AlertDialogTitle>{t("account.resumeTitle")}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Dein Abo wird nicht beendet und verlängert sich wie gewohnt am{" "}
-                        {currentPeriodEnd ? new Date(currentPeriodEnd).toLocaleDateString("de-DE") : "Periodenende"}.
+                        {t("account.resumeBody", { date: currentPeriodEnd ? fmtDate(currentPeriodEnd) : t("account.periodEnd") })}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                      <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                       <AlertDialogAction onClick={(e) => { e.preventDefault(); void onResume(); }}>
-                        Fortsetzen
+                        {t("account.resumeConfirm")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -289,26 +296,23 @@ function AccountPage() {
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" disabled={cancelBusy} className="text-destructive hover:text-destructive">
                       {cancelBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
-                      Abo kündigen
+                      {t("account.cancelBtn")}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Abo wirklich kündigen?</AlertDialogTitle>
+                      <AlertDialogTitle>{t("account.cancelTitle")}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Du behältst alle Premium-Vorteile bis zum Ende des aktuellen Abrechnungszeitraums
-                        {currentPeriodEnd ? ` (${new Date(currentPeriodEnd).toLocaleDateString("de-DE")})` : ""}.
-                        Danach wirst du automatisch auf den kostenlosen Plan zurückgesetzt. Es wird keine weitere Zahlung
-                        eingezogen. Du kannst die Kündigung jederzeit vor Ablauf zurücknehmen.
+                        {t("account.cancelBody", { suffix: currentPeriodEnd ? ` (${fmtDate(currentPeriodEnd)})` : "" })}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>Doch behalten</AlertDialogCancel>
+                      <AlertDialogCancel>{t("account.cancelKeep")}</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={(e) => { e.preventDefault(); void onCancel(); }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        Zum Periodenende kündigen
+                        {t("account.cancelConfirm")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -325,42 +329,40 @@ function AccountPage() {
             <AlertTriangle className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-sm">Konto löschen</h2>
+            <h2 className="font-semibold text-sm">{t("account.delete")}</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Löscht dein Konto, dein Profil, deine Watchlist, Alerts, Portfolio und kündigt aktive Abos sofort.
-              Dieser Schritt ist <strong>endgültig</strong> und kann nicht rückgängig gemacht werden.
+              {t("account.deleteDesc")}
             </p>
             <AlertDialog onOpenChange={(o) => !o && setConfirmText("")}>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="mt-3">
-                  <Trash2 className="h-4 w-4 mr-1.5" /> Konto endgültig löschen
+                  <Trash2 className="h-4 w-4 mr-1.5" /> {t("account.deleteBtn")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Konto wirklich löschen?</AlertDialogTitle>
+                  <AlertDialogTitle>{t("account.deleteTitle")}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Alle deine Daten (Profil, Watchlist, Alerts, Portfolio, Subscription) werden unwiderruflich entfernt.
-                    Aktive Stripe-Abos werden gekündigt. Tippe <strong>LÖSCHEN</strong> zur Bestätigung.
+                    {t("account.deleteBody", { keyword: deleteKeyword })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <Input
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
-                  placeholder="LÖSCHEN"
+                  placeholder={deleteKeyword}
                   autoFocus
                 />
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                   <AlertDialogAction
-                    disabled={confirmText !== "LÖSCHEN" || deleteBusy}
+                    disabled={confirmText !== deleteKeyword || deleteBusy}
                     onClick={(e) => {
                       e.preventDefault();
                       void onDelete();
                     }}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {deleteBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Endgültig löschen"}
+                    {deleteBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.deleteConfirm")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

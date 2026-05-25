@@ -3,10 +3,11 @@ import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { Loader2 } from "lucide-react";
-import { useT } from "@/lib/i18n";
 
+// Brand-neutral splash — no translated text here, since it renders before
+// the language preference is hydrated from localStorage (would otherwise
+// cause an SSR/CSR hydration mismatch).
 function ApexLoadingScreen() {
-  const t = useT();
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
       <div className="text-center">
@@ -14,11 +15,12 @@ function ApexLoadingScreen() {
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
         </div>
         <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Quantm Trade</p>
-        <p className="mt-1 text-sm text-muted-foreground">{t("common.loadingApp")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">Loading…</p>
       </div>
     </main>
   );
 }
+
 
 /** Routes that must remain reachable without a session. */
 const PUBLIC_PATHS = new Set<string>([

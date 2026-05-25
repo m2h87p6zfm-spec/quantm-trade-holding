@@ -4,28 +4,30 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/checkout/return")({
   validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
     session_id: typeof search.session_id === "string" ? search.session_id : undefined,
   }),
-  head: () => ({ meta: [{ title: "Bestätigung — Quantm Trade" }] }),
+  head: () => ({ meta: [{ title: "Confirmation — Quantm Trade" }] }),
   component: ReturnPage,
 });
 
 function ReturnPage() {
+  const t = useT();
   const { session_id } = Route.useSearch();
   const navigate = useNavigate();
   const { tier, loading } = useSubscription();
-  // useSubscription läuft mit Realtime; sobald der Webhook die DB-Zeile schreibt,
-  // wechselt tier von "free" auf "pro"/"elite" – wir warten bis zu 15s darauf.
+  // useSubscription runs with Realtime; as soon as the webhook writes the DB row,
+  // tier switches from "free" to "pro"/"elite" — we wait up to 15s for it.
   const [waited, setWaited] = useState(0);
 
   useEffect(() => {
     if (tier !== "free") return;
     if (waited > 15) return;
-    const t = setTimeout(() => setWaited((w) => w + 1), 1000);
-    return () => clearTimeout(t);
+    const tm = setTimeout(() => setWaited((w) => w + 1), 1000);
+    return () => clearTimeout(tm);
   }, [tier, waited]);
 
   const propagating = !loading && tier === "free" && waited < 15;
@@ -38,9 +40,9 @@ function ReturnPage() {
             <div className="h-14 w-14 rounded-full bg-primary/15 text-primary flex items-center justify-center mx-auto mb-4">
               <Loader2 className="h-7 w-7 animate-spin" />
             </div>
-            <h1 className="text-2xl font-semibold mb-2">Zahlung wird verbucht …</h1>
+            <h1 className="text-2xl font-semibold mb-2">{t("checkoutReturn.processing")}</h1>
             <p className="text-sm text-muted-foreground mb-6">
-              Stripe bestätigt die Transaktion. Das dauert in der Regel nur wenige Sekunden.
+              {t("checkoutReturn.processingBody")}
             </p>
           </>
         ) : (
@@ -48,16 +50,16 @@ function ReturnPage() {
             <div className="h-14 w-14 rounded-full bg-bull/15 text-bull flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="h-7 w-7" />
             </div>
-            <h1 className="text-2xl font-semibold mb-2">Zahlung erfolgreich</h1>
+            <h1 className="text-2xl font-semibold mb-2">{t("checkoutReturn.success")}</h1>
             <p className="text-sm text-muted-foreground mb-6">
               {tier === "free"
-                ? "Dein Zahlungseingang wird gleich sichtbar. Du kannst die App schon nutzen — das Upgrade erscheint in wenigen Sekunden."
-                : `Dein ${tier === "elite" ? "Elite" : "Pro"}-Plan ist aktiv. Viel Erfolg beim Traden.`}
+                ? t("checkoutReturn.pending")
+                : t("checkoutReturn.active", { plan: tier === "elite" ? "Elite" : "Pro" })}
             </p>
             <div className="flex flex-col gap-2">
-              <Button onClick={() => navigate({ to: "/" })}>Zur App</Button>
+              <Button onClick={() => navigate({ to: "/" })}>{t("checkoutReturn.toApp")}</Button>
               <Button asChild variant="outline">
-                <Link to="/konto">Konto öffnen</Link>
+                <Link to="/konto">{t("checkoutReturn.openAccount")}</Link>
               </Button>
             </div>
           </>
