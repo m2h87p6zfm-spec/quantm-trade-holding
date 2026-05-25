@@ -10,6 +10,7 @@ import { PRODUCTS } from "@/lib/products";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export const Route = createFileRoute("/alerts")({
   component: AlertsPage,
