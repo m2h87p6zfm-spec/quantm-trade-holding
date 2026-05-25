@@ -77,7 +77,14 @@ const BREAKING_RX = /\b(breaking|halts?|halted|surges?|plunges?|crashes?|soars?|
 // Optionaler Firmenname pro Symbol — wird genutzt, um Headlines auch dann
 // zuzulassen, wenn Yahoo den Ticker nicht in relatedTickers listet, aber die
 // Firma im Titel erwähnt (z. B. "Apple unveils …").
-import { resolveCompanyName } from "@/lib/ticker-resolver";
+import { PRODUCTS } from "@/lib/products";
+
+function resolveCompanyName(sym: string): string | null {
+  const p = PRODUCTS.find((x) => x.symbol.toUpperCase() === sym.toUpperCase());
+  if (!p?.name) return null;
+  // Erstes signifikantes Wort, z. B. "Apple Inc." → "Apple", "JPMorgan Chase" → "JPMorgan"
+  return p.name.split(/[\s,]+/)[0] || null;
+}
 
 async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
   const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=15&quotesCount=0`;
