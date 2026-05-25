@@ -322,6 +322,7 @@ const DICT: Record<Lang, Dict> = {
     "manifest.cta": "Jetzt analysieren",
     "manifest.transition": "Dein Live-Cockpit",
     "manifest.close": "Schließen",
+    "manifest.later": "Später ansehen — zum Cockpit",
     "cockpit.setupScore": "Setup-Score · {symbol}",
     // Watchlist panel
     "watchlist.title": "Meine Watchlist",
