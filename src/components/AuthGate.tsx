@@ -47,12 +47,20 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useTradingProfile();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const publicRoute = isPublic(pathname);
+
+  // Auth utility pages must render immediately, even while the auth client is
+  // still resolving URL tokens. Otherwise users only see the global loading
+  // splash and never reach the visible retry/login button.
+  if (publicRoute) {
+    return <>{children}</>;
+  }
 
   if (authLoading || (user && profileLoading)) {
     return <ApexLoadingScreen />;
   }
 
-  if (!user && !isPublic(pathname)) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
