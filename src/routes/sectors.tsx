@@ -134,26 +134,27 @@ export function SectorRotationPage({ embedded = false }: { embedded?: boolean } 
       />
 
       {/* Regime-Hero */}
-      <div className={`card-glow rounded-2xl border p-4 md:p-5 ${regimeMeta.bg}`}>
+      <div className={`card-glow rounded-2xl border p-4 sm:p-5 ${regimeMeta.bg}`}>
 
-        <div className="flex items-start justify-between gap-3 md:gap-4 flex-wrap">
-          <div className="flex items-start gap-3 md:gap-4 min-w-0">
-            <div className={`flex h-10 w-10 md:h-12 md:w-12 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/60 ${regimeMeta.color}`}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+            <div className={`flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl ring-1 ring-border/60 ${regimeMeta.color}`}>
               {regimeMeta.icon}
             </div>
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Aktuelles Marktregime</div>
-              <div className={`mt-1 text-2xl md:text-3xl font-bold ${regimeMeta.color}`}>{data.regime}</div>
-              <p className="mt-1 max-w-xl text-xs md:text-sm text-muted-foreground">{regimeMeta.desc}</p>
+              <div className={`mt-1 text-2xl sm:text-3xl font-bold ${regimeMeta.color}`}>{data.regime}</div>
+              <p className="mt-1 max-w-xl text-sm text-muted-foreground">{regimeMeta.desc}</p>
             </div>
           </div>
-          <div className="flex w-full sm:w-auto items-center gap-3 sm:gap-4 flex-wrap">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:justify-end lg:text-right">
             <StatMini label="Cyc − Def (1M)" value={`${data.spread >= 0 ? "+" : ""}${data.spread.toFixed(2)}%`} tone={data.spread >= 0 ? "bull" : "bear"} />
             <StatMini label="SPY 1M" value={data.bench1m != null ? `${data.bench1m >= 0 ? "+" : ""}${data.bench1m.toFixed(2)}%` : "—"} tone={(data.bench1m ?? 0) >= 0 ? "bull" : "bear"} />
             <ExplainAiButton topic="Sektor-Rotation & Marktregime" context={`Aktuelles Regime: ${data.regime}. Cyclical-Defensive-Spread (1M): ${data.spread.toFixed(2)}%. SPY 1M: ${data.bench1m?.toFixed(2)}%. Erkläre dem User, was Sektor-Rotation für seine Trading-Entscheidungen bedeutet, welche Sektoren in diesem Regime typischerweise outperformen, und wie professionelle Anleger darauf reagieren.`} variant="chip" />
           </div>
         </div>
       </div>
+
 
       {/* Leaders & Laggards — die Kernaussage auf einen Blick */}
       <div className="grid gap-4 md:grid-cols-2">

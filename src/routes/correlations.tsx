@@ -145,31 +145,31 @@ export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = 
       </div>
 
 
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
-        <div className="card-glow rounded-xl p-3 md:p-4">
-          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground">Ø Korrelation</div>
-          <div className={`mt-2 font-mono text-lg md:text-2xl font-bold ${(avgCorr ?? 0) > 0.6 ? "text-bear" : (avgCorr ?? 0) > 0.3 ? "text-gold" : "text-bull"}`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card-glow rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Ø Korrelation</div>
+          <div className={`mt-2 font-mono text-2xl font-bold ${(avgCorr ?? 0) > 0.6 ? "text-bear" : (avgCorr ?? 0) > 0.3 ? "text-gold" : "text-bull"}`}>
             {avgCorr != null ? avgCorr.toFixed(2) : "—"}
           </div>
-          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
+          <div className="text-[11px] text-muted-foreground mt-1">
             {avgCorr != null && avgCorr > 0.6 ? "Sehr hoch — wenig Diversifikation" : avgCorr != null && avgCorr > 0.3 ? "Moderat" : "Gut diversifiziert"}
           </div>
         </div>
-        <div className="card-glow rounded-xl p-3 md:p-4">
-          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3 text-gold" /> Klumpen
+        <div className="card-glow rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3 text-gold" /> Klumpen ({"|ρ|"} {">"} 0.8)
           </div>
-          <div className="mt-2 font-mono text-lg md:text-2xl font-bold text-gold">{clusters.length}</div>
-          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
+          <div className="mt-2 font-mono text-2xl font-bold text-gold">{clusters.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">
             Paare mit nahezu identischer Bewegung
           </div>
         </div>
-        <div className="card-glow rounded-xl p-3 md:p-4">
-          <div className="text-[9px] md:text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+        <div className="card-glow rounded-xl p-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
             <Shuffle className="h-3 w-3 text-primary" /> Werte
           </div>
-          <div className="mt-2 font-mono text-lg md:text-2xl font-bold">{symbols.length}</div>
-          <div className="text-[10px] md:text-[11px] text-muted-foreground mt-1 hidden sm:block">
+          <div className="mt-2 font-mono text-2xl font-bold">{symbols.length}</div>
+          <div className="text-[11px] text-muted-foreground mt-1">
             aus aktiver Watchlist
           </div>
         </div>
@@ -210,7 +210,7 @@ export function CorrelationsPage({ embedded = false }: { embedded?: boolean } = 
                     return (
                       <td
                         key={j}
-                        className="rounded text-center font-mono tabular-nums text-[8px] md:text-[10px] w-7 h-7 md:w-10 md:h-10 transition-transform hover:scale-110"
+                        className="rounded text-center text-[10px] font-mono tabular-nums w-10 h-10 transition-transform hover:scale-110"
                         style={{
                           background: isDiag ? "color-mix(in oklab, var(--primary) 30%, transparent)" : corrColor(c),
                           color: isDiag || (c != null && Math.abs(c) > 0.45) ? "white" : "var(--foreground)",
