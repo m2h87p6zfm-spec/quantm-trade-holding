@@ -10,6 +10,7 @@ import { PRODUCTS } from "@/lib/products";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export const Route = createFileRoute("/alerts")({
   component: AlertsPage,
@@ -181,11 +182,19 @@ function AlertsPage() {
   const triggeredCount = history.length;
   const quotaPct = Number.isFinite(max) ? Math.min(100, (count / Number(max)) * 100) : Math.min(100, count * 5);
 
+  const { status: pushStatus, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+
   async function requestPush() {
-    if (typeof Notification === "undefined") return toast.error("Browser unterstützt keine Benachrichtigungen.");
-    const p = await Notification.requestPermission();
-    if (p === "granted") toast.success("Push-Benachrichtigungen aktiviert.");
-    else toast.error("Push abgelehnt — Toasts bleiben aktiv.");
+    if (pushStatus === "unsupported") return toast.error("Browser unterstützt keine Web-Push-Benachrichtigungen.");
+    if (pushStatus === "denied") return toast.error("Push wurde blockiert. Aktiviere Benachrichtigungen in den Browser-Einstellungen.");
+    if (pushStatus === "subscribed") {
+      const ok = await unsubscribePush();
+      if (ok) toast.success("Push deaktiviert.");
+      return;
+    }
+    const ok = await subscribePush();
+    if (ok) toast.success("Push aktiviert — du bekommst Benachrichtigungen auch bei geschlossenem Tab.");
+    else toast.error("Push konnte nicht aktiviert werden.");
   }
 
   function onAdd(e: React.FormEvent) {
@@ -255,7 +264,7 @@ function AlertsPage() {
           >
             <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
             <BellRing className="relative h-4 w-4" />
-            <span className="relative">Push aktivieren</span>
+            <span className="relative">{pushStatus === "subscribed" ? "Push aktiv · deaktivieren" : "Push aktivieren"}</span>
           </button>
         </div>
 
