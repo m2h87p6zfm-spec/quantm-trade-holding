@@ -4,28 +4,30 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Activity, Bell, Bot, Calendar, FlaskConical, Flame, LineChart, ListOrdered, MessageSquare, Newspaper, Search, Settings, Sparkles, Swords, Wallet, Star, Eye } from "lucide-react";
 import { PRODUCTS } from "@/lib/products";
 import { useSettings } from "@/lib/settings";
+import { useT } from "@/lib/i18n";
 
 const ROUTES = [
-  { label: "Watchlist / Cockpit", to: "/", icon: ListOrdered },
-  { label: "Apex Picks — KI-Vorschläge", to: "/picks", icon: Sparkles },
+  { labelKey: "nav.watchlist", to: "/", icon: ListOrdered },
+  { labelKey: "nav.picks", to: "/picks", icon: Sparkles },
   { label: "War Room", to: "/war-room", icon: Swords },
-  { label: "Aktien-Analyse & KI-Chat", to: "/analyse", icon: MessageSquare },
-  { label: "Portfolio Tracker", to: "/portfolio", icon: Wallet },
-  { label: "Smart Alerts", to: "/alerts", icon: Bell },
+  { labelKey: "nav.analyse", to: "/analyse", icon: MessageSquare },
+  { labelKey: "nav.portfolio", to: "/portfolio", icon: Wallet },
+  { labelKey: "nav.alerts", to: "/alerts", icon: Bell },
   { label: "Backtest Lab", to: "/backtest", icon: FlaskConical },
-  { label: "News & Sentiment", to: "/news", icon: Newspaper },
-  { label: "Wirtschaftskalender", to: "/kalender", icon: Calendar },
-  { label: "Märkte & Sektoren", to: "/maerkte", icon: Activity },
-  { label: "Heatmap", to: "/heatmap", icon: Flame },
-  { label: "Watchlist & Signale", to: "/", icon: Sparkles },
-  { label: "Produktkatalog", to: "/produkte", icon: LineChart },
-  { label: "Einstellungen", to: "/einstellungen", icon: Settings },
+  { labelKey: "nav.news", to: "/news", icon: Newspaper },
+  { labelKey: "nav.calendar", to: "/kalender", icon: Calendar },
+  { labelKey: "side.markets", to: "/maerkte", icon: Activity },
+  { labelKey: "nav.heatmap", to: "/heatmap", icon: Flame },
+  { labelKey: "watchlist.title", to: "/", icon: Sparkles },
+  { labelKey: "nav.catalog", to: "/produkte", icon: LineChart },
+  { labelKey: "nav.settings", to: "/einstellungen", icon: Settings },
 ] as const;
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { settings, toggleWatch, update } = useSettings();
+  const t = useT();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -52,7 +54,7 @@ export function CommandPalette() {
         className="hidden md:inline-flex items-center gap-2 rounded-md border border-border/60 bg-background/50 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-accent/30 hover:text-foreground transition"
       >
         <Search className="h-3.5 w-3.5" />
-        <span>Suchen…</span>
+        <span>{t("command.searchButton")}</span>
         <kbd className="ml-2 hidden lg:inline-flex h-5 items-center rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-semibold">⌘K</kbd>
       </button>
       <button onClick={() => setOpen(true)} className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent/30">
@@ -60,9 +62,9 @@ export function CommandPalette() {
       </button>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Symbol, Seite oder Aktion suchen…" />
+        <CommandInput placeholder={t("command.placeholder")} />
         <CommandList>
-          <CommandEmpty>Keine Treffer.</CommandEmpty>
+          <CommandEmpty>{t("command.empty")}</CommandEmpty>
 
           {settings.watchlist.length > 0 && (
             <CommandGroup heading="Watchlist">
@@ -77,13 +79,14 @@ export function CommandPalette() {
 
           <CommandSeparator />
 
-          <CommandGroup heading="Navigation">
+          <CommandGroup heading={t("command.nav")}>
             {ROUTES.map((r) => {
               const Icon = r.icon;
+              const label = "labelKey" in r ? t(r.labelKey) : r.label;
               return (
-                <CommandItem key={r.to} value={r.label} onSelect={() => go(r.to)}>
+                <CommandItem key={`${r.to}-${label}`} value={label} onSelect={() => go(r.to)}>
                   <Icon className="mr-2 h-4 w-4" />
-                  <span>{r.label}</span>
+                  <span>{label}</span>
                 </CommandItem>
               );
             })}
@@ -91,7 +94,7 @@ export function CommandPalette() {
 
           <CommandSeparator />
 
-          <CommandGroup heading="Symbole">
+          <CommandGroup heading={t("command.symbols")}>
             {PRODUCTS.slice(0, 80).map((p) => (
               <CommandItem key={p.symbol} value={`${p.symbol} ${p.name} ${p.sector}`} onSelect={() => focus(p.symbol)}>
                 <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -105,13 +108,13 @@ export function CommandPalette() {
           {settings.lastSelected && (
             <>
               <CommandSeparator />
-              <CommandGroup heading="Aktionen">
+              <CommandGroup heading={t("command.actions")}>
                 <CommandItem
                   value={`watchlist toggle ${settings.lastSelected}`}
                   onSelect={() => { toggleWatch(settings.lastSelected!); setOpen(false); }}
                 >
                   <Star className="mr-2 h-4 w-4" />
-                  Watchlist umschalten: <span className="ml-1 font-mono">{settings.lastSelected}</span>
+                  {t("command.toggleWatchlist", { symbol: settings.lastSelected })}
                 </CommandItem>
               </CommandGroup>
             </>

@@ -3,12 +3,14 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import { Star, Zap, Keyboard, X, ArrowRight, Bell } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n";
 
 // Globale Hotkeys + Floating Quick-Action-Panel.
 // B = toggle watchlist · S = scroll to signals · 1-9 = wechselt zwischen Watchlist-Symbolen · ? = Hilfe
 export function QuickPanel() {
   const navigate = useNavigate();
   const { settings, toggleWatch } = useSettings();
+  const t = useT();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [helpOpen, setHelpOpen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -95,7 +97,7 @@ export function QuickPanel() {
               {current && (
                 <button onClick={() => toggleWatch(current)}
                   className="flex w-full items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 text-sm hover:bg-accent/40">
-                  <span className="flex items-center gap-2"><Star className="h-3.5 w-3.5 text-gold" /> Watchlist {settings.watchlist.includes(current) ? "entfernen" : "hinzufügen"}</span>
+            <span className="flex items-center gap-2"><Star className="h-3.5 w-3.5 text-gold" /> {settings.watchlist.includes(current) ? t("quick.watchlistRemove") : t("quick.watchlistAdd")}</span>
                   <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[9px]">B</kbd>
                 </button>
               )}
@@ -106,12 +108,12 @@ export function QuickPanel() {
               </button>
               <button onClick={() => setHelpOpen(true)}
                 className="flex w-full items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 text-sm hover:bg-accent/40">
-                <span className="flex items-center gap-2"><Keyboard className="h-3.5 w-3.5 text-violet-accent" /> Alle Hotkeys</span>
+                <span className="flex items-center gap-2"><Keyboard className="h-3.5 w-3.5 text-violet-accent" /> {t("quick.allHotkeys")}</span>
                 <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[9px]">?</kbd>
               </button>
               {settings.watchlist.length > 0 && (
                 <div className="pt-2">
-                  <div className="mb-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">Springe zu</div>
+                  <div className="mb-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">{t("quick.jumpTo")}</div>
                   <div className="flex flex-wrap gap-1">
                     {settings.watchlist.slice(0, 9).map((s, i) => (
                       <button key={s} onClick={() => navigate({ to: "/produkte/$symbol", params: { symbol: s } })}
@@ -139,20 +141,20 @@ export function QuickPanel() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/70 backdrop-blur-sm p-4" onClick={() => setHelpOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-fade-up">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold flex items-center gap-2"><Keyboard className="h-4 w-4 text-primary" /> Tastatur-Shortcuts</h2>
+              <h2 className="text-lg font-bold flex items-center gap-2"><Keyboard className="h-4 w-4 text-primary" /> {t("quick.shortcuts")}</h2>
               <button onClick={() => setHelpOpen(false)} className="rounded p-1 hover:bg-accent/40"><X className="h-4 w-4" /></button>
             </div>
             <div className="space-y-2 text-sm">
-              <Row k="⌘ + K" desc="Command Palette öffnen" />
-              <Row k="B" desc="Symbol zur Watchlist toggeln" />
-              <Row k="1 – 9" desc="Zu Watchlist-Symbol springen" />
+              <Row k="⌘ + K" desc={t("quick.openCommand")} />
+              <Row k="B" desc={t("quick.toggleSymbol")} />
+              <Row k="1 – 9" desc={t("quick.jumpSymbol")} />
               <Row k="A" desc="Smart Alerts" />
               <Row k="N" desc="News-Feed" />
               <Row k="H" desc="Heatmap" />
-              <Row k="C" desc="Wirtschaftskalender" />
+              <Row k="C" desc={t("quick.calendar")} />
               <Row k="W" desc="War Room" />
-              <Row k="?" desc="Diese Hilfe" />
-              <Row k="Esc" desc="Schließen" />
+              <Row k="?" desc={t("quick.thisHelp")} />
+              <Row k="Esc" desc={t("common.close")} />
             </div>
           </div>
         </div>
