@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon, Trash2, AlertTriangle, Pencil, Check, X } from "lucide-react";
+import { Loader2, LogOut, CreditCard, ArrowUpRight, User as UserIcon, Trash2, AlertTriangle, Pencil, Check, X, XCircle, RotateCcw } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useServerFn } from "@tanstack/react-start";
-import { createPortalSession } from "@/utils/payments.functions";
+import { createPortalSession, cancelSubscription, resumeSubscription } from "@/utils/payments.functions";
 import { deleteOwnAccount } from "@/lib/account.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +37,8 @@ function AccountPage() {
   const { tier, status, currentPeriodEnd, cancelAtPeriodEnd, priceId, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const [portalBusy, setPortalBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [resumeBusy, setResumeBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [displayName, setDisplayName] = useState<string>("");
@@ -44,6 +46,8 @@ function AccountPage() {
   const [nameDraft, setNameDraft] = useState("");
   const [nameBusy, setNameBusy] = useState(false);
   const openPortal = useServerFn(createPortalSession);
+  const callCancel = useServerFn(cancelSubscription);
+  const callResume = useServerFn(resumeSubscription);
   const callDelete = useServerFn(deleteOwnAccount);
 
   useEffect(() => {
@@ -111,6 +115,30 @@ function AccountPage() {
       toast.error(e instanceof Error ? e.message : "Konnte Billing-Portal nicht öffnen");
     } finally {
       setPortalBusy(false);
+    }
+  };
+
+  const onCancel = async () => {
+    setCancelBusy(true);
+    try {
+      await callCancel({ data: { environment: getStripeEnvironment() } });
+      toast.success("Abo gekündigt. Du behältst deinen Plan bis zum Ende des Abrechnungszeitraums.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Kündigung fehlgeschlagen");
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const onResume = async () => {
+    setResumeBusy(true);
+    try {
+      await callResume({ data: { environment: getStripeEnvironment() } });
+      toast.success("Abo fortgesetzt.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Fortsetzen fehlgeschlagen");
+    } finally {
+      setResumeBusy(false);
     }
   };
 
@@ -231,6 +259,60 @@ function AccountPage() {
                 <Button asChild variant="default">
                   <Link to="/preise">Auf Elite upgraden</Link>
                 </Button>
+              )}
+              {cancelAtPeriodEnd ? (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={resumeBusy}>
+                      {resumeBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                      Kündigung zurücknehmen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Abo fortsetzen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Dein Abo wird nicht beendet und verlängert sich wie gewohnt am{" "}
+                        {currentPeriodEnd ? new Date(currentPeriodEnd).toLocaleDateString("de-DE") : "Periodenende"}.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                      <AlertDialogAction onClick={(e) => { e.preventDefault(); void onResume(); }}>
+                        Fortsetzen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" disabled={cancelBusy} className="text-destructive hover:text-destructive">
+                      {cancelBusy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <XCircle className="h-4 w-4 mr-2" />}
+                      Abo kündigen
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Abo wirklich kündigen?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Du behältst alle Premium-Vorteile bis zum Ende des aktuellen Abrechnungszeitraums
+                        {currentPeriodEnd ? ` (${new Date(currentPeriodEnd).toLocaleDateString("de-DE")})` : ""}.
+                        Danach wirst du automatisch auf den kostenlosen Plan zurückgesetzt. Es wird keine weitere Zahlung
+                        eingezogen. Du kannst die Kündigung jederzeit vor Ablauf zurücknehmen.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Doch behalten</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={(e) => { e.preventDefault(); void onCancel(); }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Zum Periodenende kündigen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </>
           )}

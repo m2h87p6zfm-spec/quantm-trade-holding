@@ -121,3 +121,74 @@ export const createPortalSession = createServerFn({ method: "POST" })
     });
     return portal.url;
   });
+
+export const cancelSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => {
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: sub, error } = await supabase
+      .from("subscriptions")
+      .select("stripe_subscription_id, status")
+      .eq("user_id", userId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !sub?.stripe_subscription_id) {
+      throw new Error("Kein aktives Abo gefunden.");
+    }
+    const stripe = createStripeClient(data.environment);
+    const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      cancel_at_period_end: true,
+    });
+    const periodEnd = updated.items?.data?.[0]?.current_period_end ?? null;
+    await supabase
+      .from("subscriptions")
+      .update({
+        cancel_at_period_end: true,
+        ...(periodEnd && { current_period_end: new Date(periodEnd * 1000).toISOString() }),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("stripe_subscription_id", sub.stripe_subscription_id)
+      .eq("environment", data.environment);
+    return { ok: true };
+  });
+
+export const resumeSubscription = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { environment: StripeEnv }) => {
+    if (data.environment !== "sandbox" && data.environment !== "live") {
+      throw new Error("Invalid environment");
+    }
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: sub, error } = await supabase
+      .from("subscriptions")
+      .select("stripe_subscription_id")
+      .eq("user_id", userId)
+      .eq("environment", data.environment)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !sub?.stripe_subscription_id) {
+      throw new Error("Kein Abo gefunden.");
+    }
+    const stripe = createStripeClient(data.environment);
+    await stripe.subscriptions.update(sub.stripe_subscription_id, {
+      cancel_at_period_end: false,
+    });
+    await supabase
+      .from("subscriptions")
+      .update({ cancel_at_period_end: false, updated_at: new Date().toISOString() })
+      .eq("stripe_subscription_id", sub.stripe_subscription_id)
+      .eq("environment", data.environment);
+    return { ok: true };
+  });
