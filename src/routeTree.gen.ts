@@ -67,6 +67,7 @@ import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
+import { Route as ApiPublicHooksEvaluateAlertsRouteImport } from './routes/api/public/hooks/evaluate-alerts'
 import { Route as ApiPublicHooksCausalOutcomesRouteImport } from './routes/api/public/hooks/causal-outcomes'
 
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -362,6 +363,12 @@ const ApiPublicHooksTrackOutcomesRoute =
     path: '/api/public/hooks/track-outcomes',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksEvaluateAlertsRoute =
+  ApiPublicHooksEvaluateAlertsRouteImport.update({
+    id: '/api/public/hooks/evaluate-alerts',
+    path: '/api/public/hooks/evaluate-alerts',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksCausalOutcomesRoute =
   ApiPublicHooksCausalOutcomesRouteImport.update({
     id: '/api/public/hooks/causal-outcomes',
@@ -427,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
+  '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -488,6 +496,7 @@ export interface FileRoutesByTo {
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
+  '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -550,6 +559,7 @@ export interface FileRoutesById {
   '/api/public/stream': typeof ApiPublicStreamRoute
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
+  '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -613,6 +623,7 @@ export interface FileRouteTypes {
     | '/api/public/stream'
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
+    | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/api/public/stream'
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
+    | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
@@ -735,6 +747,7 @@ export interface FileRouteTypes {
     | '/api/public/stream'
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
+    | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -797,6 +810,7 @@ export interface RootRouteChildren {
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
   ApiPublicVapidPublicKeyRoute: typeof ApiPublicVapidPublicKeyRoute
   ApiPublicHooksCausalOutcomesRoute: typeof ApiPublicHooksCausalOutcomesRoute
+  ApiPublicHooksEvaluateAlertsRoute: typeof ApiPublicHooksEvaluateAlertsRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -1209,6 +1223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTrackOutcomesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/evaluate-alerts': {
+      id: '/api/public/hooks/evaluate-alerts'
+      path: '/api/public/hooks/evaluate-alerts'
+      fullPath: '/api/public/hooks/evaluate-alerts'
+      preLoaderRoute: typeof ApiPublicHooksEvaluateAlertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/causal-outcomes': {
       id: '/api/public/hooks/causal-outcomes'
       path: '/api/public/hooks/causal-outcomes'
@@ -1277,6 +1298,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStreamRoute: ApiPublicStreamRoute,
   ApiPublicVapidPublicKeyRoute: ApiPublicVapidPublicKeyRoute,
   ApiPublicHooksCausalOutcomesRoute: ApiPublicHooksCausalOutcomesRoute,
+  ApiPublicHooksEvaluateAlertsRoute: ApiPublicHooksEvaluateAlertsRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
