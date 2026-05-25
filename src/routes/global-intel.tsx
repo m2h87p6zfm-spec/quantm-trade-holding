@@ -947,18 +947,18 @@ function StrategicBriefing() {
   const expl = explData?.explanations ?? {};
 
   return (
-    <section aria-label="Global market overview" className="space-y-6">
+    <section aria-label="Global market overview" className="space-y-8">
       {/* ── LAYER 1 · Global Snapshot ─────────────────────────────── */}
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Global Snapshot
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap any tile for today's reasoning
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap for reasoning
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           <ExplainPopover metricKey="globalRisk" label="Global Risk" status={snap.globalRisk.label} loading={explLoading} explanation={expl.globalRisk}>
             <StatusPill icon={Gauge}      label="Global Risk"   status={snap.globalRisk.label}  tone={snap.globalRisk.tone} />
           </ExplainPopover>
@@ -983,11 +983,11 @@ function StrategicBriefing() {
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Core Market Drivers
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap any card for today's reasoning
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap for reasoning
           </span>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <ExplainPopover metricKey="positioning" label="Investor Positioning" status={snap.globalRisk.label} loading={explLoading} explanation={expl.positioning}>
             <DriverCard icon={Users}      label="Investor Positioning"   status={snap.globalRisk.label} direction={positioningDir} />
           </ExplainPopover>
@@ -1003,22 +1003,20 @@ function StrategicBriefing() {
         </div>
       </div>
 
-
-
       {/* ── LAYER 3 · Market Context (expandable) ─────────────────── */}
       <div>
         <div className="mb-3 flex items-baseline justify-between gap-3">
           <h3 className="font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Market Context
           </h3>
-          <span className="hidden font-mono text-[10px] text-muted-foreground/70 sm:block">
-            Tap to go deeper
+          <span className="hidden font-mono text-[10px] text-muted-foreground/60 sm:block">
+            Tap to expand
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="rounded-lg border border-white/[0.06] bg-white/[0.01] px-4">
           <ContextAccordion icon={Eye} title="Why markets are reacting this way" defaultOpen>
             <p>{s.headline}</p>
-            <p className="mt-2 text-foreground/70">
+            <p className="mt-2 text-foreground/65">
               The combination of a firm dollar, sticky inflation pressure and decelerating
               global growth is driving capital toward US assets and away from the rest of the
               world. Investors are paying a premium for liquidity, quality and short-duration
@@ -1027,7 +1025,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={ShieldCheck} title="Key geopolitical influences">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· Middle East tensions keep an oil-risk premium baked into Brent and gold.</li>
               <li>· US–China tech and tariff posture is the single biggest swing factor for global capital flows.</li>
               <li>· European political risk (France / Germany) is widening sovereign spreads inside the eurozone.</li>
@@ -1036,7 +1034,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={Flame} title="Commodity pressure drivers">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· <span className="text-foreground">Oil:</span> OPEC+ discipline + Middle East risk = firm floor; demand softening at the margin.</li>
               <li>· <span className="text-foreground">Gold:</span> Central-bank buying + safe-haven flows offset a strong dollar.</li>
               <li>· <span className="text-foreground">Industrial metals:</span> Chinese demand remains the swing variable; AI capex lifts copper.</li>
@@ -1045,7 +1043,7 @@ function StrategicBriefing() {
           </ContextAccordion>
 
           <ContextAccordion icon={Globe2} title="Regional breakdown">
-            <ul className="space-y-1.5 text-foreground/80">
+            <ul className="space-y-1.5 text-foreground/75">
               <li>· <span className="text-foreground">United States:</span> Earnings resilience and AI capex keep equities supported despite restrictive rates.</li>
               <li>· <span className="text-foreground">Europe:</span> Industrial weakness in Germany / France; energy gap to the US persists.</li>
               <li>· <span className="text-foreground">China:</span> Property unwind continues to drag goods inflation and commodity demand lower.</li>
@@ -1058,6 +1056,7 @@ function StrategicBriefing() {
     </section>
   );
 }
+
 
 /* ───────── Event cause→effect chains (drives EventPanel + map propagation) ───────── */
 
