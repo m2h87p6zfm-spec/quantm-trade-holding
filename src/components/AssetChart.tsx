@@ -8,6 +8,7 @@ import type {
 import { MarketDataReconnectingError } from "@/lib/finnhub";
 import { formatPercent, formatSignedAbs, formatCompact, pctChange, absChange, axisDecimals, formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
 import { chartCssVar, resolveChartColor } from "@/lib/chartColors";
+import { attachTimeScaleContainment, configureContainedTimeScale, showFullDataRange } from "@/lib/chartTimeScale";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -106,6 +107,7 @@ export const AssetChart = memo(function AssetChart({
   const baseLineRef = useRef<ReturnType<NonNullable<typeof seriesRef.current>["createPriceLine"]> | null>(null);
   const volMapRef = useRef<Map<number, number>>(new Map());
   const libRef = useRef<typeof import("lightweight-charts") | null>(null);
+  const timeScaleCleanupRef = useRef<(() => void) | null>(null);
 
   // Keep latest values reachable from async setup
   const upRef = useRef(up);
@@ -161,6 +163,9 @@ export const AssetChart = memo(function AssetChart({
         handleScale: { axisPressedMouseMove: false },
       });
       chartRef.current = chart;
+      configureContainedTimeScale(chart);
+      timeScaleCleanupRef.current?.();
+      timeScaleCleanupRef.current = attachTimeScaleContainment(chart, () => dataRef.current.length);
 
       chart.subscribeCrosshairMove((param) => {
         if (!param.time || !seriesRef.current) { setHover(null); return; }
@@ -182,6 +187,8 @@ export const AssetChart = memo(function AssetChart({
     return () => {
       cancelled = true;
       ro?.disconnect();
+      timeScaleCleanupRef.current?.();
+      timeScaleCleanupRef.current = null;
       chartRef.current?.remove();
       chartRef.current = null;
       seriesRef.current = null;
@@ -247,7 +254,7 @@ export const AssetChart = memo(function AssetChart({
         title: "",
       });
     }
-    chartRef.current.timeScale().fitContent();
+    showFullDataRange(chartRef.current, data.length);
   }, [ready, data, first]);
 
   // Time-axis format on timeframe change
