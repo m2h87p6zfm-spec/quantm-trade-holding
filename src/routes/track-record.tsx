@@ -495,6 +495,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
 type SortKey = "analyzed_at" | "ticker" | "verdict" | "return_30d" | "confidence_score";
 
 function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
+  const { settings } = useSettings();
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>("analyzed_at");
