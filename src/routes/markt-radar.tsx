@@ -24,13 +24,13 @@ function MarktRadarPage() {
     navigate({ search: { tab: v as Tab }, replace: true });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-6">
+    <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8 p-4 sm:p-6 pb-24 lg:pb-6">
       {/* Unified Hero */}
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Radar className="h-3 w-3 text-primary" /> Markt-Radar
         </div>
-        <h1 className="mt-3 text-4xl font-bold tracking-tight">
+        <h1 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
           Wo bewegt sich der Markt — und warum?
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
@@ -42,11 +42,12 @@ function MarktRadarPage() {
 
       {/* Tab-Navigation als visuell ansprechende Karten */}
       <Tabs value={active} onValueChange={setTab} className="space-y-6">
-        <TabsList className="grid w-full h-auto grid-cols-3 gap-2 rounded-2xl border border-border bg-card/40 p-2 backdrop-blur">
+        <TabsList className="grid w-full h-auto grid-cols-3 gap-1.5 sm:gap-2 rounded-2xl border border-border bg-card/40 p-1.5 sm:p-2 backdrop-blur">
           <TabTriggerCard
             value="heatmap"
             icon={<Flame className="h-4 w-4" />}
             label="Heatmap"
+            shortLabel="Heatmap"
             sub="Marktpuls — was läuft heute?"
             tone="bear"
           />
@@ -54,6 +55,7 @@ function MarktRadarPage() {
             value="sectors"
             icon={<Compass className="h-4 w-4" />}
             label="Sektor-Rotation"
+            shortLabel="Sektoren"
             sub="Risk-On oder Risk-Off?"
             tone="primary"
           />
@@ -61,6 +63,7 @@ function MarktRadarPage() {
             value="correlations"
             icon={<Network className="h-4 w-4" />}
             label="Korrelationen"
+            shortLabel="Korrel."
             sub="Klumpenrisiko erkennen"
             tone="violet"
           />
@@ -84,12 +87,14 @@ function TabTriggerCard({
   value,
   icon,
   label,
+  shortLabel,
   sub,
   tone,
 }: {
   value: string;
   icon: React.ReactNode;
   label: string;
+  shortLabel?: string;
   sub: string;
   tone: "bull" | "bear" | "primary" | "violet";
 }) {
@@ -101,15 +106,18 @@ function TabTriggerCard({
   return (
     <TabsTrigger
       value={value}
-      className="group flex h-auto flex-col items-start gap-1 rounded-xl px-4 py-3 text-left data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
+      className="group flex h-auto min-w-0 flex-col items-start gap-1 rounded-xl px-2 py-2 sm:px-4 sm:py-3 text-left data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-border"
     >
-      <div className="flex items-center gap-2">
-        <span className={`flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 ring-1 ring-border/60 ${toneText}`}>
+      <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2">
+        <span className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg bg-muted/40 ring-1 ring-border/60 ${toneText}`}>
           {icon}
         </span>
-        <span className="text-sm font-semibold">{label}</span>
+        <span className="truncate text-[11px] sm:text-sm font-semibold">
+          <span className="sm:hidden">{shortLabel ?? label}</span>
+          <span className="hidden sm:inline">{label}</span>
+        </span>
       </div>
-      <span className="text-[11px] text-muted-foreground hidden sm:block">{sub}</span>
+      <span className="text-[11px] text-muted-foreground hidden md:block">{sub}</span>
     </TabsTrigger>
   );
 }
