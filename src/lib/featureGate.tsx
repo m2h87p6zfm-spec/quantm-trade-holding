@@ -139,6 +139,7 @@ export function FeatureGate({
   description?: string;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const { allowed, required, loading } = useFeature(feature);
   const { user } = useAuth();
 
@@ -163,23 +164,23 @@ export function FeatureGate({
           <Lock className="h-6 w-6" />
         </div>
         <div className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {TIER_LABEL[required]} Feature
+          {t("gate.feature", { tier: TIER_LABEL[required] })}
         </div>
         <h2 className="text-2xl font-bold tracking-tight">
-          {title ?? "Dieses Feature ist gesperrt"}
+          {title ?? t("gate.locked")}
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          {description ?? `Upgrade auf den ${TIER_LABEL[required]}-Plan, um diesen Bereich freizuschalten.`}
+          {description ?? t("gate.description", { tier: TIER_LABEL[required] })}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <Button asChild>
             <Link to="/preise">
-              <Icon className="mr-1.5 h-4 w-4" /> Auf {TIER_LABEL[required]} upgraden
+              <Icon className="mr-1.5 h-4 w-4" /> {t("gate.upgrade", { tier: TIER_LABEL[required] })}
             </Link>
           </Button>
           {!user && (
             <Button asChild variant="outline">
-              <Link to="/login">Anmelden</Link>
+              <Link to="/login">{t("common.signIn")}</Link>
             </Button>
           )}
         </div>
