@@ -150,6 +150,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
           s={analyst}
           topic="Analyst Sentiment"
           ctx={`Analyst-Konsens für ${symbol}: bullish ${analyst.bull}%, neutral ${analyst.neutral}%, bearish ${analyst.bear}%.`}
+          lang={lang}
         />
         <GroupCard
           icon={<Users className="h-3.5 w-3.5" />}
@@ -158,6 +159,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
           s={retail}
           topic="Retail Sentiment"
           ctx={`Retail-Stimmung für ${symbol}: bullish ${retail.bull}%, neutral ${retail.neutral}%, bearish ${retail.bear}%.`}
+          lang={lang}
         />
         <GroupCard
           icon={<Building2 className="h-3.5 w-3.5" />}
@@ -166,6 +168,7 @@ export function MarketConsensus({ symbol, indicators }: MarketConsensusProps) {
           s={institutional}
           topic="Institutional Sentiment"
           ctx={`Institutionelle Stimmung für ${symbol}: bullish ${institutional.bull}%, neutral ${institutional.neutral}%, bearish ${institutional.bear}%.`}
+          lang={lang}
         />
       </div>
 
@@ -187,9 +190,9 @@ function Legend() {
 }
 
 function GroupCard({
-  icon, title, subtitle, s, topic, ctx,
-}: { icon: React.ReactNode; title: string; subtitle: string; s: Sentiment; topic: string; ctx: string }) {
-  const v = verdictFor(s);
+  icon, title, subtitle, s, topic, ctx, lang,
+}: { icon: React.ReactNode; title: string; subtitle: string; s: Sentiment; topic: string; ctx: string; lang: "de" | "en" }) {
+  const v = verdictFor(s, lang);
   const net = s.bull - s.bear;
   return (
     <div className="rounded-lg border border-border/60 bg-background/40 p-4">
