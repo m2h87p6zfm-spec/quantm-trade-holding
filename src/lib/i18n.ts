@@ -474,6 +474,10 @@ const DICT: Record<Lang, Dict> = {
     "credits.title": "{tier}-Plan · {used} von {limit} Analysen diesen Monat genutzt",
     "aiSummary.label": "Quantm · KI-Einschätzung",
     "aiSummary.scoreFallback": "Gesamtscore aus Momentum, Trend, Volatilität und Risiko-Komponenten.",
+    "aiSummary.metrics": "Kennzahlen",
+    "aiSummary.risks": "Risiken",
+    "aiSummary.conclusion": "Fazit",
+    "aiSummary.writing": "schreibt …",
   },
   en: {
     // Nav — Quant Core
@@ -939,6 +943,10 @@ const DICT: Record<Lang, Dict> = {
     "credits.title": "{tier} plan · {used} of {limit} analyses used this month",
     "aiSummary.label": "Quantm · AI assessment",
     "aiSummary.scoreFallback": "Overall score from momentum, trend, volatility and risk components.",
+    "aiSummary.metrics": "Metrics",
+    "aiSummary.risks": "Risks",
+    "aiSummary.conclusion": "Conclusion",
+    "aiSummary.writing": "writing …",
   },
 };
 
