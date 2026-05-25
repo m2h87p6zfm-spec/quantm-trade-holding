@@ -24,7 +24,8 @@ class FinnhubError extends Error {
 }
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path);
+  const { authedFetch } = await import("@/lib/authed-fetch");
+  const res = await authedFetch(path);
   if (!res.ok) throw new FinnhubError(`Datenfeed-Fehler: ${res.status}`, res.status);
   const j: any = await res.json();
   if (j?.status === "reconnecting") throw new MarketDataReconnectingError(j.message);
@@ -130,7 +131,8 @@ export async function searchSymbols(q: string): Promise<SymbolSearchHit[]> {
   const query = q.trim();
   if (!query) return [];
   try {
-    const res = await fetch(`/api/public/search?q=${encodeURIComponent(query)}`);
+    const { authedFetch } = await import("@/lib/authed-fetch");
+    const res = await authedFetch(`/api/public/search?q=${encodeURIComponent(query)}`);
     if (!res.ok) return [];
     const j = await res.json();
     return Array.isArray(j?.results) ? j.results : [];

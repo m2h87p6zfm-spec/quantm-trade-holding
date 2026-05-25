@@ -35,7 +35,8 @@ type CandlesResp = {
 };
 
 async function fetchTfCandles(symbol: string, interval: string, range: string): Promise<CandlesResp> {
-  const res = await fetch(`/api/public/candles?symbol=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`);
+  const { authedFetch } = await import("@/lib/authed-fetch");
+  const res = await authedFetch(`/api/public/candles?symbol=${encodeURIComponent(symbol)}&interval=${interval}&range=${range}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const j = (await res.json()) as CandlesResp;
   if (j.status === "reconnecting") throw new MarketDataReconnectingError(j.message);
