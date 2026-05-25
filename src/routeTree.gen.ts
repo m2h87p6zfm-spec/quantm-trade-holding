@@ -50,6 +50,7 @@ import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthConfirmRouteImport } from './routes/auth.confirm'
+import { Route as ApiPublicVapidPublicKeyRouteImport } from './routes/api/public/vapid-public-key'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSignalChatRouteImport } from './routes/api/public/signal-chat'
 import { Route as ApiPublicSearchRouteImport } from './routes/api/public/search'
@@ -273,6 +274,11 @@ const AuthConfirmRoute = AuthConfirmRouteImport.update({
   path: '/auth/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicVapidPublicKeyRoute = ApiPublicVapidPublicKeyRouteImport.update({
+  id: '/api/public/vapid-public-key',
+  path: '/api/public/vapid-public-key',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStreamRoute = ApiPublicStreamRouteImport.update({
   id: '/api/public/stream',
   path: '/api/public/stream',
@@ -419,6 +425,7 @@ export interface FileRoutesByFullPath {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -479,6 +486,7 @@ export interface FileRoutesByTo {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -540,6 +548,7 @@ export interface FileRoutesById {
   '/api/public/search': typeof ApiPublicSearchRoute
   '/api/public/signal-chat': typeof ApiPublicSignalChatRoute
   '/api/public/stream': typeof ApiPublicStreamRoute
+  '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -602,6 +611,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -662,6 +672,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -722,6 +733,7 @@ export interface FileRouteTypes {
     | '/api/public/search'
     | '/api/public/signal-chat'
     | '/api/public/stream'
+    | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -783,6 +795,7 @@ export interface RootRouteChildren {
   ApiPublicSearchRoute: typeof ApiPublicSearchRoute
   ApiPublicSignalChatRoute: typeof ApiPublicSignalChatRoute
   ApiPublicStreamRoute: typeof ApiPublicStreamRoute
+  ApiPublicVapidPublicKeyRoute: typeof ApiPublicVapidPublicKeyRoute
   ApiPublicHooksCausalOutcomesRoute: typeof ApiPublicHooksCausalOutcomesRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1077,6 +1090,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/vapid-public-key': {
+      id: '/api/public/vapid-public-key'
+      path: '/api/public/vapid-public-key'
+      fullPath: '/api/public/vapid-public-key'
+      preLoaderRoute: typeof ApiPublicVapidPublicKeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/stream': {
       id: '/api/public/stream'
       path: '/api/public/stream'
@@ -1255,6 +1275,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSearchRoute: ApiPublicSearchRoute,
   ApiPublicSignalChatRoute: ApiPublicSignalChatRoute,
   ApiPublicStreamRoute: ApiPublicStreamRoute,
+  ApiPublicVapidPublicKeyRoute: ApiPublicVapidPublicKeyRoute,
   ApiPublicHooksCausalOutcomesRoute: ApiPublicHooksCausalOutcomesRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
