@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useT } from "@/lib/i18n";
 
-const DISMISS_KEY = "qt.manifest.dismissed.v1";
+const DISMISS_KEY = "qt.manifest.dismissed.v2";
 
 /**
  * HeartManifestHero
