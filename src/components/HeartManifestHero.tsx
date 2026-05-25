@@ -86,7 +86,7 @@ export function HeartManifestHero() {
           </div>
 
           {/* decorative chart */}
-          <div className="pointer-events-none absolute bottom-0 right-0 h-full w-1/2 opacity-25 transition-opacity duration-500 group-hover:opacity-50">
+          <div className="pointer-events-none absolute bottom-0 right-0 hidden h-full w-1/2 opacity-25 transition-opacity duration-500 group-hover:opacity-50 sm:block">
             <svg className="h-full w-full" viewBox="0 0 200 200" preserveAspectRatio="none">
               <path d="M0,150 Q50,130 100,160 T200,100" fill="none" stroke="#22FF88" strokeWidth="2" />
               <path
