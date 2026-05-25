@@ -90,8 +90,8 @@ function AboutPage() {
         <div className="surface p-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
             <div className="text-sm text-muted-foreground mb-1">Fragen, Feedback oder Presse?</div>
-            <a href="mailto:hello@quantmtrade.com" className="text-lg font-display font-medium text-foreground hover:text-primary transition-colors inline-flex items-center gap-2">
-              <Mail className="h-4 w-4" /> hello@quantmtrade.com
+            <a href="mailto:QuantmTradeInbox@proton.me" className="text-lg font-display font-medium text-foreground hover:text-primary transition-colors inline-flex items-center gap-2">
+              <Mail className="h-4 w-4" /> QuantmTradeInbox@proton.me
             </a>
           </div>
           <div className="flex gap-3">
