@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getCandlesCached } from "@/lib/twelvedata.server";
+import { requireUserId } from "@/lib/api-auth.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/api/public/candles")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async ({ request }) => {
+        const auth = await requireUserId(request);
+        if (auth instanceof Response) return auth;
         try {
           const url = new URL(request.url);
           const symbol = (url.searchParams.get("symbol") || "").trim().toUpperCase();

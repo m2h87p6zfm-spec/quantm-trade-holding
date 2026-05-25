@@ -1,18 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { backfillOutcomes } from "@/lib/causal-engine.server";
+import { requireCronSecret } from "@/lib/api-auth.server";
 
 export const Route = createFileRoute("/api/public/hooks/causal-outcomes")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        const apikey = request.headers.get("apikey") ?? request.headers.get("x-api-key");
-        if (!expected || apikey !== expected) {
-          return new Response(
-            JSON.stringify({ ok: false, error: "Unauthorized" }),
-            { status: 401, headers: { "Content-Type": "application/json" } },
-          );
-        }
+        const denied = requireCronSecret(request);
+        if (denied) return denied;
         try {
           const result = await backfillOutcomes();
           return new Response(
