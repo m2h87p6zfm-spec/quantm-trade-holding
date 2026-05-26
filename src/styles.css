@@ -116,48 +116,69 @@
    Sehr helle, kühl-neutrale Flächen (kein Cream/Sand) mit lebendigem
    Signal-Blau, TradingView-Teal-Grün und Coral-Rot. Hoher Kontrast, präzise. */
 .light {
-  --background: oklch(0.985 0.003 240);      /* near-white #f7f9fb */
-  --foreground: oklch(0.22 0.012 245);       /* deep slate #1a1f2c */
+  --background: oklch(0.985 0.003 240);      /* near-white */
+  --foreground: oklch(0.16 0.014 250);       /* near-black ink for AA+ */
   --card: oklch(1 0 0);                      /* pure white surface */
-  --card-foreground: oklch(0.22 0.012 245);
+  --card-foreground: oklch(0.16 0.014 250);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.012 245);
-  --primary: oklch(0.55 0.20 255);           /* signal blue #2962ff */
+  --popover-foreground: oklch(0.16 0.014 250);
+  --primary: oklch(0.48 0.22 258);           /* deeper signal blue for contrast on white */
   --primary-foreground: oklch(0.99 0.003 240);
-  --secondary: oklch(0.96 0.006 240);        /* subtle cool gray */
-  --secondary-foreground: oklch(0.28 0.012 245);
-  --muted: oklch(0.955 0.005 240);
-  --muted-foreground: oklch(0.50 0.012 245); /* #6b7280 */
-  --accent: oklch(0.95 0.025 245);           /* tinted blue hover state */
-  --accent-foreground: oklch(0.32 0.10 255);
-  --destructive: oklch(0.60 0.22 25);        /* coral red */
+  --secondary: oklch(0.94 0.007 240);
+  --secondary-foreground: oklch(0.20 0.014 250);
+  --muted: oklch(0.945 0.006 240);
+  --muted-foreground: oklch(0.38 0.014 250); /* darker so secondary text is readable */
+  --accent: oklch(0.92 0.030 250);
+  --accent-foreground: oklch(0.22 0.10 258);
+  --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.91 0.006 240);           /* hairline #e4e7eb */
-  --input: oklch(0.94 0.006 240);
-  --ring: oklch(0.55 0.20 255);
-  --bull: oklch(0.62 0.13 165);              /* TradingView teal-green #26a69a */
-  --bear: oklch(0.62 0.18 25);               /* TradingView coral #ef5350 */
-  --neutral-signal: oklch(0.52 0.018 245);
-  --cyan-accent: oklch(0.62 0.13 215);
-  --gold: oklch(0.68 0.14 75);
-  --ticker: oklch(0.55 0.20 255);
-  --violet-accent: oklch(0.55 0.18 290);
-  --chart-grid: color-mix(in oklab, var(--border) 75%, transparent);
-  --chart-axis: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+  --border: oklch(0.84 0.008 240);           /* visible hairline */
+  --input: oklch(0.90 0.007 240);
+  --ring: oklch(0.48 0.22 258);
+  --bull: oklch(0.50 0.16 160);              /* darker green for white bg */
+  --bear: oklch(0.55 0.20 25);
+  --neutral-signal: oklch(0.40 0.018 250);
+  --cyan-accent: oklch(0.52 0.14 215);
+  --gold: oklch(0.58 0.15 75);
+  --ticker: oklch(0.48 0.22 258);
+  --violet-accent: oklch(0.48 0.20 290);
+  --chart-grid: color-mix(in oklab, var(--border) 80%, transparent);
+  --chart-axis: color-mix(in oklab, var(--muted-foreground) 80%, transparent);
   --chart-tooltip: color-mix(in oklab, var(--popover) 98%, transparent);
-  --chart-1: oklch(0.55 0.20 255);
-  --chart-2: oklch(0.62 0.13 165);
-  --chart-3: oklch(0.62 0.18 25);
-  --chart-4: oklch(0.68 0.14 75);
-  --chart-5: oklch(0.55 0.18 290);
-  --sidebar: oklch(0.97 0.005 240);
-  --sidebar-foreground: oklch(0.28 0.012 245);
-  --sidebar-primary: oklch(0.55 0.20 255);
+  --chart-1: oklch(0.48 0.22 258);
+  --chart-2: oklch(0.50 0.16 160);
+  --chart-3: oklch(0.55 0.20 25);
+  --chart-4: oklch(0.58 0.15 75);
+  --chart-5: oklch(0.48 0.20 290);
+  --sidebar: oklch(0.96 0.005 240);
+  --sidebar-foreground: oklch(0.20 0.014 250);
+  --sidebar-primary: oklch(0.48 0.22 258);
   --sidebar-primary-foreground: oklch(0.99 0.003 240);
-  --sidebar-accent: oklch(0.94 0.008 240);
-  --sidebar-accent-foreground: oklch(0.28 0.012 245);
-  --sidebar-border: oklch(0.90 0.006 240);
+  --sidebar-accent: oklch(0.92 0.010 240);
+  --sidebar-accent-foreground: oklch(0.20 0.014 250);
+  --sidebar-border: oklch(0.84 0.008 240);
 }
+
+/* In light mode, neutralize common hardcoded dark-mode utility classes that
+   otherwise produce invisible / catastrophic contrast (white-on-white,
+   black-on-black). We re-map them to theme tokens so legacy components
+   stay readable without touching every file. */
+.light .text-white { color: var(--foreground) !important; }
+.light .text-black { color: var(--foreground) !important; }
+.light .bg-black\/40,
+.light .bg-black\/50,
+.light .bg-black\/60,
+.light .bg-black\/70,
+.light .bg-black\/80,
+.light .bg-black\/90 { background-color: color-mix(in oklab, var(--foreground) 55%, transparent) !important; }
+.light .bg-white\/5,
+.light .bg-white\/10,
+.light .bg-white\/15,
+.light .bg-white\/20 { background-color: color-mix(in oklab, var(--foreground) 6%, transparent) !important; }
+.light .border-white\/5,
+.light .border-white\/10,
+.light .border-white\/15,
+.light .border-white\/20 { border-color: color-mix(in oklab, var(--foreground) 14%, transparent) !important; }
 
 @layer base {
   * { border-color: var(--color-border); }
