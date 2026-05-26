@@ -86,6 +86,27 @@ function resolveCompanyName(sym: string): string | null {
   return p.name.split(/[\s,]+/)[0] || null;
 }
 
+function escapeRx(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Liefert das Symbol, das die Schlagzeile tatsächlich beschreibt.
+ * Strategie: unter allen Kandidaten (queried + relatedTickers) bevorzugen wir
+ * das Symbol, dessen Ticker oder Firmenname WIRKLICH im Titel auftaucht.
+ * So landen "Ferrari surges …" nicht unter AAPL, nur weil Yahoo AAPL als
+ * verwandt mitliefert.
+ */
+function pickPrimarySymbol(title: string, candidates: string[]): string | null {
+  const t = title || "";
+  for (const sym of candidates) {
+    const name = resolveCompanyName(sym);
+    if (new RegExp(`\\b${escapeRx(sym)}\\b`).test(t)) return sym;
+    if (name && new RegExp(`\\b${escapeRx(name)}\\b`, "i").test(t)) return sym;
+  }
+  return null;
+}
+
 async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
   const url = `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}&newsCount=15&quotesCount=0`;
   try {
@@ -94,47 +115,41 @@ async function fetchYahooNews(symbol: string): Promise<NewsItem[]> {
     const json = (await res.json()) as { news?: Array<{ uuid: string; title: string; publisher: string; link: string; providerPublishTime: number; relatedTickers?: string[] }> };
 
     const sym = symbol.toUpperCase();
-    const companyName = resolveCompanyName(sym);
-    const nameRx = companyName
-      ? new RegExp(`\\b${companyName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
-      : null;
 
-    const all = (json.news ?? []).map((n) => {
+    const out: NewsItem[] = [];
+    for (const n of json.news ?? []) {
       const source = classifyPublisher(n.publisher);
       const related = (n.relatedTickers ?? []).map((t) => t.toUpperCase());
-      const tickers = Array.from(new Set([sym, ...related]));
-      return {
-        item: {
-          uuid: n.uuid,
-          title: n.title,
-          publisher: n.publisher,
-          source,
-          link: n.link,
-          publishedAt: (n.providerPublishTime ?? 0) * 1000,
-          symbol: sym,
-          tickers,
-          breaking: BREAKING_RX.test(n.title),
-        } satisfies NewsItem,
-        related,
-      };
-    });
+      const candidates = Array.from(new Set([sym, ...related]));
+      const title = n.title || "";
 
-    // Strikter Relevanzfilter: behalte nur News, die das Symbol wirklich
-    // betreffen. Verhindert generische Markt-Headlines ("Italian Stocks…")
-    // auf einer Einzelaktien-Seite.
-    const filtered = all.filter(({ item, related }) => {
-      if (related.includes(sym)) return true;
-      const t = item.title || "";
-      if (new RegExp(`\\b${sym}\\b`).test(t)) return true;
-      if (nameRx && nameRx.test(t)) return true;
-      return false;
-    });
+      // 1) Versuche das Symbol zu finden, dessen Name/Ticker tatsächlich im Titel steht.
+      const matched = pickPrimarySymbol(title, candidates);
 
-    return filtered.slice(0, 10).map((x) => x.item);
+      // 2) Fallback: nur wenn der abgefragte Sym selbst im Titel oder Namen ist,
+      //    sonst verwerfen — das eliminiert generische Markt-Headlines, die Yahoo
+      //    fälschlich an AAPL/MSFT/… hängt.
+      const primary = matched ?? (pickPrimarySymbol(title, [sym]) ? sym : null);
+      if (!primary) continue;
+
+      out.push({
+        uuid: n.uuid,
+        title,
+        publisher: n.publisher,
+        source,
+        link: n.link,
+        publishedAt: (n.providerPublishTime ?? 0) * 1000,
+        symbol: primary,
+        tickers: candidates,
+        breaking: BREAKING_RX.test(title),
+      });
+    }
+    return out.slice(0, 10);
   } catch {
     return [];
   }
 }
+
 
 async function classifySentiments(items: NewsItem[]): Promise<NewsItem[]> {
   const apiKey = process.env.LOVABLE_API_KEY;
@@ -234,10 +249,35 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
             flat = flat.filter((i) => allow.has(i.source));
           }
 
-          const seen = new Set<string>();
-          flat = flat.filter((i) => (seen.has(i.uuid) ? false : (seen.add(i.uuid), true)));
+          // Dedupe nach uuid UND nach normalisiertem Titel (gleicher Artikel
+          // wird sonst mehrfach unter verschiedenen Symbolen geliefert).
+          const seenUuid = new Set<string>();
+          const seenTitle = new Set<string>();
+          flat = flat.filter((i) => {
+            const tKey = (i.title || "").toLowerCase().replace(/\s+/g, " ").trim().slice(0, 140);
+            if (!tKey) return false;
+            if (i.uuid && seenUuid.has(i.uuid)) return false;
+            if (seenTitle.has(tKey)) return false;
+            if (i.uuid) seenUuid.add(i.uuid);
+            seenTitle.add(tKey);
+            return true;
+          });
+
           flat.sort((a, b) => b.publishedAt - a.publishedAt);
-          flat = flat.slice(0, 40);
+
+          // Diversifikation: max. 1 News pro Symbol, damit das Karussell
+          // nicht 3× Apple hintereinander zeigt.
+          const perSymbol = new Map<string, number>();
+          const diversified: NewsItem[] = [];
+          for (const it of flat) {
+            const c = perSymbol.get(it.symbol) ?? 0;
+            if (c >= 1) continue;
+            perSymbol.set(it.symbol, c + 1);
+            diversified.push(it);
+            if (diversified.length >= 40) break;
+          }
+          flat = diversified;
+
 
           let enriched = await classifySentiments(flat);
           // Volltext-Zusammenfassungen für alle Items, damit die Karten im UI
