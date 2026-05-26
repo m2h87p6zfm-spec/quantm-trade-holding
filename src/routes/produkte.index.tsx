@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { Search, Star, StarOff } from "lucide-react";
 import { PRODUCTS, SECTORS, searchProducts } from "@/lib/products";
 import { useSettings } from "@/lib/settings";
@@ -9,19 +9,39 @@ export const Route = createFileRoute("/produkte/")({ component: KatalogPage });
 
 type AssetKind = "all" | "stocks" | "etfs";
 
+const PAGE_SIZE = 120;
+
 function KatalogPage() {
   const [q, setQ] = useState("");
   const [sector, setSector] = useState<string>("Alle");
   const [kind, setKind] = useState<AssetKind>("all");
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
-  const customSymbol = q.trim().toUpperCase().replace(/\s+/g, "");
-  const exactMatch = listHasExactSymbol(searchProducts(q), customSymbol);
 
-  let list = searchProducts(q);
-  if (kind === "stocks") list = list.filter((p) => p.sector !== "Index");
-  else if (kind === "etfs") list = list.filter((p) => p.sector === "Index");
-  if (sector !== "Alle") list = list.filter((p) => p.sector === sector);
+  // useDeferredValue hält Tippen flüssig, auch wenn die Liste re-filtert.
+  const deferredQ = useDeferredValue(q);
+
+  const list = useMemo(() => {
+    let l = searchProducts(deferredQ);
+    if (kind === "stocks") l = l.filter((p) => p.sector !== "Index");
+    else if (kind === "etfs") l = l.filter((p) => p.sector === "Index");
+    if (sector !== "Alle") l = l.filter((p) => p.sector === sector);
+    return l;
+  }, [deferredQ, kind, sector]);
+
+  // Bei jeder Filteränderung Pagination zurücksetzen.
+  const filterKey = `${deferredQ}|${kind}|${sector}`;
+  useMemo(() => { setVisible(PAGE_SIZE); }, [filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const customSymbol = q.trim().toUpperCase().replace(/\s+/g, "");
+  const exactMatch = useMemo(
+    () => list.some((p) => p.symbol.toUpperCase() === customSymbol),
+    [list, customSymbol],
+  );
+
+  const pageItems = useMemo(() => list.slice(0, visible), [list, visible]);
+  const watchSet = useMemo(() => new Set(settings.watchlist), [settings.watchlist]);
 
   const kindOptions: { v: AssetKind; label: string }[] = [
     { v: "all", label: "Alle" },
@@ -33,7 +53,9 @@ function KatalogPage() {
     <div className="mx-auto max-w-7xl space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Produktkatalog</h1>
-          <p className="text-sm text-muted-foreground">{PRODUCTS.length}+ Vorlagen. Zusätzlich kannst du jeden vom Datenfeed unterstützten Ticker direkt eingeben.</p>
+        <p className="text-sm text-muted-foreground">
+          {PRODUCTS.length.toLocaleString("de-DE")}+ Vorlagen. Zusätzlich kannst du jeden vom Datenfeed unterstützten Ticker direkt eingeben.
+        </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Finanzart">
@@ -60,7 +82,12 @@ function KatalogPage() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Suche Ticker oder Name…" className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Suche Ticker oder Name…"
+            className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
         </div>
         <select value={sector} onChange={(e) => setSector(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
           <option>Alle</option>
@@ -77,7 +104,7 @@ function KatalogPage() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => guardedAdd(customSymbol)} className="rounded-md border border-border bg-card px-3 py-1.5 text-xs hover:bg-accent">
-              {settings.watchlist.includes(customSymbol) ? "Aus Watchlist entfernen" : "Zur Watchlist"}
+              {watchSet.has(customSymbol) ? "Aus Watchlist entfernen" : "Zur Watchlist"}
             </button>
             <Link to="/produkte/$symbol" params={{ symbol: customSymbol }} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
               Analysieren
@@ -86,9 +113,14 @@ function KatalogPage() {
         </div>
       )}
 
+      <div className="text-xs text-muted-foreground">
+        Zeige <span className="font-mono">{pageItems.length.toLocaleString("de-DE")}</span> von{" "}
+        <span className="font-mono">{list.length.toLocaleString("de-DE")}</span> Treffern
+      </div>
+
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((p) => {
-          const watched = settings.watchlist.includes(p.symbol);
+        {pageItems.map((p) => {
+          const watched = watchSet.has(p.symbol);
           return (
             <div key={p.symbol} className="flex items-center justify-between rounded-lg border border-border bg-card p-3 hover:border-primary/50 transition">
               <Link to="/produkte/$symbol" params={{ symbol: p.symbol }} className="flex-1">
@@ -105,10 +137,17 @@ function KatalogPage() {
           );
         })}
       </div>
+
+      {visible < list.length && (
+        <div className="flex justify-center pt-2">
+          <button
+            onClick={() => setVisible((v) => v + PAGE_SIZE)}
+            className="rounded-md border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/50 hover:bg-accent"
+          >
+            Weitere {Math.min(PAGE_SIZE, list.length - visible)} laden
+          </button>
+        </div>
+      )}
     </div>
   );
-}
-
-function listHasExactSymbol(list: ReturnType<typeof searchProducts>, symbol: string) {
-  return list.some((p) => p.symbol.toUpperCase() === symbol);
 }
