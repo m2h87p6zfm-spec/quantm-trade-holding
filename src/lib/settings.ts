@@ -151,6 +151,7 @@ export function useSettings() {
     return () => { window.removeEventListener("ta_settings_change", h); window.removeEventListener("storage", h); };
   }, []);
   useEffect(() => {
+    if (stored.theme === "auto") return; // handled by useAutoTheme based on sun position
     const root = document.documentElement;
     if (stored.theme === "light") { root.classList.add("light"); root.classList.remove("dark"); }
     else { root.classList.remove("light"); root.classList.add("dark"); }
