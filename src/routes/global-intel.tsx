@@ -1137,7 +1137,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "JPY / KRW", tone: "warn", note: "Asian FX wobble on regional escalation risk." },
       { label: "Defence equities", tone: "ok", note: "Pacific posture lifts US/JP/KR defence names." },
     ],
-    global: "Any disruption to Taiwan = global tech earnings shock; no near-term substitute for TSMC's leading-edge nodes.",
+    global: "Taiwan makes almost all of the world's most advanced chips, with no real backup supplier. A serious conflict would cripple AI, smartphones, cars and data centres globally. That's why every flare-up moves tech stocks worldwide.",
   },
   "us-pol": {
     who: ["United States of America", "Mexico", "China"],
