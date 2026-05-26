@@ -11,6 +11,7 @@ import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
+import { MarketMovers } from "@/components/MarketMovers";
 import { useT } from "@/lib/i18n";
 import { HeartManifestHero } from "@/components/HeartManifestHero";
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
@@ -237,6 +238,9 @@ function Cockpit() {
         <section>
           <WatchlistSignalsPanel />
         </section>
+
+        {/* BEREICH 2b — Today's Market Movers */}
+        <MarketMovers />
 
         {/* BEREICH 3 — Zusätzliche Insights (collapsible) */}
         <section>
