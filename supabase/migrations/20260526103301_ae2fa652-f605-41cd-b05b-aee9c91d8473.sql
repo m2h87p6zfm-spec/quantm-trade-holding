@@ -1,0 +1,1 @@
+ALTER TABLE public.user_trading_profile ADD COLUMN IF NOT EXISTS tour_completed boolean NOT NULL DEFAULT false;

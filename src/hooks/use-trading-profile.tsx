@@ -51,6 +51,7 @@ export type TradingProfile = {
   trusted_sources: string[];
   starter_watchlists: string[];
   ai_transparency_ack: boolean;
+  tour_completed: boolean;
 };
 
 export const RISK_TO_MIN_CONFIDENCE: Record<RiskLevel, number> = {
