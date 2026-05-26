@@ -24,6 +24,7 @@ import { useQuote } from "@/lib/useMarketData";
 import { useCockpitData } from "@/lib/cockpit";
 import { usePortfolioLimit } from "@/lib/featureGate";
 import { supabase } from "@/integrations/supabase/client";
+import { SymbolSearch } from "@/components/SymbolSearch";
 
 /* ---------- shared types ---------- */
 
@@ -173,52 +174,58 @@ function TabButton({
 
 function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
   const { add } = usePortfolio();
-  const { guard } = usePortfolioLimit(0); // guard reuses same logic
-  const [symbolInput, setSymbolInput] = useState("");
-  const [selectedSymbol, setSelectedSymbol] = useState("AAPL");
-  const [qty, setQty] = useState<number>(10);
+  const { guard } = usePortfolioLimit(0);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [qty, setQty] = useState<number>(1);
   const [entry, setEntry] = useState<number>(0);
   const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
-  const [showPicker, setShowPicker] = useState(false);
 
-  const selectedProduct = findProduct(selectedSymbol);
-  const selectedQuote = useQuote(selectedSymbol, 30_000);
+  const selectedProduct = selectedSymbol ? findProduct(selectedSymbol) : null;
+  const selectedQuote = useQuote(selectedSymbol ?? "AAPL", 30_000);
+  const livePrice = selectedSymbol ? selectedQuote.data?.c : undefined;
 
-  const searchResults = useMemo(() => {
-    const q = symbolInput.trim().toLowerCase();
-    if (!q) return PRODUCTS.slice(0, 12);
-    return PRODUCTS.filter(
-      (p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q),
-    ).slice(0, 12);
-  }, [symbolInput]);
+  // Auto-prefill entry price when a symbol is picked and quote arrives.
+  useEffect(() => {
+    if (selectedSymbol && livePrice && entry === 0) {
+      setEntry(livePrice);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSymbol, livePrice]);
 
-  function selectSymbol(sym: string) {
-    setSelectedSymbol(sym);
-    setSymbolInput("");
-    setShowPicker(false);
+  function onPickSymbol(symbols: string[]) {
+    const sym = symbols[0];
+    if (!sym) return;
+    setSelectedSymbol(sym.toUpperCase());
+    setEntry(0); // will be auto-filled by live quote effect
   }
 
   function onAdd(e: React.FormEvent) {
     e.preventDefault();
-    const finalEntry = entry > 0 ? entry : (selectedQuote.data?.c ?? 0);
-    if (!selectedSymbol || qty <= 0 || finalEntry <= 0) {
-      toast.error("Bitte Symbol, Menge und Einstandskurs angeben.");
+    if (!selectedSymbol) {
+      toast.error("Bitte zuerst eine Aktie suchen und auswählen.");
+      return;
+    }
+    const finalEntry = entry > 0 ? entry : (livePrice ?? 0);
+    if (qty <= 0 || finalEntry <= 0) {
+      toast.error("Bitte Menge und Einstandskurs angeben.");
       return;
     }
     if (!guard()) return;
-    add({ symbol: selectedSymbol.toUpperCase(), qty, entry: finalEntry, side });
+    add({ symbol: selectedSymbol, qty, entry: finalEntry, side });
     toast.success(
-      `${side} ${qty} × ${selectedSymbol.toUpperCase()} @ ${finalEntry.toFixed(2)} hinzugefügt`,
+      `${side} ${qty} × ${selectedSymbol} @ ${finalEntry.toFixed(2)} hinzugefügt`,
     );
+    // Reset for the next add
+    setSelectedSymbol(null);
     setEntry(0);
+    setQty(1);
+    setSide("LONG");
   }
 
-  const livePrice = selectedQuote.data?.c;
-
   return (
-    <div className="p-5">
+    <div className="p-5 space-y-4">
       {atLimit && tier === "free" && (
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[11px] text-amber-400/90">
+        <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[11px] text-amber-400/90">
           <span>Limit erreicht — upgrade für unbegrenzte Positionen.</span>
           <a href="/preise" className="font-semibold text-primary hover:underline">
             Pro freischalten →
@@ -226,128 +233,136 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
         </div>
       )}
 
-      <form onSubmit={onAdd} className="grid gap-3 md:grid-cols-[2fr,90px,140px,110px,auto]">
-        {/* Symbol Picker */}
-        <div className="relative">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Symbol / Firma
-          </label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={
-                symbolInput ||
-                (showPicker ? "" : `${selectedSymbol} · ${selectedProduct?.name ?? ""}`)
-              }
-              onChange={(e) => {
-                setSymbolInput(e.target.value);
-                setShowPicker(true);
-              }}
-              onFocus={() => {
-                setShowPicker(true);
-                setSymbolInput("");
-              }}
-              onBlur={() => setTimeout(() => setShowPicker(false), 150)}
-              placeholder="z. B. AAPL, Apple, Vertiv…"
-              className="w-full rounded-md border border-input bg-background pl-8 pr-3 py-2 text-sm focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-            />
-          </div>
-          {showPicker && searchResults.length > 0 && (
-            <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-border bg-popover shadow-xl">
-              {searchResults.map((p) => (
-                <button
-                  key={p.symbol}
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    selectSymbol(p.symbol);
-                  }}
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-xs hover:bg-accent/50"
-                >
-                  <div className="min-w-0">
-                    <div className="font-semibold">{p.symbol}</div>
-                    <div className="truncate text-[10px] text-muted-foreground">{p.name}</div>
-                  </div>
-                  <span className="shrink-0 text-[9px] uppercase tracking-wider text-muted-foreground">
-                    {p.sector} · {p.region}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Step 1: Search & pick stock */}
+      <div>
+        <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          1. Aktie suchen
+        </label>
+        <SymbolSearch
+          compact
+          onAdd={onPickSymbol}
+          placeholder="Tipp einfach den Namen oder Ticker — z. B. Apple, NVDA, BMW…"
+          autoFocus={false}
+        />
+      </div>
 
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Menge
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={qty}
-            onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
-        </div>
-
-        <div>
-          <label className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-            <span>Einstand</span>
-            {livePrice && entry === 0 && (
-              <button
-                type="button"
-                onClick={() => setEntry(livePrice)}
-                className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold normal-case text-primary hover:bg-primary/20"
-              >
-                live € {livePrice.toFixed(2)}
-              </button>
-            )}
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={entry || ""}
-            onChange={(e) => setEntry(parseFloat(e.target.value) || 0)}
-            placeholder={livePrice ? livePrice.toFixed(2) : "0.00"}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-          />
-        </div>
-
-        <div>
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-            Richtung
-          </label>
-          <div className="grid grid-cols-2 overflow-hidden rounded-md border border-input">
-            {(["LONG", "SHORT"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSide(s)}
-                className={`px-2 py-2 text-xs font-semibold transition-colors ${
-                  side === s
-                    ? s === "LONG"
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-rose-500/20 text-rose-400"
-                    : "bg-background text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={atLimit}
-          className="inline-flex items-center justify-center gap-1.5 self-end rounded-md bg-gradient-to-r from-primary to-violet-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+      {/* Step 2: Selected stock + details */}
+      {selectedSymbol && (
+        <form
+          onSubmit={onAdd}
+          className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          <Plus className="h-4 w-4" /> Hinzufügen
-        </button>
-      </form>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                2. Details
+              </div>
+              <div className="mt-0.5 flex items-center gap-2">
+                <span className="font-mono text-base font-bold">{selectedSymbol}</span>
+                {selectedProduct?.name && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    · {selectedProduct.name}
+                  </span>
+                )}
+              </div>
+              {livePrice && (
+                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                  Live-Kurs: <span className="font-mono text-foreground">€ {livePrice.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSymbol(null);
+                setEntry(0);
+              }}
+              className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Abbrechen"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[90px,140px,110px,auto]">
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Menge
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={qty}
+                onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+                <span>Einstand</span>
+                {livePrice && (
+                  <button
+                    type="button"
+                    onClick={() => setEntry(livePrice)}
+                    className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold normal-case text-primary hover:bg-primary/20"
+                  >
+                    live € {livePrice.toFixed(2)}
+                  </button>
+                )}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={entry || ""}
+                onChange={(e) => setEntry(parseFloat(e.target.value) || 0)}
+                placeholder={livePrice ? livePrice.toFixed(2) : "0.00"}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Richtung
+              </label>
+              <div className="grid grid-cols-2 overflow-hidden rounded-md border border-input">
+                {(["LONG", "SHORT"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSide(s)}
+                    className={`px-2 py-2 text-xs font-semibold transition-colors ${
+                      side === s
+                        ? s === "LONG"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-rose-500/20 text-rose-400"
+                        : "bg-background text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={atLimit}
+              className="inline-flex items-center justify-center gap-1.5 self-end rounded-md bg-gradient-to-r from-primary to-violet-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+            >
+              <Plus className="h-4 w-4" /> Zum Portfolio
+            </button>
+          </div>
+        </form>
+      )}
+
+      {!selectedSymbol && (
+        <p className="text-[11px] text-muted-foreground">
+          Tipp: Such einfach den Namen oder den Ticker deiner Aktie. Wir holen den Live-Kurs automatisch.
+        </p>
+      )}
     </div>
   );
 }
