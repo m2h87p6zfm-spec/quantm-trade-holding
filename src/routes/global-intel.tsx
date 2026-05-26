@@ -1095,7 +1095,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU industry", tone: "bad", note: "Higher energy costs erode margins for autos & chemicals." },
       { label: "USD", tone: "ok", note: "Safe-haven flows support the dollar." },
     ],
-    global: "Reshapes European energy mix, lifts global food inflation and accelerates defence spending worldwide.",
+    global: "Europe has to rebuild its entire energy supply, which keeps costs high for households and factories. Food prices also stay higher because of the disruption to Ukrainian grain. On top of that, NATO countries are spending much more on defence.",
   },
   mideast: {
     who: ["Israel", "Iran", "Saudi Arabia", "United States of America"],
@@ -1110,7 +1110,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Energy majors", tone: "ok", note: "Higher Brent flows to upstream earnings." },
       { label: "EM equities", tone: "bad", note: "Higher oil + USD strength tightens EM conditions." },
     ],
-    global: "Oil shock pathway → global inflation pulse → tighter policy expectations → risk-off across equities.",
+    global: "Any escalation can spike oil prices within hours, since the Gulf supplies a huge share of the world's crude. Higher oil quickly lifts inflation everywhere, which makes it harder for central banks to cut rates. Stock markets typically sell off while gold and the dollar rally.",
   },
   redsea: {
     who: ["Yemen", "Saudi Arabia", "Germany", "China"],
@@ -1124,7 +1124,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU retailers", tone: "bad", note: "Longer transit + higher costs hit margins." },
       { label: "Inventories", tone: "warn", note: "Just-in-time supply chains build buffer stock." },
     ],
-    global: "Persistent reroute around Cape of Good Hope raises global trade friction by ~10–15 days.",
+    global: "Goods between Asia and Europe now take about two weeks longer and cost much more to ship. That extra cost ends up in the price of everyday products in stores. It acts like a hidden tax on European consumers and retailers.",
   },
   taiwan: {
     who: ["Taiwan", "China", "United States of America", "South Korea", "Japan"],
@@ -1137,7 +1137,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "JPY / KRW", tone: "warn", note: "Asian FX wobble on regional escalation risk." },
       { label: "Defence equities", tone: "ok", note: "Pacific posture lifts US/JP/KR defence names." },
     ],
-    global: "Any disruption to Taiwan = global tech earnings shock; no near-term substitute for TSMC's leading-edge nodes.",
+    global: "Taiwan makes almost all of the world's most advanced chips, with no real backup supplier. A serious conflict would cripple AI, smartphones, cars and data centres globally. That's why every flare-up moves tech stocks worldwide.",
   },
   "us-pol": {
     who: ["United States of America", "Mexico", "China"],
@@ -1150,7 +1150,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM FX", tone: "bad", note: "USD strength tightens EM conditions." },
       { label: "Mexican peso", tone: "warn", note: "Tariff threats whip MXN both ways." },
     ],
-    global: "US policy uncertainty is now the single biggest swing factor for global capital flows.",
+    global: "The US drives global capital flows, so its policy choices ripple everywhere. New tariffs raise prices for consumers worldwide, and uncertainty about taxes and the Fed pushes the dollar and US bond yields around. That moves nearly every other market with them.",
   },
   "ai-capex": {
     who: ["United States of America", "Taiwan", "South Korea", "Japan"],
@@ -1164,7 +1164,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Industrials", tone: "ok", note: "HVAC, generators, switchgear all in the AI supply chain." },
       { label: "REITs (data)", tone: "ok", note: "Hyperscale leasing supports cash flows." },
     ],
-    global: "Largest capex super-cycle since the dotcom era — spreads from chips into the real economy.",
+    global: "This is the biggest spending boom in tech since the dotcom era. The money doesn't just go to chipmakers — it spreads into power grids, cooling, copper, and even nuclear energy. Whole industries are being reshaped to feed AI demand.",
   },
   "india-growth": {
     who: ["India"],
@@ -1177,7 +1177,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM equity flows", tone: "ok", note: "India is the largest non-China EM allocation." },
       { label: "Consumer staples", tone: "ok", note: "Premiumisation theme intact." },
     ],
-    global: "India is the marginal global growth contributor as China decelerates.",
+    global: "As China slows down, India is taking over as the main growth engine of the developing world. Global companies and investors are increasingly betting on Indian consumers. That makes India a key destination for emerging-market money.",
   },
   opec: {
     who: ["Saudi Arabia", "Russia", "United States of America"],
@@ -1190,7 +1190,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Inflation path", tone: "warn", note: "Oil floor keeps headline CPI sticky." },
       { label: "Airlines / chemicals", tone: "bad", note: "Higher input costs erode margins." },
     ],
-    global: "OPEC+ is the swing actor for global inflation — every cut feeds into central-bank thinking.",
+    global: "OPEC+ decides how much oil reaches the market, which directly shapes global inflation. When they cut, fuel and energy bills stay higher for everyone. That feeds into what central banks like the Fed and ECB do next.",
   },
   "boj-exit": {
     who: ["Japan", "United States of America"],
@@ -1203,7 +1203,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "US treasuries", tone: "warn", note: "Marginal Japanese demand weakens." },
       { label: "Nikkei banks", tone: "ok", note: "Higher rates lift bank NIMs." },
     ],
-    global: "BoJ shift could reprice the world's cheapest funding currency — global carry trades at risk.",
+    global: "For years, investors borrowed cheap yen to invest in higher-yielding assets around the world. As Japan raises rates, those bets get unwound, pulling money back home. That can shake stocks, bonds and currencies far beyond Japan.",
   },
   milei: {
     who: ["Argentina"],
@@ -1216,7 +1216,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM reform trade", tone: "ok", note: "Sets template for frontier reform stories." },
       { label: "Lithium", tone: "ok", note: "Capacity unlock supports battery supply chain." },
     ],
-    global: "Reform-bellwether for emerging markets — success here resets the EM playbook.",
+    global: "Argentina is a live test of whether tough reforms can fix a broken economy. If it works, other emerging markets may try the same playbook. If it fails, it sets back reform efforts across the region.",
   },
   "de-ind": {
     who: ["Germany", "France"],
@@ -1229,7 +1229,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU industrial proxies", tone: "bad", note: "Bellwether weakness spreads across the bloc." },
       { label: "Bunds", tone: "ok", note: "Growth fears bid quality fixed income." },
     ],
-    global: "Europe's industrial engine is stalling — drags eurozone trend growth lower.",
+    global: "Germany is Europe's biggest economy and its factories have stalled. That drags down growth for the entire eurozone, not just Germany. A weak Germany also means a weaker euro and softer demand for global suppliers.",
   },
   "fr-pol": {
     who: ["France", "Germany"],
@@ -1242,7 +1242,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EUR", tone: "bad", note: "Core eurozone political risk filters into the currency." },
       { label: "Periphery spreads", tone: "warn", note: "Italian / Spanish bonds drift with French risk." },
     ],
-    global: "Eurozone-core fiscal credibility under question — repricing of the EUR risk premium.",
+    global: "France was always seen as a safe core economy in Europe, but markets are starting to doubt that. If trust in France slips, the whole eurozone gets more expensive to borrow. That weakens the euro and pressures European banks.",
   },
   "cn-prop": {
     who: ["China", "Australia", "Brazil"],
@@ -1255,7 +1255,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM equities", tone: "bad", note: "China beta drags EM index returns." },
       { label: "Global goods CPI", tone: "ok", note: "Cheaper Chinese exports = global disinflation." },
     ],
-    global: "China's property unwind is the single biggest source of global goods disinflation.",
+    global: "China's slowdown means less demand for raw materials like iron ore and copper, hurting commodity exporters. At the same time, cheap Chinese exports flood other markets and push goods prices down worldwide. Both effects shape global inflation and growth.",
   },
   "kr-chips": {
     who: ["South Korea", "Taiwan", "United States of America"],
@@ -1268,7 +1268,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Equipment names", tone: "ok", note: "Cap-ex flows to ASML, Applied Materials, TEL." },
       { label: "KRW", tone: "warn", note: "Export upside vs USD strength tug-of-war." },
     ],
-    global: "Korean memory cycle is a real-time gauge for global AI / cloud capex.",
+    global: "Memory chip demand is a real-time signal for how much the world is spending on AI and cloud. When Korean chipmakers do well, it confirms the AI build-out is still strong. When orders slow, it's an early warning for the whole tech sector.",
   },
 };
 

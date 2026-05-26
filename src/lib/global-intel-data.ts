@@ -2128,7 +2128,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "ukr-war", type: "negative", category: "Conflict", title: "Ukraine–Russia conflict",
     location: "Eastern Europe", coords: [31.2, 49], date: "Ongoing",
     summary:
-      "Russia's full-scale invasion of Ukraine is now a multi-year war of attrition, and that permanence is what matters for markets. Europe has been forced to replace cheap Russian pipeline gas with expensive seaborne LNG, which keeps a structural cost premium on European industry and a floor under TTF gas. NATO defence budgets are stepping up for years, driving a re-rating of defence primes (RHM, BA., LMT), while Black Sea grain disruption keeps wheat and sunflower oil sensitive to every drone strike on port infrastructure. Trade the EUR through the energy-import-bill lens and watch any ceasefire headlines as a fast risk-on trigger for European cyclicals.",
+      "Russia is still at war with Ukraine, and it isn't ending soon. Europe lost cheap Russian gas and now pays more for energy, while Western countries keep raising defence spending. Any disruption to Ukrainian grain exports also pushes food prices up.",
     newsQuery: "Ukraine Russia war markets energy defence",
     impact: { commodities: "Wheat, gas, oil premium", fx: "EUR risk premium", regions: "EU industry" },
   },
@@ -2136,7 +2136,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "mideast", type: "negative", category: "Conflict", title: "Middle East tensions",
     location: "Israel / Gaza", coords: [34.8, 31.5], date: "Ongoing",
     summary:
-      "The Israel–Gaza war plus the proxy axis (Hezbollah, Houthis, Iran) keeps a constant escalation risk over the Gulf, which is the world's most important oil-producing region. Even without a direct supply outage, traders have to price a 5–10 USD/bbl 'fear premium' into Brent because any incident near the Strait of Hormuz or a strike on Saudi/Iranian energy infrastructure can spike crude double-digit percent in hours. That premium feeds straight into headline inflation, complicating central-bank pivots, and pushes safe-haven flows into USD, CHF, JPY and gold while pressuring EM FX and risk equities. For positioning: hedge oil-sensitive shorts, watch XLE/airlines as the cleanest pair trade, and treat any de-escalation headline as a sharp mean-revert opportunity.",
+      "The Israel–Gaza war and tensions with Iran sit right next to the world's biggest oil region. Even without a real supply cut, traders add a 'fear premium' to oil, which feeds into inflation. When things escalate, money flows into safe havens like the US dollar and gold.",
     newsQuery: "Israel Gaza Middle East oil markets escalation",
     impact: { commodities: "Brent risk premium", fx: "Safe-haven flows" },
   },
@@ -2144,7 +2144,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "redsea", type: "negative", category: "Supply Chain", title: "Red Sea shipping disruption",
     location: "Bab el-Mandeb", coords: [43, 13], date: "Ongoing",
     summary:
-      "Houthi attacks on commercial shipping in the Red Sea have pushed most container lines (Maersk, MSC, Hapag-Lloyd, CMA CGM) to reroute around the Cape of Good Hope, adding 10–14 days and ~30% to a typical Asia–Europe voyage. Spot freight rates on the SCFI Shanghai–Europe leg have multiple-X'd from pre-crisis levels, and that cost is now showing up in European retailer guidance and goods CPI. The longer this lasts, the more it acts as a stealth tightening of European financial conditions even as the ECB is trying to cut. Tactically: long shipping (MAERSK-B, ZIM, HLAG) and tanker names benefit, while EU discretionary retailers and just-in-time auto OEMs are squeezed on working capital.",
+      "Attacks in the Red Sea force ships to sail around Africa instead of using the Suez Canal. That adds about two weeks and 30% extra cost to Asia–Europe trips, lifting freight rates sharply. The longer it lasts, the more it pushes up prices for European retailers and carmakers.",
     newsQuery: "Red Sea Houthi shipping container freight rates",
     impact: { commodities: "Container rates +", equities: "Shipping, retailers" },
   },
@@ -2152,7 +2152,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "taiwan", type: "watch", category: "Geopolitics", title: "Taiwan Strait risk",
     location: "Taiwan", coords: [121, 23.7], date: "Watch",
     summary:
-      "Taiwan produces ~90% of the world's leading-edge semiconductors via TSMC, which makes the Strait the single largest concentrated tail risk in global equities. The 'normal' state is grey-zone pressure — PLA incursions, drills around election cycles, US arms packages — and that alone is enough to drive periodic risk-off spikes in semis (SMCI, NVDA, TSM, ASML) and AI-adjacent capex names. A genuine blockade scenario would price like a black swan: VIX 40+, Nasdaq -15% in days, JPY/CHF surge, and a cascade through every AI server, hyperscaler and equipment name globally. Treat each headline as a vol opportunity rather than a directional trade; the optionality skew on SOX/SMH and TSM is the cleanest expression.",
+      "Taiwan makes about 90% of the world's most advanced chips through TSMC, so any conflict there would shock the entire tech industry. Even routine Chinese military pressure is enough to wobble chip and AI stocks. A real blockade would be a worst-case scenario for global markets.",
     newsQuery: "Taiwan China semiconductor TSMC tensions",
     impact: { equities: "Semis, AI supply chain" },
   },
@@ -2160,7 +2160,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "us-pol", type: "watch", category: "Politics", title: "US policy cycle",
     location: "Washington, DC", coords: [-77, 38.9], date: "2025–26",
     summary:
-      "The US is in a high-variance policy regime: a tariff agenda, an extension/expiration debate on the 2017 tax cuts, and an unusually politicised Fed conversation are all live at once. Tariffs act as a stagflationary impulse — they're a tax on imports that lifts goods CPI and squeezes margins for retailers, autos and consumer-electronics importers, while propping up domestic steel, aluminium and select industrial names. Tax/fiscal uncertainty is the main driver of the long end of the Treasury curve and, by extension, of US equity multiples and the DXY. Trade it through the curve (2s10s steepeners on dovish surprises) and rotate between large-cap exporters and domestic small-caps as the policy mix shifts.",
+      "The US is juggling new tariffs, big tax decisions, and political pressure on the Federal Reserve all at once. Tariffs act like a tax on imports, lifting prices on goods and squeezing retailers and carmakers. The uncertainty is the main reason US bond yields and the dollar keep jumping around.",
     newsQuery: "US tariffs Federal Reserve fiscal policy markets",
     impact: { fx: "DXY", equities: "Sector rotation" },
   },
@@ -2168,7 +2168,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "ai-capex", type: "positive", category: "Capex", title: "AI capex super-cycle",
     location: "US West Coast", coords: [-122, 37.4], date: "2024–",
     summary:
-      "Hyperscalers (Microsoft, Meta, Google, Amazon, Oracle) have collectively guided 200B+ USD per year of AI infrastructure capex, and the full second-order chain — NVDA accelerators, HBM memory (SK Hynix, Micron, Samsung), networking (Arista, Broadcom), power (Vertiv, Eaton, GE Vernova), grid build-out and even uranium/nuclear utilities — is being repriced for a multi-year demand pull. The risk is that this is concentrated in a handful of customers, so any guidance cut from one hyperscaler hits the whole chain. The cleanest framework: own the picks-and-shovels (NVDA, AVGO, ANET, VRT) on dips, watch power capacity as the real bottleneck, and treat any 'capex digestion' headline as a chance to re-add at better entries.",
+      "Big tech companies like Microsoft, Meta, Google and Amazon are spending over $200 billion a year building AI data centres. That money flows straight into chips (Nvidia), memory, networking gear, power equipment, and even nuclear power. The main risk is that it's concentrated in a few buyers, so one of them cutting spend hits the whole chain.",
     newsQuery: "AI capex hyperscaler datacenter Nvidia spending",
     impact: { equities: "Semis, utilities, industrials" },
   },
@@ -2176,7 +2176,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "india-growth", type: "positive", category: "Growth", title: "India structural growth",
     location: "Mumbai", coords: [72.8, 19], date: "Ongoing",
     summary:
-      "India is now the fastest-growing major economy (6–7% real GDP), with a 'China+1' manufacturing tailwind, a 1.4B-person consumer base, and a digital stack (UPI, Aadhaar) that is genuinely structural. That story has pulled persistent foreign equity inflows into Nifty/Sensex, and domestic SIP flows now add a daily bid that smooths drawdowns. The catch is valuation — India trades at a meaningful premium to other EM, so it is more vulnerable to a USD/rates shock than the headline growth suggests. Express it through INDA/EPI for broad exposure, large-cap private banks (HDFCBANK, ICICIBANK) for the credit cycle, and stay disciplined on entry multiples.",
+      "India is the fastest-growing big economy, around 6–7% per year, helped by companies moving production out of China and a huge young consumer base. Foreign and local investors keep buying Indian stocks, which has lifted the Nifty index. The downside is that valuations are already high, so any global shock hits harder.",
     newsQuery: "India economy stocks Nifty foreign inflows",
     impact: { equities: "Nifty/Sensex", fx: "INR" },
   },
@@ -2184,7 +2184,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "opec", type: "watch", category: "Commodities", title: "OPEC+ production policy",
     location: "Riyadh", coords: [46.7, 24.7], date: "Recurring",
     summary:
-      "Saudi Arabia and Russia anchor OPEC+ and currently hold several million barrels/day of voluntary cuts off the market, which is the main reason Brent has a soft floor in the high-60s/low-70s despite weak Chinese demand. Every OPEC+ meeting is therefore a binary headline event: an extension is bullish crude and petro-FX (CAD, NOK, MXN); any unwind hint flushes energy equities and lifts global airlines/consumer names. Watch the Saudi fiscal break-even (currently above spot Brent) — it's the structural reason the Kingdom defends prices. Trade it through XLE/XOP for the equity leg and USD/CAD or NOK crosses for the FX leg.",
+      "Saudi Arabia and Russia lead OPEC+ and are keeping millions of barrels per day off the market to support prices. That's why oil hasn't fallen further despite weak Chinese demand. Every OPEC+ meeting moves oil prices and oil-linked currencies like the Canadian dollar and Norwegian krone.",
     newsQuery: "OPEC oil production cuts Saudi Arabia Russia",
     impact: { commodities: "Brent crude", fx: "Petro-FX" },
   },
@@ -2192,7 +2192,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "boj-exit", type: "positive", category: "Policy", title: "BoJ policy normalisation",
     location: "Tokyo", coords: [139.7, 35.7], date: "2024–",
     summary:
-      "After two decades of zero/negative rates, the Bank of Japan has begun a slow normalisation — ending NIRP, lifting the YCC cap, and signalling further hikes if wage growth sustains. That single shift is enough to unwind the world's largest carry trade: JPY-funded longs in USD, MXN, BRL and global tech. When the BoJ surprises hawkish, you typically get a sharp USD/JPY drop, a spike in JGB yields, and a forced deleveraging in crowded carry pairs and high-beta US tech. Tactically: Japanese banks (8306, 8316, 8411) are the cleanest beneficiaries, while any USD/JPY spike below 140 should be watched as a global risk-off signal, not just an FX move.",
+      "After 20 years of near-zero rates, Japan is slowly raising them again. That matters globally because investors borrowed cheap yen to invest everywhere else — and now they may have to unwind those trades. A hawkish surprise from Japan can shake US tech and emerging-market currencies.",
     newsQuery: "Bank of Japan rate hike yen JGB normalisation",
     impact: { fx: "USD/JPY carry", equities: "Banks, Nikkei" },
   },
@@ -2200,7 +2200,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "milei", type: "positive", category: "Reform", title: "Argentina reform program",
     location: "Buenos Aires", coords: [-58.4, -34.6], date: "2023–",
     summary:
-      "Milei's shock-therapy programme — fiscal surplus, deregulation, gradual FX-control unwind — has delivered the steepest disinflation in Argentina's recent history and a 5-year sovereign-spread tightening of hundreds of bps. The Merval has rallied multi-X in USD terms and high-beta names (YPF, banks) have led. The risk is execution: any social-unrest spike, FX-control reversal, or IMF stand-off can trigger a fast unwind given how crowded the long-Argentina trade has become. Express it through ARGT or single-stock ADRs (YPF, GGAL, BMA), size for ARS vol, and treat IMF review dates as binary events.",
+      "President Milei is running tough reforms — big spending cuts, deregulation, and slowly removing currency controls. Inflation is dropping fast and Argentine stocks have rallied sharply in dollar terms. The risk is that any social pushback or IMF dispute could quickly reverse the trade.",
     newsQuery: "Argentina Milei economy peso Merval reform",
     impact: { equities: "Merval", fx: "ARS volatile" },
   },
@@ -2208,7 +2208,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "de-ind", type: "negative", category: "Economy", title: "German industrial stagnation",
     location: "Berlin", coords: [13.4, 52.5], date: "Structural",
     summary:
-      "Germany's industrial model — cheap Russian gas, open Chinese end-markets, ICE auto exports — has been broken by three simultaneous shocks: energy repricing, Chinese EV competition, and a weak global manufacturing cycle. Chemie (BAS, Covestro), Autos (VOW, BMW, MBG) and Maschinenbau are in a multi-quarter earnings recession, and the IFO/ZEW reads keep confirming there's no V-shaped rebound. This caps the EUR on growth-differential grounds and keeps the DAX's gains concentrated in a few global champions (SAP, Siemens, RHM). Stay underweight EU autos/chemicals on rallies, watch for German fiscal-rule reform as the only real domestic catalyst, and use any China-stimulus headline as a tactical long.",
+      "Germany's industry was built on cheap Russian gas, strong Chinese demand, and combustion-engine cars — and all three are now broken. Chemicals, carmakers and machinery firms are stuck in a long earnings slump. This drags on the euro and keeps the DAX dependent on a few global winners like SAP and Siemens.",
     newsQuery: "Germany economy industry recession DAX",
     impact: { equities: "Autos, Chemie", fx: "EUR drag" },
   },
@@ -2216,7 +2216,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "fr-pol", type: "watch", category: "Politics", title: "France fiscal & political risk",
     location: "Paris", coords: [2.35, 48.85], date: "Ongoing",
     summary:
-      "France is running a ~5–6% of GDP deficit with no political majority to consolidate, and the OAT–Bund 10y spread has widened to levels not seen since the eurozone crisis. That's the market telling you France is being repriced from 'core' towards 'semi-periphery' — even small budget-vote failures or rating-agency downgrade headlines now move EUR and CAC40 banks (BNP, ACA, GLE) several percent. The contagion question is whether this stays France-specific or starts pulling Italian BTPs wider too. Trade it through BNP/SocGen as the cleanest single-name expression, watch OAT–Bund as the cleanest risk gauge, and keep an eye on ECB transmission-tool commentary.",
+      "France is running a big budget deficit with no clear majority to fix it, so investors now demand higher yields on French bonds. The fear is that France slowly slides from 'safe core Europe' towards risky periphery. Each budget vote or rating downgrade headline can move the euro and French bank stocks.",
     newsQuery: "France OAT spread deficit politics budget",
     impact: { fx: "EUR", equities: "French banks" },
   },
@@ -2224,7 +2224,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "cn-prop", type: "negative", category: "Economy", title: "China property deleveraging",
     location: "Beijing", coords: [116.4, 39.9], date: "2021–",
     summary:
-      "Chinese real estate was historically ~25% of GDP and is now in a multi-year deleveraging — Evergrande, Country Garden and Vanke have all defaulted or restructured, and new-home sales are running ~half of 2021 peak. That destroys household wealth (~70% of Chinese savings sit in property), caps consumption, and removes the marginal global buyer of iron ore, copper, steel and luxury goods. The PBoC keeps drip-feeding stimulus but has refused to do a US-style bazooka, so each rally in HSI/CSI300 has faded. Stay structurally cautious on iron ore (BHP, RIO, VALE), luxury (LVMH, HRMS), and German autos exposed to China; trade Chinese tech (BABA, TCEHY) tactically around stimulus headlines.",
+      "Chinese real estate used to be a quarter of the economy and is now shrinking, with giants like Evergrande and Country Garden in default. Since most Chinese household wealth sits in property, that hurts consumer spending and demand for iron ore, copper and luxury goods. Beijing keeps adding small stimulus but won't launch a giant rescue.",
     newsQuery: "China property real estate Evergrande PBoC stimulus",
     impact: { commodities: "Iron ore, copper", equities: "HSI" },
   },
@@ -2232,7 +2232,7 @@ export const EVENTS: GlobalEvent[] = [
     id: "kr-chips", type: "positive", category: "Cycle", title: "Memory chip up-cycle",
     location: "Seoul", coords: [127, 37.5], date: "2024–",
     summary:
-      "AI training and inference have created a structural shortage of HBM (high-bandwidth memory), where SK Hynix and Samsung are the only two suppliers at scale. DRAM and NAND pricing has turned, capex discipline post-2022 means supply can't flood, and the order books from NVDA are visible 12–18 months out. KOSPI memory names (000660, 005930) and Micron (MU) are the cleanest expressions, alongside equipment (ASML, AMAT, LRCX, KLAC). The cyclical risk is always the same — memory is the most cyclical sub-sector in tech — so size around inventory data and watch DRAM contract pricing as the real signal.",
+      "AI needs huge amounts of memory chips, and only SK Hynix and Samsung can make the most advanced type (HBM) at scale. Memory prices are rising again and order books are full for over a year. The catch: memory is the most cyclical part of tech, so swings can be sharp in both directions.",
     newsQuery: "memory chips HBM Samsung SK Hynix AI demand",
     impact: { equities: "KOSPI, semis" },
   },
