@@ -122,9 +122,10 @@ function PicksPage() {
       change: number;
       last: number;
     };
+    if (mode !== "ki") return [];
     const rows: Row[] = [];
     for (let i = 0; i < filtered.length; i++) {
-      const c = candleQs[i].data;
+      const c = candleQs[i]?.data;
       const p = filtered[i];
       if (!c || !c.c || c.c.length < 60) continue;
       const ind = computeAll(c.c);
