@@ -172,7 +172,7 @@ function GlobalIntelPage() {
   useEffect(() => { if (selectedEvent) setAsideTab("event"); }, [selectedEvent]);
 
   return (
-    <div className="min-h-screen bg-[oklch(0.09_0.014_260)] text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Top command bar */}
       <header className="relative overflow-hidden border-b border-white/[0.14]">
         <div className="pointer-events-none absolute inset-0">
