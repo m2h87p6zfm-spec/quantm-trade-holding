@@ -45,7 +45,7 @@ const STEPS: Step[] = [
     icon: Sigma,
     title: "Aktienanalyse-Agent",
     body: "Frage natürlichsprachlich zu jeder Aktie: RSI, MACD, Bollinger, Z-Score, Monte-Carlo-Verteilung und Broker-Konsens.",
-    tip: "Trading-Tipp: Frage gezielt nach „Setup, Risk/Reward und Invalidation" – das spart Stunden Recherche.",
+    tip: 'Trading-Tipp: Frage gezielt nach "Setup, Risk/Reward und Invalidation" – das spart Stunden Recherche.',
   },
   {
     target: "portfolio",
