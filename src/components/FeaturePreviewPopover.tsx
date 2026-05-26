@@ -227,6 +227,35 @@ const MockRiskAnalytics = () => (
   </Card>
 );
 
+const MockEverythingInPro = () => (
+  <Card>
+    <div className="text-[10px] font-bold mb-1.5">Alles aus Pro · enthalten</div>
+    <div className="space-y-1">
+      {["100 Analyse-Credits", "Volle Quantm Picks", "Unlim. Watchlist & Alerts", "AI News-Sentiment", "Sektor-Heatmap"].map((t) => (
+        <div key={t} className="flex items-center gap-1.5 text-[10px]">
+          <span className="text-bull">✓</span>
+          <span className="truncate">{t}</span>
+        </div>
+      ))}
+    </div>
+    <div className="text-[9px] text-muted-foreground mt-1">+ alle Elite-Extras obendrauf</div>
+  </Card>
+);
+
+const MockPrioritySupport = () => (
+  <Card>
+    <div className="flex items-center justify-between mb-1.5">
+      <span className="text-[10px] font-bold">Support · Elite</span>
+      <Pill tone="primary">VIP</Pill>
+    </div>
+    <div className="space-y-1 text-[10px]">
+      <div className="flex items-center justify-between"><span>Erste Antwort</span><span className="font-bold text-bull tabular-nums">&lt; 4 h</span></div>
+      <div className="flex items-center justify-between"><span>Direkt vom Team</span><Pill tone="bull">Ja</Pill></div>
+      <div className="flex items-center justify-between"><span>Bug-Eskalation</span><Pill tone="primary">Fast-Lane</Pill></div>
+    </div>
+  </Card>
+);
+
 const MockGeneric = () => (
   <Card>
     <div className="space-y-1.5">
@@ -294,9 +323,14 @@ const PREVIEWS: Record<string, Preview> = {
     en: { title: "200 Analysis credits", desc: "Twice as many deep analyses per month vs. Pro." },
     mockup: MockAnalysisAgent,
   },
+  "plan.elite.f2": {
+    de: { title: "Alles aus Pro inklusive", desc: "Du bekommst alle 10 Pro-Features automatisch dazu — plus die Elite-Extras obendrauf." },
+    en: { title: "Everything in Pro included", desc: "You get all 10 Pro features by default — plus every Elite extra on top." },
+    mockup: MockEverythingInPro,
+  },
   "plan.elite.f3": {
-    de: { title: "AI Learning", desc: "Sieh, was die Engine aus vergangenen Trades lernt und wo sie besser wird." },
-    en: { title: "AI Learning", desc: "See what the engine learns from past trades and where accuracy improves." },
+    de: { title: "AI Learning", desc: "Sieh, was die Engine aus vergangenen Trades lernt und wo sich die Trefferquote verbessert." },
+    en: { title: "AI Learning", desc: "See what the engine learns from past trades and where the hit rate improves." },
     mockup: MockAILearning,
   },
   "plan.elite.f4": {
@@ -330,9 +364,9 @@ const PREVIEWS: Record<string, Preview> = {
     mockup: MockRiskAnalytics,
   },
   "plan.elite.f10": {
-    de: { title: "Priority Support", desc: "Bevorzugte Antwortzeiten bei Anfragen direkt vom Team." },
-    en: { title: "Priority support", desc: "Faster response times for support requests, direct from the team." },
-    mockup: MockGeneric,
+    de: { title: "Priority Support", desc: "Anfragen werden vom Team bevorzugt beantwortet — typischerweise innerhalb von 4 Stunden." },
+    en: { title: "Priority support", desc: "Your requests jump the queue — typical first reply within 4 hours, straight from the team." },
+    mockup: MockPrioritySupport,
   },
 };
 
