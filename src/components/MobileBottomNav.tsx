@@ -135,7 +135,7 @@ export function MobileBottomNav() {
           <button
             type="button"
             aria-label="Close"
-            className="flex-1 bg-black/60 backdrop-blur-sm"
+            className="flex-1 bg-foreground/40 backdrop-blur-sm"
             onClick={() => setMoreOpen(false)}
           />
           <div
