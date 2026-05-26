@@ -30,6 +30,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/konto" });
@@ -39,7 +40,13 @@ function LoginPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
+        setPendingEmail(email);
+        return toast.error("Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach (auch Spam-Ordner).", { duration: 8000 });
+      }
+      return toast.error(error.message);
+    }
   };
 
   const signUp = async () => {
@@ -54,8 +61,18 @@ function LoginPage() {
     if (data.session) {
       navigate({ to: "/" });
     } else {
-      toast.success(t("login.created"));
+      setPendingEmail(email);
+      toast.success("Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.", { duration: 10000 });
     }
+  };
+
+  const resendConfirmation = async () => {
+    if (!pendingEmail) return;
+    setBusy(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Bestätigungs-E-Mail erneut gesendet.");
   };
 
   const signInGoogle = async () => {
@@ -89,6 +106,25 @@ function LoginPage() {
             <span>✓ Made in Germany · DSGVO</span>
           </div>
         </div>
+
+        {pendingEmail && (
+          <div className="mb-4 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+            <p className="font-semibold text-foreground">Bitte bestätige deine E-Mail-Adresse</p>
+            <p className="mt-1 text-muted-foreground">
+              Wir haben eine Bestätigungs-E-Mail an <span className="font-medium text-foreground">{pendingEmail}</span> gesendet.
+              Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren. Schau auch im Spam-Ordner nach.
+            </p>
+            <Button
+              onClick={resendConfirmation}
+              disabled={busy}
+              variant="outline"
+              size="sm"
+              className="mt-3"
+            >
+              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : "E-Mail erneut senden"}
+            </Button>
+          </div>
+        )}
 
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           <Tabs defaultValue="signin">
@@ -137,7 +173,7 @@ function LoginPage() {
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("login.signup")}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
-                {t("login.noConfirm")}
+                Nach der Registrierung erhältst du eine E-Mail zur Bestätigung. Erst danach kannst du dich anmelden.
               </p>
             </TabsContent>
           </Tabs>
