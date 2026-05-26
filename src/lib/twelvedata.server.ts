@@ -10,6 +10,7 @@
 // Erst wenn beide Cache-Schichten miss sind, geht ein Request raus.
 
 import { sharedGet, sharedSet } from "@/lib/shared-cache.server";
+import { normalizeForTd } from "@/lib/td-symbol.server";
 
 const BASE = "https://api.twelvedata.com";
 
@@ -136,7 +137,10 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   }
   const p = (async () => {
     try {
-      const j = await tdFetch("/quote", { symbol });
+      const norm = normalizeForTd(symbol);
+      const params: Record<string, string> = { symbol: norm.symbol };
+      if (norm.mic_code) params.mic_code = norm.mic_code;
+      const j = await tdFetch("/quote", params);
       const v = parseQuote(j);
       cacheSet(key, v, ttl);
       void sharedSet(key, v, ttl);
@@ -198,24 +202,35 @@ export async function getQuotesBatch(symbols: string[]): Promise<Record<string, 
   const p = (async () => {
     const filled: Record<string, TdQuote> = {};
     try {
-      const j = await tdFetch("/quote", { symbol: missing.join(",") });
-      if (missing.length === 1) {
-        const v = parseQuote(j);
-        if (v) {
-          filled[missing[0]] = v;
-          cacheSet(`q:${missing[0]}`, v, QUOTE_TTL);
-          void sharedSet(`q:${missing[0]}`, v, QUOTE_TTL);
-        }
-      } else {
-        for (const sym of missing) {
-          const v = parseQuote(j?.[sym]);
-          if (v) {
-            filled[sym] = v;
-            cacheSet(`q:${sym}`, v, QUOTE_TTL);
-            void sharedSet(`q:${sym}`, v, QUOTE_TTL);
-          }
-        }
+      // Gruppe nach mic_code — TD's Batch-Quote akzeptiert nur EINE Exchange
+      // pro Anfrage. Yahoo-Suffix-Symbole (HEIA.AS, BMW.DE, …) brauchen den
+      // passenden mic_code, sonst antwortet TD mit dem falschen Doppelgänger.
+      const groups = new Map<string, { orig: string; tdSym: string }[]>();
+      for (const sym of missing) {
+        const norm = normalizeForTd(sym);
+        const key = norm.mic_code ?? "";
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push({ orig: sym, tdSym: norm.symbol });
       }
+      await Promise.all(Array.from(groups.entries()).map(async ([mic, items]) => {
+        // Eindeutig nach TD-Symbol — selber Bare-Ticker auf derselben Exchange
+        // braucht nur 1 Eintrag im Request.
+        const tdSymList = Array.from(new Set(items.map((i) => i.tdSym)));
+        const params: Record<string, string> = { symbol: tdSymList.join(",") };
+        if (mic) params.mic_code = mic;
+        try {
+          const j = await tdFetch("/quote", params);
+          for (const { orig, tdSym } of items) {
+            const node = tdSymList.length === 1 ? j : j?.[tdSym];
+            const v = parseQuote(node);
+            if (v) {
+              filled[orig] = v;
+              cacheSet(`q:${orig}`, v, QUOTE_TTL);
+              void sharedSet(`q:${orig}`, v, QUOTE_TTL);
+            }
+          }
+        } catch { /* eine Gruppe darf scheitern, andere liefern weiter */ }
+      }));
     } finally {
       INFLIGHT.delete(inflightKey);
     }
@@ -328,12 +343,15 @@ export async function getCandlesCached(
   }
   const p = (async () => {
     try {
-      const j = await tdFetch("/time_series", {
-        symbol,
+      const norm = normalizeForTd(symbol);
+      const params: Record<string, string> = {
+        symbol: norm.symbol,
         interval: tdInterval,
         outputsize: String(outputsize),
         order: "DESC",
-      });
+      };
+      if (norm.mic_code) params.mic_code = norm.mic_code;
+      const j = await tdFetch("/time_series", params);
       const v = parseTimeSeries(j);
       cacheSet(key, v, ttlSec);
       void sharedSet(key, v, ttlSec);
