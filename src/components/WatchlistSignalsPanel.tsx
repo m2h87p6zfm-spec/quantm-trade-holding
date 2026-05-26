@@ -168,6 +168,9 @@ export function WatchlistSignalsPanel() {
         </div>
       </div>
 
+      {/* MOST VIEWED — community pulse based on local view history */}
+      <MostViewedStocks limit={8} />
+
       {/* CARD GRID */}
       {loading && <div className="py-12 text-center text-[13px] text-muted-foreground/70">{t("watchlist.loading")}</div>}
       {!loading && filtered.length === 0 && (
