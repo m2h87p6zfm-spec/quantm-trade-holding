@@ -49,7 +49,7 @@ function MethodologyPage() {
           Bedingungen (potenzieller Kauf), &gt; 70 auf überkaufte (potenzieller Verkauf).
         </p>
         <p className="text-foreground/80">
-          <span className="font-mono text-xs">Score = (50 - RSI) / 50</span> — normalisiert auf [-1, +1].
+          <span className="font-mono text-xs">Score = (50 - RSI) / 50</span>, normalisiert auf [-1, +1].
         </p>
       </Section>
 
