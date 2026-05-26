@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 import { FeaturePreviewPopover } from "@/components/FeaturePreviewPopover";
+import { trackEvent, getPopoverContext } from "@/lib/analytics";
 
 export const Route = createFileRoute("/preise")({
   head: () => ({
@@ -106,6 +107,14 @@ function PricingPage() {
   };
 
   const onChoose = (plan: Plan) => {
+    const popoverCtx = getPopoverContext();
+    void trackEvent("pricing_upgrade_clicked", {
+      plan: plan.id,
+      cycle,
+      currentTier,
+      authed: !!user,
+      ...popoverCtx,
+    });
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -119,6 +128,12 @@ function PricingPage() {
       return;
     }
     const priceId = cycle === "monthly" ? plan.monthlyPriceId! : plan.yearlyPriceId!;
+    void trackEvent("pricing_checkout_opened", {
+      plan: plan.id,
+      cycle,
+      priceId,
+      ...popoverCtx,
+    });
     setCheckoutPrice(priceId);
   };
 
@@ -219,7 +234,7 @@ function PricingPage() {
                     <li key={k} className="flex items-start gap-2">
                       <Check className={cn("h-4 w-4 mt-0.5 shrink-0", plan.highlighted ? "text-primary" : "text-bull")} />
                       <span className="text-foreground/80 flex-1">{t(k)}</span>
-                      <FeaturePreviewPopover featureKey={k} />
+                      <FeaturePreviewPopover featureKey={k} plan={plan.id} />
                     </li>
                   ))}
                 </ul>
