@@ -299,7 +299,7 @@ export const AssetChart = memo(function AssetChart({
 
         {/* Hover overlay */}
         {hover && (
-          <div className="pointer-events-none absolute left-3 top-3 min-w-[180px] rounded-md border border-border/70 bg-[color:var(--chart-tooltip)] px-3 py-2.5 text-xs shadow-2xl backdrop-blur-md">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 min-w-[180px] rounded-md border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-2xl ring-1 ring-border/40">
             <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} lang={lang} />
           </div>
         )}
