@@ -407,7 +407,7 @@ function Panel({
   return (
     <section
       id={id}
-      className="scroll-mt-20 overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.015_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.85)]"
+      className="scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)]"
     >
       <header className="flex items-center gap-3 border-b border-white/[0.10] bg-white/[0.025] px-5 py-3">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
