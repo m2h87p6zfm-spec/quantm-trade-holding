@@ -642,7 +642,7 @@ function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v:
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
           <Sparkles className="h-3 w-3" /> AI Profile Calibrated
         </div>
-        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">Dein Apex AI Trading-Profil</h2>
+        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">Dein Quantm Trade Profil</h2>
         <p className="mt-1 text-xs text-muted-foreground">Diese Konfiguration steuert ab sofort deine gesamte Plattform-Erfahrung.</p>
       </div>
 
