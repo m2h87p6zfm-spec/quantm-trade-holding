@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { startSelfHealing } from "@/lib/self-healing-service";
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
