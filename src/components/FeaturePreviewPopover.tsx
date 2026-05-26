@@ -2,6 +2,7 @@ import type { ReactElement } from "react";
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useLang } from "@/lib/i18n";
+import { recordPopoverOpen } from "@/lib/analytics";
 
 type Preview = {
   de: { title: string; desc: string };
