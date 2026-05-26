@@ -874,7 +874,7 @@ const PRODUCTS_BASE: Product[] = [
 
 // Deduplicated merge of base catalog + extended global universe (500+ extra symbols).
 const _seen = new Set<string>();
-export const PRODUCTS: Product[] = [...PRODUCTS_BASE, ...PRODUCTS_EXTRA].filter((p) => {
+export const PRODUCTS: Product[] = [...PRODUCTS_BASE, ...PRODUCTS_EXTRA, ...PRODUCTS_EXTRA2].filter((p) => {
   const key = p.symbol.toUpperCase();
   if (_seen.has(key)) return false;
   _seen.add(key);
