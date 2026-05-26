@@ -1124,7 +1124,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU retailers", tone: "bad", note: "Longer transit + higher costs hit margins." },
       { label: "Inventories", tone: "warn", note: "Just-in-time supply chains build buffer stock." },
     ],
-    global: "Persistent reroute around Cape of Good Hope raises global trade friction by ~10–15 days.",
+    global: "Goods between Asia and Europe now take about two weeks longer and cost much more to ship. That extra cost ends up in the price of everyday products in stores. It acts like a hidden tax on European consumers and retailers.",
   },
   taiwan: {
     who: ["Taiwan", "China", "United States of America", "South Korea", "Japan"],
