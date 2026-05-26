@@ -66,7 +66,7 @@ function WarRoom() {
             placeholder="Symbol hinzufügen…"
             className="w-44 rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
-          <datalist id="war-symbols">{PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}</datalist>
+          <ProductsDatalist id="war-symbols" />
           <button onClick={add} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50" disabled={symbols.length >= 8}>
             <Plus className="h-4 w-4" /> Hinzufügen
           </button>
