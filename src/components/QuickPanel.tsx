@@ -61,10 +61,6 @@ export function QuickPanel() {
           e.preventDefault();
           navigate({ to: "/kalender" });
           break;
-        case "w":
-          e.preventDefault();
-          navigate({ to: "/war-room" });
-          break;
         case "?":
           e.preventDefault();
           setHelpOpen((v) => !v);
@@ -80,7 +76,7 @@ export function QuickPanel() {
   }, [current, navigate, settings.watchlist, toggleWatch]);
 
   // Show only on data-heavy routes
-  const showOn = ["/produkte", "/", "/war-room", "/portfolio", "/news", "/heatmap"];
+  const showOn = ["/produkte", "/", "/portfolio", "/news", "/heatmap"];
   const visible = showOn.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
   if (!visible) return null;
 
@@ -152,7 +148,6 @@ export function QuickPanel() {
               <Row k="N" desc="News-Feed" />
               <Row k="H" desc="Heatmap" />
               <Row k="C" desc={t("quick.calendar")} />
-              <Row k="W" desc="War Room" />
               <Row k="?" desc={t("quick.thisHelp")} />
               <Row k="Esc" desc={t("common.close")} />
             </div>
