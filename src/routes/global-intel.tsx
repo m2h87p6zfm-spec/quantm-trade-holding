@@ -2140,7 +2140,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
 }
 
 
-type ImpactItem = { label: string; tone: "ok" | "bad" | "warn"; note: string };
+type ImpactItem = { label: string; tone: Tone; note: string };
 type AssetClass = "Currencies" | "Stocks" | "Commodities" | "Bonds";
 
 function classifyAsset(label: string): AssetClass {
