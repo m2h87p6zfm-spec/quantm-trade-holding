@@ -1177,7 +1177,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM equity flows", tone: "ok", note: "India is the largest non-China EM allocation." },
       { label: "Consumer staples", tone: "ok", note: "Premiumisation theme intact." },
     ],
-    global: "India is the marginal global growth contributor as China decelerates.",
+    global: "As China slows down, India is taking over as the main growth engine of the developing world. Global companies and investors are increasingly betting on Indian consumers. That makes India a key destination for emerging-market money.",
   },
   opec: {
     who: ["Saudi Arabia", "Russia", "United States of America"],
