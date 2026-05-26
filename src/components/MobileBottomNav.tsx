@@ -115,7 +115,7 @@ export function MobileBottomNav() {
               </li>
             );
           })}
-          <li>
+          <li data-tour="more">
             <button
               type="button"
               onClick={() => setMoreOpen(true)}
