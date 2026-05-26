@@ -104,6 +104,12 @@ const DEFAULT: StoredSettings = {
 
 function migrate(raw: any): StoredSettings {
   const merged: StoredSettings = { ...DEFAULT, ...raw };
+  // One-time migration: users on the old "auto" default complained about
+  // unwanted day/night theme switches. Move them to a stable "dark" unless
+  // they re-opt-in via Einstellungen.
+  if (merged.theme === "auto" && !raw?.themeOptIn) {
+    merged.theme = "dark";
+  }
   if (!Array.isArray(merged.watchlists) || merged.watchlists.length === 0) {
     const legacy = Array.isArray(raw?.watchlist) ? raw.watchlist : DEFAULT_LIST.symbols;
     merged.watchlists = [{ id: "default", name: "Main list", symbols: legacy }];
