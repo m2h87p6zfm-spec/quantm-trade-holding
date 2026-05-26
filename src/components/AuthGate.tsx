@@ -79,5 +79,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <FirstRunTour />
+    </>
+  );
 }
