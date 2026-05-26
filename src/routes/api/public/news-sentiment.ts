@@ -249,10 +249,35 @@ export const Route = createFileRoute("/api/public/news-sentiment")({
             flat = flat.filter((i) => allow.has(i.source));
           }
 
-          const seen = new Set<string>();
-          flat = flat.filter((i) => (seen.has(i.uuid) ? false : (seen.add(i.uuid), true)));
+          // Dedupe nach uuid UND nach normalisiertem Titel (gleicher Artikel
+          // wird sonst mehrfach unter verschiedenen Symbolen geliefert).
+          const seenUuid = new Set<string>();
+          const seenTitle = new Set<string>();
+          flat = flat.filter((i) => {
+            const tKey = (i.title || "").toLowerCase().replace(/\s+/g, " ").trim().slice(0, 140);
+            if (!tKey) return false;
+            if (i.uuid && seenUuid.has(i.uuid)) return false;
+            if (seenTitle.has(tKey)) return false;
+            if (i.uuid) seenUuid.add(i.uuid);
+            seenTitle.add(tKey);
+            return true;
+          });
+
           flat.sort((a, b) => b.publishedAt - a.publishedAt);
-          flat = flat.slice(0, 40);
+
+          // Diversifikation: max. 1 News pro Symbol, damit das Karussell
+          // nicht 3× Apple hintereinander zeigt.
+          const perSymbol = new Map<string, number>();
+          const diversified: NewsItem[] = [];
+          for (const it of flat) {
+            const c = perSymbol.get(it.symbol) ?? 0;
+            if (c >= 1) continue;
+            perSymbol.set(it.symbol, c + 1);
+            diversified.push(it);
+            if (diversified.length >= 40) break;
+          }
+          flat = diversified;
+
 
           let enriched = await classifySentiments(flat);
           // Volltext-Zusammenfassungen für alle Items, damit die Karten im UI
