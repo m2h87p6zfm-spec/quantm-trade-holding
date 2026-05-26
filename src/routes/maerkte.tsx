@@ -105,7 +105,7 @@ function MaerktePage() {
           Märkte & <span className="text-gradient-gold">Sektoren</span>
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          {PRODUCTS.length} handelbare Symbole quer durch {activeSectors.length} Sektoren und {Object.keys(REGION_FLAG).length} Regionen.
+          {totalSymbols} handelbare Symbole quer durch {activeSectors.length} Sektoren und {Object.keys(REGION_FLAG).length} Regionen.
           Kurse werden erst beim Öffnen geladen — schonend für den Edge-Cache.
         </p>
       </div>
