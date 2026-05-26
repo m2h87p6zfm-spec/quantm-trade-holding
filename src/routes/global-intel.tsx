@@ -1164,7 +1164,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Industrials", tone: "ok", note: "HVAC, generators, switchgear all in the AI supply chain." },
       { label: "REITs (data)", tone: "ok", note: "Hyperscale leasing supports cash flows." },
     ],
-    global: "Largest capex super-cycle since the dotcom era — spreads from chips into the real economy.",
+    global: "This is the biggest spending boom in tech since the dotcom era. The money doesn't just go to chipmakers — it spreads into power grids, cooling, copper, and even nuclear energy. Whole industries are being reshaped to feed AI demand.",
   },
   "india-growth": {
     who: ["India"],
