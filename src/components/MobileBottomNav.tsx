@@ -113,12 +113,12 @@ export function MobileBottomNav() {
               type="button"
               onClick={() => setMoreOpen(true)}
               className={`flex w-full min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
-                moreActive ? "text-[#22FF88]" : "text-white/55"
+                moreActive ? "text-bull" : "text-muted-foreground"
               }`}
               aria-label={t("nav.more")}
             >
               <MoreHorizontal
-                className={`h-5 w-5 md:h-6 md:w-6 ${moreActive ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
+                className={`h-5 w-5 md:h-6 md:w-6 ${moreActive ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--bull)_55%,transparent)]" : ""}`}
               />
               <span className="truncate leading-none">{t("nav.more")}</span>
             </button>
