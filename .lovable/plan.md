@@ -1,94 +1,40 @@
-## Self-Monitoring & Self-Healing System
+# Kompletter Sprachumbau DE ↔ EN
 
-Ein zentrales Konsistenz- und Selbstheilungssystem, das im Hintergrund läuft, Inkonsistenzen erkennt, automatisch behebt und protokolliert.
+Ziel: Wenn der User „English" wählt, sieht er **ausschließlich** englischen Text — und umgekehrt. Inklusive Rechtstexte. Inhalts-Datenfiles werden auf eine bilinguale `{de, en}`-Struktur umgestellt.
 
-### 1. Datenbank (Migration)
+## Realistischer Umfang
 
-Neue Tabelle `self_healing_logs`:
-- `id`, `user_id` (nullable), `check_name`, `severity` (info/warn/error/critical), `status` (detected/healed/failed/escalated), `details` (jsonb), `auto_healed` (bool), `created_at`
-- RLS: User sieht nur eigene Einträge; Admin sieht alle
-- Index auf `(created_at desc)` und `(severity, status)`
+Betroffen sind ≈ 30 Dateien mit ~1.000+ deutschen Strings, davon allein **2.349 Zeilen** in `src/lib/global-intel-data.ts`. Das passt nicht in eine einzige Antwort. Ich liefere das in **fünf aufeinanderfolgenden Sprints**, jeder einzeln lauffähig & in sich abgeschlossen. Nach Sprint 1 startest du einfach „weiter" und ich mache den nächsten Sprint — bis alles fertig ist.
 
-Neue Tabelle `app_admins` (für hidden Admin-Dashboard):
-- `user_id` (PK, FK auf auth.users), `created_at`
-- `has_role(uid, 'admin')` Funktion via separates `user_roles`-Pattern (wir nutzen bestehende Conventions: enum + user_roles + has_role security definer)
+## Sprint 1 — Fundament + aktuelle Seite (jetzt sofort)
 
-### 2. Core: `ConsistencyEngine` (`src/lib/consistency-engine.ts`)
+1. **Helper `useTr(de, en)`** zu `src/lib/i18n.ts` hinzufügen — erlaubt Inline-Übersetzung in JSX ohne neuen Dictionary-Key.
+2. **`global-intel-data.ts`** auf bilinguale Struktur umstellen:
+   - Alle übersetzbaren String-Felder (`summary`, `pivotalEvent.*`, `geopolitics.tensions`, `impact.*`, `positives[]`, `negatives[]`, `GLOBAL_SUMMARY.headline`, `EVENTS[].*`, `TRADE_FLOWS[].*`, `TENSIONS[].*`, `MARKET_FEED[].*`, `COUNTRY_EXTRAS.*`) → `{ de: string; en: string }`.
+   - Selektor-Helper `pickLang(field, lang)` exportieren.
+   - `RISK_LABEL` bilingual.
+3. **`global-intel.tsx`** + **`country-derived.ts`** + **`MostTrackedCountries.tsx`** auf den Selektor umstellen. Alle hardcoded deutschen Strings in JSX → `useTr(...)`.
 
-Pure-TS Modul mit registrierbaren Checks:
-```ts
-type Check = {
-  name: string;
-  category: 'watchlist' | 'alerts' | 'apex' | 'realtime' | 'causal' | 'onboarding' | 'filter';
-  run: (ctx) => Promise<CheckResult>;
-  heal?: (ctx, result) => Promise<HealResult>;
-};
-```
+## Sprint 2 — Hauptrouten
 
-Eingebaute Checks:
-- **watchlist-sentiment-consistency**: Vergleicht Counts aus Marktstimmung mit Watchlist-Cards (nutzt selben `stabilizeDecision`-Pipeline). Bei Mismatch → cache invalidate.
-- **price-data-freshness**: Prüft ob Candle-Daten der Watchlist ≤ X Minuten alt sind. Heal: refetch.
-- **alerts-integrity**: Prüft ob aktive Preisalarme auf existierende Symbole zeigen.
-- **apex-signal-consistency**: Prüft ob APEX-Verdict und Decision-Card-Verdict übereinstimmen.
-- **realtime-connection**: Prüft Supabase Realtime Channel Status.
-- **causal-engine-health**: Pingt Causal Engine Endpoint, prüft Latenz.
-- **onboarding-flow**: Prüft ob Profile vorhanden ist, wenn user authed.
-- **portfolio-pnl-recompute**: Berechnet G/V aus Rohdaten neu und vergleicht mit angezeigtem Wert.
+`picks.tsx`, `analyse.tsx`, `produkte.$symbol.tsx`, `explain-trade.tsx`, `track-record.tsx`, `ai-learning.tsx`, `sectors.tsx`, `correlations.tsx`, `alerts.tsx`, `methodology.tsx`, `about.tsx`, `index.tsx` — hardcoded deutsche Strings via `useTr` oder neue i18n-Keys übersetzen.
 
-Jede Heal-Action invalidiert relevante Query Keys via globalem `queryClient`.
+## Sprint 3 — Komponenten
 
-### 3. Hintergrund-Runner: `SelfHealingService` (`src/lib/self-healing-service.ts`)
+`BrokerAssessment`, `IndicatorBreakdown`, `Disclaimer`, `OnboardingGate`, `ApexDashboard`, `PortfolioCommandCenter`, `FirstRunTour`, `PortfolioAnalytics`, `LearningProgressBlock`, `CausalEngineCard`, `FeaturePreviewPopover` (Mocks).
 
-- Singleton, gestartet im `__root.tsx` via `useEffect`
-- Intervall: alle 10 Min (configurable)
-- Zusätzlich Trigger bei Route-Wechsel auf kritische Seiten (Watchlist, Portfolio, APEX)
-- Throttling: pro Check max 1x/2min
-- Bei Heal-Success → silent log; bei Fail nach 3 Versuchen → escalate (severity=critical)
-- Logs werden batched via server function `logHealingActions` in DB geschrieben
+## Sprint 4 — Rechtstexte
 
-### 4. Server-Side
+`agb.tsx`, `datenschutz.tsx`, `impressum.tsx` — vollständige englische Übersetzung mit dem üblichen Hinweis „German version is legally binding".
 
-`src/lib/self-healing.functions.ts`:
-- `logHealingActions(actions[])` — batch insert in `self_healing_logs`
-- `getHealingLogs({limit, severity?})` — admin-only via `requireSupabaseAuth` + `has_role(uid,'admin')` check
-- `getHealingStats()` — aggregate counts last 24h/7d
+## Sprint 5 — Cleanup & Audit
 
-### 5. Hidden Admin Dashboard
+`rg`-Sweep nach restlichen `[äöüß]` außerhalb von Strings/Kommentaren. Letzte UI-Komponenten (Banners, Tooltips, Toasts) abräumen. Tests gegen beide Sprachen prüfen.
 
-Neue Route `/admin/self-healing` (unter `_authenticated`):
-- Server-side Guard: redirected non-admins zu `/`
-- Tabelle aller Logs mit Filter (severity, category, time range)
-- Stats-Kacheln: Total Checks 24h, Auto-Healed %, Open Escalations
-- Live-Refresh alle 30s
+## Technische Details
 
-Kein Link in der Sidebar — nur direkt per URL erreichbar.
-
-### 6. User-facing (dezent)
-
-- Bei `severity=critical` und Premium-User: kleiner Toast (max 1x/Session) "Daten aktualisiert"
-- Keine Popups, keine Banner — alles passiert silent
-
-### 7. Performance / Resource Hygiene
-
-- Alle Checks share dieselben React-Query Caches (kein doppelter API-Call)
-- Failed checks haben Exponential Backoff
-- Pausiert wenn `document.hidden` (Tab inaktiv)
-- Pausiert während aktiver User-Interaction (input focus)
-
-### Dateiliste
-
-**Neu:**
-- `supabase/migrations/<ts>_self_healing.sql`
-- `src/lib/consistency-engine.ts`
-- `src/lib/self-healing-service.ts`
-- `src/lib/self-healing.functions.ts`
-- `src/lib/checks/` (ein File pro Check)
-- `src/routes/_authenticated/admin.self-healing.tsx`
-
-**Geändert:**
-- `src/routes/__root.tsx` (Service-Start im useEffect)
-- `src/integrations/supabase/types.ts` (auto-generated nach Migration)
-
-### Hinweis zur Stack-Konvention
-
-Cron-Jobs auf diesem Stack laufen als TanStack Server Routes unter `/api/public/hooks/*`, nicht als Supabase Edge Functions. Die Haupt-Loop läuft client-seitig (das ist konsistent mit dem bestehenden Code, der ebenfalls auf Client-Polling setzt). Falls server-seitige Checks gewünscht sind, kommt zusätzlich `src/routes/api/public/hooks/self-healing.ts` + pg_cron dazu.
+- **Bilinguale Felder**: `type Bi = { de: string; en: string }`. Wo Arrays existieren (`positives`, `negatives`, `newsKeywords`), wird jedes Element zu `Bi`.
+- **Selektor**: `export const pick = (b: Bi, lang: Lang) => b[lang]` — in Komponenten via `const lang = useLang(); pick(country.summary, lang)`.
+- **`useTr`-Helper**: `export function useTr() { const lang = useLang(); return (de: string, en: string) => lang === "en" ? en : de; }` — für JSX-only Strings ohne Dictionary-Overhead.
+- Keine Änderung an bestehenden Dictionary-Keys (DE+EN sind bereits symmetrisch mit 521 Keys).
+- Übersetzungen werden professionell formuliert, nicht wörtlich — passend zum Finanz-/Trading-Kontext.

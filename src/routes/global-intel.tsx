@@ -26,6 +26,7 @@ import {
   ROUTE_COLOR,
   TENSIONS,
   TRADE_FLOWS,
+  getCountry,
   type CountryIntel,
   type GlobalEvent,
   type FeedItem,
@@ -272,7 +273,7 @@ function GlobalIntelPage() {
                             backgroundColor: `color-mix(in oklab, ${RISK_COLOR[hc.risk]} 18%, transparent)`,
                           }}
                         >
-                          {RISK_LABEL[hc.risk]}
+                          {RISK_LABEL[hc.risk].en}
                         </span>
                       )}
                     </div>
@@ -1529,7 +1530,7 @@ function WorldMap({
                 onMouseLeave={() => onHover(null)}
                 onClick={() => intel && onSelectCountry(intel)}
               >
-                <title>{name}{intel ? ` — ${RISK_LABEL[intel.risk]}` : ""}</title>
+                <title>{name}{intel ? ` — ${RISK_LABEL[intel.risk].en}` : ""}</title>
               </path>
               {tint && (
                 <path
