@@ -53,7 +53,7 @@ function ImpressumPage() {
 
         <section>
           <h2 className="font-semibold text-foreground">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-          <p className="mt-1">Maximilian Mustermann, Anschrift wie oben.</p>
+          <p className="mt-1">Yannick Sutter, Anschrift wie oben.</p>
         </section>
 
         <section>
