@@ -1150,7 +1150,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM FX", tone: "bad", note: "USD strength tightens EM conditions." },
       { label: "Mexican peso", tone: "warn", note: "Tariff threats whip MXN both ways." },
     ],
-    global: "US policy uncertainty is now the single biggest swing factor for global capital flows.",
+    global: "The US drives global capital flows, so its policy choices ripple everywhere. New tariffs raise prices for consumers worldwide, and uncertainty about taxes and the Fed pushes the dollar and US bond yields around. That moves nearly every other market with them.",
   },
   "ai-capex": {
     who: ["United States of America", "Taiwan", "South Korea", "Japan"],
