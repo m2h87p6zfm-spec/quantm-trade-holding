@@ -256,7 +256,7 @@ export function FirstRunTour() {
         {!hit && (
           <p className="mt-2 text-[11px] text-muted-foreground/80">
             {isMobile
-              ? "Tipp: Tippe unten auf „Mehr", um alle Bereiche zu sehen."
+              ? 'Tipp: Tippe unten auf "Mehr", um alle Bereiche zu sehen.'
               : "Hinweis: Element nicht sichtbar – klicke auf Weiter."}
           </p>
         )}
