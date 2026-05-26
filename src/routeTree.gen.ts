@@ -50,6 +50,7 @@ import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthConfirmRouteImport } from './routes/auth.confirm'
+import { Route as AdminTickersRouteImport } from './routes/admin.tickers'
 import { Route as AdminSelfHealingRouteImport } from './routes/admin.self-healing'
 import { Route as ApiPublicVapidPublicKeyRouteImport } from './routes/api/public/vapid-public-key'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
@@ -277,6 +278,11 @@ const AuthConfirmRoute = AuthConfirmRouteImport.update({
   path: '/auth/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTickersRoute = AdminTickersRouteImport.update({
+  id: '/admin/tickers',
+  path: '/admin/tickers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSelfHealingRoute = AdminSelfHealingRouteImport.update({
   id: '/admin/self-healing',
   path: '/admin/self-healing',
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
+  '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -492,6 +499,7 @@ export interface FileRoutesByTo {
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
+  '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
+  '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/war-room'
     | '/welcome'
     | '/admin/self-healing'
+    | '/admin/tickers'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -687,6 +697,7 @@ export interface FileRouteTypes {
     | '/war-room'
     | '/welcome'
     | '/admin/self-healing'
+    | '/admin/tickers'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -751,6 +762,7 @@ export interface FileRouteTypes {
     | '/war-room'
     | '/welcome'
     | '/admin/self-healing'
+    | '/admin/tickers'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -816,6 +828,7 @@ export interface RootRouteChildren {
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
   AdminSelfHealingRoute: typeof AdminSelfHealingRoute
+  AdminTickersRoute: typeof AdminTickersRoute
   AuthConfirmRoute: typeof AuthConfirmRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
@@ -1131,6 +1144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/tickers': {
+      id: '/admin/tickers'
+      path: '/admin/tickers'
+      fullPath: '/admin/tickers'
+      preLoaderRoute: typeof AdminTickersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/self-healing': {
       id: '/admin/self-healing'
       path: '/admin/self-healing'
@@ -1320,6 +1340,7 @@ const rootRouteChildren: RootRouteChildren = {
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
   AdminSelfHealingRoute: AdminSelfHealingRoute,
+  AdminTickersRoute: AdminTickersRoute,
   AuthConfirmRoute: AuthConfirmRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
