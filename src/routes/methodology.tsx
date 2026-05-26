@@ -38,7 +38,7 @@ function MethodologyPage() {
           Wie wir <span className="text-gradient-primary">Signale berechnen</span>
         </h1>
         <p className="text-muted-foreground max-w-2xl">
-          Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens fünf
+          Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens sechs
           unabhängigen Quellen. Hier ist exakt, wie es funktioniert — keine Black Box.
         </p>
       </header>
