@@ -14,6 +14,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { FeaturePreviewPopover } from "@/components/FeaturePreviewPopover";
 
 export const Route = createFileRoute("/preise")({
   head: () => ({
