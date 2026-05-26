@@ -167,6 +167,10 @@ export function FirstRunTour() {
     } catch {
       /* ignore */
     }
+    // Persist to DB so the tour never shows again for this user on any device
+    void update({ tour_completed: true }).catch(() => {
+      /* ignore */
+    });
   }
 
   function skip() {
