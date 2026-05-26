@@ -137,7 +137,19 @@ export function FirstRunTour() {
 
   if (!open) return null;
 
-  const close = () => { markSeen(); setOpen(false); };
+  const persistSeen = async () => {
+    markLocalSeen();
+    if (!user) return;
+    // Upsert so the row is created if onboarding hadn't already inserted it.
+    await supabase
+      .from("user_trading_profile")
+      .upsert(
+        { user_id: user.id, tour_completed: true },
+        { onConflict: "user_id" },
+      );
+  };
+
+  const close = () => { void persistSeen(); setOpen(false); };
   const next = () => {
     if (step >= STEPS.length - 1) { close(); return; }
     setStep((s) => s + 1);
