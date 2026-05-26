@@ -24,6 +24,12 @@ const ACCENT = {
   NEUTRAL: { text: "text-[#8B9EFF]", bg: "bg-[#8B9EFF]/10", border: "border-[#8B9EFF]/30", stroke: "#8B9EFF", glow: "" },
 } as const;
 
+const SIGNAL_LABEL: Record<"LONG" | "SHORT" | "NEUTRAL", string> = {
+  LONG: "Bullish",
+  SHORT: "Bearish",
+  NEUTRAL: "Neutral",
+};
+
 export function WatchlistSignalsPanel() {
   const { settings } = useSettings();
   const t = useT();
