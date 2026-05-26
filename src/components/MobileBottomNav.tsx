@@ -39,6 +39,13 @@ const primary: PrimaryItem[] = [
   { to: "/alerts", icon: Bell, key: "nav.alerts" },
 ];
 
+const tourKeys: Record<string, string> = {
+  "/": "watchlist",
+  "/portfolio": "portfolio",
+  "/picks": "picks",
+  "/alerts": "alerts",
+};
+
 // Everything not in the bottom bar lives in the "More" sheet.
 // Mirrors AppSidebar exactly so phone & tablet have full feature parity.
 const moreSections: { labelKey: string; items: MoreItem[] }[] = [
