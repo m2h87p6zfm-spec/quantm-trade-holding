@@ -146,5 +146,5 @@ export function useAutoTheme(enabled: boolean = true) {
       cancelled = true;
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, []);
+  }, [enabled]);
 }
