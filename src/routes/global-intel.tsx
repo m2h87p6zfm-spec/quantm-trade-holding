@@ -298,7 +298,7 @@ function GlobalIntelPage() {
                 </div>
               )}
 
-              <div className="relative aspect-[1000/520] w-full">
+              <div className="relative aspect-[4/3] w-full sm:aspect-[1000/520]">
                 {error && (
                   <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
                     Map unavailable: {error}
