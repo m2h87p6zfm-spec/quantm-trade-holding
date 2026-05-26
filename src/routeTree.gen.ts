@@ -50,6 +50,7 @@ import { Route as ProdukteIndexRouteImport } from './routes/produkte.index'
 import { Route as ProdukteSymbolRouteImport } from './routes/produkte.$symbol'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as AuthConfirmRouteImport } from './routes/auth.confirm'
+import { Route as AdminSelfHealingRouteImport } from './routes/admin.self-healing'
 import { Route as ApiPublicVapidPublicKeyRouteImport } from './routes/api/public/vapid-public-key'
 import { Route as ApiPublicStreamRouteImport } from './routes/api/public/stream'
 import { Route as ApiPublicSignalChatRouteImport } from './routes/api/public/signal-chat'
@@ -276,6 +277,11 @@ const AuthConfirmRoute = AuthConfirmRouteImport.update({
   path: '/auth/confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSelfHealingRoute = AdminSelfHealingRouteImport.update({
+  id: '/admin/self-healing',
+  path: '/admin/self-healing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVapidPublicKeyRoute = ApiPublicVapidPublicKeyRouteImport.update({
   id: '/api/public/vapid-public-key',
   path: '/api/public/vapid-public-key',
@@ -421,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/self-healing': typeof AdminSelfHealingRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -484,6 +491,7 @@ export interface FileRoutesByTo {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/self-healing': typeof AdminSelfHealingRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -548,6 +556,7 @@ export interface FileRoutesById {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/self-healing': typeof AdminSelfHealingRoute
   '/auth/confirm': typeof AuthConfirmRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/produkte/$symbol': typeof ProdukteSymbolRoute
@@ -613,6 +622,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/admin/self-healing'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -676,6 +686,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/admin/self-healing'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/admin/self-healing'
     | '/auth/confirm'
     | '/checkout/return'
     | '/produkte/$symbol'
@@ -803,6 +815,7 @@ export interface RootRouteChildren {
   TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
+  AdminSelfHealingRoute: typeof AdminSelfHealingRoute
   AuthConfirmRoute: typeof AuthConfirmRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   ProdukteSymbolRoute: typeof ProdukteSymbolRoute
@@ -1118,6 +1131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/self-healing': {
+      id: '/admin/self-healing'
+      path: '/admin/self-healing'
+      fullPath: '/admin/self-healing'
+      preLoaderRoute: typeof AdminSelfHealingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/vapid-public-key': {
       id: '/api/public/vapid-public-key'
       path: '/api/public/vapid-public-key'
@@ -1299,6 +1319,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
+  AdminSelfHealingRoute: AdminSelfHealingRoute,
   AuthConfirmRoute: AuthConfirmRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   ProdukteSymbolRoute: ProdukteSymbolRoute,
