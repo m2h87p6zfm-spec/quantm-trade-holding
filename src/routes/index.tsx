@@ -13,7 +13,7 @@ import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
 import { MarketMovers } from "@/components/MarketMovers";
 import { useT } from "@/lib/i18n";
-import { HeartManifestHero } from "@/components/HeartManifestHero";
+
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
