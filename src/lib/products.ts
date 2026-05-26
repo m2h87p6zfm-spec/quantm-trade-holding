@@ -924,15 +924,40 @@ export const MERGE_STATS: MergeStats = {
 };
 
 export const SECTORS = ["Technologie", "Energie", "Finanzen", "Gesundheit", "Konsum", "Industrie", "Rohstoffe"] as const;
-export const INDICES = PRODUCTS.filter((p) => p.sector === "Index");
+
+// Vorbereitete Indizes — einmalig beim Modul-Load berechnet. Verhindert,
+// dass Komponenten bei jedem Render 3.300+ Symbole linear durchsuchen.
+export const PRODUCT_BY_SYMBOL: ReadonlyMap<string, Product> = new Map(
+  PRODUCTS.map((p) => [p.symbol.toUpperCase(), p]),
+);
+export const PRODUCTS_BY_SECTOR: ReadonlyMap<string, Product[]> = (() => {
+  const m = new Map<string, Product[]>();
+  for (const p of PRODUCTS) {
+    let arr = m.get(p.sector);
+    if (!arr) { arr = []; m.set(p.sector, arr); }
+    arr.push(p);
+  }
+  return m;
+})();
+
+export const INDICES = PRODUCTS_BY_SECTOR.get("Index") ?? [];
 export const BENCHMARK = "SPY";
 
 export function findProduct(symbol: string): Product | undefined {
-  return PRODUCTS.find((p) => p.symbol.toUpperCase() === symbol.toUpperCase());
+  return PRODUCT_BY_SYMBOL.get(symbol.toUpperCase());
 }
 
-export function searchProducts(q: string): Product[] {
+// Optionales Limit verhindert pathologische Renderzeiten bei generischen Queries.
+export function searchProducts(q: string, limit?: number): Product[] {
   const s = q.trim().toLowerCase();
-  if (!s) return PRODUCTS;
-  return PRODUCTS.filter((p) => p.symbol.toLowerCase().includes(s) || p.name.toLowerCase().includes(s));
+  if (!s) return limit ? PRODUCTS.slice(0, limit) : PRODUCTS;
+  const out: Product[] = [];
+  const cap = limit ?? PRODUCTS.length;
+  for (const p of PRODUCTS) {
+    if (p.symbol.toLowerCase().includes(s) || p.name.toLowerCase().includes(s)) {
+      out.push(p);
+      if (out.length >= cap) break;
+    }
+  }
+  return out;
 }

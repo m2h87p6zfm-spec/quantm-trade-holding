@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { INDICES, PRODUCTS, SECTORS } from "@/lib/products";
+import { INDICES, PRODUCTS_BY_SECTOR, SECTORS } from "@/lib/products";
 import {
   Cpu, Flame, Landmark, HeartPulse, ShoppingBag, Factory, Gem, Globe2, TrendingUp, ArrowRight,
 } from "lucide-react";
@@ -23,7 +23,7 @@ const REGION_FLAG: Record<string, string> = {
 function SectorCard({ sector }: { sector: string }) {
   const meta = SECTOR_META[sector];
   const Icon = meta?.icon ?? Globe2;
-  const list = PRODUCTS.filter((p) => p.sector === sector);
+  const list = PRODUCTS_BY_SECTOR.get(sector) ?? [];
   const preview = list.slice(0, 9);
 
   return (
@@ -93,7 +93,8 @@ function IndexCard({ idx }: { idx: { symbol: string; name: string; region: strin
 }
 
 function MaerktePage() {
-  const activeSectors = SECTORS.filter((s) => PRODUCTS.some((p) => p.sector === s));
+  const activeSectors = SECTORS.filter((s) => (PRODUCTS_BY_SECTOR.get(s)?.length ?? 0) > 0);
+  const totalSymbols = Array.from(PRODUCTS_BY_SECTOR.values()).reduce((n, arr) => n + arr.length, 0);
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-6">
       <div className="animate-fade-up">
@@ -104,7 +105,7 @@ function MaerktePage() {
           Märkte & <span className="text-gradient-gold">Sektoren</span>
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          {PRODUCTS.length} handelbare Symbole quer durch {activeSectors.length} Sektoren und {Object.keys(REGION_FLAG).length} Regionen.
+          {totalSymbols} handelbare Symbole quer durch {activeSectors.length} Sektoren und {Object.keys(REGION_FLAG).length} Regionen.
           Kurse werden erst beim Öffnen geladen — schonend für den Edge-Cache.
         </p>
       </div>

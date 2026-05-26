@@ -6,7 +6,7 @@ import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
-import { PRODUCTS } from "@/lib/products";
+import { ProductsDatalist } from "@/components/ProductsDatalist";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
@@ -318,7 +318,7 @@ function AlertsPage() {
               onChange={(e) => setSymbol(e.target.value.toUpperCase())}
               className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm font-semibold tracking-tight transition-all focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
-            <datalist id="apex-symbols-alerts">{PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}</datalist>
+            <ProductsDatalist id="apex-symbols-alerts" />
           </Field>
           <Field label="Bedingung">
             <select
