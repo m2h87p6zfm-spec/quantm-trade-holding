@@ -1216,7 +1216,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM reform trade", tone: "ok", note: "Sets template for frontier reform stories." },
       { label: "Lithium", tone: "ok", note: "Capacity unlock supports battery supply chain." },
     ],
-    global: "Reform-bellwether for emerging markets — success here resets the EM playbook.",
+    global: "Argentina is a live test of whether tough reforms can fix a broken economy. If it works, other emerging markets may try the same playbook. If it fails, it sets back reform efforts across the region.",
   },
   "de-ind": {
     who: ["Germany", "France"],
