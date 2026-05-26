@@ -1281,7 +1281,7 @@ function ActiveFlashpoints({
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.016_260)] backdrop-blur">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card backdrop-blur">
       <div className="flex items-center justify-between border-b border-white/[0.12] px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           <AlertTriangle className="h-3 w-3 text-amber-400" />
