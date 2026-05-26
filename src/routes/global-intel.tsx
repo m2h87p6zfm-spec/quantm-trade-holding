@@ -176,7 +176,7 @@ function GlobalIntelPage() {
       {/* Top command bar */}
       <header className="relative overflow-hidden border-b border-white/[0.14]">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.14_0.025_260)] via-[oklch(0.11_0.018_260)] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-card/80 via-card/40 to-transparent" />
           <div
             className="absolute inset-0 opacity-[0.05]"
             style={{
