@@ -1268,7 +1268,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Equipment names", tone: "ok", note: "Cap-ex flows to ASML, Applied Materials, TEL." },
       { label: "KRW", tone: "warn", note: "Export upside vs USD strength tug-of-war." },
     ],
-    global: "Korean memory cycle is a real-time gauge for global AI / cloud capex.",
+    global: "Memory chip demand is a real-time signal for how much the world is spending on AI and cloud. When Korean chipmakers do well, it confirms the AI build-out is still strong. When orders slow, it's an early warning for the whole tech sector.",
   },
 };
 
