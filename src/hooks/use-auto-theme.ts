@@ -101,6 +101,7 @@ function getCachedCoords(): Coords | null {
 
 export function useAutoTheme(enabled: boolean = true) {
   useEffect(() => {
+    if (!enabled) return;
     if (typeof window === "undefined") return;
 
     let cancelled = false;
