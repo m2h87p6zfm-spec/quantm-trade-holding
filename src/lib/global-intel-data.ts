@@ -45,6 +45,9 @@ export type CountryIntel = {
   newsKeywords: string[];
 };
 
+import { GLOBAL_SUMMARY_HEADLINE_EN, COUNTRY_EN_OVERRIDES } from "./global-intel-data.en";
+import type { Lang } from "./i18n";
+
 export const GLOBAL_SUMMARY = {
   sentiment: "mixed" as Sentiment,
   volatility: "medium" as RiskLevel,
@@ -54,6 +57,11 @@ export const GLOBAL_SUMMARY = {
   headline:
     "US-Resilienz vs. globale Verlangsamung — USD bleibt fest, Rohstoffe gemischt, EM unter Druck.",
 };
+
+/** Lang-aware headline for the global summary band. */
+export function getGlobalHeadline(lang: Lang): string {
+  return lang === "en" ? GLOBAL_SUMMARY_HEADLINE_EN : GLOBAL_SUMMARY.headline;
+}
 
 export const COUNTRIES: CountryIntel[] = [
   {
