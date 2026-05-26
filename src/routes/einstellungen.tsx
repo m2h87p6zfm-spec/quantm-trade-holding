@@ -15,6 +15,7 @@ import {
   Trash2,
   Sun,
   Moon,
+  SunMoon,
   Sparkles,
   TrendingUp,
   TrendingDown,
@@ -125,6 +126,7 @@ function SettingsPage() {
             <div className="flex gap-2">
               {(
                 [
+                  { v: "auto", label: t("settings.theme.auto"), icon: <SunMoon className="h-3.5 w-3.5" /> },
                   { v: "dark", label: t("settings.theme.dark"), icon: <Moon className="h-3.5 w-3.5" /> },
                   { v: "light", label: t("settings.theme.light"), icon: <Sun className="h-3.5 w-3.5" /> },
                 ] as const

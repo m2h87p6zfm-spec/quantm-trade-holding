@@ -36,7 +36,7 @@ export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
   risk: RiskProfile;
-  theme: "dark" | "light";
+  theme: "dark" | "light" | "auto";
   minConfidence: number;
   watchlists: Watchlist[];
   activeWatchlistId: string;
@@ -82,7 +82,7 @@ export const MARKET_WATCH_DEFAULTS = ["SPY", "QQQ", "DIA", "IWM"] as const;
 
 const DEFAULT: StoredSettings = {
   risk: "ausgewogen",
-  theme: "dark",
+  theme: "auto",
   minConfidence: 60,
   watchlists: [DEFAULT_LIST],
   activeWatchlistId: DEFAULT_LIST.id,
@@ -151,6 +151,7 @@ export function useSettings() {
     return () => { window.removeEventListener("ta_settings_change", h); window.removeEventListener("storage", h); };
   }, []);
   useEffect(() => {
+    if (stored.theme === "auto") return; // handled by useAutoTheme based on sun position
     const root = document.documentElement;
     if (stored.theme === "light") { root.classList.add("light"); root.classList.remove("dark"); }
     else { root.classList.remove("light"); root.classList.add("dark"); }
