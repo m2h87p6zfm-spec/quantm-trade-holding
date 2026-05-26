@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getCandlesCached } from "@/lib/twelvedata.server";
+import { getCandlesCached, adaptiveCandleTtl } from "@/lib/twelvedata.server";
 import { requireUserId } from "@/lib/api-auth.server";
 
 const CORS = {
