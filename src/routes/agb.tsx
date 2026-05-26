@@ -83,7 +83,7 @@ function AGBPage() {
           <p className="mt-1">
             Verbrauchern steht bei kostenpflichtigen Abonnements ein gesetzliches Widerrufsrecht von 14 Tagen ab
             Vertragsschluss zu. Der Widerruf ist formfrei möglich, beispielsweise per E-Mail an
-            support@quantmtrade.com unter eindeutiger Bezeichnung des Vertrags.
+            QuantmTradeInbox@proton.me unter eindeutiger Bezeichnung des Vertrags.
           </p>
           <p className="mt-2">
             <strong>Erlöschen des Widerrufsrechts:</strong> Das Widerrufsrecht erlischt bei einem Vertrag über die
@@ -142,7 +142,7 @@ function AGBPage() {
           <p className="mt-1">
             Abonnements können jederzeit zum Ende der laufenden Abrechnungsperiode ordentlich gekündigt werden. Die
             Kündigung erfolgt durch den Nutzer selbständig im Bereich „Konto → Abo verwalten" oder per E-Mail an
-            support@quantmtrade.com. Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt für beide
+            QuantmTradeInbox@proton.me. Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt für beide
             Parteien unberührt. Bei Kündigung durch den Anbieter aus wichtigem Grund wird eine bereits gezahlte
             Vergütung anteilig erstattet, soweit die Plattform aufgrund der Kündigung nicht weiter genutzt werden kann.
           </p>
