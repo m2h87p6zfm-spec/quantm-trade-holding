@@ -283,7 +283,7 @@ export function OnboardingGate() {
               <StepIcon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Apex AI · Onboarding</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Quantm Trade · Onboarding</div>
               <div className="text-sm font-semibold text-foreground">
                 Step {Math.min(step + 1, TOTAL_STEPS)} of {TOTAL_STEPS}
               </div>
