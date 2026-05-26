@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { INDICES, PRODUCTS, SECTORS } from "@/lib/products";
+import { INDICES, PRODUCTS_BY_SECTOR, SECTORS } from "@/lib/products";
 import {
   Cpu, Flame, Landmark, HeartPulse, ShoppingBag, Factory, Gem, Globe2, TrendingUp, ArrowRight,
 } from "lucide-react";
