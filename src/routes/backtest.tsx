@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { FlaskConical, Play, TrendingUp, TrendingDown } from "lucide-react";
 import { useCandles } from "@/lib/useMarketData";
 import { runBacktest } from "@/lib/backtest";
-import { PRODUCTS } from "@/lib/products";
+import { ProductsDatalist } from "@/components/ProductsDatalist";
 import type { RiskProfile } from "@/lib/analysis";
 
 export const Route = createFileRoute("/backtest")({
