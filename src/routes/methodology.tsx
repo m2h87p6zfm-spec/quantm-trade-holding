@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Activity, BarChart3, Brain, GitBranch, Scale, Sigma } from "lucide-react";
+import { Activity, BarChart3, Brain, GitBranch, Scale, Sigma, Dices } from "lucide-react";
 
 export const Route = createFileRoute("/methodology")({
   head: () => ({
