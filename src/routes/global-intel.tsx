@@ -366,6 +366,17 @@ function GlobalIntelPage() {
 
         {/* 3. COUNTRIES */}
         <Panel id="countries" eyebrow="Search and filter" title="Tracked Countries" icon={Search}>
+          <div className="mb-4">
+            <MostTrackedCountries
+              onSelect={(c) => {
+                setSelected(c);
+                setSelectedEvent(null);
+                if (typeof document !== "undefined") {
+                  document.getElementById("command")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            />
+          </div>
           <CountryFinder
             selected={selected}
             onSelect={(c) => {
