@@ -10,6 +10,7 @@ import { scoreIndicators, buildDecision, stabilizeDecision, type Decision } from
 import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
+import { formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
 
 
 type SortKey = "confidence" | "perf1d" | "perf30d" | "volatility";
@@ -194,7 +195,7 @@ export function WatchlistSignalsPanel() {
                   <div className="flex items-baseline justify-between gap-2">
                     <div className="text-[16px] font-bold leading-tight">{r.p.symbol}</div>
                     <div className="font-mono text-[18px] font-bold leading-none tabular-nums">
-                      {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {formatCurrencyFromUsd(r.last, settings.currency)}
                     </div>
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
@@ -226,11 +227,11 @@ export function WatchlistSignalsPanel() {
 
                 <div className="mt-5">
                   <div className="font-mono text-[30px] font-bold leading-none tabular-nums">
-                    {r.last.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrencyFromUsd(r.last, settings.currency)}
                   </div>
                   <div className={`mt-2 inline-flex items-center gap-2 rounded-lg px-2.5 py-1 text-[13px] font-semibold tabular-nums ${up ? "bg-[#22FF88]/12 text-[#22FF88]" : "bg-[#FF3B5C]/12 text-[#FF3B5C]"}`}>
                     <span className="font-mono">{up ? "+" : ""}{r.change.toFixed(2)}%</span>
-                    <span className="font-mono text-muted-foreground">{up ? "+" : ""}{r.changeAbs.toFixed(2)}</span>
+                    <span className="font-mono text-muted-foreground">{up ? "+" : ""}{convertFromUsd(r.changeAbs, settings.currency).toFixed(2)}</span>
                   </div>
                 </div>
 
