@@ -3,6 +3,7 @@ import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { Loader2 } from "lucide-react";
+import { FirstRunTour } from "@/components/FirstRunTour";
 
 // Brand-neutral splash — no translated text here, since it renders before
 // the language preference is hydrated from localStorage (would otherwise
@@ -78,5 +79,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <FirstRunTour />
+    </>
+  );
 }
