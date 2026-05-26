@@ -1530,7 +1530,7 @@ function WorldMap({
                 onMouseLeave={() => onHover(null)}
                 onClick={() => intel && onSelectCountry(intel)}
               >
-                <title>{name}{intel ? ` — ${RISK_LABEL[intel.risk]}` : ""}</title>
+                <title>{name}{intel ? ` — ${RISK_LABEL[intel.risk].en}` : ""}</title>
               </path>
               {tint && (
                 <path
