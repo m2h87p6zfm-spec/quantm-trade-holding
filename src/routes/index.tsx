@@ -11,7 +11,7 @@ import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
-import { MarketMovers } from "@/components/MarketMovers";
+import { WatchlistAccordions } from "@/components/WatchlistAccordions";
 import { useT } from "@/lib/i18n";
 
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
