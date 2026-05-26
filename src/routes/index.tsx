@@ -126,7 +126,7 @@ function Cockpit() {
                   {sentimentTotal} {sentimentTotal === 1 ? "Wert" : "Werte"}
                 </span>
               </div>
-              {/* Drei klare Stat-Karten: Zahl groß, Label direkt darunter */}
+              {/* Drei Stat-Karten: Label oben, große Zahl mittig, Prozent unten – klar gruppiert */}
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
@@ -137,27 +137,31 @@ function Cockpit() {
                   return (
                     <div
                       key={s.k}
-                      className="flex flex-col items-center justify-center rounded-xl border px-2 py-3 text-center"
+                      className="flex flex-col items-center justify-between gap-2 rounded-xl border px-2 py-3 text-center"
                       style={{ background: s.tint, borderColor: s.border }}
                     >
-                      <span className="font-mono text-2xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
-                        {s.v}
-                      </span>
-                      <span className="mt-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-foreground/70">
+                      <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-foreground/80">
                         <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
                         {s.k}
                       </span>
-                      <span className="mt-1 text-[10px] tabular-nums text-muted-foreground/60">{pct}%</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-mono text-2xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
+                          {s.v}
+                        </span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground/70">/ {sentimentTotal}</span>
+                      </div>
+                      <span className="text-[10px] tabular-nums" style={{ color: s.color, opacity: 0.85 }}>{pct}%</span>
                     </div>
                   );
                 })}
               </div>
               {/* Verteilungsbalken darunter als visuelle Zusammenfassung */}
               <div className="mt-4 flex h-1.5 overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-[#22FF88]" style={{ width: `${(longCount / sentimentTotal) * 100}%` }} />
-                <div className="h-full bg-white/30" style={{ width: `${(neutralCount / sentimentTotal) * 100}%` }} />
-                <div className="h-full bg-[#FF3B5C]" style={{ width: `${(shortCount / sentimentTotal) * 100}%` }} />
+                <div className="h-full bg-[#22FF88]" style={{ width: sentimentTotal > 0 ? `${(longCount / sentimentTotal) * 100}%` : "0%" }} />
+                <div className="h-full bg-[#8B9EFF]/60" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
+                <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
               </div>
+
             </div>
 
 
