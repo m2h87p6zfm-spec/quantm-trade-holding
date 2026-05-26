@@ -100,25 +100,27 @@ function findRect(target: string): { rect: Rect; el: HTMLElement } | null {
 
 export function FirstRunTour() {
   const { user, loading } = useAuth();
-  const { profile, loading: profLoading } = useTradingProfile();
+  const { profile, loading: profLoading, update } = useTradingProfile();
   const [running, setRunning] = useState(false);
   const [step, setStep] = useState(0);
   const [hit, setHit] = useState<{ rect: Rect; el: HTMLElement } | null>(null);
   const [done, setDone] = useState(false);
 
-  // Decide whether to start the tour
+  // Decide whether to start the tour - only once per user, stored in DB
   useEffect(() => {
     if (loading || profLoading) return;
-    if (!user) return;
-    if (!profile?.onboarding_completed) return;
+    if (!user || !profile) return;
+    if (!profile.onboarding_completed) return;
+    if (profile.tour_completed) return;
     try {
       if (localStorage.getItem(TOUR_KEY)) return;
     } catch {
-      return;
+      /* ignore */
     }
     const t = window.setTimeout(() => setRunning(true), 600);
     return () => window.clearTimeout(t);
-  }, [user, loading, profile?.onboarding_completed, profLoading]);
+  }, [user, loading, profile, profLoading]);
+
 
   // Lock body scroll while running
   useEffect(() => {
