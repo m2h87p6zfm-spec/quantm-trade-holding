@@ -872,14 +872,56 @@ const PRODUCTS_BASE: Product[] = [
   { symbol: "SAAB-B.ST", name: "Saab AB", sector: "Industrie", region: "EU" },
 ];
 
-// Deduplicated merge of base catalog + extended global universe (500+ extra symbols).
+// Deduplicated merge of base catalog + extended global universe.
+// MERGE_STATS protokolliert, wie die einzelnen Quellen zusammengeführt wurden —
+// vom Debug-/Admin-Panel ausgelesen.
+export type MergeSource = "base" | "extra" | "extra2";
+export type MergeStats = {
+  mergedAt: number;
+  buildTime: string;
+  counts: { base: number; extra: number; extra2: number; total: number; duplicates: number };
+  duplicatesBySource: { extra: string[]; extra2: string[] };
+  perSource: Record<MergeSource, number>;
+  sampleExtra2: string[];
+};
+
 const _seen = new Set<string>();
-export const PRODUCTS: Product[] = [...PRODUCTS_BASE, ...PRODUCTS_EXTRA, ...PRODUCTS_EXTRA2].filter((p) => {
-  const key = p.symbol.toUpperCase();
-  if (_seen.has(key)) return false;
-  _seen.add(key);
-  return true;
-});
+const _dupExtra: string[] = [];
+const _dupExtra2: string[] = [];
+const _perSource: Record<MergeSource, number> = { base: 0, extra: 0, extra2: 0 };
+
+function _mergeWith(list: Product[], src: MergeSource, dupSink?: string[]): Product[] {
+  const out: Product[] = [];
+  for (const p of list) {
+    const key = p.symbol.toUpperCase();
+    if (_seen.has(key)) { dupSink?.push(key); continue; }
+    _seen.add(key);
+    _perSource[src]++;
+    out.push(p);
+  }
+  return out;
+}
+
+const _mergedBase = _mergeWith(PRODUCTS_BASE, "base");
+const _mergedExtra = _mergeWith(PRODUCTS_EXTRA, "extra", _dupExtra);
+const _mergedExtra2 = _mergeWith(PRODUCTS_EXTRA2, "extra2", _dupExtra2);
+
+export const PRODUCTS: Product[] = [..._mergedBase, ..._mergedExtra, ..._mergedExtra2];
+
+export const MERGE_STATS: MergeStats = {
+  mergedAt: Date.now(),
+  buildTime: new Date().toISOString(),
+  counts: {
+    base: PRODUCTS_BASE.length,
+    extra: PRODUCTS_EXTRA.length,
+    extra2: PRODUCTS_EXTRA2.length,
+    total: PRODUCTS.length,
+    duplicates: _dupExtra.length + _dupExtra2.length,
+  },
+  duplicatesBySource: { extra: _dupExtra, extra2: _dupExtra2 },
+  perSource: _perSource,
+  sampleExtra2: _mergedExtra2.slice(0, 20).map((p) => p.symbol),
+};
 
 export const SECTORS = ["Technologie", "Energie", "Finanzen", "Gesundheit", "Konsum", "Industrie", "Rohstoffe"] as const;
 export const INDICES = PRODUCTS.filter((p) => p.sector === "Index");
