@@ -1110,7 +1110,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Energy majors", tone: "ok", note: "Higher Brent flows to upstream earnings." },
       { label: "EM equities", tone: "bad", note: "Higher oil + USD strength tightens EM conditions." },
     ],
-    global: "Oil shock pathway → global inflation pulse → tighter policy expectations → risk-off across equities.",
+    global: "Any escalation can spike oil prices within hours, since the Gulf supplies a huge share of the world's crude. Higher oil quickly lifts inflation everywhere, which makes it harder for central banks to cut rates. Stock markets typically sell off while gold and the dollar rally.",
   },
   redsea: {
     who: ["Yemen", "Saudi Arabia", "Germany", "China"],
