@@ -153,6 +153,17 @@ function AppShell() {
     }
   }, [lang]);
 
+  // Self-Healing Service starten (läuft im Hintergrund, pausiert bei inaktivem Tab)
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!user) return;
+    const stop = startSelfHealing({
+      queryClient,
+      getUserId: () => user?.id ?? null,
+    });
+    return stop;
+  }, [queryClient, user]);
+
   // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   // The `key={lang}` on the Fragment forces a full remount of the entire
   // subtree whenever the user switches language. This guarantees every
