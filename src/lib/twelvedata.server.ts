@@ -10,6 +10,7 @@
 // Erst wenn beide Cache-Schichten miss sind, geht ein Request raus.
 
 import { sharedGet, sharedSet } from "@/lib/shared-cache.server";
+import { normalizeForTd } from "@/lib/td-symbol.server";
 
 const BASE = "https://api.twelvedata.com";
 
