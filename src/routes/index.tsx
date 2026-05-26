@@ -239,8 +239,8 @@ function Cockpit() {
           <WatchlistSignalsPanel />
         </section>
 
-        {/* BEREICH 2b — Today's Market Movers */}
-        <MarketMovers />
+        {/* BEREICH 2b — Markets accordion */}
+        <WatchlistAccordions />
 
         {/* BEREICH 3 — Zusätzliche Insights (collapsible) */}
         <section>
