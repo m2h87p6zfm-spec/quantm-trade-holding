@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Activity, BarChart3, Brain, GitBranch, Scale, Sigma } from "lucide-react";
+import { Activity, BarChart3, Brain, GitBranch, Scale, Sigma, Dices } from "lucide-react";
 
 export const Route = createFileRoute("/methodology")({
   head: () => ({
     meta: [
       { title: "Methodik — Wie Quantm Trade Signale berechnet" },
-      { name: "description", content: "Vollständige Transparenz: RSI, MACD, Bollinger Bands, Z-Score, Broker-Konsens und Composite-Scoring — wie Quantm Trade Kauf-, Halte- und Verkaufssignale ableitet." },
+      { name: "description", content: "Vollständige Transparenz: RSI, MACD, Bollinger Bands, Z-Score, Broker-Konsens, Monte-Carlo-Simulation und Composite-Scoring — wie Quantm Trade Kauf-, Halte- und Verkaufssignale ableitet." },
       { property: "og:title", content: "Methodik — Quantm Trade" },
-      { property: "og:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens und Composite-Scoring." },
+      { property: "og:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens, Monte Carlo und Composite-Scoring." },
       { name: "twitter:title", content: "Methodik — Quantm Trade" },
-      { name: "twitter:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens und Composite-Scoring." },
+      { name: "twitter:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens, Monte Carlo und Composite-Scoring." },
     ],
   }),
   component: MethodologyPage,
@@ -38,7 +38,7 @@ function MethodologyPage() {
           Wie wir <span className="text-gradient-primary">Signale berechnen</span>
         </h1>
         <p className="text-muted-foreground max-w-2xl">
-          Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens fünf
+          Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens sechs
           unabhängigen Quellen. Hier ist exakt, wie es funktioniert — keine Black Box.
         </p>
       </header>
@@ -74,7 +74,26 @@ function MethodologyPage() {
         </p>
       </Section>
 
-      <Section icon={Brain} title="5. KI-Synthese (Lovable AI)">
+      <Section icon={Dices} title="5. Monte-Carlo-Simulation (GBM + GARCH)">
+        <p>
+          Geometrische Brownsche Bewegung (GBM) mit Drift μ (annualisierter Log-Return)
+          und GARCH(1,1)-Volatilität σ. 4 000 Pfade über 30 Handelstage erzeugen eine
+          empirische Preisverteilung.
+        </p>
+        <p className="text-foreground/80">
+          <span className="font-mono text-xs">S(t+1) = S(t) · exp((μ − ½σ²)·Δt + σ·√Δt·Z)</span>
+        </p>
+        <p>
+          Aus der Verteilung lesen wir Quantile (P05, P25, P50, P75, P95) sowie
+          VaR/CVaR(95%) ab. Liegt der Spot deutlich unter P25, fließt ein positiver
+          Beitrag in den Score (asymmetrisches Upside-Profil) — und umgekehrt.
+        </p>
+        <p className="text-foreground/80">
+          <span className="font-mono text-xs">Score = clip((Median₃₀ − Spot) / Spot · 10, -1, +1)</span>
+        </p>
+      </Section>
+
+      <Section icon={Brain} title="6. KI-Synthese (Lovable AI)">
         <p>
           Ein Large Language Model verarbeitet die obigen Faktoren plus aktuelle Nachrichten
           und liefert eine natürlichsprachliche Erklärung. Das LLM trifft keine Entscheidung —
@@ -87,7 +106,7 @@ function MethodologyPage() {
           <Sigma className="h-4 w-4 text-primary" /> Composite Score
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Final Score = <span className="font-mono text-foreground">0.25·Momentum + 0.25·Trend + 0.2·MeanRev + 0.3·Broker</span>
+          Final Score = <span className="font-mono text-foreground">0.22·Momentum + 0.22·Trend + 0.18·MeanRev + 0.25·Broker + 0.13·MonteCarlo</span>
         </p>
         <p className="text-sm text-muted-foreground mt-3">
           Verdict-Mapping: <span className="text-bull">≥ +0.4 STRONG BUY</span> ·{" "}
