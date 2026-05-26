@@ -200,7 +200,7 @@ export function WatchlistSignalsPanel() {
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${a.bg} ${a.border} border ${a.text}`}>
                       <span className="h-1 w-1 rounded-full" style={{ background: a.stroke }} />
-                      {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
+                      {SIGNAL_LABEL[r.signal]} <span className="font-mono opacity-80">{r.confidence}%</span>
                     </span>
                     <span className={`font-mono text-[13px] font-semibold tabular-nums ${up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
                       {up ? "+" : ""}{r.change.toFixed(2)}%
@@ -241,7 +241,7 @@ export function WatchlistSignalsPanel() {
                 <div className="mt-4">
                   <div className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-[13px] font-bold tracking-wide ${a.bg} ${a.border} ${a.text}`}>
                     <span className="h-1.5 w-1.5 rounded-full" style={{ background: a.stroke, boxShadow: `0 0 8px ${a.stroke}` }} />
-                    {r.signal} <span className="font-mono opacity-80">{r.confidence}%</span>
+                    {SIGNAL_LABEL[r.signal]} <span className="font-mono opacity-80">{r.confidence}%</span>
                   </div>
                 </div>
 
