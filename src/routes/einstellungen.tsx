@@ -15,6 +15,7 @@ import {
   Trash2,
   Sun,
   Moon,
+  SunMoon,
   Sparkles,
   TrendingUp,
   TrendingDown,
