@@ -309,7 +309,7 @@ function PicksPage() {
             <div className="h-full bg-gradient-to-r from-primary to-violet-accent transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            Berechnung läuft lokal (Z-Score, RSI, MACD, Trend, Sharpe) — verbraucht <span className="text-foreground font-semibold">keine AI-Credits</span>, nur Marktdaten-Abrufe.
+            Picks werden aus einem deterministischen Score (Z-Score, RSI, MACD, Trend, Sharpe) berechnet, nicht von einer KI geraten. Das hält die Auswahl reproduzierbar und spart deine <span className="text-foreground font-semibold">AI-Credits</span> für die individuelle Analyse.
           </p>
         </div>
       )}
