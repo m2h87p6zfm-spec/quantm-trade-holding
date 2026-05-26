@@ -871,6 +871,15 @@ const PRODUCTS_BASE: Product[] = [
   { symbol: "SAAB-B.ST", name: "Saab AB", sector: "Industrie", region: "EU" },
 ];
 
+// Deduplicated merge of base catalog + extended global universe (500+ extra symbols).
+const _seen = new Set<string>();
+export const PRODUCTS: Product[] = [...PRODUCTS_BASE, ...PRODUCTS_EXTRA].filter((p) => {
+  const key = p.symbol.toUpperCase();
+  if (_seen.has(key)) return false;
+  _seen.add(key);
+  return true;
+});
+
 export const SECTORS = ["Technologie", "Energie", "Finanzen", "Gesundheit", "Konsum", "Industrie", "Rohstoffe"] as const;
 export const INDICES = PRODUCTS.filter((p) => p.sector === "Index");
 export const BENCHMARK = "SPY";
