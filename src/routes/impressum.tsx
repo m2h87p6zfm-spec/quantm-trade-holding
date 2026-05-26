@@ -40,7 +40,7 @@ function ImpressumPage() {
 
         <section>
           <h2 className="font-semibold text-foreground">Vertretungsberechtigt</h2>
-          <p className="mt-1">Maximilian Mustermann (Inhaber)</p>
+          <p className="mt-1">Yannick Sutter (Inhaber)</p>
         </section>
 
         <section>
