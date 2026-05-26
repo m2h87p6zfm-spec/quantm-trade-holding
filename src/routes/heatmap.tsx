@@ -135,13 +135,15 @@ export function HeatmapPage({ embedded = false }: { embedded?: boolean } = {}) {
       {!embedded && (
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Flame className="h-3 w-3 text-bear" /> {t("heatmap.badge")}
+          <Flame className="h-3 w-3 text-bear" /> Heatmap · Direkt-Ansicht
         </div>
         <h1 className="mt-3 text-4xl font-bold tracking-tight">
           {t("page.heatmap.title")}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          {t("page.heatmap.subtitle")}
+          Schneller Blick nur auf die Tages-Heatmap. Für die vollständige Marktanalyse mit
+          Sektor-Rotation und Korrelationen in einer Ansicht öffne stattdessen den{" "}
+          <Link to="/markt-radar" className="text-primary underline-offset-2 hover:underline">Markt-Radar</Link>.
         </p>
       </div>
       )}

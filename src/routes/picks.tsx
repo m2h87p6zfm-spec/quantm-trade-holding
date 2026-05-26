@@ -188,8 +188,32 @@ function PicksPage() {
     try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
   }, [loading, picks, user]);
 
-  const podium = picks.slice(0, 3);
-  const rest = picks.slice(3);
+  // Mobile-Resilienz: letzte fertige Picks im localStorage spiegeln,
+  // damit Tab-Switch / Browser-Background-Kill nicht den ganzen Scan
+  // verliert. Beim nächsten Mount sehen wir sofort die letzten Treffer
+  // (max. 30 min alt), während der Hintergrund-Scan still neu läuft.
+  const CACHE_KEY = `apex_picks_cache_${universe}_${sector}_${region}`;
+  const [cachedPicks, setCachedPicks] = useState<typeof picks>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return;
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < 30 * 60 * 1000) setCachedPicks(data);
+    } catch { /* ignore */ }
+  }, [CACHE_KEY]);
+  useEffect(() => {
+    if (loading || picks.length === 0) return;
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: picks }));
+    } catch { /* ignore */ }
+  }, [CACHE_KEY, loading, picks]);
+
+  // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
+  // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
+  const displayPicks = picks.length > 0 ? picks : cachedPicks;
+  const podium = displayPicks.slice(0, 3);
+  const rest = displayPicks.slice(3);
 
   const apiMissing = !getApiKey();
 
@@ -296,10 +320,16 @@ function PicksPage() {
         </div>
       )}
 
-      {mode === "ki" && !loading && picks.length === 0 && (
+      {mode === "ki" && !loading && displayPicks.length === 0 && (
         <Card className="p-8 text-center text-sm text-muted-foreground">
           Aktuell keine BUY-Kandidaten in diesem Filter — die KI bleibt diszipliniert und schlägt nur vor, wenn die Konfidenz ≥ 60 % ist.
         </Card>
+      )}
+
+      {mode === "ki" && loading && picks.length === 0 && cachedPicks.length > 0 && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-[11px] text-muted-foreground">
+          Zuletzt gefundene Picks werden angezeigt, während der neue Scan im Hintergrund läuft.
+        </div>
       )}
 
       {/* Podium Top 3 */}

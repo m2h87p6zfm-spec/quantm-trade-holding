@@ -55,10 +55,12 @@ const plans: Plan[] = [
     name: "Pro",
     taglineKey: "plan.pro.tagline",
     icon: Zap,
+    // Brutto-Anzeige (inkl. 19 % MwSt). Stripe-Preise sind Netto (8,40 / 80,64 €)
+    // → automatic_tax addiert die MwSt → Kunde zahlt exakt diese Beträge.
     monthlyPrice: 9.99,
     yearlyPrice: 95.88,
-    monthlyPriceId: "apex_pro_monthly",
-    yearlyPriceId: "apex_pro_yearly",
+    monthlyPriceId: "apex_pro_monthly_v2",
+    yearlyPriceId: "apex_pro_yearly_v2",
     highlighted: true,
     featureKeys: ["plan.pro.f1","plan.pro.f2","plan.pro.f3","plan.pro.f4","plan.pro.f5","plan.pro.f6","plan.pro.f7","plan.pro.f8","plan.pro.f9","plan.pro.f10"],
   },
@@ -67,10 +69,11 @@ const plans: Plan[] = [
     name: "Elite",
     taglineKey: "plan.elite.tagline",
     icon: Crown,
+    // Brutto-Anzeige (inkl. 19 % MwSt). Netto: 16,80 / 161,28 €.
     monthlyPrice: 19.99,
     yearlyPrice: 191.88,
-    monthlyPriceId: "apex_elite_monthly",
-    yearlyPriceId: "apex_elite_yearly",
+    monthlyPriceId: "apex_elite_monthly_v2",
+    yearlyPriceId: "apex_elite_yearly_v2",
     featureKeys: ["plan.elite.f1","plan.elite.f2","plan.elite.f3","plan.elite.f4","plan.elite.f5","plan.elite.f6","plan.elite.f7","plan.elite.f8","plan.elite.f9","plan.elite.f10"],
   },
 ];
@@ -182,6 +185,11 @@ function PricingPage() {
                   {perMonth && (
                     <p className="text-xs text-muted-foreground mt-1">
                       {t("pricing.equivPerMonth", { amount: perMonth.toFixed(2).replace(".", ",") })}
+                    </p>
+                  )}
+                  {price !== 0 && (
+                    <p className="text-[11px] text-muted-foreground/80 mt-1">
+                      Endpreis inkl. 19 % MwSt. — keine versteckten Kosten.
                     </p>
                   )}
                 </div>
