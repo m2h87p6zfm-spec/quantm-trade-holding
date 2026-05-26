@@ -323,7 +323,7 @@ function GlobalIntelPage() {
             </div>
 
             {/* Tabbed side panel — replaces stacked aside, cuts vertical sprawl */}
-            <aside className="flex max-h-[calc(100vh-6rem)] min-h-[480px] flex-col">
+            <aside className="flex max-h-none min-h-[320px] flex-col xl:max-h-[calc(100vh-6rem)] xl:min-h-[480px]">
               <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b border-white/[0.10] bg-white/[0.02] px-2 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <AsideTabBtn active={asideTab === "spotlight"} onClick={() => setAsideTab("spotlight")} icon={Flame} label="Spotlight" />
                 <AsideTabBtn
