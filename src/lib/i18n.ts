@@ -682,6 +682,7 @@ const DICT: Record<Lang, Dict> = {
     "settings.theme": "Theme",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "settings.theme.auto": "Automatic",
     "settings.density": "Density",
     "settings.density.hint": "Compact tables for more content at a glance.",
     "settings.density.comfortable": "Comfortable",
