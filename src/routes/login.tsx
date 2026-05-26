@@ -173,7 +173,7 @@ function LoginPage() {
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("login.signup")}
               </Button>
               <p className="text-[11px] text-muted-foreground text-center">
-                {t("login.noConfirm")}
+                Nach der Registrierung erhältst du eine E-Mail zur Bestätigung. Erst danach kannst du dich anmelden.
               </p>
             </TabsContent>
           </Tabs>
