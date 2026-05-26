@@ -11,6 +11,7 @@ import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
 import { formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
+import { MostViewedStocks } from "@/components/MostViewedStocks";
 
 
 type SortKey = "confidence" | "perf1d" | "perf30d" | "volatility";
@@ -166,6 +167,9 @@ export function WatchlistSignalsPanel() {
           </select>
         </div>
       </div>
+
+      {/* MOST VIEWED — community pulse based on local view history */}
+      <MostViewedStocks limit={8} />
 
       {/* CARD GRID */}
       {loading && <div className="py-12 text-center text-[13px] text-muted-foreground/70">{t("watchlist.loading")}</div>}

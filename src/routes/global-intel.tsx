@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import { getCountryNews, type CountryNewsItem } from "@/lib/country-news.functions";
 import { getEventArticle } from "@/lib/event-article.functions";
 import { getMacroExplanations } from "@/lib/macro-explanations.functions";
+import { trackView } from "@/lib/popularity-tracker";
+import { MostTrackedCountries } from "@/components/MostTrackedCountries";
 import { geoNaturalEarth1, geoPath, geoGraticule10 } from "d3-geo";
 import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
@@ -168,7 +170,7 @@ function GlobalIntelPage() {
   type AsideTab = "spotlight" | "country" | "event" | "feed";
   const [asideTab, setAsideTab] = useState<AsideTab>("spotlight");
 
-  useEffect(() => { if (selected) setAsideTab("country"); }, [selected]);
+  useEffect(() => { if (selected) { setAsideTab("country"); trackView("country", selected.iso2); } }, [selected]);
   useEffect(() => { if (selectedEvent) setAsideTab("event"); }, [selectedEvent]);
 
   return (
@@ -364,6 +366,17 @@ function GlobalIntelPage() {
 
         {/* 3. COUNTRIES */}
         <Panel id="countries" eyebrow="Search and filter" title="Tracked Countries" icon={Search}>
+          <div className="mb-4">
+            <MostTrackedCountries
+              onSelect={(c) => {
+                setSelected(c);
+                setSelectedEvent(null);
+                if (typeof document !== "undefined") {
+                  document.getElementById("command")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            />
+          </div>
           <CountryFinder
             selected={selected}
             onSelect={(c) => {
