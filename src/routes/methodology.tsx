@@ -5,11 +5,11 @@ export const Route = createFileRoute("/methodology")({
   head: () => ({
     meta: [
       { title: "Methodik — Wie Quantm Trade Signale berechnet" },
-      { name: "description", content: "Vollständige Transparenz: RSI, MACD, Bollinger Bands, Z-Score, Broker-Konsens und Composite-Scoring — wie Quantm Trade Kauf-, Halte- und Verkaufssignale ableitet." },
+      { name: "description", content: "Vollständige Transparenz: RSI, MACD, Bollinger Bands, Z-Score, Broker-Konsens, Monte-Carlo-Simulation und Composite-Scoring — wie Quantm Trade Kauf-, Halte- und Verkaufssignale ableitet." },
       { property: "og:title", content: "Methodik — Quantm Trade" },
-      { property: "og:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens und Composite-Scoring." },
+      { property: "og:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens, Monte Carlo und Composite-Scoring." },
       { name: "twitter:title", content: "Methodik — Quantm Trade" },
-      { name: "twitter:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens und Composite-Scoring." },
+      { name: "twitter:description", content: "Vollständige Transparenz zu RSI, MACD, Bollinger, Z-Score, Broker-Konsens, Monte Carlo und Composite-Scoring." },
     ],
   }),
   component: MethodologyPage,
