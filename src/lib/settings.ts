@@ -36,7 +36,7 @@ export type NewsSource = (typeof NEWS_SOURCES)[number];
 
 type StoredSettings = {
   risk: RiskProfile;
-  theme: "dark" | "light";
+  theme: "dark" | "light" | "auto";
   minConfidence: number;
   watchlists: Watchlist[];
   activeWatchlistId: string;
