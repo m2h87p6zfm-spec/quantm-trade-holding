@@ -261,7 +261,7 @@ export function OnboardingGate() {
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Apex Onboarding</DialogTitle>
+        <DialogTitle className="sr-only">Quantm Trade Onboarding</DialogTitle>
         {/* Ambient AI background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
