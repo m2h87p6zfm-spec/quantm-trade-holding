@@ -11,6 +11,7 @@ import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
 import { formatCurrencyFromUsd, convertFromUsd } from "@/lib/format";
+import { MostViewedStocks } from "@/components/MostViewedStocks";
 
 
 type SortKey = "confidence" | "perf1d" | "perf30d" | "volatility";
