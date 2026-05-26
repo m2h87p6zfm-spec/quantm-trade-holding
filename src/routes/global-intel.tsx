@@ -168,7 +168,7 @@ function GlobalIntelPage() {
   type AsideTab = "spotlight" | "country" | "event" | "feed";
   const [asideTab, setAsideTab] = useState<AsideTab>("spotlight");
 
-  useEffect(() => { if (selected) setAsideTab("country"); }, [selected]);
+  useEffect(() => { if (selected) { setAsideTab("country"); trackView("country", selected.iso2); } }, [selected]);
   useEffect(() => { if (selectedEvent) setAsideTab("event"); }, [selectedEvent]);
 
   return (
