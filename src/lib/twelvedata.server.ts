@@ -137,7 +137,10 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
   }
   const p = (async () => {
     try {
-      const j = await tdFetch("/quote", { symbol });
+      const norm = normalizeForTd(symbol);
+      const params: Record<string, string> = { symbol: norm.symbol };
+      if (norm.mic_code) params.mic_code = norm.mic_code;
+      const j = await tdFetch("/quote", params);
       const v = parseQuote(j);
       cacheSet(key, v, ttl);
       void sharedSet(key, v, ttl);
