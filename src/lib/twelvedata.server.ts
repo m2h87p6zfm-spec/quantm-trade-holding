@@ -332,12 +332,15 @@ export async function getCandlesCached(
   }
   const p = (async () => {
     try {
-      const j = await tdFetch("/time_series", {
-        symbol,
+      const norm = normalizeForTd(symbol);
+      const params: Record<string, string> = {
+        symbol: norm.symbol,
         interval: tdInterval,
         outputsize: String(outputsize),
         order: "DESC",
-      });
+      };
+      if (norm.mic_code) params.mic_code = norm.mic_code;
+      const j = await tdFetch("/time_series", params);
       const v = parseTimeSeries(j);
       cacheSet(key, v, ttlSec);
       void sharedSet(key, v, ttlSec);
