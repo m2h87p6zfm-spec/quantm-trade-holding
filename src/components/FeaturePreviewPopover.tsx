@@ -371,14 +371,18 @@ const PREVIEWS: Record<string, Preview> = {
   },
 };
 
-export function FeaturePreviewPopover({ featureKey }: { featureKey: string }) {
+export function FeaturePreviewPopover({ featureKey, plan }: { featureKey: string; plan?: string }) {
   const lang = useLang();
   const p = PREVIEWS[featureKey];
   if (!p) return null;
   const txt = lang === "en" ? p.en : p.de;
   const Mock = p.mockup;
   return (
-    <Popover>
+    <Popover
+      onOpenChange={(open) => {
+        if (open) recordPopoverOpen(featureKey, plan);
+      }}
+    >
       <PopoverTrigger asChild>
         <button
           type="button"
