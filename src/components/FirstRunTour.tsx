@@ -63,11 +63,11 @@ const STEPS: Step[] = [
   },
 ];
 
-function hasSeenTour(): boolean {
+function localSeen(): boolean {
   if (typeof window === "undefined") return true;
   try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch { return true; }
 }
-function markSeen() {
+function markLocalSeen() {
   try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* noop */ }
 }
 
@@ -79,19 +79,41 @@ function findTarget(key: string): HTMLElement | null {
 }
 
 export function FirstRunTour() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
 
+  // Decide once per user whether to show the tour.
+  // Source of truth = user_trading_profile.tour_completed in DB.
   useEffect(() => {
-    // Delay a tick so sidebar has mounted.
-    const id = window.setTimeout(() => {
-      if (!hasSeenTour()) setOpen(true);
-    }, 400);
-    return () => window.clearTimeout(id);
-  }, []);
+    let cancelled = false;
+    if (!user) return;
+    // Fast path: if local cache says seen, don't even query.
+    if (localSeen()) return;
 
-  // Recompute target position whenever step or viewport changes.
+    (async () => {
+      const { data, error } = await supabase
+        .from("user_trading_profile")
+        .select("tour_completed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        // Network/RLS issue — fall back to local cache (already false here).
+        setOpen(true);
+        return;
+      }
+      if (data?.tour_completed) {
+        markLocalSeen();
+        return;
+      }
+      // Slight delay so sidebar is mounted before we measure targets.
+      window.setTimeout(() => { if (!cancelled) setOpen(true); }, 400);
+    })();
+
+    return () => { cancelled = true; };
+  }, [user]);
   useLayoutEffect(() => {
     if (!open) return;
     const update = () => {
