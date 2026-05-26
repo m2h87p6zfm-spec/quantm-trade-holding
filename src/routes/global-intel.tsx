@@ -172,11 +172,11 @@ function GlobalIntelPage() {
   useEffect(() => { if (selectedEvent) setAsideTab("event"); }, [selectedEvent]);
 
   return (
-    <div className="min-h-screen bg-[oklch(0.09_0.014_260)] text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Top command bar */}
       <header className="relative overflow-hidden border-b border-white/[0.14]">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.14_0.025_260)] via-[oklch(0.11_0.018_260)] to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-card/80 via-card/40 to-transparent" />
           <div
             className="absolute inset-0 opacity-[0.05]"
             style={{
@@ -407,7 +407,7 @@ function Panel({
   return (
     <section
       id={id}
-      className="scroll-mt-20 overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-br from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.015_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.85)]"
+      className="scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)]"
     >
       <header className="flex items-center gap-3 border-b border-white/[0.10] bg-white/[0.025] px-5 py-3">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
@@ -446,7 +446,7 @@ function SectionNav() {
   ];
   return (
     <nav
-      className="sticky top-0 z-30 border-b border-white/[0.10] bg-[oklch(0.09_0.014_260)]/85 backdrop-blur-md"
+      className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md"
       aria-label="Section navigation"
     >
       <div className="mx-auto flex max-w-[1700px] items-center gap-1 overflow-x-auto px-4 py-2 sm:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -754,7 +754,7 @@ function ExplainPopover({
       <PopoverContent
         side="bottom"
         align="start"
-        className="w-[320px] border-white/10 bg-[oklch(0.12_0.018_260)] p-0 text-foreground/90 shadow-2xl"
+        className="w-[320px] border-border bg-card p-0 text-foreground/90 shadow-2xl"
       >
         <div className="border-b border-white/[0.08] px-4 py-2.5">
           <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -1281,7 +1281,7 @@ function ActiveFlashpoints({
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.13_0.02_260)] to-[oklch(0.10_0.016_260)] backdrop-blur">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card backdrop-blur">
       <div className="flex items-center justify-between border-b border-white/[0.12] px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           <AlertTriangle className="h-3 w-3 text-amber-400" />
@@ -1682,7 +1682,7 @@ function CountryPanel({
   const tickers = tickersForCountry(country.iso2);
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)] backdrop-blur">
       <div
         className="relative border-b border-white/[0.12] p-5"
         style={{
