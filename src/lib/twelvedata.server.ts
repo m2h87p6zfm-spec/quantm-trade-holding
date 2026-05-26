@@ -140,8 +140,15 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
       const norm = normalizeForTd(symbol);
       const params: Record<string, string> = { symbol: norm.symbol };
       if (norm.mic_code) params.mic_code = norm.mic_code;
-      const j = await tdFetch("/quote", params);
-      const v = parseQuote(j);
+      let v: TdQuote | null = null;
+      try {
+        const j = await tdFetch("/quote", params);
+        v = parseQuote(j);
+      } catch { /* TD fehlt → Yahoo-Fallback */ }
+      if (!v) {
+        const { fetchYahooQuote } = await import("./yahoo-fallback.server");
+        v = await fetchYahooQuote(symbol);
+      }
       cacheSet(key, v, ttl);
       void sharedSet(key, v, ttl);
       return v;
