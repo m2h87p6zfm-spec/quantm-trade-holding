@@ -288,6 +288,15 @@ function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: stri
     );
   }
 
+  if (candles.isError && !candles.data) {
+    return (
+      <div className="rounded-lg border border-bear/30 bg-bear/5 p-4 text-sm text-bear">
+        Für <b>{productName}</b> ({symbol}) konnten gerade keine Kursdaten geladen werden.
+        Das passiert kurzzeitig, wenn unser Datenanbieter dieses Symbol nicht erreicht.
+        Bitte erneut versuchen oder ein anderes Symbol wählen.
+      </div>
+    );
+  }
   if ((candles.isLoading && !candles.data) || !candles.data || !indicators) {
     return <ApexLoading name={productName} />;
   }
