@@ -88,7 +88,7 @@ export function AppSidebar() {
                   const locked = isLocked(item);
                   const title = t(item.titleKey);
                   return (
-                    <SidebarMenuItem key={item.url}>
+                    <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
