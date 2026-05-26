@@ -49,7 +49,7 @@ function BacktestPage() {
         <div>
           <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Symbol</label>
           <input list="apex-symbols-bt" value={symbol} onChange={(e) => { setSymbol(e.target.value.toUpperCase()); setRan(false); }} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
-          <datalist id="apex-symbols-bt">{PRODUCTS.map((p) => <option key={p.symbol} value={p.symbol}>{p.name}</option>)}</datalist>
+          <ProductsDatalist id="apex-symbols-bt" />
         </div>
         <div>
           <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Risikoprofil</label>
