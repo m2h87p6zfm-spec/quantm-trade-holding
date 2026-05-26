@@ -99,7 +99,7 @@ function getCachedCoords(): Coords | null {
   return null;
 }
 
-export function useAutoTheme() {
+export function useAutoTheme(enabled: boolean = true) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
