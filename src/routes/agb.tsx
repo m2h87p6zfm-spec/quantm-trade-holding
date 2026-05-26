@@ -3,8 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/agb")({
   head: () => ({
     meta: [
-      { title: "AGB — Quantm Trade" },
-      { name: "description", content: "Allgemeine Geschäftsbedingungen für die Nutzung von Quantm Trade." },
+      { title: "AGB — Quantum Trade" },
+      { name: "description", content: "Allgemeine Geschäftsbedingungen für die Nutzung von Quantum Trade." },
       { name: "robots", content: "noindex,follow" },
     ],
   }),
@@ -23,9 +23,9 @@ function AGBPage() {
           <h2 className="font-semibold text-foreground">§ 1 Geltungsbereich und Vertragspartner</h2>
           <p className="mt-1">
             Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB") regeln das Vertragsverhältnis zwischen
-            Quantm Trade Holding, Maximilian Mustermann, Musterstraße 12, 10115 Berlin (nachfolgend „Anbieter"
+            Yannick Sutter, Quantum Trade (Einzelunternehmen), Pistoriusstraße 7, 13086 Berlin (nachfolgend „Anbieter"
             oder „wir") und dem Nutzer der unter quantmtrade.com sowie zugehörigen Subdomains erreichbaren
-            Plattform „Quantm Trade" (nachfolgend „Plattform" oder „Dienst"). Mit der Registrierung eines
+            Plattform „Quantum Trade" (nachfolgend „Plattform" oder „Dienst"). Mit der Registrierung eines
             Kontos akzeptiert der Nutzer diese AGB in der jeweils zum Zeitpunkt der Registrierung gültigen Fassung.
             Abweichende Bedingungen des Nutzers werden nicht anerkannt, es sei denn, der Anbieter stimmt ihrer
             Geltung ausdrücklich schriftlich zu.
@@ -35,7 +35,7 @@ function AGBPage() {
         <section>
           <h2 className="font-semibold text-foreground">§ 2 Leistungsbeschreibung</h2>
           <p className="mt-1">
-            Quantm Trade ist ein rein <strong>informations-, analyse- und bildungsbasiertes</strong> Werkzeug.
+            Quantum Trade ist ein rein <strong>informations-, analyse- und bildungsbasiertes</strong> Werkzeug.
             Wir stellen aggregierte Marktdaten, statistische Indikatoren (z. B. Z-Score, RSI, MACD, Bollinger-Bänder),
             algorithmische Auswertungen sowie KI-generierte Zusammenfassungen bereit. Diese Inhalte dienen
             ausschließlich der Information und Weiterbildung.
@@ -66,7 +66,7 @@ function AGBPage() {
           <h2 className="font-semibold text-foreground">§ 4 Abonnements, Preise und Zahlung</h2>
           <p className="mt-1">
             Die Plattform bietet eine kostenlose Grundversion sowie kostenpflichtige Abonnement-Stufen
-            („Quantm Pro" und „Quantm Elite"). Die jeweils aktuellen Preise, Funktionsumfänge und Abrechnungszeiträume
+            („Quantum Pro" und „Quantum Elite"). Die jeweils aktuellen Preise, Funktionsumfänge und Abrechnungszeiträume
             sind auf der Preisseite einsehbar und werden zum Zeitpunkt des Vertragsabschlusses verbindlich. Abonnements
             verlängern sich automatisch um den jeweils gewählten Zeitraum, sofern sie nicht spätestens am Tag vor
             Ablauf der laufenden Periode gekündigt werden.
