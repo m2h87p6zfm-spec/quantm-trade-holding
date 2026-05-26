@@ -1,8 +1,12 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Check, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
-// Bumped key (v2) so existing users see the new guided tour once.
+// localStorage acts as a fast cache so we don't re-show the tour during the
+// brief window before the DB row loads. Source of truth is the
+// `user_trading_profile.tour_completed` column.
 const STORAGE_KEY = "quantm_first_run_tour_v2";
 
 type Step = {
