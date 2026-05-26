@@ -5,7 +5,9 @@ export type Product = {
   region: "US" | "DE" | "EU" | "UK" | "JP";
 };
 
-export const PRODUCTS: Product[] = [
+import { PRODUCTS_EXTRA } from "./products-extra";
+
+const PRODUCTS_BASE: Product[] = [
   // US Tech
   { symbol: "AAPL", name: "Apple Inc.", sector: "Technologie", region: "US" },
   { symbol: "MSFT", name: "Microsoft", sector: "Technologie", region: "US" },
@@ -868,6 +870,15 @@ export const PRODUCTS: Product[] = [
   { symbol: "LDO.MI", name: "Leonardo", sector: "Industrie", region: "EU" },
   { symbol: "SAAB-B.ST", name: "Saab AB", sector: "Industrie", region: "EU" },
 ];
+
+// Deduplicated merge of base catalog + extended global universe (500+ extra symbols).
+const _seen = new Set<string>();
+export const PRODUCTS: Product[] = [...PRODUCTS_BASE, ...PRODUCTS_EXTRA].filter((p) => {
+  const key = p.symbol.toUpperCase();
+  if (_seen.has(key)) return false;
+  _seen.add(key);
+  return true;
+});
 
 export const SECTORS = ["Technologie", "Energie", "Finanzen", "Gesundheit", "Konsum", "Industrie", "Rohstoffe"] as const;
 export const INDICES = PRODUCTS.filter((p) => p.sector === "Index");
