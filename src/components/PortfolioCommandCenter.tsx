@@ -24,6 +24,7 @@ import { useQuote } from "@/lib/useMarketData";
 import { useCockpitData } from "@/lib/cockpit";
 import { usePortfolioLimit } from "@/lib/featureGate";
 import { supabase } from "@/integrations/supabase/client";
+import { SymbolSearch } from "@/components/SymbolSearch";
 
 /* ---------- shared types ---------- */
 
