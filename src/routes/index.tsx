@@ -42,10 +42,13 @@ function Cockpit() {
   const rows = useCockpitData(cockpitSymbols);
   const rowMap = new Map(rows.map((r) => [r.symbol, r]));
 
-
-  const longCount = rows.filter((r) => r.sig.verdict === "LONG").length;
-  const shortCount = rows.filter((r) => r.sig.verdict === "SHORT").length;
-  const neutralCount = rows.filter((r) => r.sig.verdict === "NEUTRAL").length;
+  // Sentiment NUR über die tatsächliche User-Watchlist (nicht über versteckte Markt-Defaults
+  // wie SPY/QQQ/DIA/IWM, die zusätzlich im Cockpit-Set stecken).
+  const watchlistSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
+  const watchlistRows = rows.filter((r) => watchlistSymbols.includes(r.symbol));
+  const longCount = watchlistRows.filter((r) => r.sig.verdict === "LONG").length;
+  const shortCount = watchlistRows.filter((r) => r.sig.verdict === "SHORT").length;
+  const neutralCount = watchlistRows.filter((r) => r.sig.verdict === "NEUTRAL").length;
 
   const featured = [...rows].sort((a, b) =>
     (Math.abs(b.sig.score) * b.sig.confidence) - (Math.abs(a.sig.score) * a.sig.confidence)
@@ -127,7 +130,7 @@ function Cockpit() {
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
-                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "rgba(255,255,255,0.85)", tint: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.12)" },
+                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)" },
                   { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)" },
                 ].map((s) => {
                   const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
