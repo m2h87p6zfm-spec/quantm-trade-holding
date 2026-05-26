@@ -320,10 +320,16 @@ function PicksPage() {
         </div>
       )}
 
-      {mode === "ki" && !loading && picks.length === 0 && (
+      {mode === "ki" && !loading && displayPicks.length === 0 && (
         <Card className="p-8 text-center text-sm text-muted-foreground">
           Aktuell keine BUY-Kandidaten in diesem Filter — die KI bleibt diszipliniert und schlägt nur vor, wenn die Konfidenz ≥ 60 % ist.
         </Card>
+      )}
+
+      {mode === "ki" && loading && picks.length === 0 && cachedPicks.length > 0 && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-[11px] text-muted-foreground">
+          Zuletzt gefundene Picks werden angezeigt, während der neue Scan im Hintergrund läuft.
+        </div>
       )}
 
       {/* Podium Top 3 */}
