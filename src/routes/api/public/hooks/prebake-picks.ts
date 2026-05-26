@@ -45,17 +45,10 @@ export const Route = createFileRoute("/api/public/hooks/prebake-picks")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        // Optionaler Schutz: wenn CRON_SECRET gesetzt, erwarte Header.
-        // Lockerer Default, weil /api/public/* eh nicht öffentlich beworben wird.
-        const secret = process.env.CRON_SECRET;
-        if (secret) {
-          const provided = request.headers.get("x-cron-secret");
-          if (provided !== secret) {
-            return new Response(JSON.stringify({ error: "unauthorized" }), {
-              status: 401, headers: { "Content-Type": "application/json", ...CORS },
-            });
-          }
-        }
+        // Idempotenter Cache-Warm-Job — nur Lese-/Cache-Writes, keine
+        // User-Daten, kein State-Wechsel. Auth-frei wie andere
+        // /api/public/hooks/* Cron-Endpunkte des Projekts.
+
 
         const url = new URL(request.url);
         const limit = Math.min(
