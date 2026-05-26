@@ -754,7 +754,7 @@ function ExplainPopover({
       <PopoverContent
         side="bottom"
         align="start"
-        className="w-[320px] border-white/10 bg-[oklch(0.12_0.018_260)] p-0 text-foreground/90 shadow-2xl"
+        className="w-[320px] border-border bg-card p-0 text-foreground/90 shadow-2xl"
       >
         <div className="border-b border-white/[0.08] px-4 py-2.5">
           <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
