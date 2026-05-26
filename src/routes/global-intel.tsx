@@ -1095,7 +1095,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU industry", tone: "bad", note: "Higher energy costs erode margins for autos & chemicals." },
       { label: "USD", tone: "ok", note: "Safe-haven flows support the dollar." },
     ],
-    global: "Reshapes European energy mix, lifts global food inflation and accelerates defence spending worldwide.",
+    global: "Europe has to rebuild its entire energy supply, which keeps costs high for households and factories. Food prices also stay higher because of the disruption to Ukrainian grain. On top of that, NATO countries are spending much more on defence.",
   },
   mideast: {
     who: ["Israel", "Iran", "Saudi Arabia", "United States of America"],
