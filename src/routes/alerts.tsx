@@ -6,7 +6,7 @@ import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
-import { PRODUCTS } from "@/lib/products";
+import { ProductsDatalist } from "@/components/ProductsDatalist";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
