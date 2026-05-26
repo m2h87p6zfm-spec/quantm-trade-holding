@@ -51,16 +51,20 @@ export function MarketAiInsight({ rows }: { rows: CockpitRow[] }) {
 
 function Stat({ label, value, total, tone }: { label: string; value: number; total: number; tone?: "up" | "down" }) {
   const pct = total > 0 ? (value / total) * 100 : 0;
-  const color = tone === "up" ? "text-emerald-400" : tone === "down" ? "text-rose-400" : "text-muted-foreground";
+  const color = tone === "up" ? "text-emerald-400" : tone === "down" ? "text-rose-400" : "text-foreground";
   const dot = tone === "up" ? "bg-emerald-400" : tone === "down" ? "bg-rose-400" : "bg-muted-foreground/60";
   const bar = tone === "up" ? "bg-emerald-400/70" : tone === "down" ? "bg-rose-400/70" : "bg-muted-foreground/40";
   return (
     <div className="rounded-md border border-border/60 bg-muted/15 p-2.5">
-      <div className="flex items-center gap-2">
-        <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
-        <span className={`ml-auto text-lg font-bold leading-none tabular-nums ${color}`}>{value}</span>
-        <span className="text-[10px] tabular-nums text-muted-foreground/70">/{total}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dot}`} />
+          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground truncate">{label}</span>
+        </div>
+        <div className="flex items-baseline gap-0.5 shrink-0">
+          <span className={`text-lg font-bold leading-none tabular-nums ${color}`}>{value}</span>
+          <span className="text-[10px] tabular-nums text-muted-foreground/70">/{total}</span>
+        </div>
       </div>
       <div className="mt-2 h-1 rounded-full bg-muted/40 overflow-hidden">
         <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />

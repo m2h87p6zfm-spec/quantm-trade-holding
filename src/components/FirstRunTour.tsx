@@ -106,12 +106,20 @@ export function FirstRunTour() {
   const [hit, setHit] = useState<{ rect: Rect; el: HTMLElement } | null>(null);
   const [done, setDone] = useState(false);
 
-  // Decide whether to start the tour - only once per user, stored in DB
+  // Decide whether to start the tour - only once, directly after registration
   useEffect(() => {
     if (loading || profLoading) return;
     if (!user || !profile) return;
     if (!profile.onboarding_completed) return;
     if (profile.tour_completed) return;
+    // Only fire for genuinely fresh accounts (registered in the last 15 min).
+    // Protects pre-existing users whose row was created before this flag existed.
+    const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+    const ageMs = Date.now() - createdAt;
+    if (!createdAt || ageMs > 15 * 60 * 1000) {
+      void update({ tour_completed: true }).catch(() => {});
+      return;
+    }
     try {
       if (localStorage.getItem(TOUR_KEY)) return;
     } catch {
@@ -119,7 +127,7 @@ export function FirstRunTour() {
     }
     const t = window.setTimeout(() => setRunning(true), 600);
     return () => window.clearTimeout(t);
-  }, [user, loading, profile, profLoading]);
+  }, [user, loading, profile, profLoading, update]);
 
 
   // Lock body scroll while running
