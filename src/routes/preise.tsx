@@ -107,6 +107,14 @@ function PricingPage() {
   };
 
   const onChoose = (plan: Plan) => {
+    const popoverCtx = getPopoverContext();
+    void trackEvent("pricing_upgrade_clicked", {
+      plan: plan.id,
+      cycle,
+      currentTier,
+      authed: !!user,
+      ...popoverCtx,
+    });
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -120,6 +128,12 @@ function PricingPage() {
       return;
     }
     const priceId = cycle === "monthly" ? plan.monthlyPriceId! : plan.yearlyPriceId!;
+    void trackEvent("pricing_checkout_opened", {
+      plan: plan.id,
+      cycle,
+      priceId,
+      ...popoverCtx,
+    });
     setCheckoutPrice(priceId);
   };
 
