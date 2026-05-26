@@ -1255,7 +1255,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EM equities", tone: "bad", note: "China beta drags EM index returns." },
       { label: "Global goods CPI", tone: "ok", note: "Cheaper Chinese exports = global disinflation." },
     ],
-    global: "China's property unwind is the single biggest source of global goods disinflation.",
+    global: "China's slowdown means less demand for raw materials like iron ore and copper, hurting commodity exporters. At the same time, cheap Chinese exports flood other markets and push goods prices down worldwide. Both effects shape global inflation and growth.",
   },
   "kr-chips": {
     who: ["South Korea", "Taiwan", "United States of America"],
