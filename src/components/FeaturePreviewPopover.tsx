@@ -364,9 +364,9 @@ const PREVIEWS: Record<string, Preview> = {
     mockup: MockRiskAnalytics,
   },
   "plan.elite.f10": {
-    de: { title: "Priority Support", desc: "Bevorzugte Antwortzeiten bei Anfragen direkt vom Team." },
-    en: { title: "Priority support", desc: "Faster response times for support requests, direct from the team." },
-    mockup: MockGeneric,
+    de: { title: "Priority Support", desc: "Anfragen werden vom Team bevorzugt beantwortet — typischerweise innerhalb von 4 Stunden." },
+    en: { title: "Priority support", desc: "Your requests jump the queue — typical first reply within 4 hours, straight from the team." },
+    mockup: MockPrioritySupport,
   },
 };
 
