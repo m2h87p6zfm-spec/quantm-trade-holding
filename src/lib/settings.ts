@@ -58,6 +58,8 @@ type StoredSettings = {
   costBasis: Record<string, number>;
   /** Flipped to true once user completes the portfolio step. */
   portfolioOnboarded: boolean;
+  /** True once the user explicitly picked a theme in Einstellungen. */
+  themeOptIn?: boolean;
 };
 
 export type Settings = Omit<StoredSettings, "watchlist"> & { watchlist: string[] };
