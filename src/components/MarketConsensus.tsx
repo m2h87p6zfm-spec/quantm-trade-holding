@@ -300,8 +300,8 @@ function Gauge({ value }: { value: number }) {
   const cy = 70;
   // Color zones
   return (
-    <div className="relative">
-      <svg viewBox="0 0 140 80" className="w-full">
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 140 80" className="w-full max-w-[220px]">
         <defs>
           <linearGradient id="gaugeGrad" x1="0" x2="1" y1="0" y2="0">
             <stop offset="0%" stopColor="var(--bear)" />
@@ -323,9 +323,9 @@ function Gauge({ value }: { value: number }) {
           <circle cx={cx} cy={cy} r="4" className="fill-foreground" />
         </g>
       </svg>
-      <div className="absolute inset-x-0 bottom-0 text-center">
-        <div className="font-mono text-2xl font-bold tabular-nums">{v}</div>
-        <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Bull-Score</div>
+      <div className="mt-1 text-center">
+        <div className="font-mono text-2xl font-bold tabular-nums leading-none">{v}</div>
+        <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">Bull-Score</div>
       </div>
     </div>
   );

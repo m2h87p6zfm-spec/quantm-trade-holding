@@ -39,7 +39,7 @@ function MethodologyPage() {
         </h1>
         <p className="text-muted-foreground max-w-2xl">
           Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens sechs
-          unabhängigen Quellen. Hier ist exakt, wie es funktioniert — keine Black Box.
+          unabhängigen Quellen. Hier ist exakt, wie es funktioniert. Nichts wird versteckt.
         </p>
       </header>
 
@@ -49,7 +49,7 @@ function MethodologyPage() {
           Bedingungen (potenzieller Kauf), &gt; 70 auf überkaufte (potenzieller Verkauf).
         </p>
         <p className="text-foreground/80">
-          <span className="font-mono text-xs">Score = (50 - RSI) / 50</span> — normalisiert auf [-1, +1].
+          <span className="font-mono text-xs">Score = (50 - RSI) / 50</span>, normalisiert auf [-1, +1].
         </p>
       </Section>
 
@@ -86,7 +86,8 @@ function MethodologyPage() {
         <p>
           Aus der Verteilung lesen wir Quantile (P05, P25, P50, P75, P95) sowie
           VaR/CVaR(95%) ab. Liegt der Spot deutlich unter P25, fließt ein positiver
-          Beitrag in den Score (asymmetrisches Upside-Profil) — und umgekehrt.
+          Beitrag in den Score (asymmetrisches Upside-Profil). Umgekehrt zieht ein
+          Spot über P75 den Score nach unten.
         </p>
         <p className="text-foreground/80">
           <span className="font-mono text-xs">Score = clip((Median₃₀ − Spot) / Spot · 10, -1, +1)</span>

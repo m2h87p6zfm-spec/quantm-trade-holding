@@ -29,8 +29,8 @@ export function AlphaScoreGauge({ score, label = "Setup-Score" }: { score: numbe
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
         <Gauge className="h-4 w-4 text-gold" />
       </div>
-      <div className="relative flex-1 flex items-center justify-center">
-        <svg viewBox="0 0 180 110" className="w-full max-w-[240px]">
+      <div className="relative flex-1 flex flex-col items-center justify-center">
+        <svg viewBox="0 0 180 110" className="w-full max-w-[220px]">
           {/* Hintergrund-Bogen */}
           <path d={arcPath(180, 360)} stroke="var(--muted)" strokeWidth="10" fill="none" strokeLinecap="round" />
           {/* Farbsegmente */}
@@ -46,8 +46,8 @@ export function AlphaScoreGauge({ score, label = "Setup-Score" }: { score: numbe
             <circle cx={cx} cy={cy} r="3" fill="var(--background)" />
           </g>
         </svg>
-        <div className="absolute bottom-1 left-0 right-0 text-center pointer-events-none">
-          <div className={`text-4xl font-bold tabular-nums ${tone}`}>{s}</div>
+        <div className="mt-1 text-center pointer-events-none">
+          <div className={`text-3xl font-bold tabular-nums leading-none ${tone}`}>{s}</div>
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-0.5">{verdict}</div>
         </div>
       </div>
