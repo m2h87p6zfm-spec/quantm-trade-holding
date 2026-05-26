@@ -112,7 +112,8 @@ function RootComponent() {
       window.location.protocol + "//quantmtrade.com" + window.location.pathname + window.location.search + window.location.hash,
     );
   }
-  useAutoTheme();
+  const { settings: rootSettings } = useSettings();
+  useAutoTheme(rootSettings.theme === "auto");
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
