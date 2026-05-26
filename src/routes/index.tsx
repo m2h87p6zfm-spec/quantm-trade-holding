@@ -96,8 +96,8 @@ function Cockpit() {
       <TickerBand />
 
       <div className="mx-auto max-w-7xl space-y-8 px-4 pt-6 sm:space-y-12 sm:px-6 sm:pt-10">
-        {/* Manifest hero — Quantm Picks + Analysis Agent spotlight */}
-        <HeartManifestHero />
+
+
 
         {/* Hero strip */}
         <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
