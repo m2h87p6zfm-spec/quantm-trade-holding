@@ -25,7 +25,7 @@ function DatenschutzPage() {
             Verantwortlicher im Sinne der DSGVO ist:<br />
             Yannick Sutter, Quantum Trade (Einzelunternehmen)<br />
             Pistoriusstraße 7, 13086 Berlin, Deutschland<br />
-            E-Mail: support@quantmtrade.com
+            E-Mail: QuantmTradeInbox@proton.me
           </p>
           <p className="mt-2">
             Ein Datenschutzbeauftragter ist gesetzlich nicht erforderlich. Bei Fragen zum Datenschutz erreichst du

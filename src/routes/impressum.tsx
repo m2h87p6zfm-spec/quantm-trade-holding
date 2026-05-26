@@ -33,7 +33,7 @@ function ImpressumPage() {
         <section>
           <h2 className="font-semibold text-foreground">Kontakt</h2>
           <p className="mt-1">
-            E-Mail: support@quantmtrade.com<br />
+            E-Mail: QuantmTradeInbox@proton.me<br />
             Web: https://quantmtrade.com
           </p>
         </section>
