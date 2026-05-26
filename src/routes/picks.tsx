@@ -188,8 +188,32 @@ function PicksPage() {
     try { localStorage.setItem("apex_picks_recorded", JSON.stringify(stored)); } catch { /* ignore */ }
   }, [loading, picks, user]);
 
-  const podium = picks.slice(0, 3);
-  const rest = picks.slice(3);
+  // Mobile-Resilienz: letzte fertige Picks im localStorage spiegeln,
+  // damit Tab-Switch / Browser-Background-Kill nicht den ganzen Scan
+  // verliert. Beim nächsten Mount sehen wir sofort die letzten Treffer
+  // (max. 30 min alt), während der Hintergrund-Scan still neu läuft.
+  const CACHE_KEY = `apex_picks_cache_${universe}_${sector}_${region}`;
+  const [cachedPicks, setCachedPicks] = useState<typeof picks>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return;
+      const { ts, data } = JSON.parse(raw);
+      if (Date.now() - ts < 30 * 60 * 1000) setCachedPicks(data);
+    } catch { /* ignore */ }
+  }, [CACHE_KEY]);
+  useEffect(() => {
+    if (loading || picks.length === 0) return;
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: picks }));
+    } catch { /* ignore */ }
+  }, [CACHE_KEY, loading, picks]);
+
+  // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
+  // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
+  const displayPicks = picks.length > 0 ? picks : cachedPicks;
+  const podium = displayPicks.slice(0, 3);
+  const rest = displayPicks.slice(3);
 
   const apiMissing = !getApiKey();
 
