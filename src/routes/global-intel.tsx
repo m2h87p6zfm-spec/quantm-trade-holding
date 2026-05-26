@@ -446,7 +446,7 @@ function SectionNav() {
   ];
   return (
     <nav
-      className="sticky top-0 z-30 border-b border-white/[0.10] bg-[oklch(0.09_0.014_260)]/85 backdrop-blur-md"
+      className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md"
       aria-label="Section navigation"
     >
       <div className="mx-auto flex max-w-[1700px] items-center gap-1 overflow-x-auto px-4 py-2 sm:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
