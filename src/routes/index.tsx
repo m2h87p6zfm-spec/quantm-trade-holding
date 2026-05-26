@@ -117,32 +117,46 @@ function Cockpit() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Sentiment */}
             <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-4 flex items-center justify-between">
                 <span className="text-[13px] font-medium text-muted-foreground">{t("cockpit.sentiment.title")}</span>
+                <span className="text-[11px] tabular-nums text-muted-foreground/60">
+                  {sentimentTotal} {sentimentTotal === 1 ? "Wert" : "Werte"}
+                </span>
               </div>
-              <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+              {/* Drei klare Stat-Karten: Zahl groß, Label direkt darunter */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
+                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "rgba(255,255,255,0.85)", tint: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.12)" },
+                  { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)" },
+                ].map((s) => {
+                  const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
+                  return (
+                    <div
+                      key={s.k}
+                      className="flex flex-col items-center justify-center rounded-xl border px-2 py-3 text-center"
+                      style={{ background: s.tint, borderColor: s.border }}
+                    >
+                      <span className="font-mono text-2xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
+                        {s.v}
+                      </span>
+                      <span className="mt-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-foreground/70">
+                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
+                        {s.k}
+                      </span>
+                      <span className="mt-1 text-[10px] tabular-nums text-muted-foreground/60">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Verteilungsbalken darunter als visuelle Zusammenfassung */}
+              <div className="mt-4 flex h-1.5 overflow-hidden rounded-full bg-muted">
                 <div className="h-full bg-[#22FF88]" style={{ width: `${(longCount / sentimentTotal) * 100}%` }} />
                 <div className="h-full bg-white/30" style={{ width: `${(neutralCount / sentimentTotal) * 100}%` }} />
                 <div className="h-full bg-[#FF3B5C]" style={{ width: `${(shortCount / sentimentTotal) * 100}%` }} />
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-3 text-[13px]">
-                {[
-                  { k: t("cockpit.sentiment.bullish"), v: longCount, c: "#22FF88" },
-                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, c: "rgba(255,255,255,0.5)" },
-                  { k: t("cockpit.sentiment.bearish"), v: shortCount, c: "#FF3B5C" },
-                ].map((s) => (
-                  <div key={s.k} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-foreground/70">
-                      <span className="h-2 w-2 rounded-full" style={{ background: s.c }} />
-                      {s.k}
-                    </span>
-                    <span className="font-mono tabular-nums font-semibold" style={{ color: s.c }}>
-                      {s.v}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
+
 
             {/* Indizes */}
             <div className="rounded-2xl border border-border bg-card p-5">
