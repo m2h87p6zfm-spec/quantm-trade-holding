@@ -91,6 +91,10 @@ function plainVerdict(
 function ProductDetail() {
   const { symbol } = Route.useParams();
   const product = findProduct(symbol);
+  // Popularity tracking for "Most viewed stocks" widget
+  useEffect(() => {
+    if (symbol) trackView("stock", symbol);
+  }, [symbol]);
   const { indicators, candles } = useAnalysis(symbol);
   const { settings } = useSettings();
   const { guardedAdd } = useWatchlistLimit();
