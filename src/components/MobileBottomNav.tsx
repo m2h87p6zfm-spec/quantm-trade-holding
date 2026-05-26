@@ -97,11 +97,11 @@ export function MobileBottomNav() {
                 <Link
                   to={it.to}
                   className={`flex min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
-                    active ? "text-[#22FF88]" : "text-white/55"
+                    active ? "text-bull" : "text-muted-foreground"
                   }`}
                 >
                   <it.icon
-                    className={`h-5 w-5 md:h-6 md:w-6 ${active ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
+                    className={`h-5 w-5 md:h-6 md:w-6 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--bull)_55%,transparent)]" : ""}`}
                   />
                   <span className="truncate leading-none">{t(it.key)}</span>
                 </Link>
@@ -113,12 +113,12 @@ export function MobileBottomNav() {
               type="button"
               onClick={() => setMoreOpen(true)}
               className={`flex w-full min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
-                moreActive ? "text-[#22FF88]" : "text-white/55"
+                moreActive ? "text-bull" : "text-muted-foreground"
               }`}
               aria-label={t("nav.more")}
             >
               <MoreHorizontal
-                className={`h-5 w-5 md:h-6 md:w-6 ${moreActive ? "drop-shadow-[0_0_6px_rgba(34,255,136,0.55)]" : ""}`}
+                className={`h-5 w-5 md:h-6 md:w-6 ${moreActive ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--bull)_55%,transparent)]" : ""}`}
               />
               <span className="truncate leading-none">{t("nav.more")}</span>
             </button>
@@ -135,7 +135,7 @@ export function MobileBottomNav() {
           <button
             type="button"
             aria-label="Close"
-            className="flex-1 bg-black/60 backdrop-blur-sm"
+            className="flex-1 bg-foreground/40 backdrop-blur-sm"
             onClick={() => setMoreOpen(false)}
           />
           <div
@@ -173,8 +173,8 @@ export function MobileBottomNav() {
                           onClick={() => setMoreOpen(false)}
                           className={`flex min-h-[80px] md:min-h-[96px] flex-col items-center justify-center gap-1.5 md:gap-2 rounded-xl border px-2 py-3 md:py-4 text-center text-[11px] md:text-[13px] font-medium transition ${
                             active
-                              ? "border-[#22FF88]/40 bg-[#22FF88]/10 text-[#22FF88]"
-                              : "border-border bg-muted/30 text-foreground/80 hover:bg-muted/50"
+                              ? "border-bull/40 bg-bull/10 text-bull"
+                              : "border-border bg-muted/40 text-foreground hover:bg-muted"
                           }`}
                         >
                           <it.icon className="h-5 w-5 md:h-6 md:w-6" />
