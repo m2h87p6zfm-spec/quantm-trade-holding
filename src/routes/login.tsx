@@ -40,7 +40,6 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success(t("login.welcomeBack"));
   };
 
   const signUp = async () => {
@@ -53,7 +52,6 @@ function LoginPage() {
     setBusy(false);
     if (error) return toast.error(error.message);
     if (data.session) {
-      toast.success(t("login.welcomeNew"));
       navigate({ to: "/" });
     } else {
       toast.success(t("login.created"));
