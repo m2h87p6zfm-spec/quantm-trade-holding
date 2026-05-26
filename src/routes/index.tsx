@@ -13,6 +13,8 @@ import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
 import { useT } from "@/lib/i18n";
 import { HeartManifestHero } from "@/components/HeartManifestHero";
+import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
+import { detectRegime } from "@/lib/ai-learning";
 
 
 
@@ -43,12 +45,24 @@ function Cockpit() {
   const rowMap = new Map(rows.map((r) => [r.symbol, r]));
 
   // Sentiment NUR über die tatsächliche User-Watchlist (nicht über versteckte Markt-Defaults
-  // wie SPY/QQQ/DIA/IWM, die zusätzlich im Cockpit-Set stecken).
+  // wie SPY/QQQ/DIA/IWM, die zusätzlich im Cockpit-Set stecken). Verwendet exakt dieselbe
+  // Pipeline wie die Watchlist-Karten unten (gleiche Risk-Einstellung + stabilisierte
+  // Decision) — sonst zeigen Markt-Stimmung und Karten unterschiedliche Verdicts.
   const watchlistSymbols = usingDefault ? DEFAULT_SET : settings.watchlist;
   const watchlistRows = rows.filter((r) => watchlistSymbols.includes(r.symbol));
-  const longCount = watchlistRows.filter((r) => r.sig.verdict === "LONG").length;
-  const shortCount = watchlistRows.filter((r) => r.sig.verdict === "SHORT").length;
-  const neutralCount = watchlistRows.filter((r) => r.sig.verdict === "NEUTRAL").length;
+  const watchlistVerdicts = useMemo(() => {
+    return watchlistRows.map((r) => {
+      const ind = r.ind;
+      const sig = scoreIndicators(ind, settings.risk);
+      const regime = detectRegime(ind);
+      const raw = buildDecision(r.symbol, r.symbol, ind, sig, regime);
+      const stable = stabilizeDecision(r.symbol, raw.decision, raw.confidence);
+      return stable.decision; // "BUY" | "SELL" | "HOLD"
+    });
+  }, [watchlistRows, settings.risk]);
+  const longCount = watchlistVerdicts.filter((d) => d === "BUY").length;
+  const shortCount = watchlistVerdicts.filter((d) => d === "SELL").length;
+  const neutralCount = watchlistVerdicts.filter((d) => d === "HOLD").length;
 
   const featured = [...rows].sort((a, b) =>
     (Math.abs(b.sig.score) * b.sig.confidence) - (Math.abs(a.sig.score) * a.sig.confidence)
