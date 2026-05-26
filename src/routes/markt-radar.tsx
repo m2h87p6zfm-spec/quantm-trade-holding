@@ -28,15 +28,15 @@ function MarktRadarPage() {
       {/* Unified Hero */}
       <div className="animate-fade-up">
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Radar className="h-3 w-3 text-primary" /> Markt-Radar
+          <Radar className="h-3 w-3 text-primary" /> Markt-Radar · Multi-Tool
         </div>
         <h1 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-          Wo bewegt sich der Markt — und warum?
+          Drei Sichten auf den Markt — in einem Cockpit
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-          Drei Perspektiven auf eine Frage: Welche Werte laufen, welche Sektoren führen
-          und welche Positionen bewegen sich praktisch identisch. Zusammen ergeben sie ein
-          vollständiges Bild der Marktstruktur.
+          Das Markt-Radar bündelt <strong className="text-foreground">Heatmap, Sektor-Rotation und Korrelationen</strong> in
+          einer Ansicht — ideal, wenn du systematisch von oben nach unten scannen willst.
+          Wenn du nur die Tages-Heatmap brauchst, nimm den Direkt-Link „Heatmap" in der Seitenleiste.
         </p>
       </div>
 
