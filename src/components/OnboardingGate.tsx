@@ -496,7 +496,7 @@ export function OnboardingGate() {
           ) : (
             <Button size="sm" onClick={finish} disabled={!canNext || saving} className="bg-gradient-to-r from-primary to-violet-500 text-primary-foreground">
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-              {saving ? "Kalibriere…" : "Apex AI aktivieren"}
+              {saving ? "Kalibriere…" : "Quantm Trade aktivieren"}
             </Button>
           )}
         </div>
