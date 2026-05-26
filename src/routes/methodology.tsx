@@ -39,7 +39,7 @@ function MethodologyPage() {
         </h1>
         <p className="text-muted-foreground max-w-2xl">
           Jedes Quantm-Signal basiert auf einem Composite-Score aus mindestens sechs
-          unabhängigen Quellen. Hier ist exakt, wie es funktioniert — keine Black Box.
+          unabhängigen Quellen. Hier ist exakt, wie es funktioniert. Nichts wird versteckt.
         </p>
       </header>
 
