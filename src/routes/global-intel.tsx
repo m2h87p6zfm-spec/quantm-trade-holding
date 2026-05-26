@@ -1229,7 +1229,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EU industrial proxies", tone: "bad", note: "Bellwether weakness spreads across the bloc." },
       { label: "Bunds", tone: "ok", note: "Growth fears bid quality fixed income." },
     ],
-    global: "Europe's industrial engine is stalling — drags eurozone trend growth lower.",
+    global: "Germany is Europe's biggest economy and its factories have stalled. That drags down growth for the entire eurozone, not just Germany. A weak Germany also means a weaker euro and softer demand for global suppliers.",
   },
   "fr-pol": {
     who: ["France", "Germany"],
