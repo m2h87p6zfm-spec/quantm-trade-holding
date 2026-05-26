@@ -3,8 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/impressum")({
   head: () => ({
     meta: [
-      { title: "Impressum — Quantm Trade" },
-      { name: "description", content: "Anbieterkennzeichnung von Quantm Trade gemäß § 5 TMG." },
+      { title: "Impressum — Quantum Trade" },
+      { name: "description", content: "Anbieterkennzeichnung von Quantum Trade gemäß § 5 TMG." },
       { name: "robots", content: "noindex,follow" },
     ],
   }),
@@ -22,8 +22,8 @@ function ImpressumPage() {
         <section>
           <h2 className="font-semibold text-foreground">Anbieter</h2>
           <p className="mt-1">
-            Quantm Trade Holding<br />
-            Inhaber: Yannick Sutter<br />
+            Yannick Sutter<br />
+            Quantum Trade (Einzelunternehmen)<br />
             Pistoriusstraße 7<br />
             13086 Berlin<br />
             Deutschland
@@ -106,7 +106,7 @@ function ImpressumPage() {
         <section>
           <h2 className="font-semibold text-foreground">Aufsichtsbehörde</h2>
           <p className="mt-1">
-            Quantm Trade erbringt keine erlaubnispflichtigen Finanzdienstleistungen im Sinne des KWG oder WpIG.
+            Quantum Trade erbringt keine erlaubnispflichtigen Finanzdienstleistungen im Sinne des KWG oder WpIG.
             Die Plattform stellt ausschließlich informations- und bildungsbezogene Inhalte, statistische Auswertungen
             und Marktdaten bereit. Eine Aufsicht durch die BaFin findet daher nicht statt.
           </p>

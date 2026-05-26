@@ -3,8 +3,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/datenschutz")({
   head: () => ({
     meta: [
-      { title: "Datenschutz — Quantm Trade" },
-      { name: "description", content: "Informationen zur Verarbeitung personenbezogener Daten bei Quantm Trade gemäß DSGVO." },
+      { title: "Datenschutz — Quantum Trade" },
+      { name: "description", content: "Informationen zur Verarbeitung personenbezogener Daten bei Quantum Trade gemäß DSGVO." },
       { name: "robots", content: "noindex,follow" },
     ],
   }),
@@ -23,8 +23,8 @@ function DatenschutzPage() {
           <h2 className="font-semibold text-foreground">1. Verantwortlicher</h2>
           <p className="mt-1">
             Verantwortlicher im Sinne der DSGVO ist:<br />
-            Quantm Trade Holding, Maximilian Mustermann<br />
-            Musterstraße 12, 10115 Berlin, Deutschland<br />
+            Yannick Sutter, Quantum Trade (Einzelunternehmen)<br />
+            Pistoriusstraße 7, 13086 Berlin, Deutschland<br />
             E-Mail: support@quantmtrade.com
           </p>
           <p className="mt-2">
