@@ -128,7 +128,7 @@ export function MobileBottomNav() {
 
       {moreOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-50 flex flex-col"
+          className="lg:hidden fixed inset-0 z-[130] flex flex-col"
           role="dialog"
           aria-modal="true"
         >
