@@ -7,6 +7,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { consistencyEngine, type ExecutedCheck } from "./consistency-engine";
 import { registerBuiltinChecks } from "./self-healing-checks";
 import { logHealingActions } from "./self-healing.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 const RUN_INTERVAL_MS = 10 * 60_000;
 const INITIAL_DELAY_MS = 20_000;
@@ -51,9 +52,12 @@ async function runOnce(ctx: { queryClient: QueryClient; getUserId: () => string 
       }
     }
 
-    // Logs senden – nur wenn User authentifiziert (sonst keine RLS-Insert-Permission)
+    // Logs senden – nur wenn User authentifiziert UND Session-Token verfügbar
+    // (sonst 401 vom requireSupabaseAuth-Middleware vor dem RLS-Check)
     if (userId) {
       try {
+        const { data: sess } = await supabase.auth.getSession();
+        if (!sess.session?.access_token) return;
         await logHealingActions({ data: { actions: toLoggable(results) } });
       } catch (e) {
         // silent – Logging-Fehler darf User nie stören
