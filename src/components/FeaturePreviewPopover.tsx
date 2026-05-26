@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import { Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useLang } from "@/lib/i18n";
@@ -5,8 +6,8 @@ import { useLang } from "@/lib/i18n";
 type Preview = {
   de: { title: string; desc: string };
   en: { title: string; desc: string };
-  /** Inline SVG mini-mockup illustrating the feature. */
-  mockup: () => JSX.Element;
+  /** Inline mini-mockup illustrating the feature. */
+  mockup: () => ReactElement;
 };
 
 // Mini-mockup primitives ----------------------------------------------------
