@@ -209,6 +209,7 @@ function AppShell() {
         </div>
         <QuickPanel />
         <UpgradeModal />
+        <FirstRunTour />
       </SidebarProvider>
     </Fragment>
   );
