@@ -130,13 +130,57 @@ export type SymbolSearchHit = { symbol: string; name: string; exchange?: string;
 export async function searchSymbols(q: string): Promise<SymbolSearchHit[]> {
   const query = q.trim();
   if (!query) return [];
+
+  // 1) Lokaler Katalog (instant) — deckt alle 3.300+ Symbole inkl. der
+  //    neu hinzugefügten 2000 Ticker zuverlässig ab, auch ohne API-Call.
+  const local = await searchLocalCatalog(query);
+
+  // 2) Parallel die globale Twelve-Data-Suche — liefert Symbole,
+  //    die (noch) nicht im lokalen Katalog stehen.
+  let remote: SymbolSearchHit[] = [];
   try {
     const { authedFetch } = await import("@/lib/authed-fetch");
     const res = await authedFetch(`/api/public/search?q=${encodeURIComponent(query)}`);
-    if (!res.ok) return [];
-    const j = await res.json();
-    return Array.isArray(j?.results) ? j.results : [];
-  } catch { return []; }
+    if (res.ok) {
+      const j = await res.json();
+      if (Array.isArray(j?.results)) remote = j.results;
+    }
+  } catch { /* offline / rate-limit → nur lokale Treffer */ }
+
+  const seen = new Set<string>();
+  const merged: SymbolSearchHit[] = [];
+  for (const h of [...local, ...remote]) {
+    const key = h.symbol.toUpperCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(h);
+  }
+  return merged.slice(0, 50);
+}
+
+async function searchLocalCatalog(query: string): Promise<SymbolSearchHit[]> {
+  const { PRODUCTS } = await import("@/lib/products");
+  const q = query.toLowerCase();
+  const qUpper = query.toUpperCase();
+  const out: Array<{ hit: SymbolSearchHit; score: number }> = [];
+  for (const p of PRODUCTS) {
+    const sym = p.symbol.toUpperCase();
+    const name = p.name.toLowerCase();
+    let score = 0;
+    if (sym === qUpper) score = 1000;
+    else if (sym.startsWith(qUpper)) score = 800;
+    else if (sym.includes(qUpper)) score = 500;
+    else if (name.startsWith(q)) score = 400;
+    else if (name.includes(q)) score = 200;
+    if (score > 0) {
+      out.push({
+        score,
+        hit: { symbol: p.symbol, name: p.name, exchange: p.region, type: "Stock" },
+      });
+    }
+  }
+  out.sort((a, b) => b.score - a.score);
+  return out.slice(0, 30).map((s) => s.hit);
 }
 
 export { FinnhubError };
