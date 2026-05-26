@@ -107,6 +107,25 @@ function LoginPage() {
           </div>
         </div>
 
+        {pendingEmail && (
+          <div className="mb-4 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+            <p className="font-semibold text-foreground">Bitte bestätige deine E-Mail-Adresse</p>
+            <p className="mt-1 text-muted-foreground">
+              Wir haben eine Bestätigungs-E-Mail an <span className="font-medium text-foreground">{pendingEmail}</span> gesendet.
+              Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren. Schau auch im Spam-Ordner nach.
+            </p>
+            <Button
+              onClick={resendConfirmation}
+              disabled={busy}
+              variant="outline"
+              size="sm"
+              className="mt-3"
+            >
+              {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : "E-Mail erneut senden"}
+            </Button>
+          </div>
+        )}
+
         <Card className="p-6 border-border/60 bg-card/80 backdrop-blur">
           <Tabs defaultValue="signin">
             <TabsList className="grid grid-cols-2 w-full mb-6">
