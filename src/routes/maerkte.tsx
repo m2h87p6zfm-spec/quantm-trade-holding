@@ -93,7 +93,8 @@ function IndexCard({ idx }: { idx: { symbol: string; name: string; region: strin
 }
 
 function MaerktePage() {
-  const activeSectors = SECTORS.filter((s) => PRODUCTS.some((p) => p.sector === s));
+  const activeSectors = SECTORS.filter((s) => (PRODUCTS_BY_SECTOR.get(s)?.length ?? 0) > 0);
+  const totalSymbols = Array.from(PRODUCTS_BY_SECTOR.values()).reduce((n, arr) => n + arr.length, 0);
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-6">
       <div className="animate-fade-up">
