@@ -1279,6 +1279,7 @@ export type Database = {
           signal_frequency: string | null
           starter_watchlists: Json
           strategy_mode: string | null
+          tour_completed: boolean
           trader_type: string | null
           trading_goal: string | null
           trusted_sources: Json
@@ -1309,6 +1310,7 @@ export type Database = {
           signal_frequency?: string | null
           starter_watchlists?: Json
           strategy_mode?: string | null
+          tour_completed?: boolean
           trader_type?: string | null
           trading_goal?: string | null
           trusted_sources?: Json
@@ -1339,6 +1341,7 @@ export type Database = {
           signal_frequency?: string | null
           starter_watchlists?: Json
           strategy_mode?: string | null
+          tour_completed?: boolean
           trader_type?: string | null
           trading_goal?: string | null
           trusted_sources?: Json
