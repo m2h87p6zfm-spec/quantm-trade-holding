@@ -2167,7 +2167,7 @@ const CLASS_ICON: Record<AssetClass, string> = {
 
 function ImpactByClass({ items }: { items: ImpactItem[] }) {
   const hurt = items.filter((i) => i.tone === "bad" || i.tone === "warn");
-  const helped = items.filter((i) => i.tone === "ok");
+  const helped = items.filter((i) => i.tone === "ok" || i.tone === "info");
 
   return (
     <div className="space-y-3">
