@@ -1203,7 +1203,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "US treasuries", tone: "warn", note: "Marginal Japanese demand weakens." },
       { label: "Nikkei banks", tone: "ok", note: "Higher rates lift bank NIMs." },
     ],
-    global: "BoJ shift could reprice the world's cheapest funding currency — global carry trades at risk.",
+    global: "For years, investors borrowed cheap yen to invest in higher-yielding assets around the world. As Japan raises rates, those bets get unwound, pulling money back home. That can shake stocks, bonds and currencies far beyond Japan.",
   },
   milei: {
     who: ["Argentina"],
