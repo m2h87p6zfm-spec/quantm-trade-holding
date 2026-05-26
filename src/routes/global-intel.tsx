@@ -1725,7 +1725,7 @@ function CountryPanel({
                     }}
                   >
                     <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: riskColor }} />
-                    {RISK_LABEL[country.risk]}
+                    {RISK_LABEL[country.risk].en}
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                     {country.iso2}
