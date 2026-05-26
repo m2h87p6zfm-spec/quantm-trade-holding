@@ -146,7 +146,7 @@ function PicksPage() {
     }
     rows.sort((a, b) => b.score - a.score);
     return rows.slice(0, 15);
-  }, [candleQs, filtered, settings.risk]);
+  }, [candleQs, filtered, settings.risk, mode]);
 
   // Persist BUY picks into the public Track Record (dedup per symbol per day).
   const recordedRef = useRef<Set<string>>(new Set());
