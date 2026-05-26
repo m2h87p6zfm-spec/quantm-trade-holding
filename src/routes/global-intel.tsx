@@ -1242,7 +1242,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "EUR", tone: "bad", note: "Core eurozone political risk filters into the currency." },
       { label: "Periphery spreads", tone: "warn", note: "Italian / Spanish bonds drift with French risk." },
     ],
-    global: "Eurozone-core fiscal credibility under question — repricing of the EUR risk premium.",
+    global: "France was always seen as a safe core economy in Europe, but markets are starting to doubt that. If trust in France slips, the whole eurozone gets more expensive to borrow. That weakens the euro and pressures European banks.",
   },
   "cn-prop": {
     who: ["China", "Australia", "Brazil"],
