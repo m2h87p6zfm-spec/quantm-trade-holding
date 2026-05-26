@@ -5,7 +5,9 @@ export type Product = {
   region: "US" | "DE" | "EU" | "UK" | "JP";
 };
 
-export const PRODUCTS: Product[] = [
+import { PRODUCTS_EXTRA } from "./products-extra";
+
+const PRODUCTS_BASE: Product[] = [
   // US Tech
   { symbol: "AAPL", name: "Apple Inc.", sector: "Technologie", region: "US" },
   { symbol: "MSFT", name: "Microsoft", sector: "Technologie", region: "US" },
