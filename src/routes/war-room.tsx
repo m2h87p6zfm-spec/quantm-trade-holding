@@ -8,7 +8,8 @@ import { scoreIndicators, setupScore } from "@/lib/analysis";
 import { ProChart } from "@/components/ProChart";
 import { SignalBadge } from "@/components/SignalBadge";
 import { useSettings } from "@/lib/settings";
-import { PRODUCTS, findProduct } from "@/lib/products";
+import { findProduct } from "@/lib/products";
+import { ProductsDatalist } from "@/components/ProductsDatalist";
 
 export const Route = createFileRoute("/war-room")({
   component: WarRoom,
