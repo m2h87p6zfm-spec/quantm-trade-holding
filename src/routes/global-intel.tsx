@@ -2120,66 +2120,9 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
           </div>
         )}
 
-        {/* D. Direct impact */}
-        {chain && chain.direct.length > 0 && (
-          <div>
-            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
-              Direct market impact
-            </div>
-            <ul className="mt-1.5 space-y-1.5">
-              {chain.direct.map((d) => {
-                const c = TONE_COLOR[d.tone];
-                return (
-                  <li
-                    key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
-                  >
-                    <span
-                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: c }}
-                    />
-                    <div className="min-w-0">
-                      <div className="text-[12px] font-semibold" style={{ color: c }}>
-                        {d.label}
-                      </div>
-                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-
-        {/* E. Secondary effects */}
-        {chain && chain.secondary.length > 0 && (
-          <div>
-            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
-              Secondary &amp; cross-asset effects
-            </div>
-            <ul className="mt-1.5 space-y-1.5">
-              {chain.secondary.map((d) => {
-                const c = TONE_COLOR[d.tone];
-                return (
-                  <li
-                    key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
-                  >
-                    <span
-                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: c }}
-                    />
-                    <div className="min-w-0">
-                      <div className="text-[12px] font-semibold" style={{ color: c }}>
-                        {d.label}
-                      </div>
-                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+        {/* D. Market impact — grouped by direction and asset class */}
+        {chain && (chain.direct.length > 0 || chain.secondary.length > 0) && (
+          <ImpactByClass items={[...chain.direct, ...chain.secondary]} />
         )}
 
         {/* Legacy impact tags as quick reference if no chain available */}
