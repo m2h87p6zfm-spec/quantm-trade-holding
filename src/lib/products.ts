@@ -6,6 +6,7 @@ export type Product = {
 };
 
 import { PRODUCTS_EXTRA } from "./products-extra";
+import { PRODUCTS_EXTRA2 } from "./products-extra2";
 
 const PRODUCTS_BASE: Product[] = [
   // US Tech
