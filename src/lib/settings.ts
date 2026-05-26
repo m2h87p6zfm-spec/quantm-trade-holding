@@ -82,7 +82,7 @@ export const MARKET_WATCH_DEFAULTS = ["SPY", "QQQ", "DIA", "IWM"] as const;
 
 const DEFAULT: StoredSettings = {
   risk: "ausgewogen",
-  theme: "dark",
+  theme: "auto",
   minConfidence: 60,
   watchlists: [DEFAULT_LIST],
   activeWatchlistId: DEFAULT_LIST.id,
