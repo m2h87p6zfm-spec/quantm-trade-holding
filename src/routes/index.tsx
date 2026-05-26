@@ -129,15 +129,16 @@ function Cockpit() {
               {/* Drei Stat-Karten: Label oben, große Zahl mittig, Prozent unten – klar gruppiert */}
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
-                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)" },
-                  { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)" },
+                  { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)", tip: "Bullish: Aktien mit positivem Signal – Kursanstieg wahrscheinlich (Long-Setup)." },
+                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)", tip: "Neutral: Kein klares Signal – Seitwärtsbewegung oder abwarten." },
+                  { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)", tip: "Bearish: Aktien mit negativem Signal – Kursrückgang wahrscheinlich (Short-Setup)." },
                 ].map((s) => {
                   const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
                   return (
                     <div
                       key={s.k}
-                      className="flex flex-col items-center justify-between gap-2 rounded-xl border px-2 py-3 text-center"
+                      title={s.tip}
+                      className="flex cursor-help flex-col items-center justify-between gap-2 rounded-xl border px-2 py-3 text-center"
                       style={{ background: s.tint, borderColor: s.border }}
                     >
                       <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-foreground/80">
@@ -161,8 +162,24 @@ function Cockpit() {
                 <div className="h-full bg-[#8B9EFF]/60" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
                 <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
               </div>
+              {/* Kurze Legende, damit die Begriffe sofort verständlich sind */}
+              <ul className="mt-3 space-y-1 text-[11px] leading-snug text-muted-foreground">
+                <li className="flex gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#22FF88" }} />
+                  <span><span className="font-medium text-foreground/85">Bullish</span> – positives Signal, Long-Setup (Kursanstieg erwartet).</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#8B9EFF" }} />
+                  <span><span className="font-medium text-foreground/85">Neutral</span> – kein klares Signal, Seitwärtsphase oder abwarten.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF3B5C" }} />
+                  <span><span className="font-medium text-foreground/85">Bearish</span> – negatives Signal, Short-Setup (Kursrückgang erwartet).</span>
+                </li>
+              </ul>
 
             </div>
+
 
 
             {/* Indizes */}
