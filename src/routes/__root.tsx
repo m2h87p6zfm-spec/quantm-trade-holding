@@ -1,5 +1,6 @@
 import { Fragment, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { startSelfHealing } from "@/lib/self-healing-service";
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
@@ -151,6 +152,17 @@ function AppShell() {
       document.documentElement.lang = lang;
     }
   }, [lang]);
+
+  // Self-Healing Service starten (läuft im Hintergrund, pausiert bei inaktivem Tab)
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!user) return;
+    const stop = startSelfHealing({
+      queryClient,
+      getUserId: () => user?.id ?? null,
+    });
+    return stop;
+  }, [queryClient, user]);
 
   // Auth + onboarding screens render standalone — no sidebar, header, or app chrome.
   // The `key={lang}` on the Fragment forces a full remount of the entire
