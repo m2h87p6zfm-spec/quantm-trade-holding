@@ -1190,7 +1190,7 @@ const EVENT_CHAINS: Record<string, EventChain> = {
       { label: "Inflation path", tone: "warn", note: "Oil floor keeps headline CPI sticky." },
       { label: "Airlines / chemicals", tone: "bad", note: "Higher input costs erode margins." },
     ],
-    global: "OPEC+ is the swing actor for global inflation — every cut feeds into central-bank thinking.",
+    global: "OPEC+ decides how much oil reaches the market, which directly shapes global inflation. When they cut, fuel and energy bills stay higher for everyone. That feeds into what central banks like the Fed and ECB do next.",
   },
   "boj-exit": {
     who: ["Japan", "United States of America"],
