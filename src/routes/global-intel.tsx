@@ -2120,66 +2120,9 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
           </div>
         )}
 
-        {/* D. Direct impact */}
-        {chain && chain.direct.length > 0 && (
-          <div>
-            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
-              Direct market impact
-            </div>
-            <ul className="mt-1.5 space-y-1.5">
-              {chain.direct.map((d) => {
-                const c = TONE_COLOR[d.tone];
-                return (
-                  <li
-                    key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
-                  >
-                    <span
-                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: c }}
-                    />
-                    <div className="min-w-0">
-                      <div className="text-[12px] font-semibold" style={{ color: c }}>
-                        {d.label}
-                      </div>
-                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        )}
-
-        {/* E. Secondary effects */}
-        {chain && chain.secondary.length > 0 && (
-          <div>
-            <div className="font-mono text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
-              Secondary &amp; cross-asset effects
-            </div>
-            <ul className="mt-1.5 space-y-1.5">
-              {chain.secondary.map((d) => {
-                const c = TONE_COLOR[d.tone];
-                return (
-                  <li
-                    key={d.label}
-                    className="flex items-start gap-2 rounded-xl border border-white/[0.12] bg-white/[0.02] p-2.5"
-                  >
-                    <span
-                      className="mt-0.5 inline-block h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: c }}
-                    />
-                    <div className="min-w-0">
-                      <div className="text-[12px] font-semibold" style={{ color: c }}>
-                        {d.label}
-                      </div>
-                      <div className="text-[11.5px] leading-relaxed text-foreground/80">{d.note}</div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+        {/* D. Market impact — grouped by direction and asset class */}
+        {chain && (chain.direct.length > 0 || chain.secondary.length > 0) && (
+          <ImpactByClass items={[...chain.direct, ...chain.secondary]} />
         )}
 
         {/* Legacy impact tags as quick reference if no chain available */}
@@ -2195,6 +2138,128 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
     </div>
   );
 }
+
+
+type ImpactItem = { label: string; tone: Tone; note: string };
+type AssetClass = "Currencies" | "Stocks" | "Commodities" | "Bonds";
+
+function classifyAsset(label: string): AssetClass {
+  const l = label.toLowerCase();
+  // Bonds first (most specific keywords)
+  if (/jgb|bund|treasur|oat|spread|sovereign|yield/.test(l)) return "Bonds";
+  // Commodities
+  if (/brent|crude|oil|gas|wheat|grain|iron ore|copper|gold|silver|lithium|freight|container|wti|metal/.test(l))
+    return "Commodities";
+  // Currencies — explicit tickers or words
+  if (/\b(usd|eur|jpy|chf|gbp|inr|krw|mxn|aud|nzd|cad|nok|sek|brl|ars|cny|try|zar|dxy|fx)\b/.test(l))
+    return "Currencies";
+  if (/peso|euro\b|yen|dollar|currenc/.test(l)) return "Currencies";
+  // Everything else = stocks
+  return "Stocks";
+}
+
+const CLASS_ICON: Record<AssetClass, string> = {
+  Currencies: "💱",
+  Stocks: "📈",
+  Commodities: "🛢️",
+  Bonds: "📜",
+};
+
+function ImpactByClass({ items }: { items: ImpactItem[] }) {
+  const hurt = items.filter((i) => i.tone === "bad" || i.tone === "warn");
+  const helped = items.filter((i) => i.tone === "ok" || i.tone === "info");
+
+  return (
+    <div className="space-y-3">
+      {hurt.length > 0 && (
+        <ImpactGroup
+          title="Under pressure from this event"
+          accent="#FF3B5C"
+          items={hurt}
+        />
+      )}
+      {helped.length > 0 && (
+        <ImpactGroup
+          title="Set to benefit from this event"
+          accent="#22FF88"
+          items={helped}
+        />
+      )}
+    </div>
+  );
+}
+
+function ImpactGroup({
+  title,
+  accent,
+  items,
+}: {
+  title: string;
+  accent: string;
+  items: ImpactItem[];
+}) {
+  const order: AssetClass[] = ["Currencies", "Stocks", "Commodities", "Bonds"];
+  const byClass = new Map<AssetClass, ImpactItem[]>();
+  items.forEach((it) => {
+    const k = classifyAsset(it.label);
+    if (!byClass.has(k)) byClass.set(k, []);
+    byClass.get(k)!.push(it);
+  });
+
+  return (
+    <div className="rounded-xl border border-white/[0.12] bg-white/[0.02] p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span
+          className="inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: accent, boxShadow: `0 0 8px ${accent}` }}
+        />
+        <div
+          className="font-mono text-[9.5px] uppercase tracking-[0.18em]"
+          style={{ color: accent }}
+        >
+          {title}
+        </div>
+      </div>
+      <div className="space-y-2">
+        {order.map((cls) => {
+          const list = byClass.get(cls);
+          if (!list || list.length === 0) return null;
+          return (
+            <div key={cls}>
+              <div className="mb-1 flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="text-[12px]">{CLASS_ICON[cls]}</span>
+                {cls}
+              </div>
+              <ul className="space-y-1">
+                {list.map((d) => (
+                  <li
+                    key={d.label}
+                    className="flex items-start gap-2 rounded-lg border border-white/[0.08] bg-white/[0.015] px-2.5 py-1.5"
+                  >
+                    <span
+                      className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: accent }}
+                    />
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-semibold" style={{ color: accent }}>
+                        {d.label}
+                      </div>
+                      <div className="text-[11.5px] leading-relaxed text-foreground/80">
+                        {d.note}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
 
 
 function ImpactTag({ label, value }: { label: string; value: string }) {
