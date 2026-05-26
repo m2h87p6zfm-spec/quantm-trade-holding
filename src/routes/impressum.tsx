@@ -23,9 +23,9 @@ function ImpressumPage() {
           <h2 className="font-semibold text-foreground">Anbieter</h2>
           <p className="mt-1">
             Quantm Trade Holding<br />
-            Inhaber: Maximilian Mustermann<br />
-            Musterstraße 12<br />
-            10115 Berlin<br />
+            Inhaber: Yannick Sutter<br />
+            Pistoriusstraße 7<br />
+            13086 Berlin<br />
             Deutschland
           </p>
         </section>
@@ -40,7 +40,7 @@ function ImpressumPage() {
 
         <section>
           <h2 className="font-semibold text-foreground">Vertretungsberechtigt</h2>
-          <p className="mt-1">Maximilian Mustermann (Inhaber)</p>
+          <p className="mt-1">Yannick Sutter (Inhaber)</p>
         </section>
 
         <section>
@@ -53,7 +53,7 @@ function ImpressumPage() {
 
         <section>
           <h2 className="font-semibold text-foreground">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-          <p className="mt-1">Maximilian Mustermann, Anschrift wie oben.</p>
+          <p className="mt-1">Yannick Sutter, Anschrift wie oben.</p>
         </section>
 
         <section>
