@@ -273,7 +273,7 @@ function GlobalIntelPage() {
                             backgroundColor: `color-mix(in oklab, ${RISK_COLOR[hc.risk]} 18%, transparent)`,
                           }}
                         >
-                          {RISK_LABEL[hc.risk]}
+                          {RISK_LABEL[hc.risk].en}
                         </span>
                       )}
                     </div>
