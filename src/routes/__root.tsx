@@ -185,8 +185,8 @@ function AppShell() {
                   </span>
                   <span className="font-medium hidden md:inline">Yahoo Finance</span>
                 </div>
-                <div className="mx-4 hidden xl:block h-5 w-px bg-border/60 shrink-0" />
-                <div className="hidden xl:flex min-w-0 flex-1 overflow-hidden">
+                <div className="mx-4 hidden 2xl:block h-5 w-px bg-border/60 shrink-0" />
+                <div className="hidden 2xl:flex min-w-0 flex-1 overflow-hidden">
                   <MarketClock />
                 </div>
                 <div className="ml-auto flex items-center gap-2 shrink-0">
