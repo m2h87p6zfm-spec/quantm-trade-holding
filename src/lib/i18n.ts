@@ -1128,3 +1128,18 @@ export function useLang(): Lang {
   const lang = settings.language as Lang;
   return lang in DICT ? lang : "en";
 }
+
+/** Inline translation helper for one-off JSX strings without a dictionary key. */
+export function useTr() {
+  const lang = useLang();
+  return (de: string, en: string): string => (lang === "en" ? en : de);
+}
+
+/** Bilingual string type for data files. */
+export type Bi = { de: string; en: string };
+/** Select the right side of a bilingual string. */
+export const pickBi = (b: Bi | string | undefined, lang: Lang): string => {
+  if (b == null) return "";
+  if (typeof b === "string") return b;
+  return b[lang] ?? b.de ?? b.en ?? "";
+};
