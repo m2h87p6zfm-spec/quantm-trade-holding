@@ -1,176 +1,242 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Check, Radar, Star, Sparkles, Wallet, MessageSquare } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, X } from "lucide-react";
 
-const STORAGE_KEY = "apex_first_run_tour_v1";
+// Bumped key (v2) so existing users see the new guided tour once.
+const STORAGE_KEY = "quantm_first_run_tour_v2";
 
-type Slide = {
-  icon: React.ComponentType<{ className?: string }>;
-  eyebrow: string;
+type Step = {
+  /** data-tour value on the target element in the sidebar / page. */
+  target: string;
   title: string;
   body: string;
+  /** Preferred tooltip side relative to the highlighted element. */
+  side?: "right" | "bottom";
 };
 
-const SLIDES: Slide[] = [
+const STEPS: Step[] = [
   {
-    icon: Sparkles,
-    eyebrow: "Willkommen",
-    title: "Dein KI-gestütztes Trading-Dashboard",
-    body: "In 60 Sekunden zeigen wir dir die wichtigsten Bereiche von Quantm Trade — damit du sofort loslegen kannst.",
+    target: "watchlist",
+    title: "Watchlist",
+    body: "Hier siehst du deine Favoriten mit Live-Signalen, RSI, MACD & Z-Score auf einen Blick.",
+    side: "right",
   },
   {
-    icon: Star,
-    eyebrow: "Watchlist",
-    title: "Behalte deine Favoriten im Blick",
-    body: "Speichere Aktien, ETFs und Krypto in deiner persönlichen Watchlist und erhalte live KI-Signale, RSI, MACD & Z-Score auf einen Blick.",
+    target: "picks",
+    title: "Quantm Picks",
+    body: "Täglich KI-kuratierte Trade-Ideen mit der höchsten statistischen Konfidenz.",
+    side: "right",
   },
   {
-    icon: Radar,
-    eyebrow: "Global Radar",
-    title: "Was bewegt die Märkte gerade?",
-    body: "Der Global Radar scannt laufend News, Sektor-Bewegungen und Makro-Events und meldet dir, was wirklich wichtig ist.",
+    target: "analyse",
+    title: "Aktien-Analyse",
+    body: "Tiefenanalyse für jedes Symbol — Indikatoren, Score, Decision und Erklärung.",
+    side: "right",
   },
   {
-    icon: Sparkles,
-    eyebrow: "Apex Picks",
-    title: "KI-kuratierte Trade-Ideen",
-    body: "Unsere Quant-Engine analysiert tausende Setups täglich und filtert die mit der höchsten Konfidenz heraus — inkl. KI-Erklärung auf Deutsch.",
+    target: "radar",
+    title: "Markt-Radar",
+    body: "Live-Scan über alle Märkte — wo gerade ungewöhnliche Bewegung herrscht.",
+    side: "right",
   },
   {
-    icon: Wallet,
-    eyebrow: "Portfolio",
-    title: "Tracking & Analytics",
-    body: "Lege dein Portfolio an und erhalte automatisch Performance-Auswertung, Risiko-Metriken und tägliche KI-Insights.",
+    target: "portfolio",
+    title: "Portfolio",
+    body: "Tracke deine Positionen, Performance, Risiko und nutze den KI-Portfolio-Chat.",
+    side: "right",
   },
   {
-    icon: MessageSquare,
-    eyebrow: "KI-Chat",
-    title: "Frag die KI alles über jeden Trade",
-    body: "Klick auf jedes Setup oder jede Aktie und lass dir den Grund, die Risiken und den Konsens in einfacher Sprache erklären.",
+    target: "alerts",
+    title: "Smart Alerts",
+    body: "Setze präzise Preis- und Indikator-Alerts — wir benachrichtigen dich sofort.",
+    side: "right",
+  },
+  {
+    target: "global",
+    title: "Global Macro",
+    body: "Geopolitik, Makro-Daten und Länder-Risiken — wichtiger Kontext für jeden Trade.",
+    side: "right",
   },
 ];
 
 function hasSeenTour(): boolean {
   if (typeof window === "undefined") return true;
-  try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return true;
-  }
+  try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch { return true; }
+}
+function markSeen() {
+  try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* noop */ }
 }
 
-function markSeen() {
-  try {
-    localStorage.setItem(STORAGE_KEY, "1");
-  } catch {
-    /* noop */
-  }
+type Rect = { top: number; left: number; width: number; height: number };
+
+function findTarget(key: string): HTMLElement | null {
+  if (typeof document === "undefined") return null;
+  return document.querySelector<HTMLElement>(`[data-tour="${key}"]`);
 }
 
 export function FirstRunTour() {
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [rect, setRect] = useState<Rect | null>(null);
 
   useEffect(() => {
-    // Defer until after first paint to avoid SSR/hydration flash.
-    if (!hasSeenTour()) {
-      setOpen(true);
-    }
+    // Delay a tick so sidebar has mounted.
+    const id = window.setTimeout(() => {
+      if (!hasSeenTour()) setOpen(true);
+    }, 400);
+    return () => window.clearTimeout(id);
   }, []);
 
-  const close = () => {
-    markSeen();
-    setOpen(false);
-  };
-
-  const finish = () => {
-    markSeen();
-    setOpen(false);
-    navigate({ to: "/" });
-  };
+  // Recompute target position whenever step or viewport changes.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const update = () => {
+      const el = findTarget(STEPS[step].target);
+      if (!el) { setRect(null); return; }
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    };
+    update();
+    const onResize = () => update();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onResize, true);
+    const interval = window.setInterval(update, 250); // keep aligned while layout settles
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onResize, true);
+      window.clearInterval(interval);
+    };
+  }, [open, step]);
 
   if (!open) return null;
 
-  const slide = SLIDES[step];
-  const Icon = slide.icon;
-  const isLast = step === SLIDES.length - 1;
-  const progress = ((step + 1) / SLIDES.length) * 100;
+  const close = () => { markSeen(); setOpen(false); };
+  const next = () => {
+    if (step >= STEPS.length - 1) { close(); return; }
+    setStep((s) => s + 1);
+  };
+  const prev = () => setStep((s) => Math.max(0, s - 1));
+
+  const s = STEPS[step];
+  const isLast = step === STEPS.length - 1;
+
+  // Compute tooltip placement
+  const PAD = 12;
+  const TOOLTIP_W = 320;
+  let tipStyle: React.CSSProperties = {};
+  if (rect) {
+    const side = s.side ?? "right";
+    if (side === "right") {
+      const left = Math.min(window.innerWidth - TOOLTIP_W - 16, rect.left + rect.width + PAD);
+      const top = Math.max(16, Math.min(window.innerHeight - 220, rect.top));
+      tipStyle = { top, left, width: TOOLTIP_W };
+    } else {
+      const top = Math.min(window.innerHeight - 220, rect.top + rect.height + PAD);
+      const left = Math.max(16, Math.min(window.innerWidth - TOOLTIP_W - 16, rect.left));
+      tipStyle = { top, left, width: TOOLTIP_W };
+    }
+  } else {
+    tipStyle = {
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: TOOLTIP_W,
+    };
+  }
+
+  // Spotlight box rendered as a transparent rect with 4 dark overlay panels around it
+  // (works without SVG masks across browsers and supports clicks on backdrop edges).
+  const hole = rect
+    ? { top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12 }
+    : null;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) close(); }}>
-      <DialogContent
-        className="max-w-lg border-border/40 bg-card/95 backdrop-blur-xl p-0 overflow-hidden"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
-        <DialogTitle className="sr-only">Erste Schritte mit Quantm Trade</DialogTitle>
-
-        {/* progress */}
-        <div className="h-1 w-full bg-border/40">
+    <div className="fixed inset-0 z-[9999]" aria-live="polite">
+      {/* Dark overlay panels with cutout */}
+      {hole ? (
+        <>
+          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: 0, left: 0, right: 0, height: hole.top }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top + hole.height, left: 0, right: 0, bottom: 0 }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top, left: 0, width: hole.left, height: hole.height }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top, left: hole.left + hole.width, right: 0, height: hole.height }} />
+          {/* Highlight ring around hole */}
           <div
-            className="h-full bg-gradient-to-r from-primary via-primary/80 to-primary transition-all duration-500"
-            style={{ width: `${progress}%` }}
+            className="absolute rounded-xl ring-2 ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.25),0_0_40px_hsl(var(--primary)/0.5)] pointer-events-none animate-pulse"
+            style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
           />
+          {/* Arrow pointing from tooltip toward the target */}
+          <div
+            className="absolute h-0.5 bg-primary/80 pointer-events-none"
+            style={{
+              top: hole.top + hole.height / 2,
+              left: hole.left + hole.width,
+              width: Math.max(0, (typeof tipStyle.left === "number" ? tipStyle.left : 0) - (hole.left + hole.width)),
+            }}
+          />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px]" />
+      )}
+
+      {/* Tooltip card */}
+      <div
+        className="absolute rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-4 sm:p-5"
+        style={tipStyle}
+        role="dialog"
+        aria-label={s.title}
+      >
+        <button
+          onClick={close}
+          aria-label="Tour schließen"
+          className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+          Tour · {step + 1} / {STEPS.length}
+        </div>
+        <div className="mt-1 text-base font-semibold tracking-tight text-foreground">{s.title}</div>
+        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{s.body}</p>
+
+        {/* Progress dots */}
+        <div className="mt-3 flex items-center gap-1">
+          {STEPS.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-primary" : "bg-border/60"}`}
+            />
+          ))}
         </div>
 
-        <div className="px-6 py-8 sm:px-8 sm:py-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/30">
-              <Icon className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary/80">
-                {slide.eyebrow}
-              </div>
-              <div className="text-[11px] text-muted-foreground">
-                Schritt {step + 1} von {SLIDES.length}
-              </div>
-            </div>
-          </div>
-
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight leading-tight">
-            {slide.title}
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            {slide.body}
-          </p>
-
-          <div className="mt-8 flex items-center justify-between gap-3">
-            <button
-              onClick={close}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Überspringen
-            </button>
-
-            <div className="flex items-center gap-2">
-              {step > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setStep((s) => Math.max(0, s - 1))}
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                  Zurück
-                </Button>
-              )}
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <button
+            onClick={close}
+            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Überspringen
+          </button>
+          <div className="flex items-center gap-2">
+            {step > 0 && (
+              <Button variant="ghost" size="sm" onClick={prev}>
+                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Zurück
+              </Button>
+            )}
+            <Button size="sm" onClick={next}>
               {isLast ? (
-                <Button size="sm" onClick={finish}>
-                  <Check className="h-3.5 w-3.5 mr-1.5" />
-                  Loslegen
-                </Button>
+                <>
+                  <Check className="h-3.5 w-3.5 mr-1.5" /> Fertig
+                </>
               ) : (
-                <Button size="sm" onClick={() => setStep((s) => Math.min(SLIDES.length - 1, s + 1))}>
-                  Weiter
-                  <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                </Button>
+                <>
+                  Weiter <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                </>
               )}
-            </div>
+            </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

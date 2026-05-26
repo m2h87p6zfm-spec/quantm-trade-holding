@@ -261,7 +261,7 @@ export function OnboardingGate() {
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">Apex Onboarding</DialogTitle>
+        <DialogTitle className="sr-only">Quantm Trade Onboarding</DialogTitle>
         {/* Ambient AI background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
@@ -283,7 +283,7 @@ export function OnboardingGate() {
               <StepIcon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Apex AI · Onboarding</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Quantm Trade · Onboarding</div>
               <div className="text-sm font-semibold text-foreground">
                 Step {Math.min(step + 1, TOTAL_STEPS)} of {TOTAL_STEPS}
               </div>
@@ -496,7 +496,7 @@ export function OnboardingGate() {
           ) : (
             <Button size="sm" onClick={finish} disabled={!canNext || saving} className="bg-gradient-to-r from-primary to-violet-500 text-primary-foreground">
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-              {saving ? "Kalibriere…" : "Apex AI aktivieren"}
+              {saving ? "Kalibriere…" : "Quantm Trade aktivieren"}
             </Button>
           )}
         </div>
@@ -642,7 +642,7 @@ function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v:
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
           <Sparkles className="h-3 w-3" /> AI Profile Calibrated
         </div>
-        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">Dein Apex AI Trading-Profil</h2>
+        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">Dein Quantm Trade Profil</h2>
         <p className="mt-1 text-xs text-muted-foreground">Diese Konfiguration steuert ab sofort deine gesamte Plattform-Erfahrung.</p>
       </div>
 
