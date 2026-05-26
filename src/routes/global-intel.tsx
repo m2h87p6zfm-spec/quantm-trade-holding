@@ -1682,7 +1682,7 @@ function CountryPanel({
   const tickers = tickersForCountry(country.iso2);
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.14] bg-gradient-to-b from-[oklch(0.14_0.022_260)] to-[oklch(0.10_0.016_260)] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur">
+    <div className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-30px_rgba(0,0,0,0.25)] backdrop-blur">
       <div
         className="relative border-b border-white/[0.12] p-5"
         style={{
