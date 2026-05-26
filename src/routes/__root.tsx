@@ -32,6 +32,7 @@ import { CreditCard, LogOut, Settings, User as UserIcon, Sparkles } from "lucide
 import { BreakingNewsTicker } from "@/components/BreakingNewsTicker";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { FirstRunTour } from "@/components/FirstRunTour";
 import { Footer } from "@/components/Footer";
 import { MarketRegimePill } from "@/components/MarketRegimePill";
 import { useAutoTheme } from "@/hooks/use-auto-theme";
@@ -208,6 +209,7 @@ function AppShell() {
         </div>
         <QuickPanel />
         <UpgradeModal />
+        <FirstRunTour />
       </SidebarProvider>
     </Fragment>
   );

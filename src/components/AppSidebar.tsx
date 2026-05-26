@@ -11,6 +11,24 @@ import { LegalLinks } from "@/components/LegalLinks";
 
 type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: string; feature?: Feature };
 
+const TOUR_KEYS: Record<string, string> = {
+  "/": "watchlist",
+  "/picks": "picks",
+  "/analyse": "analyse",
+  "/track-record": "trackrecord",
+  "/portfolio": "portfolio",
+  "/alerts": "alerts",
+  "/markt-radar": "radar",
+  "/news": "news",
+  "/kalender": "calendar",
+  "/explain-trade": "explain",
+  "/global-intel": "global",
+  "/produkte": "catalog",
+  "/methodology": "methodology",
+  "/einstellungen": "settings",
+};
+const tourKeyFor = (url: string) => TOUR_KEYS[url];
+
 // Quant Core — the daily-use AI tools (4)
 const quantCore: NavItem[] = [
   { titleKey: "nav.picks", url: "/picks", icon: Sparkles, descKey: "nav.picks.desc" },
@@ -88,7 +106,7 @@ export function AppSidebar() {
                   const locked = isLocked(item);
                   const title = t(item.titleKey);
                   return (
-                    <SidebarMenuItem key={item.url}>
+                    <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                       <SidebarMenuButton
                         asChild
                         isActive={active}
@@ -124,7 +142,7 @@ export function AppSidebar() {
                 const locked = isLocked(item);
                 const title = t(item.titleKey);
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
@@ -147,7 +165,7 @@ export function AppSidebar() {
                 const locked = isLocked(item);
                 const title = t(item.titleKey);
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
@@ -170,7 +188,7 @@ export function AppSidebar() {
                 const locked = isLocked(item);
                 const title = t(item.titleKey);
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
@@ -193,7 +211,7 @@ export function AppSidebar() {
               {system.map((item) => {
                 const title = t(item.titleKey);
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />

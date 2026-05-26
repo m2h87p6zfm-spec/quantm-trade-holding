@@ -39,6 +39,13 @@ const primary: PrimaryItem[] = [
   { to: "/alerts", icon: Bell, key: "nav.alerts" },
 ];
 
+const tourKeys: Record<string, string> = {
+  "/": "watchlist",
+  "/portfolio": "portfolio",
+  "/picks": "picks",
+  "/alerts": "alerts",
+};
+
 // Everything not in the bottom bar lives in the "More" sheet.
 // Mirrors AppSidebar exactly so phone & tablet have full feature parity.
 const moreSections: { labelKey: string; items: MoreItem[] }[] = [
@@ -93,7 +100,7 @@ export function MobileBottomNav() {
           {primary.map((it) => {
             const active = isActive(it);
             return (
-              <li key={it.to}>
+              <li key={it.to} data-tour={tourKeys[it.to]}>
                 <Link
                   to={it.to}
                   className={`flex min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
@@ -108,7 +115,7 @@ export function MobileBottomNav() {
               </li>
             );
           })}
-          <li>
+          <li data-tour="more">
             <button
               type="button"
               onClick={() => setMoreOpen(true)}

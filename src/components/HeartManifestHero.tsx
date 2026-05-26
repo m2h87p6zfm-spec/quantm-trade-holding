@@ -76,7 +76,8 @@ export function HeartManifestHero() {
       <section
         className={[
           "relative flex w-full flex-col overflow-hidden border border-border bg-card text-card-foreground shadow-2xl",
-          "max-h-[92vh] rounded-t-3xl border-t",
+          "max-h-[85vh] rounded-t-3xl border-t",
+          "mb-[calc(64px+env(safe-area-inset-bottom))] sm:mb-0",
           "sm:max-h-[calc(100vh-3rem)] sm:max-w-[460px] sm:rounded-2xl sm:border sm:mx-4",
           "transition-all duration-300 ease-out",
           enter
