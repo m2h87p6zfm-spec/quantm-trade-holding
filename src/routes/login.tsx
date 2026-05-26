@@ -30,6 +30,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/konto" });
@@ -39,7 +40,13 @@ function LoginPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
+        setPendingEmail(email);
+        return toast.error("Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach (auch Spam-Ordner).", { duration: 8000 });
+      }
+      return toast.error(error.message);
+    }
   };
 
   const signUp = async () => {
@@ -54,8 +61,18 @@ function LoginPage() {
     if (data.session) {
       navigate({ to: "/" });
     } else {
-      toast.success(t("login.created"));
+      setPendingEmail(email);
+      toast.success("Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.", { duration: 10000 });
     }
+  };
+
+  const resendConfirmation = async () => {
+    if (!pendingEmail) return;
+    setBusy(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Bestätigungs-E-Mail erneut gesendet.");
   };
 
   const signInGoogle = async () => {
