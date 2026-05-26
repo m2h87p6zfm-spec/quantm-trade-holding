@@ -11,6 +11,24 @@ import { LegalLinks } from "@/components/LegalLinks";
 
 type NavItem = { titleKey: string; url: string; icon: typeof Bell; descKey?: string; feature?: Feature };
 
+const TOUR_KEYS: Record<string, string> = {
+  "/": "watchlist",
+  "/picks": "picks",
+  "/analyse": "analyse",
+  "/track-record": "trackrecord",
+  "/portfolio": "portfolio",
+  "/alerts": "alerts",
+  "/markt-radar": "radar",
+  "/news": "news",
+  "/kalender": "calendar",
+  "/explain-trade": "explain",
+  "/global-intel": "global",
+  "/produkte": "catalog",
+  "/methodology": "methodology",
+  "/einstellungen": "settings",
+};
+const tourKeyFor = (url: string) => TOUR_KEYS[url];
+
 // Quant Core — the daily-use AI tools (4)
 const quantCore: NavItem[] = [
   { titleKey: "nav.picks", url: "/picks", icon: Sparkles, descKey: "nav.picks.desc" },
