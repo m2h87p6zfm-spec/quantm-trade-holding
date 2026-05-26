@@ -135,7 +135,7 @@ function SettingsPage() {
                 return (
                   <button
                     key={th.v}
-                    onClick={() => update({ theme: th.v })}
+                    onClick={() => update({ theme: th.v, themeOptIn: true } as any)}
                     className={`inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm transition-all ${
                       active ? "border-primary/60 bg-primary/10 text-primary ring-1 ring-primary/30" : "border-border hover:bg-accent/40"
                     }`}
