@@ -14,6 +14,7 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
+import { FeaturePreviewPopover } from "@/components/FeaturePreviewPopover";
 
 export const Route = createFileRoute("/preise")({
   head: () => ({
@@ -217,7 +218,8 @@ function PricingPage() {
                   {plan.featureKeys.map((k) => (
                     <li key={k} className="flex items-start gap-2">
                       <Check className={cn("h-4 w-4 mt-0.5 shrink-0", plan.highlighted ? "text-primary" : "text-bull")} />
-                      <span className="text-foreground/80">{t(k)}</span>
+                      <span className="text-foreground/80 flex-1">{t(k)}</span>
+                      <FeaturePreviewPopover featureKey={k} />
                     </li>
                   ))}
                 </ul>
