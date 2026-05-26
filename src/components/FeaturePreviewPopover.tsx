@@ -323,9 +323,14 @@ const PREVIEWS: Record<string, Preview> = {
     en: { title: "200 Analysis credits", desc: "Twice as many deep analyses per month vs. Pro." },
     mockup: MockAnalysisAgent,
   },
+  "plan.elite.f2": {
+    de: { title: "Alles aus Pro inklusive", desc: "Du bekommst alle 10 Pro-Features automatisch dazu — plus die Elite-Extras obendrauf." },
+    en: { title: "Everything in Pro included", desc: "You get all 10 Pro features by default — plus every Elite extra on top." },
+    mockup: MockEverythingInPro,
+  },
   "plan.elite.f3": {
-    de: { title: "AI Learning", desc: "Sieh, was die Engine aus vergangenen Trades lernt und wo sie besser wird." },
-    en: { title: "AI Learning", desc: "See what the engine learns from past trades and where accuracy improves." },
+    de: { title: "AI Learning", desc: "Sieh, was die Engine aus vergangenen Trades lernt und wo sich die Trefferquote verbessert." },
+    en: { title: "AI Learning", desc: "See what the engine learns from past trades and where the hit rate improves." },
     mockup: MockAILearning,
   },
   "plan.elite.f4": {
