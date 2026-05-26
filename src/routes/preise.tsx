@@ -187,6 +187,11 @@ function PricingPage() {
                       {t("pricing.equivPerMonth", { amount: perMonth.toFixed(2).replace(".", ",") })}
                     </p>
                   )}
+                  {price !== 0 && (
+                    <p className="text-[11px] text-muted-foreground/80 mt-1">
+                      Endpreis inkl. 19 % MwSt. — keine versteckten Kosten.
+                    </p>
+                  )}
                 </div>
 
                 <Button
