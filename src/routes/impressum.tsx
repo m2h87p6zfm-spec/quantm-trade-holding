@@ -22,8 +22,8 @@ function ImpressumPage() {
         <section>
           <h2 className="font-semibold text-foreground">Anbieter</h2>
           <p className="mt-1">
-            Quantm Trade Holding<br />
-            Inhaber: Yannick Sutter<br />
+            Yannick Sutter<br />
+            Quantum Trade (Einzelunternehmen)<br />
             Pistoriusstraße 7<br />
             13086 Berlin<br />
             Deutschland
