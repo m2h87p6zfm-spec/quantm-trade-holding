@@ -351,8 +351,16 @@ export async function getCandlesCached(
         order: "DESC",
       };
       if (norm.mic_code) params.mic_code = norm.mic_code;
-      const j = await tdFetch("/time_series", params);
-      const v = parseTimeSeries(j);
+      let v: TdCandles | null = null;
+      try {
+        const j = await tdFetch("/time_series", params);
+        v = parseTimeSeries(j);
+      } catch { /* TD fehlt → Yahoo-Fallback unten */ }
+      if (!v || !v.c.length) {
+        // Yahoo-Fallback — deckt internationale Ticker ab, die der TD-Plan nicht hat.
+        const { fetchYahooCandles } = await import("./yahoo-fallback.server");
+        v = await fetchYahooCandles(symbol, interval, range);
+      }
       cacheSet(key, v, ttlSec);
       void sharedSet(key, v, ttlSec);
       return v;
