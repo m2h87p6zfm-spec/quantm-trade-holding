@@ -23,7 +23,7 @@ const REGION_FLAG: Record<string, string> = {
 function SectorCard({ sector }: { sector: string }) {
   const meta = SECTOR_META[sector];
   const Icon = meta?.icon ?? Globe2;
-  const list = PRODUCTS.filter((p) => p.sector === sector);
+  const list = PRODUCTS_BY_SECTOR.get(sector) ?? [];
   const preview = list.slice(0, 9);
 
   return (
