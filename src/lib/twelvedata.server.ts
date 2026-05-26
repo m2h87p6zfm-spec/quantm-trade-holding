@@ -238,6 +238,20 @@ export async function getQuotesBatch(symbols: string[]): Promise<Record<string, 
           }
         } catch { /* eine Gruppe darf scheitern, andere liefern weiter */ }
       }));
+      // Yahoo-Fallback für Symbole, die TD nicht liefern konnte (Plan-Limit,
+      // exotische Börsen). Parallel mit kleinem Concurrency-Limit.
+      const stillMissing = missing.filter((s) => !filled[s]);
+      if (stillMissing.length) {
+        const { fetchYahooQuote } = await import("./yahoo-fallback.server");
+        await Promise.all(stillMissing.map(async (sym) => {
+          const v = await fetchYahooQuote(sym);
+          if (v) {
+            filled[sym] = v;
+            cacheSet(`q:${sym}`, v, QUOTE_TTL);
+            void sharedSet(`q:${sym}`, v, QUOTE_TTL);
+          }
+        }));
+      }
     } finally {
       INFLIGHT.delete(inflightKey);
     }
