@@ -188,7 +188,7 @@ export function AppSidebar() {
                 const locked = isLocked(item);
                 const title = t(item.titleKey);
                 return (
-                  <SidebarMenuItem key={item.url}>
+                  <SidebarMenuItem key={item.url} data-tour={tourKeyFor(item.url)}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={locked ? `${title} (${t("side.upgradeRequired")})` : title}>
                       <Link to={item.url} className="flex items-center gap-2">
                         <item.icon className="h-4 w-4" />
