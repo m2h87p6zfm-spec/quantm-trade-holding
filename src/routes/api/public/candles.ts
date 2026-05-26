@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getCandlesCached } from "@/lib/twelvedata.server";
+import { getCandlesCached, adaptiveCandleTtl } from "@/lib/twelvedata.server";
 import { requireUserId } from "@/lib/api-auth.server";
 
 const CORS = {
@@ -34,10 +34,11 @@ export const Route = createFileRoute("/api/public/candles")({
             });
           }
           const isIntraday = !["1d", "5d", "1wk", "1mo", "3mo"].includes(interval);
-          // Tageskerzen ändern sich nur 1× pro Tag nach Close → langer TTL
-          // ist sicher und spart massiv Credits bei wiederholten Picks-Scans.
-          // Intraday bleibt knapp (60s) für Live-Feel.
-          const ttl = isIntraday ? 60 : 6 * 3600;
+          // Intraday: 60 s. Daily/Weekly: 1 h wenn Markt offen, 12 h wenn zu.
+          // Bei geschlossenem Markt ändert sich die letzte Tageskerze nicht
+          // mehr — 12 h TTL spart ~4× Credits gegenüber dem alten 6h-Wert
+          // ohne dass User eine Veränderung sehen.
+          const ttl = isIntraday ? 60 : adaptiveCandleTtl(60 * 60);
           const r = await getCandlesCached(symbol, interval, range, ttl);
           if (!r.value) {
             return new Response(JSON.stringify({

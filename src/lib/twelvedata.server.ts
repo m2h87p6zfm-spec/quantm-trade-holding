@@ -48,7 +48,20 @@ function isUsMarketOpenUtc(): boolean {
   return m >= 12 * 60 + 30 && m <= 21 * 60;
 }
 export function adaptiveQuoteTtl(baseSec: number): number {
-  return isUsMarketOpenUtc() ? baseSec : Math.max(baseSec, 300);
+  // Markt offen: Basis-TTL (z. B. 30–60 s). Markt zu: min. 15 min — Kurse
+  // bewegen sich nicht, niemand merkt's, aber Credits sinken drastisch.
+  return isUsMarketOpenUtc() ? baseSec : Math.max(baseSec, 15 * 60);
+}
+
+// Adaptive TTL für Tageskerzen: während offenem Markt 1 h (laufende Kerze
+// ändert sich), bei geschlossenem Markt 12 h — Tageskerzen werden erst beim
+// nächsten Close neu geschrieben. Intraday-Caller umgehen das mit eigenem TTL.
+export function adaptiveCandleTtl(baseSec: number): number {
+  return isUsMarketOpenUtc() ? baseSec : Math.max(baseSec, 12 * 3600);
+}
+
+export function isMarketOpen(): boolean {
+  return isUsMarketOpenUtc();
 }
 
 async function tdFetch(path: string, params: Record<string, string>): Promise<any> {
