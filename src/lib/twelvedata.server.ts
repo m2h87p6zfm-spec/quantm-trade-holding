@@ -140,8 +140,15 @@ export async function getQuoteCached(symbol: string, ttlSec = 60): Promise<{
       const norm = normalizeForTd(symbol);
       const params: Record<string, string> = { symbol: norm.symbol };
       if (norm.mic_code) params.mic_code = norm.mic_code;
-      const j = await tdFetch("/quote", params);
-      const v = parseQuote(j);
+      let v: TdQuote | null = null;
+      try {
+        const j = await tdFetch("/quote", params);
+        v = parseQuote(j);
+      } catch { /* TD fehlt → Yahoo-Fallback */ }
+      if (!v) {
+        const { fetchYahooQuote } = await import("./yahoo-fallback.server");
+        v = await fetchYahooQuote(symbol);
+      }
       cacheSet(key, v, ttl);
       void sharedSet(key, v, ttl);
       return v;
@@ -231,6 +238,20 @@ export async function getQuotesBatch(symbols: string[]): Promise<Record<string, 
           }
         } catch { /* eine Gruppe darf scheitern, andere liefern weiter */ }
       }));
+      // Yahoo-Fallback für Symbole, die TD nicht liefern konnte (Plan-Limit,
+      // exotische Börsen). Parallel mit kleinem Concurrency-Limit.
+      const stillMissing = missing.filter((s) => !filled[s]);
+      if (stillMissing.length) {
+        const { fetchYahooQuote } = await import("./yahoo-fallback.server");
+        await Promise.all(stillMissing.map(async (sym) => {
+          const v = await fetchYahooQuote(sym);
+          if (v) {
+            filled[sym] = v;
+            cacheSet(`q:${sym}`, v, QUOTE_TTL);
+            void sharedSet(`q:${sym}`, v, QUOTE_TTL);
+          }
+        }));
+      }
     } finally {
       INFLIGHT.delete(inflightKey);
     }
@@ -351,8 +372,16 @@ export async function getCandlesCached(
         order: "DESC",
       };
       if (norm.mic_code) params.mic_code = norm.mic_code;
-      const j = await tdFetch("/time_series", params);
-      const v = parseTimeSeries(j);
+      let v: TdCandles | null = null;
+      try {
+        const j = await tdFetch("/time_series", params);
+        v = parseTimeSeries(j);
+      } catch { /* TD fehlt → Yahoo-Fallback unten */ }
+      if (!v || !v.c.length) {
+        // Yahoo-Fallback — deckt internationale Ticker ab, die der TD-Plan nicht hat.
+        const { fetchYahooCandles } = await import("./yahoo-fallback.server");
+        v = await fetchYahooCandles(symbol, interval, range);
+      }
       cacheSet(key, v, ttlSec);
       void sharedSet(key, v, ttlSec);
       return v;
