@@ -1944,6 +1944,30 @@ export const COUNTRIES: CountryIntel[] = [
 
 export const COUNTRIES_BY_NAME = new Map<string, CountryIntel>(COUNTRIES.map((c) => [c.name, c]));
 
+/** Returns a country with translatable string fields swapped for the requested language. */
+export function getCountry(name: string, lang: Lang): CountryIntel | undefined {
+  const base = COUNTRIES_BY_NAME.get(name);
+  if (!base) return undefined;
+  if (lang === "de") return base;
+  const ov = COUNTRY_EN_OVERRIDES[name];
+  if (!ov) return base; // no English override yet → German fallback
+  return {
+    ...base,
+    summary: ov.summary ?? base.summary,
+    pivotalEvent: ov.pivotalEvent ?? base.pivotalEvent,
+    geopolitics: ov.geopolitics ?? base.geopolitics,
+    impact: ov.impact ?? base.impact,
+    positives: ov.positives ?? base.positives,
+    negatives: ov.negatives ?? base.negatives,
+  };
+}
+
+/** Returns the full country list with English overrides applied where present. */
+export function getCountries(lang: Lang): CountryIntel[] {
+  if (lang === "de") return COUNTRIES;
+  return COUNTRIES.map((c) => getCountry(c.name, lang) ?? c);
+}
+
 export const RISK_COLOR: Record<RiskLevel, string> = {
   // Institutional tones — muted, not traffic-light
   low: "oklch(0.62 0.09 155)",   // soft green
@@ -1951,10 +1975,10 @@ export const RISK_COLOR: Record<RiskLevel, string> = {
   high: "oklch(0.62 0.13 25)",   // soft red
 };
 
-export const RISK_LABEL: Record<RiskLevel, string> = {
-  low: "Stable",
-  medium: "Watch",
-  high: "Elevated",
+export const RISK_LABEL: Record<RiskLevel, Record<Lang, string>> = {
+  low: { en: "Stable", de: "Stabil" },
+  medium: { en: "Watch", de: "Beobachten" },
+  high: { en: "Elevated", de: "Erhöht" },
 };
 
 export const NEUTRAL_LAND = "oklch(0.30 0.012 260)";
