@@ -107,22 +107,20 @@ function PicksPage() {
   const [serverLoaded, setServerLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    const key = `${universe}|${sector}|${region}`;
-    // Clear stale picks from a different scope immediately so the UI never
-    // shows candidates that don't belong to the currently selected filter.
+    // Der Cron scannt nur die breiten Scopes (sector="Alle", region="Alle")
+    // pro Universum. Damit Sektor-/Regionsfilter trotzdem konsistent Picks
+    // liefern, lesen wir IMMER den breiten Cache und filtern clientseitig.
+    const cacheKey = `${universe}|Alle|Alle`;
     setServerPicks(null);
     setServerLoaded(false);
     (async () => {
       const { data } = await supabase
         .from("picks_cache")
         .select("picks, scope_key")
-        .eq("scope_key", key)
+        .eq("scope_key", cacheKey)
         .maybeSingle();
       if (cancelled) return;
-      // Defence-in-depth: only accept the row if its scope_key matches the
-      // one we asked for. Prevents any race where a late response from a
-      // previous filter overwrites the new selection.
-      if (data && data.scope_key !== key) {
+      if (data && data.scope_key !== cacheKey) {
         setServerLoaded(true);
         return;
       }
@@ -164,11 +162,18 @@ function PicksPage() {
           last: Number(x.last ?? 0),
         };
       });
-      setServerPicks(rows.length > 0 ? rows : null);
+      // Clientseitiges Filtern nach Sektor/Region.
+      const filteredRows = rows.filter((row) => {
+        if (sector !== "Alle" && row.p.sector !== sector) return false;
+        if (region !== "Alle" && row.p.region !== region) return false;
+        return true;
+      });
+      setServerPicks(filteredRows.length > 0 ? filteredRows : null);
       setServerLoaded(true);
     })().catch(() => { if (!cancelled) setServerLoaded(true); });
     return () => { cancelled = true; };
   }, [universe, sector, region, forceRefresh]);
+
 
   const scan = useCandleScan(scanSymbols, {
     // Performance: Browser scannt NIE selbst mehr. Wir zeigen ausschließlich
