@@ -69,10 +69,10 @@ export function ScanHistoryPanel({ scopeKey }: { scopeKey?: string }) {
                 <tr className="border-b border-border/40">
                   <th className="text-left py-1.5 pr-2">Zeit</th>
                   <th className="text-left py-1.5 pr-2">Scope</th>
-                  <th className="text-right py-1.5 pr-2">Total</th>
-                  <th className="text-right py-1.5 pr-2">OK</th>
-                  <th className="text-right py-1.5 pr-2">Fehler</th>
-                  <th className="text-right py-1.5 pr-2">Picks</th>
+                  <th className="text-right py-1.5 pr-2" title="Insgesamt geprüfte Werte im Universum">Geprüft</th>
+                  <th className="text-right py-1.5 pr-2" title="Werte mit gültigen Marktdaten">Mit Daten</th>
+                  <th className="text-right py-1.5 pr-2" title="Werte ohne abrufbare Marktdaten (z. B. Quelle gedrosselt)">Ohne Daten</th>
+                  <th className="text-right py-1.5 pr-2" title="Davon BUY-Signale">Picks</th>
                   <th className="text-right py-1.5">Preserved</th>
                 </tr>
               </thead>
