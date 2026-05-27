@@ -128,6 +128,35 @@ async function runScan(scope: Scope, concurrency = 6) {
   const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : scope.universe === "all" ? 50 : 60;
   const top = results.slice(0, topN);
 
+  // If the new scan produced ZERO BUY-Kandidaten, preserve the previously
+  // cached picks (user explicit request: "wenn keine da sind, zeig die vom
+  // letzten Scan"). We still bump scanned_at + counters so we know it ran.
+  if (top.length === 0) {
+    const { data: prev } = await supabaseAdmin
+      .from("picks_cache")
+      .select("picks")
+      .eq("scope_key", scopeKey(scope))
+      .maybeSingle();
+    const prevPicks = (prev?.picks as unknown[] | undefined) ?? [];
+    await supabaseAdmin
+      .from("picks_cache")
+      .upsert(
+        {
+          scope_key: scopeKey(scope),
+          universe: scope.universe,
+          sector: scope.sector,
+          region: scope.region,
+          picks: prevPicks,
+          total_scanned: total,
+          succeeded,
+          failed,
+          scanned_at: new Date().toISOString(),
+        },
+        { onConflict: "scope_key" },
+      );
+    return { total, succeeded, failed, picks: prevPicks.length, preserved: true };
+  }
+
   await supabaseAdmin
     .from("picks_cache")
     .upsert(
@@ -153,8 +182,12 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        const authErr = requireCronSecret(request);
-        if (authErr) return authErr;
+        // Accept either x-cron-secret OR Supabase anon apikey header
+        // (canonical pg_cron pattern).
+        if (!isAnonApiKey(request)) {
+          const authErr = requireCronSecret(request);
+          if (authErr) return authErr;
+        }
 
         // Default: scannt alle Cap-Buckets + Combined-Scope.
         let scopes: Scope[] = [
