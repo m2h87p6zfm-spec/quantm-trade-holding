@@ -126,115 +126,116 @@ function Cockpit() {
         </div>
 
 
-        {/* BEREICH 1 — Markt-Überblick (kompakt) */}
-        <section className="space-y-4">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("cockpit.section.market")}</h2>
-            <span className="text-[12px] text-muted-foreground/60 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
-          </div>
-
-          {/* Unified compact accordion grid: Marktstimmung + Meine Watchlist + Indices
-              sit side-by-side with Markt-Gewinner, Top-Gewinner, Aktivste Werte … */}
-          <WatchlistAccordions
-            prependItems={[
-              {
-                id: "sentiment",
-                icon: Activity,
-                accent: "#22FF88",
-                title: t("cockpit.sentiment.title"),
-                preview: (
-                  <span className="hidden items-center gap-1.5 sm:inline-flex">
-                    <span className="font-mono tabular-nums text-[#22FF88]">{longCount}</span>
-                    <span className="text-muted-foreground/50">·</span>
-                    <span className="font-mono tabular-nums text-[#8B9EFF]">{neutralCount}</span>
-                    <span className="text-muted-foreground/50">·</span>
-                    <span className="font-mono tabular-nums text-[#FF3B5C]">{shortCount}</span>
-                  </span>
-                ),
-                content: (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
-                        { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)" },
-                        { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)" },
-                      ].map((s) => {
-                        const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
-                        return (
-                          <div
-                            key={s.k}
-                            className="flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-center"
-                            style={{ background: s.tint, borderColor: s.border }}
-                          >
-                            <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-foreground/80">
-                              <span className="h-1 w-1 rounded-full" style={{ background: s.color }} />
-                              {s.k}
-                            </span>
-                            <span className="font-mono text-xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
-                              {s.v}
-                            </span>
-                            <span className="text-[10px] tabular-nums" style={{ color: s.color, opacity: 0.85 }}>{pct}%</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="flex h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full bg-[#22FF88]" style={{ width: sentimentTotal > 0 ? `${(longCount / sentimentTotal) * 100}%` : "0%" }} />
-                      <div className="h-full bg-[#8B9EFF]/60" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
-                      <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
-                    </div>
-                  </div>
-                ),
-              },
-              {
-                id: "indices",
-                icon: Sparkles,
-                accent: "#8B9EFF",
-                title: t("cockpit.indices.title"),
-                preview: (
-                  <span className="hidden items-center gap-1.5 sm:inline-flex">
-                    {indices.slice(0, 2).map((i) => {
-                      const up = (i.change ?? 0) >= 0;
+        {/* Markets & Watchlist — terminal-precision tiered grid.
+            Sentiment (col-4) + Indices (col-8) + Watchlist (col-12) sit side-by-side
+            with the priority movers (col-4) and compact stat cards (col-3). */}
+        <WatchlistAccordions
+          prependItems={[
+            {
+              id: "sentiment",
+              icon: Activity,
+              accent: "#22FF88",
+              title: t("cockpit.sentiment.title"),
+              subtitle: t("cockpit.section.market"),
+              colSpan: 4,
+              summary: (
+                <span className="hidden items-center gap-1.5 font-mono text-[10px] tabular-nums sm:inline-flex">
+                  <span className="text-[#22FF88]">{longCount}</span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="text-zinc-400">{neutralCount}</span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="text-[#FF3B5C]">{shortCount}</span>
+                </span>
+              ),
+              content: (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88" },
+                      { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF" },
+                      { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C" },
+                    ].map((s) => {
+                      const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
                       return (
-                        <span key={i.symbol} className={`font-mono tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
-                          {i.symbol} {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(1)}%`}
-                        </span>
-                      );
-                    })}
-                  </span>
-                ),
-                content: (
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                    {indices.map((i) => {
-                      const up = (i.change ?? 0) >= 0;
-                      return (
-                        <div key={i.symbol} className="flex items-center justify-between">
-                          <span className="text-[12px] text-foreground/70">{i.label}</span>
-                          <span className={`font-mono text-[12px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
-                            {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
+                        <div
+                          key={s.k}
+                          className="flex flex-col items-center gap-1 rounded-sm border border-zinc-800 bg-zinc-900/50 px-2 py-2 text-center"
+                        >
+                          <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+                            <span className="h-1 w-1 rounded-full" style={{ background: s.color }} />
+                            {s.k}
                           </span>
+                          <span className="font-mono text-xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
+                            {s.v}
+                          </span>
+                          <span className="font-mono text-[10px] tabular-nums" style={{ color: s.color, opacity: 0.85 }}>{pct}%</span>
                         </div>
                       );
                     })}
                   </div>
-                ),
-              },
-              {
-                id: "watchlist",
-                icon: ListChecks,
-                accent: "#22FF88",
-                title: t("watchlist.title"),
-                span: "full",
-                preview: (
-                  <span className="font-mono tabular-nums text-muted-foreground/80">
-                    {settings.watchlist.length}
-                  </span>
-                ),
-                content: <WatchlistSignalsPanel />,
-              },
-            ] satisfies CustomAccordionItem[]}
-          />
-        </section>
+                  <div className="flex h-1 overflow-hidden bg-zinc-800">
+                    <div className="h-full bg-[#22FF88]" style={{ width: sentimentTotal > 0 ? `${(longCount / sentimentTotal) * 100}%` : "0%" }} />
+                    <div className="h-full bg-zinc-600" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
+                    <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
+                  </div>
+                </div>
+              ),
+            },
+            {
+              id: "indices",
+              icon: Sparkles,
+              accent: "#8B9EFF",
+              title: t("cockpit.indices.title"),
+              subtitle: t("cockpit.live"),
+              colSpan: 8,
+              summary: (
+                <span className="hidden items-center gap-4 sm:inline-flex">
+                  {indices.slice(0, 3).map((i) => {
+                    const up = (i.change ?? 0) >= 0;
+                    return (
+                      <span key={i.symbol} className="flex flex-col items-end font-mono">
+                        <span className="text-[10px] uppercase text-zinc-500">{i.symbol}</span>
+                        <span className={`text-xs tabular-nums ${i.change == null ? "text-zinc-600" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                          {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </span>
+              ),
+              content: (
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4">
+                  {indices.map((i) => {
+                    const up = (i.change ?? 0) >= 0;
+                    return (
+                      <div key={i.symbol} className="flex flex-col gap-0.5">
+                        <span className="text-[10px] uppercase tracking-widest text-zinc-500">{i.label}</span>
+                        <span className={`font-mono text-[13px] font-semibold tabular-nums ${i.change == null ? "text-zinc-600" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                          {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ),
+            },
+            {
+              id: "watchlist",
+              icon: ListChecks,
+              accent: "#22FF88",
+              title: t("watchlist.title"),
+              subtitle: t("watchlist.subtitle.live"),
+              colSpan: 12,
+              summary: (
+                <span className="rounded-sm bg-zinc-800 px-2 py-0.5 font-mono text-[10px] tabular-nums text-zinc-300">
+                  {settings.watchlist.length} {settings.watchlist.length === 1 ? "symbol" : "symbols"}
+                </span>
+              ),
+              content: <WatchlistSignalsPanel />,
+            },
+          ] satisfies CustomAccordionItem[]}
+        />
+
 
 
 
