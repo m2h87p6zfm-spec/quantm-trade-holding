@@ -237,8 +237,10 @@ function PicksPage() {
       rows.push({ p, ind, regime, report, upsidePct, score, change, last });
     }
     rows.sort((a, b) => b.score - a.score);
-    return rows.slice(0, 15);
-  }, [scan.results, filtered, settings.risk, mode]);
+    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : 50;
+    return rows.slice(0, topN);
+  }, [scan.results, filtered, settings.risk, mode, universe]);
+
 
   // Persist BUY picks into the public Track Record (dedup per symbol per day).
   const recordedRef = useRef<Set<string>>(new Set());
