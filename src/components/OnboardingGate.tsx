@@ -490,7 +490,7 @@ export function OnboardingGate() {
           )}
           {step === 5 && (
             <Question title={tt("ccyTitle")} hint={tt("ccyHint")}>
-              <Grid cols={4}>
+              <Grid cols={3}>
                 {CURRENCIES.map((g) => (
                   <Choice
                     key={g.v}
