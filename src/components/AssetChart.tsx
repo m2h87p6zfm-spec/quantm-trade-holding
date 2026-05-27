@@ -367,18 +367,17 @@ function HoverTooltip({
 
   return (
     <>
-      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
-      <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
+      <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground truncate">{dateStr}</div>
+      <div className="mt-1 font-mono text-xs font-semibold tabular-nums text-foreground">
         {formatCurrencyFromUsd(hover.close, currency)}
       </div>
-      <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
+      <div className={`mt-0.5 flex items-center gap-1 font-mono text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
         <span>{formatSignedAbs(displayAbs, axisDecimals(displayClose))}</span>
         <span>·</span>
         <span>{formatPercent(pct)}</span>
       </div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "since period start" : "seit Periodenstart"}</div>
       {hover.volume > 0 && (
-        <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+        <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-1 font-mono text-[9px] tabular-nums text-muted-foreground">
           <span className="uppercase tracking-wider">Vol</span>
           <span className="text-foreground/80">{formatCompact(hover.volume, 2)}</span>
         </div>
