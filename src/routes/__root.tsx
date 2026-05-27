@@ -188,7 +188,7 @@ function AppShell() {
 
           <div className="flex flex-1 w-full min-w-0">
             <AppSidebar />
-            <div className="flex flex-1 flex-col relative min-w-0">
+            <div className="flex flex-1 flex-col relative min-w-0 pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
               <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
                 <SidebarTrigger className="shrink-0 hidden lg:flex" />
                 <div className="h-5 w-px bg-border/60 shrink-0 hidden sm:block" />
@@ -209,7 +209,7 @@ function AppShell() {
                   <AuthHeaderButton />
                 </div>
               </header>
-              <main className="flex-1 overflow-x-hidden bg-mesh relative pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
+              <main className="flex-1 overflow-x-hidden bg-mesh relative">
                 <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
                 <div className="relative z-10">
                   <Outlet />
@@ -218,6 +218,7 @@ function AppShell() {
               <DisclaimerBanner />
               <Footer />
             </div>
+
           </div>
           <MobileBottomNav />
         </div>
