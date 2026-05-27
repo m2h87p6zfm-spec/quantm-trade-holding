@@ -94,7 +94,7 @@ const DEFAULT: StoredSettings = {
   soundOnAlert: true,
   defaultTakeProfit: 8,
   defaultStopLoss: 4,
-  language: "de",
+  language: "en",
   hideLowConfidence: true,
   experienceLevel: "intermediate",
   notifBreakingNews: true,

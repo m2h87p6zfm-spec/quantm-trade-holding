@@ -92,18 +92,18 @@ function LoginPage() {
           <span className="font-semibold tracking-tight">Quantm Trade</span>
         </Link>
 
-        {/* Fokussierte Value-Prop */}
+        {/* Focused value-prop */}
         <div className="mb-6 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
-            KI erklärt dir jeden Trade<br />
-            <span className="text-primary">in 30 Sekunden auf Deutsch.</span>
+            {t("login.hero.title1")}<br />
+            <span className="text-primary">{t("login.hero.title2")}</span>
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Z-Score, RSI, MACD & Wall-Street-Konsens — automatisch ausgewertet, klar erklärt.
+            {t("login.hero.subtitle")}
           </p>
           <div className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-            <span>✓ Keine Kreditkarte nötig</span>
-            <span>✓ Made in Germany · DSGVO</span>
+            <span>{t("login.hero.badge1")}</span>
+            <span>{t("login.hero.badge2")}</span>
           </div>
         </div>
 
