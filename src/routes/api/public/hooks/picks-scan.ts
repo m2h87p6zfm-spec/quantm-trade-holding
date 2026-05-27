@@ -80,10 +80,12 @@ type ScanResult = { ok: true; pick: PickRow | null } | { ok: false };
 
 async function scanOne(p: Product): Promise<ScanResult> {
   try {
-    // fetchCandles nutzt Yahoo zuerst und Twelve Data nur als Backup.
-    // Kein BUY-Signal ist KEIN Datenfehler, sondern ein normaler Analyseausgang.
-    const ycandles = await fetchCandles(p.symbol, "1y", "1d");
-    const closes = ycandles.map((k) => k.c).filter((n) => Number.isFinite(n));
+    // Massen-Scan ist subrequest-limitiert (Worker-Budget). Wir holen daher
+    // pro Symbol genau EINEN Yahoo-Aufruf — keine Retries, kein TD-Fallback.
+    // Nutzer-getriggerte Analysen verwenden weiterhin den vollen Waterfall
+    // via fetchCandles. Kein Yahoo-Treffer == kein Signal, kein Datenfehler.
+    const raw = await fetchYahooCandles(p.symbol, "1d", "1y");
+    const closes = (raw?.c ?? []).map((n: number) => Number(n)).filter((n: number) => Number.isFinite(n));
     if (closes.length < 60) return { ok: true, pick: null };
     const c = { c: closes } as { c: number[] };
     const ind = computeAll(c.c);
