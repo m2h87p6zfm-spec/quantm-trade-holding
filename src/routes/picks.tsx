@@ -221,15 +221,18 @@ function PicksPage() {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return;
       const { ts, data } = JSON.parse(raw);
-      if (Date.now() - ts < 30 * 60 * 1000) setCachedPicks(data);
+      // 1h Cache — passend zum stündlichen Composite-Engine-Scan
+      if (Date.now() - ts < PICKS_REFRESH_MS) setCachedPicks(data);
     } catch { /* ignore */ }
   }, [CACHE_KEY]);
   useEffect(() => {
     if (loading || picks.length === 0) return;
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: picks }));
+      localStorage.setItem(SCAN_KEY, String(Date.now()));
+      setLastScanTs(Date.now());
     } catch { /* ignore */ }
-  }, [CACHE_KEY, loading, picks]);
+  }, [CACHE_KEY, SCAN_KEY, loading, picks]);
 
   // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
   // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
