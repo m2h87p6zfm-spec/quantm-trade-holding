@@ -2,25 +2,27 @@ import { type ReactNode } from "react";
 import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
-import { Loader2 } from "lucide-react";
 import { FirstRunTour } from "@/components/FirstRunTour";
+import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
 
-// Brand-neutral splash — no translated text here, since it renders before
-// the language preference is hydrated from localStorage (would otherwise
-// cause an SSR/CSR hydration mismatch).
+// Brand splash — silver Q + full wordmark with a subtle pulse, sized
+// large enough to read the metallic wordmark cleanly.
 function ApexLoadingScreen() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-      <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 bg-card shadow-lg shadow-primary/10">
-          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+      <div className="flex flex-col items-center gap-6">
+        <ApexLogo className="h-24 w-24 animate-pulse" />
+        <ApexWordmark className="h-7 w-auto opacity-90" />
+        <div className="mt-2 h-0.5 w-32 overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/3 animate-[loadbar_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-zinc-300 to-transparent" />
         </div>
-        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-primary">Quantm Trade</p>
-        <p className="mt-1 text-sm text-muted-foreground">Loading…</p>
       </div>
+      <style>{`@keyframes loadbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }`}</style>
     </main>
   );
 }
+
+
 
 
 /** Routes that must remain reachable without a session. */

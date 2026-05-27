@@ -83,9 +83,9 @@ export function AppSidebar() {
             <ApexLogo className={collapsed ? "h-8 w-8" : "h-10 w-10"} />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight gap-1">
-              <ApexWordmark className="h-4 w-auto" />
-              <span className="text-[10px] text-muted-foreground">{t("side.tagline")}</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg font-bold tracking-tight text-foreground">Quantm <span className="font-light text-muted-foreground">Trade</span></span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("side.tagline")}</span>
             </div>
           )}
         </div>
