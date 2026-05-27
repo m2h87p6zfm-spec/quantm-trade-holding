@@ -291,15 +291,15 @@ export const AssetChart = memo(function AssetChart({
       </div>
 
       {/* Chart */}
-      <div style={{ height }} className="relative w-full">
+      <div style={{ height }} className="relative w-full rounded-lg border border-border/40 bg-background/20 overflow-hidden">
         {data.length === 0 && q.isLoading && (
           <div className="absolute inset-0 animate-pulse rounded-md bg-gradient-to-b from-card/40 to-card/10" />
         )}
         <div ref={wrapRef} className="h-full w-full" />
 
-        {/* Hover overlay */}
+        {/* Hover overlay — compact, top-right */}
         {hover && (
-          <div className="pointer-events-none absolute left-3 top-3 z-10 min-w-[180px] rounded-md border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-2xl ring-1 ring-border/40">
+          <div className="pointer-events-none absolute right-2 top-2 z-10 min-w-[120px] max-w-[160px] rounded-md border border-border/70 bg-popover/95 px-2 py-1.5 text-[10px] text-popover-foreground shadow-lg ring-1 ring-border/30 backdrop-blur-sm">
             <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} lang={lang} />
           </div>
         )}
@@ -367,18 +367,17 @@ function HoverTooltip({
 
   return (
     <>
-      <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{dateStr}</div>
-      <div className="mt-1.5 font-mono text-base font-semibold tabular-nums text-foreground">
+      <div className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground truncate">{dateStr}</div>
+      <div className="mt-1 font-mono text-xs font-semibold tabular-nums text-foreground">
         {formatCurrencyFromUsd(hover.close, currency)}
       </div>
-      <div className={`mt-0.5 flex items-center gap-1.5 font-mono text-[11px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
+      <div className={`mt-0.5 flex items-center gap-1 font-mono text-[10px] tabular-nums ${up ? "text-bull" : "text-bear"}`}>
         <span>{formatSignedAbs(displayAbs, axisDecimals(displayClose))}</span>
         <span>·</span>
         <span>{formatPercent(pct)}</span>
       </div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-muted-foreground">{lang === "en" ? "since period start" : "seit Periodenstart"}</div>
       {hover.volume > 0 && (
-        <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground">
+        <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-1 font-mono text-[9px] tabular-nums text-muted-foreground">
           <span className="uppercase tracking-wider">Vol</span>
           <span className="text-foreground/80">{formatCompact(hover.volume, 2)}</span>
         </div>

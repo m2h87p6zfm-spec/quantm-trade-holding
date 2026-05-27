@@ -180,6 +180,13 @@ export function OnboardingGate() {
   const [a, setA] = useState<Answers>(initialAnswers);
   const [saving, setSaving] = useState(false);
 
+  // Detect UI language from browser before the user picks one, then follow their choice.
+  const browserLang: LangCode = useMemo(() => {
+    if (typeof navigator === "undefined") return "en";
+    return navigator.language?.toLowerCase().startsWith("de") ? "de" : "en";
+  }, []);
+  const uiLang: LangCode = a.language ?? browserLang;
+
   if (authLoading || loading || !user || !profile) return null;
   // If already completed, AuthGate handles the redirect — do NOT navigate during render here
   // (caused a flicker loop between / and /onboarding).
@@ -290,7 +297,7 @@ export function OnboardingGate() {
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-2.5 py-1 text-[10px] text-muted-foreground">
-            <Lock className="h-3 w-3" /> Privat & verschlüsselt
+            <Lock className="h-3 w-3" /> {uiLang === "en" ? "Private & encrypted" : "Privat & verschlüsselt"}
           </div>
         </div>
 
@@ -306,6 +313,7 @@ export function OnboardingGate() {
         <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
           {step === 0 && (
             <WelcomeStep
+              lang={uiLang}
               terms={a.terms_accepted}
               privacy={a.privacy_accepted}
               risk={a.risk_disclosure_accepted}
@@ -486,12 +494,12 @@ export function OnboardingGate() {
             onClick={() => setStep((s) => Math.max(0, s - 1 === 7 ? 6 : s - 1))}
             disabled={step === 0}
           >
-            <ChevronLeft className="h-4 w-4 mr-1" /> Zurück
+            <ChevronLeft className="h-4 w-4 mr-1" /> {uiLang === "en" ? "Back" : "Zurück"}
           </Button>
           <div className="font-mono text-[10px] tabular-nums text-muted-foreground">{progressPct}%</div>
           {step < TOTAL_STEPS - 1 ? (
             <Button size="sm" onClick={() => setStep((s) => (s + 1 === 7 ? 8 : s + 1))} disabled={!canNext}>
-              {step === 0 ? "Loslegen" : "Weiter"} <ChevronRight className="h-4 w-4 ml-1" />
+              {step === 0 ? (uiLang === "en" ? "Get started" : "Loslegen") : (uiLang === "en" ? "Next" : "Weiter")} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             <Button size="sm" onClick={finish} disabled={!canNext || saving} className="bg-gradient-to-r from-primary to-violet-500 text-primary-foreground">
@@ -508,6 +516,7 @@ export function OnboardingGate() {
 /* ─────────────────── Sub-components ─────────────────── */
 
 function WelcomeStep({
+  lang,
   terms,
   privacy,
   risk,
@@ -517,6 +526,7 @@ function WelcomeStep({
   setRisk,
   setAge,
 }: {
+  lang: LangCode;
   terms: boolean;
   privacy: boolean;
   risk: boolean;
@@ -526,6 +536,7 @@ function WelcomeStep({
   setRisk: (v: boolean) => void;
   setAge: (v: boolean) => void;
 }) {
+  const en = lang === "en";
   return (
     <div className="py-2">
       <div className="text-center">
@@ -533,10 +544,13 @@ function WelcomeStep({
           <Sparkles className="h-6 w-6 text-primary" />
         </div>
         <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-          Willkommen bei <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Quantm Trade</span>
+          {en ? "Welcome to " : "Willkommen bei "}
+          <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Quantm Trade</span>
         </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-          Bevor wir deine Plattform kalibrieren, lies bitte unsere rechtlichen Bedingungen und bestätige sie.
+          {en
+            ? "Before we calibrate your platform, please review our legal terms and confirm them."
+            : "Bevor wir deine Plattform kalibrieren, lies bitte unsere rechtlichen Bedingungen und bestätige sie."}
         </p>
       </div>
 
@@ -545,10 +559,12 @@ function WelcomeStep({
         <div className="flex items-start gap-2.5">
           <ShieldCheck className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
           <div className="text-[11px] leading-relaxed text-amber-100/90">
-            <span className="font-semibold text-amber-200">Wichtiger Hinweis zum Risiko.</span>{" "}
-            Quantm Trade stellt ausschließlich informationsbasierte Inhalte, Marktdaten und algorithmische Analysen bereit. Wir bieten <span className="font-semibold">keine</span> Anlageberatung, Vermögensverwaltung oder individuelle Empfehlung im Sinne der MiFID II / WpHG.
-            Der Handel mit Finanzinstrumenten birgt erhebliche Verlustrisiken, bis hin zum Totalverlust des eingesetzten Kapitals. Vergangene Performance ist kein Indikator für zukünftige Ergebnisse.
-            AI-generierte Signale sind probabilistisch und können fehlerhaft sein. Treffe Handelsentscheidungen ausschließlich auf eigene Verantwortung.
+            <span className="font-semibold text-amber-200">
+              {en ? "Important risk notice." : "Wichtiger Hinweis zum Risiko."}
+            </span>{" "}
+            {en
+              ? "Quantm Trade provides information, market data and algorithmic analysis only. We do not provide investment advice, portfolio management or individual recommendations under MiFID II / WpHG. Trading financial instruments carries substantial risk of loss, up to the total loss of invested capital. Past performance is not an indicator of future results. AI-generated signals are probabilistic and can be wrong. Make trading decisions at your own responsibility."
+              : "Quantm Trade stellt ausschließlich informationsbasierte Inhalte, Marktdaten und algorithmische Analysen bereit. Wir bieten keine Anlageberatung, Vermögensverwaltung oder individuelle Empfehlung im Sinne der MiFID II / WpHG. Der Handel mit Finanzinstrumenten birgt erhebliche Verlustrisiken, bis hin zum Totalverlust des eingesetzten Kapitals. Vergangene Performance ist kein Indikator für zukünftige Ergebnisse. AI-generierte Signale sind probabilistisch und können fehlerhaft sein. Treffe Handelsentscheidungen ausschließlich auf eigene Verantwortung."}
           </div>
         </div>
       </div>
@@ -559,42 +575,64 @@ function WelcomeStep({
           checked={age}
           onChange={setAge}
           label={
-            <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 4 Jahre alt</span> bin.</>
+            en
+              ? <>I confirm I am <span className="font-semibold text-foreground">at least 4 years old</span>.</>
+              : <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 4 Jahre alt</span> bin.</>
           }
         />
         <ConsentRow
           checked={terms}
           onChange={setTerms}
           label={
-            <>
-              Ich akzeptiere die{" "}
-              <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                Allgemeinen Geschäftsbedingungen (AGB)
-              </a>
-              {" "}von Quantm Trade.
-            </>
+            en ? (
+              <>
+                I accept the{" "}
+                <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                  Terms and Conditions
+                </a>
+                {" "}of Quantm Trade.
+              </>
+            ) : (
+              <>
+                Ich akzeptiere die{" "}
+                <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                  Allgemeinen Geschäftsbedingungen (AGB)
+                </a>
+                {" "}von Quantm Trade.
+              </>
+            )
           }
         />
         <ConsentRow
           checked={privacy}
           onChange={setPrivacy}
           label={
-            <>
-              Ich habe die{" "}
-              <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                Datenschutzerklärung
-              </a>
-              {" "}gelesen und stimme der Verarbeitung meiner Daten zu.
-            </>
+            en ? (
+              <>
+                I have read the{" "}
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                  Privacy Policy
+                </a>
+                {" "}and consent to the processing of my data.
+              </>
+            ) : (
+              <>
+                Ich habe die{" "}
+                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                  Datenschutzerklärung
+                </a>
+                {" "}gelesen und stimme der Verarbeitung meiner Daten zu.
+              </>
+            )
           }
         />
         <ConsentRow
           checked={risk}
           onChange={setRisk}
           label={
-            <>
-              Ich habe die <span className="font-semibold text-foreground">Risikohinweise</span> verstanden und nehme zur Kenntnis, dass Quantm Trade <span className="font-semibold text-foreground">keine Anlageberatung</span> leistet und nicht für Handelsverluste haftet.
-            </>
+            en
+              ? <>I have understood the <span className="font-semibold text-foreground">risk disclosures</span> and acknowledge that Quantm Trade <span className="font-semibold text-foreground">does not provide investment advice</span> and is not liable for trading losses.</>
+              : <>Ich habe die <span className="font-semibold text-foreground">Risikohinweise</span> verstanden und nehme zur Kenntnis, dass Quantm Trade <span className="font-semibold text-foreground">keine Anlageberatung</span> leistet und nicht für Handelsverluste haftet.</>
           }
         />
       </div>
