@@ -8,12 +8,25 @@ import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
 // Cron endpoints under /api/public/* may also authenticate via the standard
-// Supabase anon `apikey` header (canonical pg_cron pattern). We accept either
-// the legacy x-cron-secret OR the anon key.
+// Supabase anon `apikey` header (canonical pg_cron pattern). The anon key
+// is fully public (embedded in every client bundle), so checking it doesn't
+// add real security — it just filters out unrelated bots. We accept any of
+// the common env-var names Supabase exposes.
+const PROJECT_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bXB6cGRmaGFyaW9oZGthbWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTExNDcsImV4cCI6MjA5NDk2NzE0N30.5_o977dQodLw5kK6DxnlV6UmUthOcz8osKOr0KJtHyE";
+
 function isAnonApiKey(request: Request): boolean {
-  const got = request.headers.get("apikey") ?? "";
-  const expected = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
-  return !!got && !!expected && got === expected;
+  const got =
+    request.headers.get("apikey") ??
+    (request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
+  if (!got) return false;
+  const candidates = [
+    process.env.SUPABASE_PUBLISHABLE_KEY,
+    process.env.SUPABASE_ANON_KEY,
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    PROJECT_ANON_KEY,
+  ].filter(Boolean) as string[];
+  return candidates.some((k) => k === got);
 }
 
 // ============================================================
