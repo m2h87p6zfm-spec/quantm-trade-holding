@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useCandleScan } from "@/hooks/use-candle-scan";
 import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass, Activity, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
@@ -81,54 +81,27 @@ function PicksPage() {
     return list;
   }, [sector, region, universe, mode, query]);
 
-  const candleQs = useQueries({
-    queries: (mode === "ki" ? filtered : []).map((p) => ({
-      queryKey: ["candles", p.symbol],
-      queryFn: () => fetchCandles(p.symbol, "D", 260),
-      // Stündlicher Throttle: nur abrufen wenn letzter Scan ≥ 1h her ist
-      enabled: !!getApiKey() && mode === "ki" && scanAllowed,
-      staleTime: PICKS_REFRESH_MS, // 1h — verhindert Refetch innerhalb der Stunde
-      gcTime: 24 * 60 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      retry: 1,
-    })),
+  // Symbols to scan (KI mode only). Stable identity so the scanner hook
+  // only restarts when the universe/sector/region actually changes.
+  const scanSymbols = useMemo(
+    () => (mode === "ki" ? filtered.map((p) => p.symbol) : []),
+    [filtered, mode],
+  );
+
+  const scan = useCandleScan(scanSymbols, {
+    enabled: !!getApiKey() && mode === "ki" && scanAllowed,
+    runId: forceRefresh,
+    concurrency: 8,
+    days: 260,
   });
 
-  // CRITICAL FIX: ein gescheiterter Request (z. B. Symbol vom Yahoo-Proxy nicht
-  // gefunden, Rate-Limit, Timeout) hat den Scan-Zähler bei "loaded/total"
-  // einfrieren lassen, weil nur `data` gezählt wurde. Jetzt zählen wir auch
-  // erledigte Fehler als "fertig", damit der Fortschritt immer 100 % erreicht.
-  const settled = candleQs.filter((q) => q.data || q.isError || (!q.isLoading && !q.isFetching)).length;
-  const succeeded = candleQs.filter((q) => q.data).length;
-  const failed = candleQs.filter((q) => q.isError).length;
+  const total = scanSymbols.length;
+  const settled = scan.settled;
+  const succeeded = scan.succeeded;
+  const failed = scan.failed;
   const pendingFeed = failed;
-  const total = filtered.length;
-  const loading = settled < total;
+  const loading = scan.loading;
   const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
-
-  // Auto-Heal: fehlgeschlagene Symbole automatisch erneut abrufen (max. 3 Runden,
-  // exponentielles Backoff), damit "ohne Daten" sich von selbst auflöst.
-  const autoRetryRef = useRef<Map<string, number>>(new Map());
-  useEffect(() => {
-    if (loading) return;
-    const toRetry: number[] = [];
-    candleQs.forEach((q, i) => {
-      if (!q.isError) return;
-      const sym = filtered[i]?.symbol;
-      if (!sym) return;
-      const n = autoRetryRef.current.get(sym) ?? 0;
-      if (n >= 3) return;
-      autoRetryRef.current.set(sym, n + 1);
-      toRetry.push(i);
-    });
-    if (toRetry.length === 0) return;
-    const delay = 1200 + Math.random() * 800;
-    const t = setTimeout(() => {
-      toRetry.forEach((i) => { candleQs[i]?.refetch?.(); });
-    }, delay);
-    return () => clearTimeout(t);
-  }, [loading, candleQs, filtered]);
 
 
 
@@ -146,8 +119,8 @@ function PicksPage() {
     if (mode !== "ki") return [];
     const rows: Row[] = [];
     for (let i = 0; i < filtered.length; i++) {
-      const c = candleQs[i]?.data;
       const p = filtered[i];
+      const c = scan.results.get(p.symbol);
       if (!c || !c.c || c.c.length < 60) continue;
       const ind = computeAll(c.c);
       const sig = scoreIndicators(ind, settings.risk);
@@ -167,7 +140,7 @@ function PicksPage() {
     }
     rows.sort((a, b) => b.score - a.score);
     return rows.slice(0, 15);
-  }, [candleQs, filtered, settings.risk, mode]);
+  }, [scan.results, filtered, settings.risk, mode]);
 
   // Persist BUY picks into the public Track Record (dedup per symbol per day).
   const recordedRef = useRef<Set<string>>(new Set());
