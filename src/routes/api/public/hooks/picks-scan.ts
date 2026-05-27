@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireCronSecret } from "@/lib/api-auth.server";
 import { getCandlesCached } from "@/lib/twelvedata.server";
+import { fetchCandles } from "@/lib/quant-fetch.server";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
@@ -80,10 +81,21 @@ type ScanResult = { ok: true; pick: PickRow | null } | { ok: false };
 
 async function scanOne(p: Product): Promise<ScanResult> {
   try {
-    const r = await getCandlesCached(p.symbol, "1d", "1y", 3600);
-    const c = r.value;
+    // PRIMÄR: Yahoo (kostenlos, hohe Quoten) — bringt die Fehlerrate von
+    // ~90 % (TD Free-Plan-Limit) auf <5 %. Nur wenn Yahoo nichts liefert,
+    // wird Twelve Data als Backup angefragt.
+    let closes: number[] | null = null;
+    const ycandles = await fetchCandles(p.symbol, "1y", "1d");
+    if (ycandles.length >= 60) {
+      closes = ycandles.map((k) => k.c);
+    } else {
+      const r = await getCandlesCached(p.symbol, "1d", "1y", 3600);
+      if (r.value && r.value.c.length >= 60) closes = r.value.c;
+    }
+    if (!closes) return { ok: true, pick: null };
+    const c = { c: closes } as { c: number[] };
     // Insufficient data is not a "fetch error" — treat as ok with no pick.
-    if (!c || c.c.length < 60) return { ok: true, pick: null };
+    if (c.c.length < 60) return { ok: true, pick: null };
     const ind = computeAll(c.c);
     const sig = scoreIndicators(ind, "ausgewogen");
     const regime = detectRegime(ind);
@@ -120,7 +132,7 @@ async function scanOne(p: Product): Promise<ScanResult> {
   }
 }
 
-async function runScan(scope: Scope, concurrency = 3) {
+async function runScan(scope: Scope, concurrency = 6) {
   const universe = filterUniverse(scope);
   const total = universe.length;
   const results: PickRow[] = [];

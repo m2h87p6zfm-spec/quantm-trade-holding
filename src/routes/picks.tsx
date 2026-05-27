@@ -134,19 +134,36 @@ function PicksPage() {
           sector: (x.sector as Product["sector"]) ?? "Technologie",
           region: (x.region as Product["region"]) ?? "US",
         };
+        const last = Number(x.last ?? 0);
+        const sma50 = Number(x.sma50 ?? 0);
+        const sma200 = Number(x.sma200 ?? 0);
         const fakeInd = {
+          price: last,
           zScore: Number(x.zScore ?? 0),
           rsi: Number(x.rsi ?? 50),
           macd: { histogram: Number(x.macdHist ?? 0), macd: 0, signal: 0 },
-          sma50: Number(x.sma50 ?? 0),
-          sma200: Number(x.sma200 ?? 0),
+          sma50,
+          sma200,
           volatility: Number(x.volatility ?? 0.3),
           momentum: Number(x.momentum ?? 0),
-          ema20: 0, ema50: 0, atr: 0, bollinger: { upper: 0, middle: 0, lower: 0 },
+          ema20: 0, ema50: 0, atr: 0,
+          bollinger: { upper: last * 1.1, middle: last, lower: last * 0.9 },
+          sharpe: 0,
+          beta: 1,
         } as unknown as ReturnType<typeof computeAll>;
+        // Re-Score mit dem aktuellen Risk-Profile des Users.
+        // Konservativ verlangt höhere Schwelle (25), spekulativ niedrigere (12).
+        const sig = scoreIndicators(fakeInd, settings.risk);
+        const baseConfidence = Number(x.confidence ?? sig.confidence);
+        // Konfidenz mit Profile-Adjustment: konservativ -10 %, spekulativ +5 %.
+        const confAdj =
+          settings.risk === "konservativ" ? -10 : settings.risk === "spekulativ" ? 5 : 0;
+        const adjConfidence = Math.max(0, Math.min(100, baseConfidence + confAdj));
+        // Bestimme Verdict-Label für die UI: wenn unter user-Schwelle, NEUTRAL.
+        const verdictForRisk = sig.verdict;
         const fakeReport = {
-          confidence: Number(x.confidence ?? 0),
-          decision: "BUY",
+          confidence: Math.round(adjConfidence),
+          decision: verdictForRisk === "LONG" ? "BUY" : verdictForRisk === "SHORT" ? "SELL" : "HOLD",
           compositeScore: x.compositeScore as number | null ?? null,
           rationale: [],
           warnings: [],
@@ -157,22 +174,30 @@ function PicksPage() {
           regime: (x.regime as MarketRegime) ?? "bull",
           report: fakeReport,
           upsidePct: Number(x.upsidePct ?? 0),
-          score: Number(x.score ?? 0),
+          score: Number(x.score ?? 0) + confAdj,
           change: Number(x.change ?? 0),
-          last: Number(x.last ?? 0),
+          last,
         };
       });
-      // Clientseitiges Filtern nach Sektor/Region.
-      const filteredRows = rows.filter((row) => {
-        if (sector !== "Alle" && row.p.sector !== sector) return false;
-        if (region !== "Alle" && row.p.region !== region) return false;
-        return true;
-      });
+      // Clientseitiges Filtern nach Sektor/Region UND nach Risk-Profile:
+      // Picks, die unter dem Profile-Threshold nicht mehr LONG sind, fallen raus.
+      const filteredRows = rows
+        .filter((row) => {
+          if (sector !== "Alle" && row.p.sector !== sector) return false;
+          if (region !== "Alle" && row.p.region !== region) return false;
+          // Verdict-Filter: nur Picks, die unter dem aktuellen Risk-Profile
+          // weiterhin als BUY/LONG durchgehen.
+          if (row.report.decision !== "BUY") return false;
+          // Mindestkonfidenz aus Settings respektieren.
+          if (row.report.confidence < settings.minConfidence) return false;
+          return true;
+        })
+        .sort((a, b) => b.score - a.score);
       setServerPicks(filteredRows.length > 0 ? filteredRows : null);
       setServerLoaded(true);
     })().catch(() => { if (!cancelled) setServerLoaded(true); });
     return () => { cancelled = true; };
-  }, [universe, sector, region, forceRefresh]);
+  }, [universe, sector, region, forceRefresh, settings.risk, settings.minConfidence]);
 
 
   const scan = useCandleScan(scanSymbols, {
