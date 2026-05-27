@@ -1175,6 +1175,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_history: {
+        Row: {
+          failed: number
+          id: string
+          picks_count: number
+          preserved: boolean
+          region: string
+          scanned_at: string
+          scope_key: string
+          sector: string
+          succeeded: number
+          total_scanned: number
+          universe: string
+        }
+        Insert: {
+          failed?: number
+          id?: string
+          picks_count?: number
+          preserved?: boolean
+          region: string
+          scanned_at?: string
+          scope_key: string
+          sector: string
+          succeeded?: number
+          total_scanned?: number
+          universe: string
+        }
+        Update: {
+          failed?: number
+          id?: string
+          picks_count?: number
+          preserved?: boolean
+          region?: string
+          scanned_at?: string
+          scope_key?: string
+          sector?: string
+          succeeded?: number
+          total_scanned?: number
+          universe?: string
+        }
+        Relationships: []
+      }
       self_healing_logs: {
         Row: {
           auto_healed: boolean
