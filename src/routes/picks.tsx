@@ -37,6 +37,12 @@ const REGIONS = ["Alle", "US", "DE", "EU", "UK", "JP"] as const;
 type Sector = (typeof SECTORS)[number];
 type Region = (typeof REGIONS)[number];
 
+// Hourly throttle: Quantm Picks laufen den vollen Composite-Engine-Scan
+// (15-Faktor Bayesian + Monte-Carlo) nur einmal pro Stunde, um API-Credits
+// und Rechenzeit zu sparen. Letztes Scan-Datum wird pro Filter persistiert.
+const PICKS_REFRESH_MS = 60 * 60 * 1000; // 1 Stunde
+const lastScanKey = (u: string, s: string, r: string) => `apex_picks_lastscan_${u}_${s}_${r}`;
+
 function PicksPage() {
   const t = useT();
   const { user } = useAuth();
@@ -46,6 +52,20 @@ function PicksPage() {
   const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
   const [mode, setMode] = useState<"ki" | "browse">("ki");
   const [query, setQuery] = useState("");
+  const [forceRefresh, setForceRefresh] = useState(0);
+
+  // Track ob ein neuer Scan jetzt erlaubt ist (älter als 1h oder manuell getriggert)
+  const SCAN_KEY = lastScanKey(universe, sector, region);
+  const [lastScanTs, setLastScanTs] = useState<number>(0);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SCAN_KEY);
+      setLastScanTs(raw ? Number(raw) : 0);
+    } catch { setLastScanTs(0); }
+  }, [SCAN_KEY, forceRefresh]);
+  const ageMs = Date.now() - lastScanTs;
+  const scanAllowed = ageMs >= PICKS_REFRESH_MS || forceRefresh > 0;
+  const nextRefreshMin = Math.max(0, Math.ceil((PICKS_REFRESH_MS - ageMs) / 60000));
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
@@ -56,7 +76,6 @@ function PicksPage() {
       if (q) list = list.filter((p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
       return list;
     }
-    // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
     else if (universe === "extended") list = list.slice(0, 250);
     return list;
@@ -66,10 +85,12 @@ function PicksPage() {
     queries: (mode === "ki" ? filtered : []).map((p) => ({
       queryKey: ["candles", p.symbol],
       queryFn: () => fetchCandles(p.symbol, "D", 260),
-      enabled: !!getApiKey() && mode === "ki",
-      staleTime: 12 * 60 * 60 * 1000,
+      // Stündlicher Throttle: nur abrufen wenn letzter Scan ≥ 1h her ist
+      enabled: !!getApiKey() && mode === "ki" && scanAllowed,
+      staleTime: PICKS_REFRESH_MS, // 1h — verhindert Refetch innerhalb der Stunde
       gcTime: 24 * 60 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
       retry: 1,
     })),
   });
