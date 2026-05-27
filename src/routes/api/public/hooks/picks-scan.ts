@@ -116,7 +116,7 @@ async function runScan(scope: Scope, concurrency = 6) {
   });
   await Promise.all(workers);
   results.sort((a, b) => b.score - a.score);
-  const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : 50;
+  const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : scope.universe === "all" ? 50 : 60;
   const top = results.slice(0, topN);
 
   await supabaseAdmin
