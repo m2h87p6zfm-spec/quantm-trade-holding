@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useCandleScan } from "@/hooks/use-candle-scan";
 import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass, Activity, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
