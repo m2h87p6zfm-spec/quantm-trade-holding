@@ -494,12 +494,12 @@ export function OnboardingGate() {
             onClick={() => setStep((s) => Math.max(0, s - 1 === 7 ? 6 : s - 1))}
             disabled={step === 0}
           >
-            <ChevronLeft className="h-4 w-4 mr-1" /> Zurück
+            <ChevronLeft className="h-4 w-4 mr-1" /> {uiLang === "en" ? "Back" : "Zurück"}
           </Button>
           <div className="font-mono text-[10px] tabular-nums text-muted-foreground">{progressPct}%</div>
           {step < TOTAL_STEPS - 1 ? (
             <Button size="sm" onClick={() => setStep((s) => (s + 1 === 7 ? 8 : s + 1))} disabled={!canNext}>
-              {step === 0 ? "Loslegen" : "Weiter"} <ChevronRight className="h-4 w-4 ml-1" />
+              {step === 0 ? (uiLang === "en" ? "Get started" : "Loslegen") : (uiLang === "en" ? "Next" : "Weiter")} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
             <Button size="sm" onClick={finish} disabled={!canNext || saving} className="bg-gradient-to-r from-primary to-violet-500 text-primary-foreground">
