@@ -357,7 +357,7 @@ function PicksPage() {
             <div className="h-full bg-gradient-to-r from-primary to-violet-accent transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            Picks werden aus einem deterministischen Score (Z-Score, RSI, MACD, Trend, Sharpe) berechnet, nicht von einer KI geraten. Das hält die Auswahl reproduzierbar und spart deine <span className="text-foreground font-semibold">AI-Credits</span> für die individuelle Analyse.
+            <span className="text-primary font-semibold">Quantm Composite Engine</span> — 15 Faktoren (Momentum, Trend, Mean-Reversion, Volatilität, Volumen, Makro-Regime, Geopolitik), 10 000-Pfad-Monte-Carlo &amp; Bayesianisches Posterior. Läuft <span className="text-foreground font-semibold">stündlich einmal</span>, um API-Credits zu sparen.
           </p>
         </div>
       )}
