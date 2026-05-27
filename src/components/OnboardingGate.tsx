@@ -221,18 +221,14 @@ const TRADER_TYPES: { v: TraderType; lk: keyof typeof T; dk: keyof typeof T }[] 
   { v: "long_term_investor", lk: "tt_long_l", dk: "tt_long_d" },
   { v: "swing_trader", lk: "tt_swing_l", dk: "tt_swing_d" },
   { v: "day_trader", lk: "tt_day_l", dk: "tt_day_d" },
-  { v: "options_trader", lk: "tt_opt_l", dk: "tt_opt_d" },
-  { v: "crypto_trader", lk: "tt_crypto_l", dk: "tt_crypto_d" },
   { v: "mixed", lk: "tt_mixed_l", dk: "tt_mixed_d" },
 ];
 
+// Wir bieten ausschließlich Aktien & ETFs an — daher nur die zugehörigen
+// Hauptwährungen (USD, EUR, CHF) zur Auswahl.
 const CURRENCIES: { v: PreferredCurrency; sym: string; k: keyof typeof T }[] = [
   { v: "USD", sym: "$", k: "ccy_USD" },
   { v: "EUR", sym: "€", k: "ccy_EUR" },
-  { v: "GBP", sym: "£", k: "ccy_GBP" },
-  { v: "AUD", sym: "A$", k: "ccy_AUD" },
-  { v: "CAD", sym: "C$", k: "ccy_CAD" },
-  { v: "JPY", sym: "¥", k: "ccy_JPY" },
   { v: "CHF", sym: "Fr.", k: "ccy_CHF" },
 ];
 
