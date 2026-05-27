@@ -113,6 +113,59 @@ export function DecisionCard({ report, symbol }: { report: DecisionReport; symbo
         </div>
         <p className="mt-1 text-xs leading-snug text-foreground/80">{report.invalidation}</p>
       </div>
+
+      {/* Quantitative Signal Metrics (Composite-Engine, MC 10k) */}
+      {report.metrics && (
+        <div className="mt-3 rounded-md border border-primary/20 bg-primary/[0.03] p-2.5">
+          <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-primary">
+            <span className="flex items-center gap-1.5"><Sigma className="h-3 w-3" /> Quant Metrics · 30d Horizon · {report.metrics.monteCarloPaths.toLocaleString("de-DE")} MC-Pfade</span>
+            {report.compositeScore != null && (
+              <span className="font-mono text-foreground/70">Composite {report.compositeScore}/100</span>
+            )}
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <Metric icon={TrendingUp} label="Erw. Rendite" value={`${report.metrics.expectedReturnPct >= 0 ? "+" : ""}${report.metrics.expectedReturnPct.toFixed(2)}%`} tone={report.metrics.expectedReturnPct >= 0 ? "bull" : "bear"} />
+            <Metric icon={Activity} label="Sharpe (ann.)" value={report.metrics.expectedSharpe.toFixed(2)} tone={report.metrics.expectedSharpe > 0.5 ? "bull" : report.metrics.expectedSharpe < 0 ? "bear" : "neutral"} />
+            <Metric icon={Percent} label="Win-Prob" value={`${(report.metrics.winProbability * 100).toFixed(0)}%`} tone={report.metrics.winProbability > 0.55 ? "bull" : report.metrics.winProbability < 0.45 ? "bear" : "neutral"} />
+            <Metric icon={Target} label="Risk:Reward" value={`1:${report.metrics.riskRewardRatio.toFixed(2)}`} tone={report.metrics.riskRewardRatio > 1.5 ? "bull" : "neutral"} />
+            <Metric icon={ShieldAlert} label="VaR 95%" value={`−${report.metrics.var95Pct.toFixed(2)}%`} tone="bear" />
+            <Metric icon={ShieldAlert} label="CVaR 95%" value={`−${report.metrics.cvar95Pct.toFixed(2)}%`} tone="bear" />
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>Bayesian P(Aufwärts | Evidenz): <b className="font-mono text-foreground/80">{(report.metrics.posteriorBuyProb * 100).toFixed(0)}%</b></span>
+          </div>
+          {report.factors && report.factors.length > 0 && (
+            <details className="mt-2 text-[10px] text-muted-foreground">
+              <summary className="cursor-pointer hover:text-foreground">15-Faktor Breakdown (regime-adaptiv gewichtet)</summary>
+              <ul className="mt-1.5 grid gap-0.5 pl-1">
+                {report.factors
+                  .slice()
+                  .sort((a, b) => Math.abs(b.score * b.weight) - Math.abs(a.score * a.weight))
+                  .map((f) => (
+                    <li key={f.key} className="flex items-center justify-between gap-2 font-mono">
+                      <span className="truncate">{f.label}</span>
+                      <span className={f.score > 0.05 ? "text-bull" : f.score < -0.05 ? "text-bear" : "text-muted-foreground"}>
+                        {f.score > 0 ? "+" : ""}{f.score.toFixed(2)} × {(f.weight * 100).toFixed(0)}%
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Metric({ icon: Icon, label, value, tone }: { icon: typeof Brain; label: string; value: string; tone: "bull" | "bear" | "neutral" }) {
+  const cls = tone === "bull" ? "text-bull" : tone === "bear" ? "text-bear" : "text-foreground";
+  return (
+    <div className="rounded-md border border-border/60 bg-background/40 p-1.5">
+      <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-2.5 w-2.5" /> {label}
+      </div>
+      <div className={`mt-0.5 font-mono text-xs font-semibold ${cls}`}>{value}</div>
     </div>
   );
 }
