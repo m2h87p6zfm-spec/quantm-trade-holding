@@ -45,7 +45,7 @@ async function scanOne(p: Product) {
     const c = r.value;
     if (!c || c.c.length < 60) return null;
     const ind = computeAll(c.c);
-    const sig = scoreIndicators(ind, "balanced");
+    const sig = scoreIndicators(ind, "ausgewogen");
     const regime = detectRegime(ind);
     const report = buildDecision(p.symbol, p.name, ind, sig, regime, {
       historicalCloses: c.c,
