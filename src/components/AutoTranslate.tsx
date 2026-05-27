@@ -108,6 +108,13 @@ export function AutoTranslate() {
     pendingRef.current = new Set();
     inflightRef.current = new Set();
 
+    // Reverse lookup: translated string -> original. Used to ignore text we
+    // already swapped so we don't queue translations as new source strings.
+    const reverse = new Set<string>();
+    for (const v of cacheRef.current.values()) reverse.add(v);
+
+
+
     const flushPending = async () => {
       const batch = Array.from(pendingRef.current);
       pendingRef.current.clear();
