@@ -243,7 +243,7 @@ function PicksPage() {
       rows.push({ p, ind, regime, report, upsidePct, score, change, last });
     }
     rows.sort((a, b) => b.score - a.score);
-    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : 50;
+    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : universe === "all" ? 50 : 60;
     return rows.slice(0, topN);
   }, [scan.results, filtered, settings.risk, mode, universe]);
 
