@@ -244,7 +244,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         } catch { /* leerer body → defaults */ }
 
         const out: Array<{ scope: string; result: Awaited<ReturnType<typeof runScan>> }> = [];
-        const buyPicksBySymbol = new Map<string, NonNullable<Awaited<ReturnType<typeof scanOne>>>>();
+        const buyPicksBySymbol = new Map<string, PickRow>();
         for (const s of scopes) {
           try {
             const result = await runScan(s);
