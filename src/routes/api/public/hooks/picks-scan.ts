@@ -233,12 +233,13 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
           if (authErr) return authErr;
         }
 
-        // Default: scannt alle Cap-Buckets + Combined-Scope.
+        // Default: scannt nur die echten Cap-Buckets. "combined" wird danach
+        // serverseitig aus den drei Cache-Einträgen synthetisiert — das spart
+        // 2.668 zusätzliche Yahoo-Aufrufe pro Cron-Tick (Subrequest-Budget).
         let scopes: Scope[] = [
           { universe: "top", sector: "Alle", region: "Alle" },
           { universe: "extended", sector: "Alle", region: "Alle" },
           { universe: "all", sector: "Alle", region: "Alle" },
-          { universe: "combined", sector: "Alle", region: "Alle" },
         ];
         try {
           const body = (await request.json()) as { scopes?: Scope[] } | null;
@@ -250,6 +251,8 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         const out: Array<{ scope: string; result: Awaited<ReturnType<typeof runScan>> }> = [];
         const buyPicksBySymbol = new Map<string, PickRow>();
         for (const s of scopes) {
+          // "combined" wird NICHT gescannt, sondern aus den anderen Caches gemerged.
+          if (s.universe === "combined") continue;
           try {
             const result = await runScan(s);
             out.push({ scope: scopeKey(s), result });
@@ -260,6 +263,65 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
               result: { total: 0, succeeded: 0, failed: 0, picks: 0, preserved: false },
             });
           }
+        }
+
+        // Synthese: combined|<sector>|<region> ist die Vereinigung der
+        // top/extended/all-Caches mit demselben sector/region. Wir holen die
+        // existierenden Picks aus picks_cache und schreiben den Merge zurück.
+        try {
+          const buckets: Array<Scope["universe"]> = ["top", "extended", "all"];
+          const seenSR = new Set<string>();
+          for (const s of scopes) {
+            const k = `${s.sector}|${s.region}`;
+            if (seenSR.has(k)) continue;
+            seenSR.add(k);
+            const keys = buckets.map((u) => `${u}|${s.sector}|${s.region}`);
+            const { data: cacheRows } = await supabaseAdmin
+              .from("picks_cache")
+              .select("picks, scope_key, total_scanned, succeeded, failed")
+              .in("scope_key", keys);
+            const all: PickRow[] = [];
+            let total = 0, succ = 0, fail = 0;
+            for (const row of cacheRows ?? []) {
+              const arr = (row.picks as unknown as PickRow[]) ?? [];
+              all.push(...arr);
+              total += Number(row.total_scanned ?? 0);
+              succ += Number(row.succeeded ?? 0);
+              fail += Number(row.failed ?? 0);
+            }
+            const dedup = new Map<string, PickRow>();
+            for (const p of all) {
+              const prev = dedup.get(p.symbol);
+              if (!prev || (Number(p.score ?? 0) > Number(prev.score ?? 0))) dedup.set(p.symbol, p);
+            }
+            const merged = [...dedup.values()].sort((a, b) => b.score - a.score).slice(0, 60);
+            const combinedKey = `combined|${s.sector}|${s.region}`;
+            await supabaseAdmin.from("picks_cache").upsert({
+              scope_key: combinedKey,
+              universe: "combined",
+              sector: s.sector,
+              region: s.region,
+              picks: merged,
+              total_scanned: total,
+              succeeded: succ,
+              failed: fail,
+              scanned_at: new Date().toISOString(),
+            }, { onConflict: "scope_key" });
+            await supabaseAdmin.from("scan_history").insert({
+              scope_key: combinedKey,
+              universe: "combined",
+              sector: s.sector,
+              region: s.region,
+              total_scanned: total,
+              succeeded: succ,
+              failed: fail,
+              picks_count: merged.length,
+              preserved: false,
+            });
+            out.push({ scope: combinedKey, result: { total, succeeded: succ, failed: fail, picks: merged.length, preserved: false } });
+          }
+        } catch (e) {
+          console.error("combined-merge failed", e);
         }
 
         // Persist BUY picks into the Track Record (apex_analyses) for
