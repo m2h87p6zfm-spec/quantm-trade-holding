@@ -186,7 +186,7 @@ function PicksPage() {
     setSimProgress(0);
     const start = Date.now();
     // Bei größerem Universum etwas länger animieren, fühlt sich realistischer an.
-    const duration = universe === "all" ? 9000 : universe === "extended" ? 6000 : 4000;
+    const duration = universe === "combined" ? 11000 : universe === "all" ? 9000 : universe === "extended" ? 6000 : 4000;
     const id = window.setInterval(() => {
       const elapsed = Date.now() - start;
       const pct = Math.min(100, Math.round((elapsed / duration) * 100));
