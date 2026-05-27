@@ -415,8 +415,8 @@ const DICT: Record<Lang, Dict> = {
     // Login
     "login.meta.title": "Anmelden — Quantm Trade",
     "login.meta.desc": "Melde dich bei Quantm Trade an, um Pro-Features und dein Abo zu verwalten.",
-    "login.hero.title1": "KI erklärt dir jeden Trade",
-    "login.hero.title2": "in 30 Sekunden auf Deutsch.",
+    "login.hero.title1": "Institutionelle Marktintelligenz.",
+    "login.hero.title2": "Auf Knopfdruck.",
     "login.hero.subtitle": "Z-Score, RSI, MACD & Wall-Street-Konsens — automatisch ausgewertet, klar erklärt.",
     "login.hero.badge1": "✓ Keine Kreditkarte nötig",
     "login.hero.badge2": "✓ Made in Germany · DSGVO",
@@ -970,8 +970,8 @@ const DICT: Record<Lang, Dict> = {
     // Login
     "login.meta.title": "Sign in — Quantm Trade",
     "login.meta.desc": "Sign in to Quantm Trade to manage Pro features and your subscription.",
-    "login.hero.title1": "AI explains every trade",
-    "login.hero.title2": "in 30 seconds, in plain English.",
+    "login.hero.title1": "Institutional market intelligence.",
+    "login.hero.title2": "On demand.",
     "login.hero.subtitle": "Z-Score, RSI, MACD & Wall Street consensus — automatically evaluated, clearly explained.",
     "login.hero.badge1": "✓ No credit card required",
     "login.hero.badge2": "✓ Made in Germany · GDPR",

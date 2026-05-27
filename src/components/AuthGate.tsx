@@ -5,25 +5,34 @@ import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { FirstRunTour } from "@/components/FirstRunTour";
 import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
 
-// Brand splash — silver Q + full wordmark with a subtle pulse, sized
-// large enough to read the metallic wordmark cleanly.
+/**
+ * Brand splash — silver Q + wordmark on a deep, vignetted canvas.
+ * Refined typographic spacing, a hairline divider, and a thin
+ * indeterminate progress sliver instead of a pulsing logo.
+ */
 function ApexLoadingScreen() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-      <div className="flex flex-col items-center gap-6">
-        <ApexLogo className="h-24 w-24 animate-pulse" />
-        <ApexWordmark className="h-7 w-auto opacity-90" />
-        <div className="mt-2 h-0.5 w-32 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-1/3 animate-[loadbar_1.2s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-zinc-300 to-transparent" />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background text-foreground">
+      {/* subtle radial vignette */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%), radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)",
+        }}
+      />
+      <div className="relative flex flex-col items-center">
+        <ApexLogo className="h-20 w-20" />
+        <div className="mt-7 h-px w-24 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
+        <ApexWordmark className="mt-7 h-6 w-auto opacity-95" />
+        <div className="relative mt-10 h-[2px] w-40 overflow-hidden rounded-full bg-white/[0.06]">
+          <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
         </div>
       </div>
-      <style>{`@keyframes loadbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }`}</style>
+      <style>{`@keyframes apexbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(420%); } }`}</style>
     </main>
   );
 }
-
-
-
 
 /** Routes that must remain reachable without a session. */
 const PUBLIC_PATHS = new Set<string>([
@@ -40,21 +49,12 @@ function isPublic(pathname: string): boolean {
   return false;
 }
 
-/**
- * Global gate:
- *  • Logged-out users → /login (only auth screens reachable).
- *  • Logged-in users with incomplete onboarding → /onboarding (forced).
- *  • Everyone else → free roam.
- */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useTradingProfile();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const publicRoute = isPublic(pathname);
 
-  // Auth utility pages must render immediately, even while the auth client is
-  // still resolving URL tokens. Otherwise users only see the global loading
-  // splash and never reach the visible retry/login button.
   if (publicRoute) {
     return <>{children}</>;
   }
@@ -67,10 +67,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Block protected content from flashing while we redirect to /onboarding.
-  // Treat a missing profile as "needs onboarding" so a freshly verified user
-  // (whose profile row may not exist yet) is always sent to /onboarding
-  // instead of landing on a route that crashes on a null profile.
   const needsOnboarding =
     user && pathname !== "/onboarding" && (profile === null || profile.onboarding_completed === false);
   if (needsOnboarding) {
