@@ -313,6 +313,7 @@ export function OnboardingGate() {
         <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
           {step === 0 && (
             <WelcomeStep
+              lang={uiLang}
               terms={a.terms_accepted}
               privacy={a.privacy_accepted}
               risk={a.risk_disclosure_accepted}
