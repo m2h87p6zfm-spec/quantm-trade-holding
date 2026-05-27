@@ -35,7 +35,7 @@ import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { UpgradeModal } from "@/components/UpgradeModal";
 
 import { Footer } from "@/components/Footer";
-import { ApexLogo } from "@/components/ApexLogo";
+import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
 import { MarketRegimePill } from "@/components/MarketRegimePill";
 import { useAutoTheme } from "@/hooks/use-auto-theme";
 
