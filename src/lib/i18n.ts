@@ -970,6 +970,11 @@ const DICT: Record<Lang, Dict> = {
     // Login
     "login.meta.title": "Sign in — Quantm Trade",
     "login.meta.desc": "Sign in to Quantm Trade to manage Pro features and your subscription.",
+    "login.hero.title1": "AI explains every trade",
+    "login.hero.title2": "in 30 seconds, in plain English.",
+    "login.hero.subtitle": "Z-Score, RSI, MACD & Wall Street consensus — automatically evaluated, clearly explained.",
+    "login.hero.badge1": "✓ No credit card required",
+    "login.hero.badge2": "✓ Made in Germany · GDPR",
     "login.tab.signin": "Sign in",
     "login.tab.signup": "Register",
     "login.google": "Continue with Google",
