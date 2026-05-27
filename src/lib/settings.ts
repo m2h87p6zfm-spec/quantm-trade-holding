@@ -144,7 +144,13 @@ function read(): StoredSettings {
 
 function write(s: StoredSettings) {
   localStorage.setItem("ta_settings", JSON.stringify(s));
-  window.dispatchEvent(new CustomEvent("ta_settings_change"));
+  // Defer the cross-instance notification so we don't synchronously call
+  // setState on other useSettings consumers (e.g. RootComponent) while
+  // the current component is still rendering. React 18 would otherwise
+  // log "Cannot update a component while rendering a different component".
+  queueMicrotask(() => {
+    window.dispatchEvent(new CustomEvent("ta_settings_change"));
+  });
 }
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
