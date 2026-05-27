@@ -186,6 +186,13 @@ export function whyNow(ind: IndicatorSet, sig: Signal): string {
 //  INSTITUTIONAL DECISION ENGINE (BUY / SELL / HOLD)
 // ============================================================
 import type { MarketRegime } from "./ai-learning";
+import {
+  analyzeComposite,
+  type CompositeAnalysis,
+  type ExternalInputs,
+  type FactorScore,
+  type SignalMetrics,
+} from "./composite-engine";
 
 export type Decision = "BUY" | "SELL" | "HOLD";
 export type RiskLevel = "Niedrig" | "Mittel" | "Hoch";
@@ -207,6 +214,10 @@ export type DecisionReport = {
   invalidation: string;
   regime: MarketRegime;
   adjustments: string[];       // Welche Filter haben Confidence verändert
+  // --- NEU: Multi-Faktor Composite + quantitative Signal-Metriken --------
+  metrics?: SignalMetrics;
+  factors?: FactorScore[];
+  compositeScore?: number;      // 0–100
 };
 
 function regimeLabelDe(r: MarketRegime): string {
@@ -230,9 +241,36 @@ export function buildDecision(
   ind: IndicatorSet,
   sig: Signal,
   regime: MarketRegime,
+  external: ExternalInputs = {},
 ): DecisionReport {
   const adjustments: string[] = [];
   let conf = sig.confidence;
+
+  // --- Multi-Faktor Composite + Monte-Carlo (10k Pfade) --------------------
+  // Diese Engine läuft ZUSÄTZLICH zur Heuristik unten und steuert Konfidenz
+  // sowie Decision-Mapping mit. Sie liefert auch Expected-Return, Sharpe,
+  // Win-Probability, R:R, VaR / CVaR und einen Bayesian-Posterior.
+  const analysis: CompositeAnalysis = analyzeComposite(ind, regime, external, {
+    horizonDays: 30,
+    paths: 10_000,
+  });
+  const compositeBoost = Math.round(analysis.composite.score * 18); // ±18 Punkte
+  conf += compositeBoost;
+  adjustments.push(
+    `Composite-Score ${analysis.composite.scoreNormalized}/100 (${analysis.composite.bullishCount} bull / ${analysis.composite.bearishCount} bear Faktoren) → ${compositeBoost >= 0 ? "+" : ""}${compositeBoost}`,
+  );
+  // Bayesian-Posterior als zusätzliche Sicherheits-Schwelle
+  const posterior = analysis.metrics.posteriorBuyProb;
+  if (posterior > 0.70 || posterior < 0.30) {
+    const bonus = posterior > 0.5 ? +4 : -4;
+    conf += bonus;
+    adjustments.push(`Bayesian-Posterior ${(posterior * 100).toFixed(0)}% → ${bonus >= 0 ? "+" : ""}${bonus}`);
+  }
+  // CVaR-Penalty: wenn Tail-Risiko > 15% in 30T, Confidence runter
+  if (analysis.metrics.cvar95Pct > 15) {
+    conf -= 5;
+    adjustments.push(`CVaR-95 ${analysis.metrics.cvar95Pct.toFixed(1)}% — Tail-Risiko hoch → −5`);
+  }
 
   // --- Smart Money Filter ----------------------------------------------------
   const annVol = ind.volatility;
@@ -369,6 +407,9 @@ export function buildDecision(
     invalidation,
     regime,
     adjustments,
+    metrics: analysis.metrics,
+    factors: analysis.composite.factors,
+    compositeScore: analysis.composite.scoreNormalized,
   };
 }
 
