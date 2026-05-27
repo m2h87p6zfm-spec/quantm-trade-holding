@@ -225,6 +225,7 @@ function AppShell() {
         </div>
         <QuickPanel />
         <UpgradeModal />
+        <AutoTranslate />
         
       </SidebarProvider>
     </Fragment>
