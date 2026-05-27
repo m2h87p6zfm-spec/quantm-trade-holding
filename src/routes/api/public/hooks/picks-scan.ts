@@ -137,7 +137,8 @@ async function runScan(scope: Scope, concurrency = 6) {
       .select("picks")
       .eq("scope_key", scopeKey(scope))
       .maybeSingle();
-    const prevPicks = (prev?.picks ?? []) as never;
+    const prevArr = (prev?.picks as unknown[] | null | undefined) ?? [];
+    const prevPicks = prevArr as never;
     await supabaseAdmin
       .from("picks_cache")
       .upsert(
