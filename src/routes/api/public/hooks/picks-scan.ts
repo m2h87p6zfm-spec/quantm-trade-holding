@@ -65,6 +65,7 @@ async function scanOne(p: Product) {
       sector: p.sector,
       region: p.region,
       confidence: report.confidence,
+      compositeScore: report.compositeScore ?? null,
       decision: report.decision,
       last,
       change,
@@ -74,10 +75,15 @@ async function scanOne(p: Product) {
       rsi: ind.rsi,
       macdHist: ind.macd.histogram,
       zScore: ind.zScore,
+      volatility: ind.volatility,
+      momentum: ind.momentum,
+      sma50: ind.sma50,
+      sma200: ind.sma200,
       entry: sig.entry ?? null,
       target: sig.target ?? null,
       stop: sig.stop ?? null,
     };
+
   } catch {
     return null;
   }
