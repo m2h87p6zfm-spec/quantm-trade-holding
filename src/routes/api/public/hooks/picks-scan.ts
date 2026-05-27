@@ -7,6 +7,15 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
+// Cron endpoints under /api/public/* may also authenticate via the standard
+// Supabase anon `apikey` header (canonical pg_cron pattern). We accept either
+// the legacy x-cron-secret OR the anon key.
+function isAnonApiKey(request: Request): boolean {
+  const got = request.headers.get("apikey") ?? "";
+  const expected = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
+  return !!got && !!expected && got === expected;
+}
+
 // ============================================================
 // Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
 // Iteriert über das gewählte Universum (Top 80 / Erweitert 250),
@@ -119,6 +128,36 @@ async function runScan(scope: Scope, concurrency = 6) {
   const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : scope.universe === "all" ? 50 : 60;
   const top = results.slice(0, topN);
 
+  // If the new scan produced ZERO BUY-Kandidaten, preserve the previously
+  // cached picks (user explicit request: "wenn keine da sind, zeig die vom
+  // letzten Scan"). We still bump scanned_at + counters so we know it ran.
+  if (top.length === 0) {
+    const { data: prev } = await supabaseAdmin
+      .from("picks_cache")
+      .select("picks")
+      .eq("scope_key", scopeKey(scope))
+      .maybeSingle();
+    const prevArr = (prev?.picks as unknown[] | null | undefined) ?? [];
+    const prevPicks = prevArr as never;
+    await supabaseAdmin
+      .from("picks_cache")
+      .upsert(
+        {
+          scope_key: scopeKey(scope),
+          universe: scope.universe,
+          sector: scope.sector,
+          region: scope.region,
+          picks: prevPicks,
+          total_scanned: total,
+          succeeded,
+          failed,
+          scanned_at: new Date().toISOString(),
+        },
+        { onConflict: "scope_key" },
+      );
+    return { total, succeeded, failed, picks: prevArr.length, preserved: true };
+  }
+
   await supabaseAdmin
     .from("picks_cache")
     .upsert(
@@ -144,8 +183,12 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        const authErr = requireCronSecret(request);
-        if (authErr) return authErr;
+        // Accept either x-cron-secret OR Supabase anon apikey header
+        // (canonical pg_cron pattern).
+        if (!isAnonApiKey(request)) {
+          const authErr = requireCronSecret(request);
+          if (authErr) return authErr;
+        }
 
         // Default: scannt alle Cap-Buckets + Combined-Scope.
         let scopes: Scope[] = [
