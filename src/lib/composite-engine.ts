@@ -651,7 +651,7 @@ export function analyzeComposite(
   ind: IndicatorSet,
   regime: MarketRegime,
   ext: ExternalInputs = {},
-  opts: { horizonDays?: number; paths?: number; muOverride?: number } = {},
+  opts: { horizonDays?: number; paths?: number; muOverride?: number; seed?: number } = {},
 ): CompositeAnalysis {
   const composite = computeFactorScores(ind, regime, ext);
   // μ-Schätzung: konservativ aus Sharpe & Volatilität (μ = Sharpe·σ + rf-proxy)
@@ -671,6 +671,7 @@ export function analyzeComposite(
       };
     }
   }
+  if (opts.seed != null) mcOpts.seed = opts.seed;
 
   const mc = monteCarloAdvanced(
     ind.price,
