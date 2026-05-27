@@ -290,12 +290,11 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
               .filter((s) => !skip.has(s.toUpperCase()))
               .map((s) => {
                 const p = buyPicksBySymbol.get(s)!;
-                const prod = PRODUCTS.find((x) => x.symbol === s);
                 return {
                   ticker: s.toUpperCase(),
                   name: p.name,
                   sector: p.sector ?? null,
-                  asset_type: (prod?.type === "ETF" ? "ETF" : "Aktie") as "Aktie" | "ETF",
+                  asset_type: "Aktie" as const,
                   verdict: "KAUF" as const,
                   confidence_score: Math.round(p.confidence ?? 0),
                   price_at_analysis: Number(p.last) || 0,
