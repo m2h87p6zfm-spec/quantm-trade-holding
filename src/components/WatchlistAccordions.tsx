@@ -1,19 +1,15 @@
 /**
- * WatchlistAccordions — Compact, information-dense accordion sections that
- * sit below the user's "My Watchlist" on the Watchlist page (/).
+ * WatchlistAccordions — Terminal-precision dashboard grid.
  *
- * Sections (in order):
- *   1. Market Winners        – best weekly performers
- *   2. Biggest Losers        – worst day performers
- *   3. Top Gainers Today     – best day performers
- *   4. Top Volume            – highest raw daily volume
- *   5. Most Active           – volume × volatility composite
- *   6. 52-Week Highs         – closest to 52w high
- *   7. 52-Week Lows          – closest to 52w low
+ * Sits below the Watchlist hero on /. Twelve-column tiered grid:
+ *   • Priority sentiment + indices row (col-4 + col-8)
+ *   • Watchlist full-width row (col-12)
+ *   • Priority movers row: Winners / Losers / Gainers (col-4 each)
+ *   • Compact stats row: Top Volume / Most Active / 52w Highs / 52w Lows (col-3 each)
  *
- * Each header shows a tiny preview (top 3 tickers + % change). Tap to expand
- * for the full list with logo, ticker, company, price, % change and volume.
- * Includes "Expand All" / "Collapse All" controls.
+ * Visual language: bg-zinc-950 surfaces, sharp rounded-sm corners,
+ * uppercase tracking, JetBrains Mono for numbers, accent-colored hover
+ * borders. Every card stays click-to-expand to reveal the full ranked list.
  */
 
 import { useMemo, useState } from "react";
@@ -36,24 +32,17 @@ import { PRODUCTS } from "@/lib/products";
 import { useTr } from "@/lib/i18n";
 
 /* --------------------------------------------------------------------- */
-/*  Liquid universe used to compute movers                                */
+/*  Liquid universe                                                       */
 /* --------------------------------------------------------------------- */
 
 const MOVERS_UNIVERSE = [
-  // Mega cap tech
   "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AMD",
   "AVGO", "ORCL", "CRM", "ADBE", "NFLX", "INTC", "QCOM", "MU",
-  // Financials
   "JPM", "BAC", "GS", "MS", "WFC", "C", "V", "MA",
-  // Energy
   "XOM", "CVX", "COP", "SLB", "OXY",
-  // Healthcare
   "UNH", "JNJ", "PFE", "LLY", "MRK", "ABBV",
-  // Consumer
   "WMT", "HD", "COST", "KO", "PEP", "MCD", "NKE", "DIS",
-  // Industrial / Materials
   "BA", "CAT", "GE", "F", "GM",
-  // High-beta / meme
   "PLTR", "COIN", "RIVN", "SOFI", "HOOD", "GME", "AMC",
 ];
 
@@ -99,8 +88,16 @@ function pctToLow52(row: CockpitRow): number {
   return (row.last / row.low52) * 100;
 }
 
+const COL_SPAN: Record<3 | 4 | 6 | 8 | 12, string> = {
+  3: "col-span-12 sm:col-span-6 lg:col-span-3",
+  4: "col-span-12 sm:col-span-6 lg:col-span-4",
+  6: "col-span-12 lg:col-span-6",
+  8: "col-span-12 lg:col-span-8",
+  12: "col-span-12",
+};
+
 /* --------------------------------------------------------------------- */
-/*  Stock row                                                             */
+/*  Stock row (used inside expanded body)                                 */
 /* --------------------------------------------------------------------- */
 
 function StockRow({
@@ -121,30 +118,30 @@ function StockRow({
     <Link
       to="/produkte/$symbol"
       params={{ symbol: row.symbol }}
-      className="group flex items-center gap-2.5 rounded-lg px-2 py-2 transition hover:bg-background/60"
+      className="group flex items-center gap-2.5 rounded-sm px-2 py-1.5 transition hover:bg-zinc-900/60"
     >
-      <span className="w-4 shrink-0 text-center font-mono text-[10px] text-muted-foreground/60 tabular-nums">
+      <span className="w-4 shrink-0 text-center font-mono text-[10px] text-zinc-600 tabular-nums">
         {rank}
       </span>
       <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background font-mono text-[10px] font-bold tracking-tight text-foreground/80"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-zinc-800 bg-zinc-900 font-mono text-[10px] font-bold tracking-tight text-zinc-300"
         title={meta?.name}
       >
         {row.symbol.slice(0, 2)}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-mono text-[12px] font-semibold text-foreground">
+        <div className="truncate font-mono text-[12px] font-semibold text-zinc-100">
           {row.symbol}
         </div>
-        <div className="truncate text-[10px] text-muted-foreground/70">
+        <div className="truncate text-[10px] text-zinc-500">
           {meta?.name ?? row.symbol}
         </div>
       </div>
-      <div className="w-16 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+      <div className="w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-zinc-500">
         {formatVolume(row.volume)}
       </div>
       <div className="w-16 shrink-0 text-right">
-        <div className="font-mono text-[12px] tabular-nums text-foreground">
+        <div className="font-mono text-[11px] tabular-nums text-zinc-200">
           ${row.last.toFixed(2)}
         </div>
         <div
@@ -161,8 +158,10 @@ function StockRow({
 }
 
 /* --------------------------------------------------------------------- */
-/*  Accordion section                                                     */
+/*  Section card (movers, list-based)                                     */
 /* --------------------------------------------------------------------- */
+
+type Tier = "priority" | "compact";
 
 type SectionDef = {
   id: string;
@@ -171,8 +170,11 @@ type SectionDef = {
   title: string;
   rows: CockpitRow[];
   emphasis: "up" | "down" | "neutral";
-  metric?: (r: CockpitRow) => string;
+  tier: Tier;
+  colSpan: 3 | 4 | 6 | 8 | 12;
 };
+
+const accentHoverBorder = (hex: string) => `hover:border-[${hex}]/50`;
 
 function AccordionSection({
   def,
@@ -183,85 +185,115 @@ function AccordionSection({
   open: boolean;
   onToggle: () => void;
 }) {
-  const top3 = def.rows.slice(0, 3);
   const Icon = def.icon;
+  const top = def.rows[0];
+  const topPctColor =
+    def.emphasis === "down" ? "text-[#FF3B5C]" : def.emphasis === "up" ? "text-[#22FF88]" : "text-zinc-300";
+  const topPct =
+    top !== undefined
+      ? `${top.change >= 0 ? "+" : ""}${top.change.toFixed(2)}%`
+      : "—";
+  const tickerStrip = def.rows.slice(0, 3).map((r) => r.symbol).join(", ") || "—";
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-sm transition-colors">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-background/40 sm:px-4"
-      >
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-          style={{
-            background: `color-mix(in oklab, ${def.accent} 14%, transparent)`,
-            boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${def.accent} 35%, transparent)`,
-            color: def.accent,
-          }}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        <h3 className="shrink-0 text-[13px] font-semibold tracking-tight text-foreground">
-          {def.title}
-        </h3>
-        {/* Preview chips */}
-        <div className="ml-auto flex min-w-0 items-center gap-1 overflow-hidden">
-          {top3.map((r) => {
-            const up = r.change >= 0;
-            const c = def.emphasis === "down" ? "#FF3B5C" : def.emphasis === "up" ? "#22FF88" : up ? "#22FF88" : "#FF3B5C";
-            return (
-              <span
-                key={r.symbol}
-                className="hidden items-center gap-1 rounded-md border border-border bg-background/60 px-1.5 py-0.5 text-[10px] sm:inline-flex"
-              >
-                <span className="font-mono font-semibold text-foreground/85">{r.symbol}</span>
-                <span className="font-mono tabular-nums" style={{ color: c }}>
-                  {up ? "+" : ""}
-                  {r.change.toFixed(1)}%
-                </span>
-              </span>
-            );
-          })}
-          {/* Mobile compact preview */}
-          <span className="flex items-center gap-1 sm:hidden">
-            {top3.map((r) => {
-              const up = r.change >= 0;
-              const c = def.emphasis === "down" ? "#FF3B5C" : def.emphasis === "up" ? "#22FF88" : up ? "#22FF88" : "#FF3B5C";
-              return (
-                <span key={r.symbol} className="font-mono text-[10px] tabular-nums" style={{ color: c }}>
-                  {r.symbol} {up ? "+" : ""}{r.change.toFixed(1)}%
-                </span>
-              );
-            }).reduce<React.ReactNode[]>((acc, el, i) => {
-              if (i > 0) acc.push(<span key={`sep-${i}`} className="text-muted-foreground/40">·</span>);
-              acc.push(el);
-              return acc;
-            }, [])}
-          </span>
-        </div>
-        <ChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
+    <div className={COL_SPAN[def.colSpan]}>
       <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        className="group h-full overflow-hidden rounded-sm border border-zinc-800/80 bg-zinc-950 transition-all duration-300 hover:bg-zinc-900/40"
+        style={{
+          // dynamic accent border on hover
+          // tailwind arbitrary hover doesn't accept dynamic hex, so use inline border-color via CSS var
+          ["--accent" as never]: def.accent,
+        }}
       >
-        <div className="overflow-hidden">
-          <div className="border-t border-border px-2 py-2 sm:px-3">
-            {def.rows.length ? (
-              <div className="space-y-0.5">
-                {def.rows.map((r, i) => (
-                  <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} />
-                ))}
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="block w-full text-left"
+        >
+          {def.tier === "priority" ? (
+            <div className="flex flex-col gap-3 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <span
+                  className="flex h-9 w-9 items-center justify-center rounded-sm border"
+                  style={{
+                    background: `color-mix(in oklab, ${def.accent} 10%, transparent)`,
+                    borderColor: `color-mix(in oklab, ${def.accent} 20%, transparent)`,
+                    color: def.accent,
+                  }}
+                >
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`font-mono text-[10px] font-medium tabular-nums ${topPctColor}`}>
+                    {topPct}
+                  </span>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 text-zinc-600 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="px-2 py-4 text-center text-[11px] text-muted-foreground/70">
-                —
+              <div>
+                <h3 className="text-[11px] font-bold uppercase tracking-tighter text-zinc-400">
+                  {def.title}
+                </h3>
+                <p className="mt-1 truncate font-mono text-[10px] text-zinc-500">{tickerStrip}</p>
               </div>
-            )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[11px] font-bold uppercase tracking-tighter text-zinc-500">
+                  {def.title}
+                </h3>
+                <ChevronDown
+                  className={`h-3 w-3 text-zinc-700 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+                />
+              </div>
+              <div className="space-y-1.5">
+                {def.rows.slice(0, 2).map((r) => {
+                  const up = r.change >= 0;
+                  const color =
+                    def.emphasis === "down"
+                      ? "text-[#FF3B5C]"
+                      : def.emphasis === "up"
+                        ? "text-[#22FF88]"
+                        : up
+                          ? "text-[#22FF88]"
+                          : "text-[#FF3B5C]";
+                  return (
+                    <div key={r.symbol} className="flex items-center justify-between text-[10px]">
+                      <span className="text-zinc-300">{r.symbol}</span>
+                      <span className={`font-mono tabular-nums ${color}`}>
+                        {up ? "+" : ""}
+                        {r.change.toFixed(2)}%
+                      </span>
+                    </div>
+                  );
+                })}
+                {def.rows.length === 0 && (
+                  <div className="text-[10px] text-zinc-600">—</div>
+                )}
+              </div>
+            </div>
+          )}
+        </button>
+
+        <div
+          className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        >
+          <div className="overflow-hidden">
+            <div className="border-t border-zinc-800/80 p-2">
+              {def.rows.length ? (
+                <div className="space-y-0.5">
+                  {def.rows.map((r, i) => (
+                    <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} />
+                  ))}
+                </div>
+              ) : (
+                <div className="px-2 py-4 text-center text-[11px] text-zinc-600">—</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -270,7 +302,7 @@ function AccordionSection({
 }
 
 /* --------------------------------------------------------------------- */
-/*  Custom (children-based) accordion section                             */
+/*  Custom (children-based) card                                          */
 /* --------------------------------------------------------------------- */
 
 export type CustomAccordionItem = {
@@ -278,13 +310,16 @@ export type CustomAccordionItem = {
   icon: typeof TrendingUp;
   accent: string;
   title: string;
-  preview?: React.ReactNode;
+  /** Inline summary shown next to the title (collapsed state). */
+  summary?: React.ReactNode;
+  /** Optional one-line label under the title. */
+  subtitle?: string;
+  /** Body shown only when expanded. */
   content: React.ReactNode;
-  /** Make the box span more columns in the grid. */
-  span?: "default" | "wide" | "full";
+  colSpan?: 3 | 4 | 6 | 8 | 12;
 };
 
-function CustomAccordionSection({
+function CustomCard({
   item,
   open,
   onToggle,
@@ -294,39 +329,50 @@ function CustomAccordionSection({
   onToggle: () => void;
 }) {
   const Icon = item.icon;
+  const span = item.colSpan ?? 6;
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-sm transition-colors">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={open}
-        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-background/40 sm:px-4"
-      >
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-          style={{
-            background: `color-mix(in oklab, ${item.accent} 14%, transparent)`,
-            boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${item.accent} 35%, transparent)`,
-            color: item.accent,
-          }}
+    <div className={COL_SPAN[span]}>
+      <div className="group h-full overflow-hidden rounded-sm border border-zinc-800/80 bg-zinc-950 transition-all duration-300 hover:bg-zinc-900/40">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex w-full items-center justify-between gap-3 p-4 text-left"
         >
-          <Icon className="h-4 w-4" />
-        </span>
-        <h3 className="shrink-0 text-[13px] font-semibold tracking-tight text-foreground">
-          {item.title}
-        </h3>
-        <div className="ml-auto flex min-w-0 items-center gap-1.5 overflow-hidden text-[10px] text-muted-foreground/80">
-          {item.preview}
-        </div>
-        <ChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      <div
-        className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
-      >
-        <div className="overflow-hidden">
-          <div className="border-t border-border p-3 sm:p-4">{item.content}</div>
+          <div className="flex min-w-0 items-center gap-3">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border"
+              style={{
+                background: `color-mix(in oklab, ${item.accent} 10%, transparent)`,
+                borderColor: `color-mix(in oklab, ${item.accent} 20%, transparent)`,
+                color: item.accent,
+              }}
+            >
+              <Icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate text-[13px] font-semibold text-zinc-100">{item.title}</h3>
+              {item.subtitle && (
+                <p className="truncate text-[10px] uppercase tracking-widest text-zinc-500">
+                  {item.subtitle}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            {item.summary}
+            <ChevronDown
+              className={`h-4 w-4 text-zinc-600 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+            />
+          </div>
+        </button>
+
+        <div
+          className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+        >
+          <div className="overflow-hidden">
+            <div className="border-t border-zinc-800/80 p-4">{item.content}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -359,13 +405,13 @@ export function WatchlistAccordions({
     const lows52 = [...rows].filter((r) => r.low52).sort((a, b) => pctToLow52(a) - pctToLow52(b)).slice(0, 10);
 
     return [
-      { id: "winners", icon: Trophy, accent: "#FFB020", title: tr("Markt-Gewinner", "Market Winners"), rows: winners, emphasis: "up" },
-      { id: "losers", icon: TrendingDown, accent: "#FF3B5C", title: tr("Größte Verlierer", "Biggest Losers"), rows: losers, emphasis: "down" },
-      { id: "gainers", icon: TrendingUp, accent: "#22FF88", title: tr("Top-Gewinner heute", "Top Gainers Today"), rows: gainers, emphasis: "up" },
-      { id: "volume", icon: BarChart3, accent: "#8B9EFF", title: tr("Top-Volumen", "Top Volume"), rows: topVolume, emphasis: "neutral" },
-      { id: "active", icon: Activity, accent: "#FF6B35", title: tr("Aktivste Werte", "Most Active"), rows: mostActive, emphasis: "neutral" },
-      { id: "highs", icon: Flame, accent: "#22FF88", title: tr("52-Wochen-Hochs", "52-Week Highs"), rows: highs52, emphasis: "up" },
-      { id: "lows", icon: TrendingDown, accent: "#FF3B5C", title: tr("52-Wochen-Tiefs", "52-Week Lows"), rows: lows52, emphasis: "down" },
+      { id: "winners", icon: Trophy, accent: "#FFB020", title: tr("Markt-Gewinner", "Market Winners"), rows: winners, emphasis: "up", tier: "priority", colSpan: 4 },
+      { id: "losers", icon: TrendingDown, accent: "#FF3B5C", title: tr("Größte Verlierer", "Biggest Losers"), rows: losers, emphasis: "down", tier: "priority", colSpan: 4 },
+      { id: "gainers", icon: TrendingUp, accent: "#22FF88", title: tr("Top-Gewinner heute", "Top Gainers Today"), rows: gainers, emphasis: "up", tier: "priority", colSpan: 4 },
+      { id: "volume", icon: BarChart3, accent: "#8B9EFF", title: tr("Top-Volumen", "Top Volume"), rows: topVolume, emphasis: "neutral", tier: "compact", colSpan: 3 },
+      { id: "active", icon: Activity, accent: "#FF6B35", title: tr("Aktivste Werte", "Most Active"), rows: mostActive, emphasis: "neutral", tier: "compact", colSpan: 3 },
+      { id: "highs", icon: Flame, accent: "#22FF88", title: tr("52-Wochen-Hochs", "52-Week Highs"), rows: highs52, emphasis: "up", tier: "compact", colSpan: 3 },
+      { id: "lows", icon: TrendingDown, accent: "#FF3B5C", title: tr("52-Wochen-Tiefs", "52-Week Lows"), rows: lows52, emphasis: "down", tier: "compact", colSpan: 3 },
     ];
   }, [rows, tr]);
 
@@ -375,48 +421,52 @@ export function WatchlistAccordions({
   const expandAll = () => setOpenMap(Object.fromEntries(allIds.map((id) => [id, true])));
   const collapseAll = () => setOpenMap({});
 
+  const analysedCount = rows.length;
+
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {tr("Märkte & Watchlist", "Markets & Watchlist")}
-        </h2>
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={expandAll}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-[#22FF88]/40 hover:text-foreground"
-          >
-            <ChevronsUpDown className="h-3 w-3" />
-            {tr("Alle öffnen", "Expand All")}
-          </button>
-          <button
-            onClick={collapseAll}
-            className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] font-medium text-muted-foreground transition hover:border-[#22FF88]/40 hover:text-foreground"
-          >
-            <ChevronsDownUp className="h-3 w-3" />
-            {tr("Alle schließen", "Collapse All")}
-          </button>
+    <section className="space-y-5">
+      {/* Section header — eyebrow + h1 + actions */}
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-zinc-800/60 pb-4">
+        <div>
+          <h2 className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+            {tr("Markt-Überblick", "Market Overview")}
+          </h2>
+          <h1 className="text-xl font-semibold text-zinc-100">
+            {tr("Märkte & Watchlist", "Markets & Watchlist")}
+          </h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 tabular-nums">
+            {tr(`${analysedCount} analysiert`, `${analysedCount} Analysed`)}
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={expandAll}
+              className="inline-flex items-center gap-1.5 rounded-sm border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            >
+              <ChevronsUpDown className="h-3 w-3" />
+              {tr("Alle öffnen", "Expand All")}
+            </button>
+            <button
+              onClick={collapseAll}
+              className="inline-flex items-center gap-1.5 rounded-sm border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+            >
+              <ChevronsDownUp className="h-3 w-3" />
+              {tr("Alle schließen", "Collapse All")}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+      {/* 12-column tiered grid */}
+      <div className="grid grid-cols-12 gap-3">
         {prependItems.map((item) => (
-          <div
+          <CustomCard
             key={item.id}
-            className={
-              item.span === "full"
-                ? "md:col-span-2 xl:col-span-3"
-                : item.span === "wide"
-                  ? "md:col-span-2 xl:col-span-2"
-                  : ""
-            }
-          >
-            <CustomAccordionSection
-              item={item}
-              open={!!openMap[item.id]}
-              onToggle={() => toggle(item.id)}
-            />
-          </div>
+            item={item}
+            open={!!openMap[item.id]}
+            onToggle={() => toggle(item.id)}
+          />
         ))}
         {sections.map((s) => (
           <AccordionSection
