@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, BookOpen, Bot, Brain, Calendar, CreditCard, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Radar, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { ApexLogo } from "@/components/ApexLogo";
+import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -79,14 +79,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <div className={`flex items-center gap-3 ${collapsed ? "justify-center px-0 py-2" : "px-2 py-3.5"}`}>
-          <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 via-background to-gold/10 ring-1 ring-primary/30 shadow-[0_0_22px_-4px_hsl(var(--primary)/0.5)] ${collapsed ? "h-9 w-9" : "h-12 w-12"}`}>
-            <ApexLogo className={collapsed ? "h-6 w-6" : "h-8 w-8"} />
-            
+          <div className={`relative flex items-center justify-center rounded-xl bg-gradient-to-br from-zinc-200/10 via-background to-zinc-400/10 ring-1 ring-zinc-300/20 shadow-[0_0_22px_-4px_rgba(192,192,192,0.35)] ${collapsed ? "h-10 w-10" : "h-12 w-12"}`}>
+            <ApexLogo className={collapsed ? "h-8 w-8" : "h-10 w-10"} />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="text-lg font-bold tracking-tight text-foreground">Quantm <span className="font-light text-muted-foreground">Trade</span></span>
-              <span className="text-[11px] text-muted-foreground">{t("side.tagline")}</span>
+            <div className="flex flex-col leading-tight gap-1">
+              <ApexWordmark className="h-4 w-auto" />
+              <span className="text-[10px] text-muted-foreground">{t("side.tagline")}</span>
             </div>
           )}
         </div>

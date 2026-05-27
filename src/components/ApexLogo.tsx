@@ -1,22 +1,30 @@
 import logoUrl from "@/assets/quantm-trade-logo.png";
+import wordmarkUrl from "@/assets/quantm-trade-wordmark.png";
 
 type Props = {
   className?: string;
-  /** Kept for API compatibility. */
   animate?: boolean;
 };
 
-/**
- * Quantm Trade brand mark — silver/metallic Q with upward arrow.
- * The asset is silver on a transparent/dark background and renders
- * legibly on both light and dark themes without inversion.
- */
-export function ApexLogo({ className = "h-6 w-auto" }: Props) {
+/** Silver Q monogram — transparent background, looks correct on any theme. */
+export function ApexLogo({ className = "h-7 w-7" }: Props) {
   return (
     <img
       src={logoUrl}
-      alt="Quantm Trade"
-      className={`${className} select-none object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]`}
+      alt="Quantm Trade AI"
+      className={`${className} select-none object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.45)]`}
+      draggable={false}
+    />
+  );
+}
+
+/** Silver brushed-metal wordmark "QUANTM TRADE AI". */
+export function ApexWordmark({ className = "h-5 w-auto" }: Props) {
+  return (
+    <img
+      src={wordmarkUrl}
+      alt="Quantm Trade AI"
+      className={`${className} select-none object-contain`}
       draggable={false}
     />
   );
