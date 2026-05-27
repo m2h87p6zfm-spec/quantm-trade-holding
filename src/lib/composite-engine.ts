@@ -267,10 +267,31 @@ export function computeFactorScores(
 //  Monte-Carlo 10k Pfade + Win-Probability / Expected Return / VaR / CVaR
 // ---------------------------------------------------------------------------
 
-// Box-Muller (Standard-Normal)
-const randn = () => {
-  const u = Math.random() || 1e-12;
-  const v = Math.random() || 1e-12;
+// ---------------------------------------------------------------------------
+//  Deterministic RNG (Mulberry32) — für reproduzierbare Monte-Carlo-Läufe
+// ---------------------------------------------------------------------------
+//  Wenn ein Seed gesetzt ist, liefert die Engine bit-identische Ergebnisse —
+//  Grundlage für die Verifikations-Suite (siehe verifyMonteCarlo).
+
+export type Rng = () => number;
+
+export function mulberry32(seed: number): Rng {
+  let a = seed >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const defaultRand: Rng = Math.random;
+
+// Box-Muller (Standard-Normal) — akzeptiert beliebige RNG-Quelle
+const randnWith = (rand: Rng) => {
+  const u = rand() || 1e-12;
+  const v = rand() || 1e-12;
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 };
 
@@ -461,6 +482,8 @@ export type MonteCarloResult = {
 export type MonteCarloOptions = {
   garch?: GarchParams;
   regimeSwitch?: RegimeSwitchingParams;
+  /** Optionaler Seed für reproduzierbare Läufe (Verifikation, Caching). */
+  seed?: number;
 };
 
 export function monteCarloAdvanced(
@@ -477,6 +500,8 @@ export function monteCarloAdvanced(
   let wins = 0;
   const useGarchRegime = !!(opts.garch && opts.regimeSwitch);
   let turbulentDays = 0;
+  const rand: Rng = opts.seed != null ? mulberry32(opts.seed) : defaultRand;
+  const randn = () => randnWith(rand);
 
   if (useGarchRegime) {
     const g = opts.garch!;
@@ -486,11 +511,11 @@ export function monteCarloAdvanced(
       let S = spot;
       let sig2 = g.sigma0 * g.sigma0;
       // Start aus stationärer Verteilung (verhindert Path-Bias)
-      let state: 0 | 1 = Math.random() < rs.stationary[0] ? 0 : 1;
+      let state: 0 | 1 = rand() < rs.stationary[0] ? 0 : 1;
       for (let d = 0; d < days; d++) {
         // 1) Regime-Übergang
         const row = rs.transitionMatrix[state];
-        state = Math.random() < row[0] ? 0 : 1;
+        state = rand() < row[0] ? 0 : 1;
         if (state === 1) turbulentDays++;
         // 2) Tages-Vola: GARCH × Regime-Skalierung
         const sigDay = Math.sqrt(Math.max(1e-12, sig2)) * rs.stateVolScales[state];
@@ -626,7 +651,7 @@ export function analyzeComposite(
   ind: IndicatorSet,
   regime: MarketRegime,
   ext: ExternalInputs = {},
-  opts: { horizonDays?: number; paths?: number; muOverride?: number } = {},
+  opts: { horizonDays?: number; paths?: number; muOverride?: number; seed?: number } = {},
 ): CompositeAnalysis {
   const composite = computeFactorScores(ind, regime, ext);
   // μ-Schätzung: konservativ aus Sharpe & Volatilität (μ = Sharpe·σ + rf-proxy)
@@ -646,6 +671,7 @@ export function analyzeComposite(
       };
     }
   }
+  if (opts.seed != null) mcOpts.seed = opts.seed;
 
   const mc = monteCarloAdvanced(
     ind.price,
