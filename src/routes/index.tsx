@@ -186,7 +186,6 @@ function Cockpit() {
               accent: "#8B9EFF",
               title: t("cockpit.indices.title"),
               colSpan: 8,
-              colSpan: 8,
               summary: (
                 <span className="hidden items-center gap-4 sm:inline-flex">
                   {indices.slice(0, 3).map((i) => {
