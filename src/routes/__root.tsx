@@ -190,6 +190,13 @@ function AppShell() {
             <div className="flex flex-1 flex-col relative min-w-0">
               <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
                 <SidebarTrigger className="shrink-0 hidden lg:flex" />
+                <Link to="/" aria-label="Quantm Trade" className="flex items-center gap-2 shrink-0 group">
+                  <ApexLogo className="h-7 w-7 transition-transform group-hover:scale-105" />
+                  <span className="hidden sm:inline text-sm font-semibold tracking-tight text-foreground">
+                    Quantm<span className="font-light text-muted-foreground"> Trade</span>
+                  </span>
+                </Link>
+                <div className="h-5 w-px bg-border/60 shrink-0 hidden sm:block" />
                 <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-bull opacity-60" />
