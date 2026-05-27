@@ -56,7 +56,7 @@ function Cockpit() {
       const ind = r.ind;
       const sig = scoreIndicators(ind, settings.risk);
       const regime = detectRegime(ind);
-      const raw = buildDecision(r.symbol, r.symbol, ind, sig, regime);
+      const raw = buildDecision(r.symbol, r.symbol, ind, sig, regime, { historicalCloses: r.closes });
       const stable = stabilizeDecision(r.symbol, raw.decision, raw.confidence);
       return stable.decision; // "BUY" | "SELL" | "HOLD"
     });

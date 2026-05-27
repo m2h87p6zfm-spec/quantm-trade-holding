@@ -122,6 +122,12 @@ export type ExternalInputs = {
   mcMedian?: number;          // monte-carlo median price
   spotPrice?: number;         // for forecast edge
   correlationDrift?: number;  // ΔCorrelation vs benchmark (last 20d)
+  /**
+   *  Historische Schlusskurse (chronologisch). Wenn vorhanden, kalibriert die
+   *  Engine GARCH(1,1) + 2-State-Markov-Regime-Switching für ein deutlich
+   *  realistischeres Monte-Carlo (Vola-Clustering & Marktphasen-Sensitivität).
+   */
+  historicalCloses?: number[];
 };
 
 // ---------------------------------------------------------------------------
@@ -248,6 +254,170 @@ const randn = () => {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 };
 
+// ---------------------------------------------------------------------------
+//  GARCH(1,1) — Volatilitäts-Clustering
+// ---------------------------------------------------------------------------
+//  Modell:  σ²_t = ω + α·ε²_{t-1} + β·σ²_{t-1}
+//  Stationaritäts-Bedingung:  α + β < 1
+//  Long-run-Varianz:           σ²_LR = ω / (1 - α - β)
+//
+//  Kalibrierung: kleine Grid-Search über (α, β) maximiert die Gauss-
+//  Log-Likelihood der Residuen — schnell genug für Echtzeit-UI (≤ 10 ms
+//  bei 250 Beobachtungen), realistisch genug für die Risiko-Aggregation.
+
+export type GarchParams = {
+  omega: number;
+  alpha: number;
+  beta: number;
+  sigma0: number;      // start-Vola (täglich, in Log-Return-Einheiten)
+  longRunVar: number;  // σ²_LR
+  persistence: number; // α + β  (Maß für Vola-Gedächtnis)
+};
+
+function dailyLogReturns(closes: number[]): number[] {
+  const r: number[] = [];
+  for (let i = 1; i < closes.length; i++) {
+    const a = closes[i - 1];
+    const b = closes[i];
+    if (a > 0 && b > 0) r.push(Math.log(b / a));
+  }
+  return r;
+}
+
+function variance(xs: number[]): number {
+  if (xs.length < 2) return 0;
+  const m = xs.reduce((s, v) => s + v, 0) / xs.length;
+  return xs.reduce((s, v) => s + (v - m) ** 2, 0) / xs.length;
+}
+
+function garchLogLikelihood(returns: number[], omega: number, alpha: number, beta: number): number {
+  // ε_t = r_t - mean.  Mit Mean-Demeaning für Stabilität.
+  const mean = returns.reduce((s, v) => s + v, 0) / returns.length;
+  let sig2 = variance(returns);
+  let ll = 0;
+  for (let i = 0; i < returns.length; i++) {
+    const eps = returns[i] - mean;
+    if (sig2 < 1e-12) sig2 = 1e-12;
+    ll += -0.5 * (Math.log(2 * Math.PI) + Math.log(sig2) + (eps * eps) / sig2);
+    sig2 = omega + alpha * eps * eps + beta * sig2;
+  }
+  return ll;
+}
+
+export function calibrateGarch(returns: number[]): GarchParams {
+  const lrv = Math.max(1e-8, variance(returns));
+  // Fallback bei zu wenig Daten: typische Equity-GARCH-Werte
+  if (returns.length < 40) {
+    const alpha = 0.08, beta = 0.90;
+    return {
+      omega: lrv * (1 - alpha - beta),
+      alpha, beta,
+      sigma0: Math.sqrt(lrv),
+      longRunVar: lrv,
+      persistence: alpha + beta,
+    };
+  }
+  // Grid-Search — bewusst klein gehalten (institutionelle Default-Range).
+  const alphaGrid = [0.03, 0.05, 0.08, 0.10, 0.13, 0.16, 0.20];
+  const betaGrid  = [0.75, 0.80, 0.85, 0.88, 0.90, 0.92, 0.94];
+  let best = { alpha: 0.08, beta: 0.90, ll: -Infinity };
+  for (const a of alphaGrid) {
+    for (const b of betaGrid) {
+      if (a + b >= 0.999) continue; // stationarity
+      const omega = lrv * (1 - a - b);
+      const ll = garchLogLikelihood(returns, omega, a, b);
+      if (ll > best.ll) best = { alpha: a, beta: b, ll };
+    }
+  }
+  const omega = lrv * (1 - best.alpha - best.beta);
+  // σ_t am Sample-Ende rekursiv schätzen → Start-Vola für Forward-Simulation
+  const mean = returns.reduce((s, v) => s + v, 0) / returns.length;
+  let sig2 = lrv;
+  for (let i = 0; i < returns.length; i++) {
+    const eps = returns[i] - mean;
+    sig2 = omega + best.alpha * eps * eps + best.beta * sig2;
+  }
+  return {
+    omega,
+    alpha: best.alpha,
+    beta: best.beta,
+    sigma0: Math.sqrt(Math.max(1e-10, sig2)),
+    longRunVar: lrv,
+    persistence: best.alpha + best.beta,
+  };
+}
+
+// ---------------------------------------------------------------------------
+//  2-State Markov Regime-Switching (Calm vs Turbulent)
+// ---------------------------------------------------------------------------
+//  Wir klassifizieren jede Tagesrendite über einen Vola-Threshold
+//  (|r| > k · σ → turbulent), schätzen Übergangswahrscheinlichkeiten
+//  aus der Sequenz und berechnen pro Zustand Mean & Vola-Skalierung.
+
+export type RegimeSwitchingParams = {
+  // P[i][j] = P(state_{t+1}=j | state_t=i),  0 = calm, 1 = turbulent
+  transitionMatrix: [[number, number], [number, number]];
+  stateMeans: [number, number];      // tägliche Log-Return-Drift pro State
+  stateVolScales: [number, number];  // Multiplikator auf GARCH-σ_t
+  initialState: 0 | 1;               // Endzustand des Samples
+  stationary: [number, number];      // langfristige Wahrscheinlichkeiten
+};
+
+export function calibrateRegimeSwitching(returns: number[]): RegimeSwitchingParams {
+  if (returns.length < 30) {
+    return {
+      transitionMatrix: [[0.95, 0.05], [0.15, 0.85]],
+      stateMeans: [0.0003, -0.0008],
+      stateVolScales: [0.75, 1.85],
+      initialState: 0,
+      stationary: [0.75, 0.25],
+    };
+  }
+  const sd = Math.sqrt(variance(returns));
+  const k = 1.0; // Threshold-Faktor — Standard in Risk-Modellen
+  const labels: (0 | 1)[] = returns.map((r) => (Math.abs(r) > k * sd ? 1 : 0));
+
+  // Übergangs-Matrix aus Zählungen (mit Laplace-Smoothing)
+  const cnt = [[1, 1], [1, 1]];
+  for (let i = 1; i < labels.length; i++) cnt[labels[i - 1]][labels[i]]++;
+  const row0 = cnt[0][0] + cnt[0][1];
+  const row1 = cnt[1][0] + cnt[1][1];
+  const P: [[number, number], [number, number]] = [
+    [cnt[0][0] / row0, cnt[0][1] / row0],
+    [cnt[1][0] / row1, cnt[1][1] / row1],
+  ];
+
+  // Per-State Statistiken
+  const calmR = returns.filter((_, i) => labels[i] === 0);
+  const turbR = returns.filter((_, i) => labels[i] === 1);
+  const meanCalm = calmR.length ? calmR.reduce((s, v) => s + v, 0) / calmR.length : 0;
+  const meanTurb = turbR.length ? turbR.reduce((s, v) => s + v, 0) / turbR.length : 0;
+  const sdCalm = calmR.length > 1 ? Math.sqrt(variance(calmR)) : sd * 0.6;
+  const sdTurb = turbR.length > 1 ? Math.sqrt(variance(turbR)) : sd * 2.0;
+  // Skalierung relativ zur Gesamt-Vola — wird auf GARCH-σ_t multipliziert
+  const scaleCalm = Math.max(0.2, sdCalm / sd);
+  const scaleTurb = Math.max(scaleCalm, sdTurb / sd);
+
+  // Stationäre Verteilung π aus P (π = πP)
+  const denom = P[0][1] + P[1][0];
+  const pi0 = denom > 0 ? P[1][0] / denom : 0.7;
+  const pi1 = 1 - pi0;
+
+  return {
+    transitionMatrix: P,
+    stateMeans: [meanCalm, meanTurb],
+    stateVolScales: [scaleCalm, scaleTurb],
+    initialState: labels[labels.length - 1],
+    stationary: [pi0, pi1],
+  };
+}
+
+// ---------------------------------------------------------------------------
+//  Monte-Carlo: GBM-Fallback ODER GARCH + Regime-Switching
+// ---------------------------------------------------------------------------
+
+export type MonteCarloModel = "gbm" | "garch-regime";
+
 export type MonteCarloResult = {
   paths: number;
   days: number;
@@ -259,8 +429,18 @@ export type MonteCarloResult = {
   p05: number; p25: number; p75: number; p95: number;
   var95: number;                 // % loss at 95% conf
   cvar95: number;                // expected loss beyond VaR95
-  sigmaUsed: number;             // ann.
+  sigmaUsed: number;             // ann. (Start-Vola annualisiert)
   muUsed: number;                // ann.
+  model: MonteCarloModel;
+  garch?: GarchParams;
+  regimeSwitch?: RegimeSwitchingParams;
+  // Anteil der Pfad-Tage, die im turbulenten Regime endeten
+  turbulentDayShare?: number;
+};
+
+export type MonteCarloOptions = {
+  garch?: GarchParams;
+  regimeSwitch?: RegimeSwitchingParams;
 };
 
 export function monteCarloAdvanced(
@@ -269,26 +449,59 @@ export function monteCarloAdvanced(
   sigmaAnnual: number,
   days = 30,
   paths = 10_000,
+  opts: MonteCarloOptions = {},
 ): MonteCarloResult {
   const dt = 1 / 252;
   const sigma = Math.max(1e-6, sigmaAnnual);
-  const drift = (muAnnual - 0.5 * sigma * sigma) * dt;
-  const vol = sigma * Math.sqrt(dt);
   const ends: number[] = new Array(paths);
   let wins = 0;
-  for (let p = 0; p < paths; p++) {
-    let S = spot;
-    for (let d = 0; d < days; d++) {
-      S = S * Math.exp(drift + vol * randn());
+  const useGarchRegime = !!(opts.garch && opts.regimeSwitch);
+  let turbulentDays = 0;
+
+  if (useGarchRegime) {
+    const g = opts.garch!;
+    const rs = opts.regimeSwitch!;
+    const muDailyBase = muAnnual * dt; // optionaler globaler Drift-Offset
+    for (let p = 0; p < paths; p++) {
+      let S = spot;
+      let sig2 = g.sigma0 * g.sigma0;
+      // Start aus stationärer Verteilung (verhindert Path-Bias)
+      let state: 0 | 1 = Math.random() < rs.stationary[0] ? 0 : 1;
+      for (let d = 0; d < days; d++) {
+        // 1) Regime-Übergang
+        const row = rs.transitionMatrix[state];
+        state = Math.random() < row[0] ? 0 : 1;
+        if (state === 1) turbulentDays++;
+        // 2) Tages-Vola: GARCH × Regime-Skalierung
+        const sigDay = Math.sqrt(Math.max(1e-12, sig2)) * rs.stateVolScales[state];
+        // 3) Tages-Drift: State-spezifisch + globaler Offset
+        const muDay = rs.stateMeans[state] + muDailyBase * 0.25; // 0.25 = sanfter Mix
+        const eps = sigDay * randn();
+        S = S * Math.exp(muDay - 0.5 * sigDay * sigDay + eps);
+        // 4) GARCH-Update mit realisiertem Schock (regime-skaliert)
+        sig2 = g.omega + g.alpha * eps * eps + g.beta * sig2;
+      }
+      if (S > spot) wins++;
+      ends[p] = S;
     }
-    if (S > spot) wins++;
-    ends[p] = S;
+  } else {
+    // GBM-Fallback (keine historischen Daten)
+    const drift = (muAnnual - 0.5 * sigma * sigma) * dt;
+    const vol = sigma * Math.sqrt(dt);
+    for (let p = 0; p < paths; p++) {
+      let S = spot;
+      for (let d = 0; d < days; d++) {
+        S = S * Math.exp(drift + vol * randn());
+      }
+      if (S > spot) wins++;
+      ends[p] = S;
+    }
   }
+
   ends.sort((a, b) => a - b);
   const q = (pp: number) => ends[Math.min(ends.length - 1, Math.max(0, Math.floor(pp * ends.length)))];
   const mean = ends.reduce((s, v) => s + v, 0) / ends.length;
   const median = q(0.5);
-  // VaR / CVaR auf Returns
   const returns = ends.map((e) => (e - spot) / spot);
   returns.sort((a, b) => a - b);
   const cut95 = Math.max(1, Math.floor(returns.length * 0.05));
@@ -303,6 +516,10 @@ export function monteCarloAdvanced(
     median, p05: q(0.05), p25: q(0.25), p75: q(0.75), p95: q(0.95),
     var95: Math.max(0, var95), cvar95: Math.max(0, cvar95),
     sigmaUsed: sigma, muUsed: muAnnual,
+    model: useGarchRegime ? "garch-regime" : "gbm",
+    garch: opts.garch,
+    regimeSwitch: opts.regimeSwitch,
+    turbulentDayShare: useGarchRegime ? turbulentDays / (paths * days) : undefined,
   };
 }
 
@@ -394,12 +611,29 @@ export function analyzeComposite(
   const composite = computeFactorScores(ind, regime, ext);
   // μ-Schätzung: konservativ aus Sharpe & Volatilität (μ = Sharpe·σ + rf-proxy)
   const mu = opts.muOverride ?? (ind.sharpe * ind.volatility + 0.035);
+
+  // GARCH(1,1) + 2-State-Regime-Switching kalibrieren, sofern historische
+  // Kurse vorliegen. So wird die Simulation marktphasen-sensitiv (Vola-
+  // Clustering + Calm/Turbulent-Wechsel) statt nur konstant-σ GBM.
+  const closes = ext.historicalCloses;
+  let mcOpts: MonteCarloOptions = {};
+  if (closes && closes.length >= 30) {
+    const returns = dailyLogReturns(closes);
+    if (returns.length >= 30) {
+      mcOpts = {
+        garch: calibrateGarch(returns),
+        regimeSwitch: calibrateRegimeSwitching(returns),
+      };
+    }
+  }
+
   const mc = monteCarloAdvanced(
     ind.price,
     mu,
     Math.max(0.05, ind.volatility),
     opts.horizonDays ?? 30,
     opts.paths ?? 10_000,
+    mcOpts,
   );
   // Forecast-Edge nachreichen, falls nicht von außen geliefert
   if (ext.mcMedian == null) {

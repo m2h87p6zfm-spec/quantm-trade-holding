@@ -152,7 +152,7 @@ function PicksPage() {
       const ind = computeAll(c.c);
       const sig = scoreIndicators(ind, settings.risk);
       const regime = detectRegime(ind);
-      const raw = buildDecision(p.symbol, p.name, ind, sig, regime);
+      const raw = buildDecision(p.symbol, p.name, ind, sig, regime, { historicalCloses: c.c });
       const stable = stabilizeDecision(p.symbol, raw.decision, raw.confidence);
       const report = stable.decision === raw.decision ? raw : { ...raw, decision: stable.decision };
       if (report.decision !== "BUY") continue;
