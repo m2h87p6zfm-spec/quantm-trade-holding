@@ -147,11 +147,12 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         const authErr = requireCronSecret(request);
         if (authErr) return authErr;
 
-        // Default: scannt alle drei Cap-Buckets über das gesamte Universum.
+        // Default: scannt alle Cap-Buckets + Combined-Scope.
         let scopes: Scope[] = [
           { universe: "top", sector: "Alle", region: "Alle" },
           { universe: "extended", sector: "Alle", region: "Alle" },
           { universe: "all", sector: "Alle", region: "Alle" },
+          { universe: "combined", sector: "Alle", region: "Alle" },
         ];
         try {
           const body = (await request.json()) as { scopes?: Scope[] } | null;
