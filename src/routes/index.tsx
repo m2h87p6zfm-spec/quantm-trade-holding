@@ -136,7 +136,7 @@ function Cockpit() {
               icon: Activity,
               accent: "#22FF88",
               title: t("cockpit.sentiment.title"),
-              subtitle: t("cockpit.section.market"),
+              colSpan: 4,
               colSpan: 4,
               summary: (
                 <span className="hidden items-center gap-1.5 font-mono text-[10px] tabular-nums sm:inline-flex">
