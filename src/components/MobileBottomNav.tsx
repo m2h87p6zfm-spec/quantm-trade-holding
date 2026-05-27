@@ -34,16 +34,16 @@ type MoreItem = { to: string; icon: typeof Bell; key: string };
 
 const primary: PrimaryItem[] = [
   { to: "/", icon: ListOrdered, key: "nav.watchlist", exact: true },
-  { to: "/portfolio", icon: Wallet, key: "nav.portfolio" },
+  { to: "/analyse", icon: Sigma, key: "nav.analyse" },
   { to: "/picks", icon: Sparkles, key: "nav.picks" },
-  { to: "/markt-radar", icon: Radar, key: "nav.marktRadar" },
+  { to: "/portfolio", icon: Wallet, key: "nav.portfolio" },
 ];
 
 const tourKeys: Record<string, string> = {
   "/": "watchlist",
-  "/portfolio": "portfolio",
+  "/analyse": "analyse",
   "/picks": "picks",
-  "/markt-radar": "markt-radar",
+  "/portfolio": "portfolio",
 };
 
 // Everything not in the bottom bar lives in the "More" sheet.
@@ -52,7 +52,6 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
   {
     labelKey: "side.quantCore",
     items: [
-      { to: "/analyse", icon: Sigma, key: "nav.analyse" },
       { to: "/explain-trade", icon: Microscope, key: "nav.explain" },
       { to: "/alerts", icon: Bell, key: "nav.alerts" },
       { to: "/track-record", icon: ShieldCheck, key: "nav.trackRecord" },
@@ -61,6 +60,7 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
   {
     labelKey: "side.markets",
     items: [
+      { to: "/markt-radar", icon: Radar, key: "nav.marktRadar" },
       { to: "/heatmap", icon: Flame, key: "nav.heatmap" },
       { to: "/news", icon: Newspaper, key: "nav.news" },
       { to: "/global-intel", icon: Globe2, key: "nav.global" },
