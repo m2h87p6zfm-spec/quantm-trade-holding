@@ -511,11 +511,11 @@ export function monteCarloAdvanced(
       let S = spot;
       let sig2 = g.sigma0 * g.sigma0;
       // Start aus stationärer Verteilung (verhindert Path-Bias)
-      let state: 0 | 1 = Math.random() < rs.stationary[0] ? 0 : 1;
+      let state: 0 | 1 = rand() < rs.stationary[0] ? 0 : 1;
       for (let d = 0; d < days; d++) {
         // 1) Regime-Übergang
         const row = rs.transitionMatrix[state];
-        state = Math.random() < row[0] ? 0 : 1;
+        state = rand() < row[0] ? 0 : 1;
         if (state === 1) turbulentDays++;
         // 2) Tages-Vola: GARCH × Regime-Skalierung
         const sigDay = Math.sqrt(Math.max(1e-12, sig2)) * rs.stateVolScales[state];
