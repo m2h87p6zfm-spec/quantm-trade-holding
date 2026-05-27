@@ -55,11 +55,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const publicRoute = isPublic(pathname);
 
+  // Enforce a minimum splash duration so the brand mark is legible on first paint.
+  const [minSplashElapsed, setMinSplashElapsed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMinSplashElapsed(true), 1500);
+    return () => clearTimeout(t);
+  }, []);
+
   if (publicRoute) {
     return <>{children}</>;
   }
 
-  if (authLoading || (user && profileLoading)) {
+  if (authLoading || (user && profileLoading) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
   }
 
