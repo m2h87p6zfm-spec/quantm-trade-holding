@@ -77,7 +77,11 @@ export function ScanHistoryPanel({ scopeKey }: { scopeKey?: string }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {rows.map((r) => {
+                  const isLegacyNoPickCount = r.failed > r.total_scanned * 0.5 && r.picks_count > 0;
+                  const analyzed = isLegacyNoPickCount ? r.total_scanned : r.succeeded;
+                  const dataIssues = isLegacyNoPickCount ? 0 : r.failed;
+                  return (
                   <tr key={r.id} className="border-b border-border/20">
                     <td className="py-1.5 pr-2 whitespace-nowrap">
                       {new Date(r.scanned_at).toLocaleString("de-DE", {
@@ -89,8 +93,8 @@ export function ScanHistoryPanel({ scopeKey }: { scopeKey?: string }) {
                     </td>
                     <td className="py-1.5 pr-2 font-mono text-[10px]">{r.scope_key}</td>
                     <td className="text-right py-1.5 pr-2">{r.total_scanned}</td>
-                    <td className="text-right py-1.5 pr-2 text-emerald-500">{r.succeeded}</td>
-                    <td className="text-right py-1.5 pr-2 text-red-500">{r.failed}</td>
+                    <td className="text-right py-1.5 pr-2 text-emerald-500">{analyzed}</td>
+                    <td className="text-right py-1.5 pr-2 text-muted-foreground">{dataIssues}</td>
                     <td className="text-right py-1.5 pr-2 font-semibold">{r.picks_count}</td>
                     <td className="text-right py-1.5">
                       {r.preserved ? (
@@ -100,7 +104,8 @@ export function ScanHistoryPanel({ scopeKey }: { scopeKey?: string }) {
                       )}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           )}
