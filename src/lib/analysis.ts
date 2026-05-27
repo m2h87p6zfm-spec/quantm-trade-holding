@@ -220,6 +220,10 @@ export type DecisionReport = {
   compositeScore?: number;      // 0–100
 };
 
+export type DecisionOptions = {
+  monteCarloPaths?: number;
+};
+
 function regimeLabelDe(r: MarketRegime): string {
   switch (r) {
     case "bull": return "Bullenmarkt";
@@ -242,6 +246,7 @@ export function buildDecision(
   sig: Signal,
   regime: MarketRegime,
   external: ExternalInputs = {},
+  options: DecisionOptions = {},
 ): DecisionReport {
   const adjustments: string[] = [];
   let conf = sig.confidence;
@@ -252,7 +257,7 @@ export function buildDecision(
   // Win-Probability, R:R, VaR / CVaR und einen Bayesian-Posterior.
   const analysis: CompositeAnalysis = analyzeComposite(ind, regime, external, {
     horizonDays: 30,
-    paths: 10_000,
+    paths: options.monteCarloPaths ?? 10_000,
   });
   const compositeBoost = Math.round(analysis.composite.score * 18); // ±18 Punkte
   conf += compositeBoost;
