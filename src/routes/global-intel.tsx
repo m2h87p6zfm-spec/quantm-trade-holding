@@ -251,11 +251,7 @@ function GlobalIntelPage() {
             <div className="relative border-b border-white/[0.10] xl:border-b-0 xl:border-r">
               <CornerOrnaments />
 
-              <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/[0.14] bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
-                <Activity className="h-3 w-3 text-primary" />
-                <span>Intelligence Layer · 2D</span>
-              </div>
-
+              {/* Toolbar (moved OUT of the map surface so it never blocks the world view) */}
               <LayerControls layers={layers} setLayers={setLayers} />
 
               {hovered && (() => {
@@ -291,15 +287,6 @@ function GlobalIntelPage() {
                 );
               })()}
 
-              {selectedEvent && (
-                <div className="pointer-events-none absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-amber-400/30 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90 backdrop-blur-md">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
-                  </span>
-                  Propagation · {selectedEvent.title}
-                </div>
-              )}
 
               <div className="relative aspect-[4/3] w-full sm:aspect-[1000/520]">
                 {error && (
@@ -546,7 +533,7 @@ function LayerControls({
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded px-2 py-1 text-[10px] font-mono uppercase tracking-wider transition ${
-        on ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+        on ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:text-foreground"
       }`}
     >
       <Icon className="h-3 w-3" />
@@ -555,14 +542,19 @@ function LayerControls({
   );
   const heatModes: HeatmapMode[] = ["none", "risk", "influence", "stability", "inflation"];
   return (
-    <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
-      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+    <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.10] bg-black/30 px-3 py-2 backdrop-blur">
+      <div className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        <Activity className="h-3 w-3 text-primary" />
+        <span>Intel Layer · 2D</span>
+      </div>
+      <span className="mx-1 h-4 w-px bg-white/10" />
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/40 p-1">
         <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
         <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
         <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
         <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
       </div>
-      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/40 p-1">
         <Gauge className="ml-1 h-3 w-3 text-muted-foreground" />
         <span className="mr-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Heatmap</span>
         {heatModes.map((m) => (
@@ -570,7 +562,7 @@ function LayerControls({
             key={m}
             onClick={() => setLayers({ ...layers, heatmap: m })}
             className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider transition ${
-              layers.heatmap === m ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+              layers.heatmap === m ? "bg-primary/20 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {HEATMAP_LABEL[m]}
@@ -1436,20 +1428,26 @@ function WorldMap({
   const graticule = geoGraticule10();
   const project = (lng: number, lat: number) => geo.projection([lng, lat]) ?? [0, 0];
 
+  // Smooth great-circle-ish cubic bezier: two control points offset perpendicular
+  // to the chord. Produces a continuously curving arc (C1 continuity) — much
+  // softer than a single Q quadratic kink.
   const curvedPath = (a: [number, number], b: [number, number]) => {
     const [x1, y1] = project(a[0], a[1]);
     const [x2, y2] = project(b[0], b[1]);
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const nx = -dy / (dist || 1);
-    const ny = dx / (dist || 1);
-    const k = Math.min(80, dist * 0.18);
-    const cx = mx + nx * k;
-    const cy = my + ny * k;
-    return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Perpendicular unit vector (always bend "northward" on screen for a globe feel)
+    let nx = -dy / dist;
+    let ny = dx / dist;
+    if (ny > 0) { nx = -nx; ny = -ny; } // ensure bend lifts upward visually
+    const bend = Math.min(110, dist * 0.22);
+    // Two control points at 1/3 and 2/3 along the chord, lifted by `bend`
+    const c1x = x1 + dx * 0.33 + nx * bend;
+    const c1y = y1 + dy * 0.33 + ny * bend;
+    const c2x = x1 + dx * 0.67 + nx * bend;
+    const c2y = y1 + dy * 0.67 + ny * bend;
+    return `M ${x1} ${y1} C ${c1x} ${c1y} ${c2x} ${c2y} ${x2} ${y2}`;
   };
 
   return (
@@ -1474,6 +1472,9 @@ function WorldMap({
         <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.5" fill="oklch(0.5 0.02 260)" opacity="0.10" />
         </pattern>
+        <marker id="arrowFlow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity="0.85" />
+        </marker>
       </defs>
 
       <rect x={-MAP_W} y={-MAP_H} width={MAP_W * 3} height={MAP_H * 3} fill="url(#oceanBg)" />
@@ -1578,34 +1579,48 @@ function WorldMap({
             const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
             const propagationActive = !!chain;
             const isLit = !!chain?.routes.includes(f.id);
-            const opacity = propagationActive ? (isLit ? 0.95 : 0.18) : 0.55;
-            const width = propagationActive && isLit ? 1.6 : 0.9;
+            const opacity = propagationActive ? (isLit ? 0.95 : 0.15) : 0.6;
+            const width = propagationActive && isLit ? 1.6 : 1.0;
+            const stroke = isLit ? "oklch(0.85 0.12 78)" : color;
             return (
-              <g key={f.id}>
+              <g key={f.id} style={{ color: stroke }}>
+                {/* soft halo for smoother look */}
                 <path
                   d={d}
                   fill="none"
-                  stroke={isLit ? "oklch(0.85 0.12 78)" : color}
+                  stroke={stroke}
+                  strokeOpacity={opacity * 0.25}
+                  strokeWidth={width + 2.4}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={stroke}
                   strokeOpacity={opacity}
                   strokeWidth={width}
-                  strokeDasharray={dashed ? "3 3" : undefined}
-                  filter="url(#softGlow)"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={dashed ? "4 4" : undefined}
+                  vectorEffect="non-scaling-stroke"
+                  markerEnd="url(#arrowFlow)"
                   style={{ transition: "stroke-opacity 320ms ease, stroke-width 320ms ease" }}
                 >
                   <title>{f.label} — {f.status} · {f.note}</title>
                 </path>
-                {isLit && (
-                  <circle r={2.2} fill="oklch(0.92 0.10 78)">
-                    <animateMotion dur="3.2s" repeatCount="indefinite" path={d} />
-                  </circle>
-                )}
+                {/* gentle traveling pulse on every flow for liveliness */}
+                <circle r={1.4} fill={stroke} opacity={isLit ? 0.95 : 0.55}>
+                  <animateMotion dur={`${isLit ? 2.4 : 5.0}s`} repeatCount="indefinite" path={d} />
+                </circle>
               </g>
             );
           })}
         </g>
       )}
 
-      {/* Tension lines */}
+      {/* Tension lines — animated dash motion for a "live" feel */}
       {layers.tensions && (
         <g>
           {TENSIONS.map((t) => {
@@ -1614,18 +1629,34 @@ function WorldMap({
             if (!a || !b) return null;
             const color = RISK_COLOR[t.level];
             const d = curvedPath(a, b);
+            const isHigh = t.level === "high";
             return (
-              <path
-                key={t.id}
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeOpacity={selectedEvent ? 0.2 : t.level === "high" ? 0.55 : 0.4}
-                strokeWidth={t.level === "high" ? 0.9 : 0.7}
-                strokeDasharray="1 3"
-              >
-                <title>{t.from} ↔ {t.to} — {t.topic} · {t.impact}</title>
-              </path>
+              <g key={t.id}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={selectedEvent ? 0.18 : isHigh ? 0.32 : 0.22}
+                  strokeWidth={isHigh ? 2.2 : 1.6}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={selectedEvent ? 0.3 : isHigh ? 0.85 : 0.6}
+                  strokeWidth={isHigh ? 0.9 : 0.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="6 5"
+                  vectorEffect="non-scaling-stroke"
+                >
+                  <animate attributeName="stroke-dashoffset" from="0" to="-22" dur={isHigh ? "1.6s" : "2.4s"} repeatCount="indefinite" />
+                  <title>{t.from} ↔ {t.to} — {t.topic} · {t.impact}</title>
+                </path>
+              </g>
             );
           })}
         </g>
