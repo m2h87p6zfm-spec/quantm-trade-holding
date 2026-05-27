@@ -132,7 +132,7 @@ async function scanOne(p: Product): Promise<ScanResult> {
   }
 }
 
-async function runScan(scope: Scope, concurrency = 3) {
+async function runScan(scope: Scope, concurrency = 6) {
   const universe = filterUniverse(scope);
   const total = universe.length;
   const results: PickRow[] = [];
