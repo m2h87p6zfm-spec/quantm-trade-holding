@@ -128,6 +128,17 @@ export type ExternalInputs = {
    *  realistischeres Monte-Carlo (Vola-Clustering & Marktphasen-Sensitivität).
    */
   historicalCloses?: number[];
+  /**
+   *  News-/AI-Sentiment für das Symbol (-1 bearish .. +1 bullish).
+   *  Wenn gesetzt, überschreibt es den contrarian RSI-Sentiment-Faktor.
+   */
+  newsSentiment?: number;
+  /**
+   *  Cross-asset Risk-On/Off-Bias (-1 Risk-Off .. +1 Risk-On). Wird in den
+   *  Macro-Regime-Faktor eingemischt — verschiebt Kaufbereitschaft je nach
+   *  globalem Liquiditäts-/Sentiment-Tape.
+   */
+  riskOnOff?: number;
 };
 
 // ---------------------------------------------------------------------------
