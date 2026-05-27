@@ -34,9 +34,12 @@ function filterUniverse(s: Scope): Product[] {
   let list = PRODUCTS;
   if (s.sector !== "Alle") list = list.filter((p) => p.sector === s.sector);
   if (s.region !== "Alle") list = list.filter((p) => p.region === s.region);
-  if (s.universe === "top") list = list.slice(0, 80);
-  else if (s.universe === "extended") list = list.slice(0, 250);
+  // Universum = Bucket, nicht nur Pool. So liefert jeder Tab andere Namen.
+  if (s.universe === "top") list = list.slice(0, 80);              // Large Caps
+  else if (s.universe === "extended") list = list.slice(80, 250);  // Mid Caps
+  else list = list.slice(250);                                      // Small/Micro Caps
   return list;
+
 }
 
 async function scanOne(p: Product) {
