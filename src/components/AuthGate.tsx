@@ -58,7 +58,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   // Enforce a minimum splash duration so the brand mark is legible on first paint.
   const [minSplashElapsed, setMinSplashElapsed] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMinSplashElapsed(true), 1500);
+    const t = setTimeout(() => setMinSplashElapsed(true), 2000);
     return () => clearTimeout(t);
   }, []);
 
