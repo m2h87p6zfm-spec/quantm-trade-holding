@@ -155,7 +155,7 @@ async function runScan(scope: Scope, concurrency = 6) {
         },
         { onConflict: "scope_key" },
       );
-    return { total, succeeded, failed, picks: prevPicks.length, preserved: true };
+    return { total, succeeded, failed, picks: prevArr.length, preserved: true };
   }
 
   await supabaseAdmin
