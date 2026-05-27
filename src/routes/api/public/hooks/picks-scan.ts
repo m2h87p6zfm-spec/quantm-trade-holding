@@ -123,7 +123,7 @@ async function scanOne(p: Product): Promise<ScanResult> {
 async function runScan(scope: Scope, concurrency = 3) {
   const universe = filterUniverse(scope);
   const total = universe.length;
-  const results: Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>> = [];
+  const results: PickRow[] = [];
   let succeeded = 0;
   let failed = 0;
   let idx = 0;
@@ -131,9 +131,9 @@ async function runScan(scope: Scope, concurrency = 3) {
     while (idx < total) {
       const i = idx++;
       const r = await scanOne(universe[i]);
-      if (r) {
-        results.push(r);
+      if (r.ok) {
         succeeded++;
+        if (r.pick) results.push(r.pick);
       } else {
         failed++;
       }
