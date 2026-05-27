@@ -249,7 +249,6 @@ const NOTIFS: { v: NotifKey; lk: keyof typeof T; dk: keyof typeof T }[] = [
 const STARTER_LISTS: { id: string; name: string; symbols: string[]; tagline: string }[] = [
   { id: "ai-tech", name: "AI & Technology", tagline: "NVDA, MSFT, GOOGL …", symbols: ["NVDA", "MSFT", "GOOGL", "META", "AMD", "AVGO", "TSM", "ASML", "PLTR"] },
   { id: "large-cap", name: "Large Cap Stocks", tagline: "AAPL, MSFT, AMZN …", symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "BRK.B", "JPM", "V", "WMT", "JNJ"] },
-  { id: "crypto", name: "Crypto Leaders", tagline: "BTC, ETH, SOL …", symbols: ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "AVAX-USD"] },
   { id: "high-vol", name: "High Volatility", tagline: "TSLA, COIN, MSTR …", symbols: ["TSLA", "COIN", "MSTR", "ARKK", "RIOT", "MARA", "PLTR"] },
   { id: "dividend", name: "Dividend Stocks", tagline: "KO, JNJ, PG …", symbols: ["KO", "JNJ", "PG", "T", "VZ", "XOM", "MMM", "MO"] },
   { id: "energy", name: "Energy & Commodities", tagline: "XOM, CVX, XLE …", symbols: ["XOM", "CVX", "COP", "XLE", "USO", "GLD", "SLV"] },
