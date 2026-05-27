@@ -291,15 +291,15 @@ export const AssetChart = memo(function AssetChart({
       </div>
 
       {/* Chart */}
-      <div style={{ height }} className="relative w-full">
+      <div style={{ height }} className="relative w-full rounded-lg border border-border/40 bg-background/20 overflow-hidden">
         {data.length === 0 && q.isLoading && (
           <div className="absolute inset-0 animate-pulse rounded-md bg-gradient-to-b from-card/40 to-card/10" />
         )}
         <div ref={wrapRef} className="h-full w-full" />
 
-        {/* Hover overlay */}
+        {/* Hover overlay — compact, top-right */}
         {hover && (
-          <div className="pointer-events-none absolute left-3 top-3 z-10 min-w-[180px] rounded-md border border-border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-2xl ring-1 ring-border/40">
+          <div className="pointer-events-none absolute right-2 top-2 z-10 min-w-[120px] max-w-[160px] rounded-md border border-border/70 bg-popover/95 px-2 py-1.5 text-[10px] text-popover-foreground shadow-lg ring-1 ring-border/30 backdrop-blur-sm">
             <HoverTooltip hover={hover} base={first} currency={currency} tf={tf} lang={lang} />
           </div>
         )}
