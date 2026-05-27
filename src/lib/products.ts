@@ -3,7 +3,10 @@ export type Product = {
   name: string;
   sector: "Technologie" | "Energie" | "Finanzen" | "Gesundheit" | "Konsum" | "Industrie" | "Rohstoffe" | "Index";
   region: "US" | "DE" | "EU" | "UK" | "JP";
+  /** Marktkapitalisierungs-Klasse — wird beim Mergen aus der Source-Liste abgeleitet. */
+  cap?: "large" | "mid" | "small";
 };
+
 
 import { PRODUCTS_EXTRA } from "./products-extra";
 import { PRODUCTS_EXTRA2 } from "./products-extra2";
