@@ -80,9 +80,14 @@ function PicksPage() {
       return list;
     }
     // Echte Markt-Kapitalisierungs-Buckets statt Listen-Slicing.
-    const wantCap: Product["cap"] =
-      universe === "top" ? "large" : universe === "extended" ? "mid" : "small";
-    list = list.filter((p) => p.cap === wantCap);
+    // "combined" = alle drei Buckets in einem Scan.
+    if (universe === "combined") {
+      list = list.filter((p) => p.cap === "large" || p.cap === "mid" || p.cap === "small");
+    } else {
+      const wantCap: Product["cap"] =
+        universe === "top" ? "large" : universe === "extended" ? "mid" : "small";
+      list = list.filter((p) => p.cap === wantCap);
+    }
     return list;
 
   }, [sector, region, universe, mode, query]);
