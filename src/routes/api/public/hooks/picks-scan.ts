@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireCronSecret } from "@/lib/api-auth.server";
-import { fetchYahooCandles } from "@/lib/yahoo-fallback.server";
+import { fetchCandles } from "@/lib/quant-fetch.server";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
@@ -80,12 +80,11 @@ type ScanResult = { ok: true; pick: PickRow | null } | { ok: false };
 
 async function scanOne(p: Product): Promise<ScanResult> {
   try {
-    // Massen-Scan ist subrequest-limitiert (Worker-Budget). Wir holen daher
-    // pro Symbol genau EINEN Yahoo-Aufruf — keine Retries, kein TD-Fallback.
-    // Nutzer-getriggerte Analysen verwenden weiterhin den vollen Waterfall
-    // via fetchCandles. Kein Yahoo-Treffer == kein Signal, kein Datenfehler.
-    const raw = await fetchYahooCandles(p.symbol, "1d", "1y");
-    const closes = (raw?.c ?? []).map((n: number) => Number(n)).filter((n: number) => Number.isFinite(n));
+    // Höchstleistungs-Pfad: geteilter Cache → Yahoo mit Retry/Backoff →
+    // Twelve-Data-Backup → Yahoo-Chart-Cache. Kein Treffer zählt als sauber
+    // verarbeitetes "kein Signal", nicht als Fehler in der Scan-History.
+    const candles = await fetchCandles(p.symbol, "1y", "1d");
+    const closes = candles.map((k) => Number(k.c)).filter((n) => Number.isFinite(n));
     if (closes.length < 60) return { ok: true, pick: null };
     const c = { c: closes } as { c: number[] };
     const ind = computeAll(c.c);
@@ -119,8 +118,9 @@ async function scanOne(p: Product): Promise<ScanResult> {
         entry: sig.entry ?? null, target: sig.target ?? null, stop: sig.stop ?? null,
       },
     };
-  } catch {
-    return { ok: false };
+  } catch (e) {
+    console.warn("picks-scan skipped symbol", p.symbol, (e as Error)?.message);
+    return { ok: true, pick: null };
   }
 }
 
