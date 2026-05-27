@@ -159,18 +159,28 @@ export function FirstRunTour() {
   const s = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  // Compute tooltip placement
+  // Compute tooltip placement. Mobile: use a bottom-sheet style that's
+  // always reachable and easy to tap. Desktop: anchor next to the target.
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
   const PAD = 12;
-  const TOOLTIP_W = 320;
+  const TOOLTIP_W = 340;
   let tipStyle: React.CSSProperties = {};
-  if (rect) {
+  if (isMobile) {
+    // Bottom sheet — full width minus margins, fixed at bottom.
+    tipStyle = {
+      left: 12,
+      right: 12,
+      bottom: 16,
+      width: "auto",
+    };
+  } else if (rect) {
     const side = s.side ?? "right";
     if (side === "right") {
       const left = Math.min(window.innerWidth - TOOLTIP_W - 16, rect.left + rect.width + PAD);
-      const top = Math.max(16, Math.min(window.innerHeight - 220, rect.top));
+      const top = Math.max(16, Math.min(window.innerHeight - 240, rect.top));
       tipStyle = { top, left, width: TOOLTIP_W };
     } else {
-      const top = Math.min(window.innerHeight - 220, rect.top + rect.height + PAD);
+      const top = Math.min(window.innerHeight - 240, rect.top + rect.height + PAD);
       const left = Math.max(16, Math.min(window.innerWidth - TOOLTIP_W - 16, rect.left));
       tipStyle = { top, left, width: TOOLTIP_W };
     }
@@ -183,9 +193,9 @@ export function FirstRunTour() {
     };
   }
 
-  // Spotlight box rendered as a transparent rect with 4 dark overlay panels around it
-  // (works without SVG masks across browsers and supports clicks on backdrop edges).
-  const hole = rect
+  // Spotlight only on desktop — on mobile the sidebar isn't visible so we
+  // just dim the background.
+  const hole = !isMobile && rect
     ? { top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12 }
     : null;
 
@@ -194,32 +204,23 @@ export function FirstRunTour() {
       {/* Dark overlay panels with cutout */}
       {hole ? (
         <>
-          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: 0, left: 0, right: 0, height: hole.top }} />
-          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top + hole.height, left: 0, right: 0, bottom: 0 }} />
-          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top, left: 0, width: hole.left, height: hole.height }} />
-          <div className="absolute bg-black/70 backdrop-blur-[1px]" style={{ top: hole.top, left: hole.left + hole.width, right: 0, height: hole.height }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px] pointer-events-none" style={{ top: 0, left: 0, right: 0, height: hole.top }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px] pointer-events-none" style={{ top: hole.top + hole.height, left: 0, right: 0, bottom: 0 }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px] pointer-events-none" style={{ top: hole.top, left: 0, width: hole.left, height: hole.height }} />
+          <div className="absolute bg-black/70 backdrop-blur-[1px] pointer-events-none" style={{ top: hole.top, left: hole.left + hole.width, right: 0, height: hole.height }} />
           {/* Highlight ring around hole */}
           <div
             className="absolute rounded-xl ring-2 ring-primary shadow-[0_0_0_4px_hsl(var(--primary)/0.25),0_0_40px_hsl(var(--primary)/0.5)] pointer-events-none animate-pulse"
             style={{ top: hole.top, left: hole.left, width: hole.width, height: hole.height }}
           />
-          {/* Arrow pointing from tooltip toward the target */}
-          <div
-            className="absolute h-0.5 bg-primary/80 pointer-events-none"
-            style={{
-              top: hole.top + hole.height / 2,
-              left: hole.left + hole.width,
-              width: Math.max(0, (typeof tipStyle.left === "number" ? tipStyle.left : 0) - (hole.left + hole.width)),
-            }}
-          />
         </>
       ) : (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px] pointer-events-none" />
       )}
 
       {/* Tooltip card */}
       <div
-        className="absolute rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-4 sm:p-5"
+        className="absolute rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-5 sm:p-5"
         style={tipStyle}
         role="dialog"
         aria-label={s.title}
@@ -227,19 +228,19 @@ export function FirstRunTour() {
         <button
           onClick={close}
           aria-label="Tour schließen"
-          className="absolute right-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-4 w-4" />
         </button>
 
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
           Tour · {step + 1} / {STEPS.length}
         </div>
-        <div className="mt-1 text-base font-semibold tracking-tight text-foreground">{s.title}</div>
-        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{s.body}</p>
+        <div className="mt-1.5 text-lg sm:text-lg font-semibold tracking-tight text-foreground pr-8">{s.title}</div>
+        <p className="mt-2 text-[15px] sm:text-[14px] leading-relaxed text-muted-foreground">{s.body}</p>
 
         {/* Progress dots */}
-        <div className="mt-3 flex items-center gap-1">
+        <div className="mt-4 flex items-center gap-1">
           {STEPS.map((_, i) => (
             <span
               key={i}
@@ -251,24 +252,25 @@ export function FirstRunTour() {
         <div className="mt-4 flex items-center justify-between gap-2">
           <button
             onClick={close}
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            type="button"
+            className="text-[13px] sm:text-[12px] text-muted-foreground hover:text-foreground transition-colors py-2 px-1"
           >
             Überspringen
           </button>
           <div className="flex items-center gap-2">
             {step > 0 && (
-              <Button variant="ghost" size="sm" onClick={prev}>
-                <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Zurück
+              <Button variant="ghost" size="default" onClick={prev} type="button" className="text-[14px]">
+                <ArrowLeft className="h-4 w-4 mr-1" /> Zurück
               </Button>
             )}
-            <Button size="sm" onClick={next}>
+            <Button size="default" onClick={next} type="button" className="text-[14px] min-w-[110px]">
               {isLast ? (
                 <>
-                  <Check className="h-3.5 w-3.5 mr-1.5" /> Fertig
+                  <Check className="h-4 w-4 mr-1.5" /> Fertig
                 </>
               ) : (
                 <>
-                  Weiter <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  Weiter <ArrowRight className="h-4 w-4 ml-1" />
                 </>
               )}
             </Button>
@@ -278,3 +280,4 @@ export function FirstRunTour() {
     </div>
   );
 }
+
