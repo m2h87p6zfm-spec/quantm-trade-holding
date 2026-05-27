@@ -482,6 +482,8 @@ export type MonteCarloResult = {
 export type MonteCarloOptions = {
   garch?: GarchParams;
   regimeSwitch?: RegimeSwitchingParams;
+  /** Optionaler Seed für reproduzierbare Läufe (Verifikation, Caching). */
+  seed?: number;
 };
 
 export function monteCarloAdvanced(
@@ -498,6 +500,8 @@ export function monteCarloAdvanced(
   let wins = 0;
   const useGarchRegime = !!(opts.garch && opts.regimeSwitch);
   let turbulentDays = 0;
+  const rand: Rng = opts.seed != null ? mulberry32(opts.seed) : defaultRand;
+  const randn = () => randnWith(rand);
 
   if (useGarchRegime) {
     const g = opts.garch!;
