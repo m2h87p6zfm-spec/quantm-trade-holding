@@ -67,23 +67,33 @@ function filterUniverse(s: Scope): Product[] {
 
 }
 
-async function scanOne(p: Product) {
+type PickRow = {
+  symbol: string; name: string; sector: string; region: string;
+  confidence: number; compositeScore: number | null;
+  decision: string; last: number; change: number; upsidePct: number;
+  regime: string; score: number; rsi: number; macdHist: number;
+  zScore: number; volatility: number; momentum: number;
+  sma50: number; sma200: number;
+  entry: number | null; target: number | null; stop: number | null;
+};
+type ScanResult = { ok: true; pick: PickRow | null } | { ok: false };
+
+async function scanOne(p: Product): Promise<ScanResult> {
   try {
     const r = await getCandlesCached(p.symbol, "1d", "1y", 3600);
     const c = r.value;
-    if (!c || c.c.length < 60) return null;
+    // Insufficient data is not a "fetch error" — treat as ok with no pick.
+    if (!c || c.c.length < 60) return { ok: true, pick: null };
     const ind = computeAll(c.c);
     const sig = scoreIndicators(ind, "ausgewogen");
     const regime = detectRegime(ind);
     const report = buildDecision(p.symbol, p.name, ind, sig, regime, {
       historicalCloses: c.c,
     }, {
-      // Der Vollscan läuft über hunderte bis tausende Werte. 10k MC-Pfade pro
-      // Aktie sprengen im Serverless-Worker das CPU-Limit; 1.2k bleibt stabil
-      // und nutzt dieselbe Engine/Signal-Logik.
+      // 10k MC-Pfade pro Aktie sprengen im Worker das CPU-Limit; 1.2k bleibt stabil.
       monteCarloPaths: 1_200,
     });
-    if (report.decision !== "BUY") return null;
+    if (report.decision !== "BUY") return { ok: true, pick: null };
     const last = c.c.at(-1) ?? 0;
     const prev = c.c.at(-2) ?? last;
     const change = prev ? ((last - prev) / prev) * 100 : 0;
@@ -93,39 +103,27 @@ async function scanOne(p: Product) {
       regime === "bull" ? 5 : regime === "low_vol" ? 2 : regime === "bear" ? -8 : 0;
     const score = report.confidence + upsidePct * 0.4 + regimeBonus;
     return {
-      symbol: p.symbol,
-      name: p.name,
-      sector: p.sector,
-      region: p.region,
-      confidence: report.confidence,
-      compositeScore: report.compositeScore ?? null,
-      decision: report.decision,
-      last,
-      change,
-      upsidePct,
-      regime,
-      score,
-      rsi: ind.rsi,
-      macdHist: ind.macd.histogram,
-      zScore: ind.zScore,
-      volatility: ind.volatility,
-      momentum: ind.momentum,
-      sma50: ind.sma50,
-      sma200: ind.sma200,
-      entry: sig.entry ?? null,
-      target: sig.target ?? null,
-      stop: sig.stop ?? null,
+      ok: true,
+      pick: {
+        symbol: p.symbol, name: p.name, sector: p.sector, region: p.region,
+        confidence: report.confidence,
+        compositeScore: report.compositeScore ?? null,
+        decision: report.decision, last, change, upsidePct, regime, score,
+        rsi: ind.rsi, macdHist: ind.macd.histogram, zScore: ind.zScore,
+        volatility: ind.volatility, momentum: ind.momentum,
+        sma50: ind.sma50, sma200: ind.sma200,
+        entry: sig.entry ?? null, target: sig.target ?? null, stop: sig.stop ?? null,
+      },
     };
-
   } catch {
-    return null;
+    return { ok: false };
   }
 }
 
 async function runScan(scope: Scope, concurrency = 3) {
   const universe = filterUniverse(scope);
   const total = universe.length;
-  const results: Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>> = [];
+  const results: PickRow[] = [];
   let succeeded = 0;
   let failed = 0;
   let idx = 0;
@@ -133,9 +131,9 @@ async function runScan(scope: Scope, concurrency = 3) {
     while (idx < total) {
       const i = idx++;
       const r = await scanOne(universe[i]);
-      if (r) {
-        results.push(r);
+      if (r.ok) {
         succeeded++;
+        if (r.pick) results.push(r.pick);
       } else {
         failed++;
       }
@@ -246,7 +244,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         } catch { /* leerer body → defaults */ }
 
         const out: Array<{ scope: string; result: Awaited<ReturnType<typeof runScan>> }> = [];
-        const buyPicksBySymbol = new Map<string, NonNullable<Awaited<ReturnType<typeof scanOne>>>>();
+        const buyPicksBySymbol = new Map<string, PickRow>();
         for (const s of scopes) {
           try {
             const result = await runScan(s);
@@ -269,7 +267,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
             .select("picks, scope_key")
             .in("scope_key", scopes.map(scopeKey));
           for (const row of cachedRows ?? []) {
-            const picks = (row.picks as unknown as Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>>) ?? [];
+            const picks = (row.picks as unknown as PickRow[]) ?? [];
             for (const p of picks) {
               if (p?.decision === "BUY" && p.symbol) {
                 if (!buyPicksBySymbol.has(p.symbol)) buyPicksBySymbol.set(p.symbol, p);
