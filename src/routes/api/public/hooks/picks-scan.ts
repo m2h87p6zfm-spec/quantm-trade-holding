@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireCronSecret } from "@/lib/api-auth.server";
-import { fetchCandles } from "@/lib/quant-fetch.server";
+import { fetchYahooCandles } from "@/lib/yahoo-fallback.server";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
