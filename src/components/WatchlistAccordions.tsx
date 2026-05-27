@@ -25,7 +25,6 @@ import {
   Flame,
   TrendingDown,
   TrendingUp,
-  Trophy,
 } from "lucide-react";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { PRODUCTS } from "@/lib/products";
