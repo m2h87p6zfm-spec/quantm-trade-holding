@@ -174,7 +174,7 @@ export const AssetChart = memo(function AssetChart({
           horzLines: { color: grid, style: LineStyle.Dotted },
         },
         rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.05 } },
-        timeScale: { borderVisible: false, timeVisible: tfRef.current === "1D", secondsVisible: false },
+        timeScale: { borderVisible: false, timeVisible: tfRef.current === "1D" || tfRef.current === "3D", secondsVisible: false },
         crosshair: {
           mode: CrosshairMode.Magnet,
           vertLine: { color: axis, width: 1, style: LineStyle.Dashed, labelBackgroundColor: fg },
