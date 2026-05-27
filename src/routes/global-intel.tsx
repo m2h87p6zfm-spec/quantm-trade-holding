@@ -251,11 +251,7 @@ function GlobalIntelPage() {
             <div className="relative border-b border-white/[0.10] xl:border-b-0 xl:border-r">
               <CornerOrnaments />
 
-              <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-md border border-white/[0.14] bg-black/50 px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground backdrop-blur-md">
-                <Activity className="h-3 w-3 text-primary" />
-                <span>Intelligence Layer · 2D</span>
-              </div>
-
+              {/* Toolbar (moved OUT of the map surface so it never blocks the world view) */}
               <LayerControls layers={layers} setLayers={setLayers} />
 
               {hovered && (() => {
@@ -291,15 +287,6 @@ function GlobalIntelPage() {
                 );
               })()}
 
-              {selectedEvent && (
-                <div className="pointer-events-none absolute right-4 top-4 z-10 flex items-center gap-2 rounded-md border border-amber-400/30 bg-black/60 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber-300/90 backdrop-blur-md">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
-                  </span>
-                  Propagation · {selectedEvent.title}
-                </div>
-              )}
 
               <div className="relative aspect-[4/3] w-full sm:aspect-[1000/520]">
                 {error && (
