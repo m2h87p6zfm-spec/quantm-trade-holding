@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ListPlus, Search, Sparkles } from "lucide-react";
+import { ListPlus, Search, Sparkles, Activity, ListChecks } from "lucide-react";
 import { useSettings, MARKET_WATCH_DEFAULTS } from "@/lib/settings";
 import { TickerBand } from "@/components/TickerBand";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
@@ -11,7 +11,7 @@ import { MarketAiInsight } from "@/components/MarketAiInsight";
 import { WatchlistSwitcher } from "@/components/WatchlistSwitcher";
 import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
-import { WatchlistAccordions } from "@/components/WatchlistAccordions";
+import { WatchlistAccordions, type CustomAccordionItem } from "@/components/WatchlistAccordions";
 import { useT } from "@/lib/i18n";
 
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
