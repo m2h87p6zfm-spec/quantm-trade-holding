@@ -297,7 +297,7 @@ export function OnboardingGate() {
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-2.5 py-1 text-[10px] text-muted-foreground">
-            <Lock className="h-3 w-3" /> Privat & verschlüsselt
+            <Lock className="h-3 w-3" /> {uiLang === "en" ? "Private & encrypted" : "Privat & verschlüsselt"}
           </div>
         </div>
 
