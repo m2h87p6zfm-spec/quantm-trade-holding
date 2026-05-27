@@ -21,11 +21,11 @@ function ApexLoadingScreen() {
             "radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%), radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)",
         }}
       />
-      <div className="relative flex flex-col items-center">
-        <ApexLogo className="h-20 w-20" />
-        <div className="mt-7 h-px w-24 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
-        <ApexWordmark className="mt-7 h-6 w-auto opacity-95" />
-        <div className="relative mt-10 h-[2px] w-40 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative flex flex-col items-center px-6">
+        <ApexLogo className="h-40 w-40 sm:h-52 sm:w-52" />
+        <div className="mt-10 h-px w-40 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
+        <ApexWordmark className="mt-10 h-12 w-auto sm:h-16 opacity-95" />
+        <div className="relative mt-12 h-[2px] w-56 overflow-hidden rounded-full bg-white/[0.06]">
           <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
         </div>
       </div>
