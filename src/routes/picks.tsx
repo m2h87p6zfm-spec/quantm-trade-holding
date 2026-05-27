@@ -14,6 +14,9 @@ import { Card } from "@/components/ui/card";
 import { recordApexAnalysis } from "@/lib/trackrecord.functions";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { PRODUCT_BY_SYMBOL } from "@/lib/products";
+
 
 function regimeLabel(r: MarketRegime) {
   return { bull: "Bullisch", bear: "Bärisch", chop: "Seitwärts", high_vol: "Hochvolatil", low_vol: "Ruhig" }[r];
@@ -88,12 +91,73 @@ function PicksPage() {
     [filtered, mode],
   );
 
+  // Server-Cache: stündlich aktualisierte Picks aus `picks_cache` lesen.
+  // Wenn vorhanden, sparen wir uns den client-seitigen Scan komplett.
+  const [serverPicks, setServerPicks] = useState<PickRowData[] | null>(null);
+  const [serverLoaded, setServerLoaded] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    setServerLoaded(false);
+    const key = `${universe}|${sector}|${region}`;
+    (async () => {
+      const { data } = await supabase
+        .from("picks_cache")
+        .select("picks")
+        .eq("scope_key", key)
+        .maybeSingle();
+      if (cancelled) return;
+      const raw = (data?.picks as unknown[] | undefined) ?? [];
+      const rows: PickRowData[] = raw.map((r) => {
+        const x = r as Record<string, unknown>;
+        const sym = String(x.symbol);
+        const p = PRODUCT_BY_SYMBOL.get(sym) ?? {
+          symbol: sym,
+          name: String(x.name ?? sym),
+          sector: (x.sector as Product["sector"]) ?? "Technologie",
+          region: (x.region as Product["region"]) ?? "US",
+        };
+        const fakeInd = {
+          zScore: Number(x.zScore ?? 0),
+          rsi: Number(x.rsi ?? 50),
+          macd: { histogram: Number(x.macdHist ?? 0), macd: 0, signal: 0 },
+          sma50: Number(x.sma50 ?? 0),
+          sma200: Number(x.sma200 ?? 0),
+          volatility: Number(x.volatility ?? 0.3),
+          momentum: Number(x.momentum ?? 0),
+          ema20: 0, ema50: 0, atr: 0, bollinger: { upper: 0, middle: 0, lower: 0 },
+        } as unknown as ReturnType<typeof computeAll>;
+        const fakeReport = {
+          confidence: Number(x.confidence ?? 0),
+          decision: "BUY",
+          compositeScore: x.compositeScore as number | null ?? null,
+          rationale: [],
+          warnings: [],
+        } as unknown as ReturnType<typeof buildDecision>;
+        return {
+          p,
+          ind: fakeInd,
+          regime: (x.regime as MarketRegime) ?? "bull",
+          report: fakeReport,
+          upsidePct: Number(x.upsidePct ?? 0),
+          score: Number(x.score ?? 0),
+          change: Number(x.change ?? 0),
+          last: Number(x.last ?? 0),
+        };
+      });
+      setServerPicks(rows.length > 0 ? rows : null);
+      setServerLoaded(true);
+    })().catch(() => { if (!cancelled) setServerLoaded(true); });
+    return () => { cancelled = true; };
+  }, [universe, sector, region, forceRefresh]);
+
   const scan = useCandleScan(scanSymbols, {
-    enabled: !!getApiKey() && mode === "ki" && scanAllowed,
+    // Wenn Server-Cache da ist, brauchen wir den Browser-Scan gar nicht.
+    enabled: !!getApiKey() && mode === "ki" && scanAllowed && serverLoaded && !serverPicks,
     runId: forceRefresh,
     concurrency: 8,
     days: 260,
   });
+
 
   const total = scanSymbols.length;
   const settled = scan.settled;
@@ -248,7 +312,7 @@ function PicksPage() {
 
   // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
   // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
-  const displayPicks = picks.length > 0 ? picks : cachedPicks;
+  const displayPicks = serverPicks ?? (picks.length > 0 ? picks : cachedPicks);
   const podium = displayPicks.slice(0, 3);
   const rest = displayPicks.slice(3);
 

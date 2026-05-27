@@ -70,6 +70,7 @@ import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agen
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
 import { Route as ApiPublicHooksPrebakePicksRouteImport } from './routes/api/public/hooks/prebake-picks'
+import { Route as ApiPublicHooksPicksScanRouteImport } from './routes/api/public/hooks/picks-scan'
 import { Route as ApiPublicHooksEvaluateAlertsRouteImport } from './routes/api/public/hooks/evaluate-alerts'
 import { Route as ApiPublicHooksCausalOutcomesRouteImport } from './routes/api/public/hooks/causal-outcomes'
 
@@ -382,6 +383,11 @@ const ApiPublicHooksPrebakePicksRoute =
     path: '/api/public/hooks/prebake-picks',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksPicksScanRoute = ApiPublicHooksPicksScanRouteImport.update({
+  id: '/api/public/hooks/picks-scan',
+  path: '/api/public/hooks/picks-scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHooksEvaluateAlertsRoute =
   ApiPublicHooksEvaluateAlertsRouteImport.update({
     id: '/api/public/hooks/evaluate-alerts',
@@ -456,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
+  '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -521,6 +528,7 @@ export interface FileRoutesByTo {
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
+  '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -587,6 +595,7 @@ export interface FileRoutesById {
   '/api/public/vapid-public-key': typeof ApiPublicVapidPublicKeyRoute
   '/api/public/hooks/causal-outcomes': typeof ApiPublicHooksCausalOutcomesRoute
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
+  '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -654,6 +663,7 @@ export interface FileRouteTypes {
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/evaluate-alerts'
+    | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -719,6 +729,7 @@ export interface FileRouteTypes {
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/evaluate-alerts'
+    | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -784,6 +795,7 @@ export interface FileRouteTypes {
     | '/api/public/vapid-public-key'
     | '/api/public/hooks/causal-outcomes'
     | '/api/public/hooks/evaluate-alerts'
+    | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
@@ -850,6 +862,7 @@ export interface RootRouteChildren {
   ApiPublicVapidPublicKeyRoute: typeof ApiPublicVapidPublicKeyRoute
   ApiPublicHooksCausalOutcomesRoute: typeof ApiPublicHooksCausalOutcomesRoute
   ApiPublicHooksEvaluateAlertsRoute: typeof ApiPublicHooksEvaluateAlertsRoute
+  ApiPublicHooksPicksScanRoute: typeof ApiPublicHooksPicksScanRoute
   ApiPublicHooksPrebakePicksRoute: typeof ApiPublicHooksPrebakePicksRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -1284,6 +1297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksPrebakePicksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/picks-scan': {
+      id: '/api/public/hooks/picks-scan'
+      path: '/api/public/hooks/picks-scan'
+      fullPath: '/api/public/hooks/picks-scan'
+      preLoaderRoute: typeof ApiPublicHooksPicksScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/evaluate-alerts': {
       id: '/api/public/hooks/evaluate-alerts'
       path: '/api/public/hooks/evaluate-alerts'
@@ -1362,6 +1382,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicVapidPublicKeyRoute: ApiPublicVapidPublicKeyRoute,
   ApiPublicHooksCausalOutcomesRoute: ApiPublicHooksCausalOutcomesRoute,
   ApiPublicHooksEvaluateAlertsRoute: ApiPublicHooksEvaluateAlertsRoute,
+  ApiPublicHooksPicksScanRoute: ApiPublicHooksPicksScanRoute,
   ApiPublicHooksPrebakePicksRoute: ApiPublicHooksPrebakePicksRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

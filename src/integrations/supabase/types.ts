@@ -1013,6 +1013,42 @@ export type Database = {
         }
         Relationships: []
       }
+      picks_cache: {
+        Row: {
+          failed: number
+          picks: Json
+          region: string
+          scanned_at: string
+          scope_key: string
+          sector: string
+          succeeded: number
+          total_scanned: number
+          universe: string
+        }
+        Insert: {
+          failed?: number
+          picks?: Json
+          region: string
+          scanned_at?: string
+          scope_key: string
+          sector: string
+          succeeded?: number
+          total_scanned?: number
+          universe: string
+        }
+        Update: {
+          failed?: number
+          picks?: Json
+          region?: string
+          scanned_at?: string
+          scope_key?: string
+          sector?: string
+          succeeded?: number
+          total_scanned?: number
+          universe?: string
+        }
+        Relationships: []
+      }
       price_alerts: {
         Row: {
           active: boolean
