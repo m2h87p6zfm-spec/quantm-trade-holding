@@ -94,10 +94,10 @@ export const AssetChart = memo(function AssetChart({
   const displayLast = convertFromUsd(last, currency);
   const displayChangeAbs = convertFromUsd(changeAbs, currency);
   const perfLabel = (lang === "en" ? {
-    "1D": "today", "1W": "last week", "1M": "last month", "3M": "last 3 months",
+    "1D": "today", "3D": "last 3 days", "1W": "last week", "1M": "last month", "3M": "last 3 months",
     "YTD": "year to date", "1Y": "last year", "5Y": "last 5 years", "MAX": "full history",
   } : {
-    "1D": "heute", "1W": "letzte Woche", "1M": "letzten Monat", "3M": "letzte 3 Monate",
+    "1D": "heute", "3D": "letzte 3 Tage", "1W": "letzte Woche", "1M": "letzten Monat", "3M": "letzte 3 Monate",
     "YTD": "seit Jahresanfang", "1Y": "letztes Jahr", "5Y": "letzte 5 Jahre", "MAX": "gesamter Verlauf",
   })[tf];
 
