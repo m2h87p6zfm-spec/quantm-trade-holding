@@ -4,7 +4,6 @@ import { useCandleScan } from "@/hooks/use-candle-scan";
 import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass, Activity, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
-import { fetchCandles, getApiKey } from "@/lib/finnhub";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision, stabilizeDecision, whyNow } from "@/lib/analysis";
 import { detectRegime, type MarketRegime } from "@/lib/ai-learning";
@@ -54,7 +53,7 @@ function PicksPage() {
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
-  const [universe, setUniverse] = useState<"top" | "extended" | "all" | "combined">("top");
+  const [universe, setUniverse] = useState<"top" | "extended" | "all" | "combined">("combined");
   const [mode, setMode] = useState<"ki" | "browse">("ki");
   const [query, setQuery] = useState("");
   const [forceRefresh, setForceRefresh] = useState(0);
@@ -160,7 +159,10 @@ function PicksPage() {
           settings.risk === "konservativ" ? -10 : settings.risk === "spekulativ" ? 5 : 0;
         const adjConfidence = Math.max(0, Math.min(100, baseConfidence + confAdj));
         // Bestimme Verdict-Label für die UI: wenn unter user-Schwelle, NEUTRAL.
-        const verdictForRisk = sig.verdict;
+        const cachedDecision = String(x.decision ?? "BUY");
+        const verdictForRisk = sig.verdict === "LONG" || (cachedDecision === "BUY" && adjConfidence >= settings.minConfidence)
+          ? "LONG"
+          : sig.verdict;
         const fakeReport = {
           confidence: Math.round(adjConfidence),
           decision: verdictForRisk === "LONG" ? "BUY" : verdictForRisk === "SHORT" ? "SELL" : "HOLD",
@@ -363,8 +365,6 @@ function PicksPage() {
   const podium = displayPicks.slice(0, 3);
   const rest = displayPicks.slice(3);
 
-  const apiMissing = !getApiKey();
-
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
       {/* Hero */}
@@ -451,12 +451,6 @@ function PicksPage() {
           </div>
         )}
       </div>
-
-      {apiMissing && mode === "ki" && (
-        <Card className="border-amber-500/40 bg-amber-500/5 p-4 text-sm">
-          API-Key für Marktdaten fehlt. Hinterlege ihn in den <Link to="/einstellungen" className="text-primary underline">Einstellungen</Link>.
-        </Card>
-      )}
 
       {mode === "ki" && loading && (
         <div className="rounded-xl border border-border bg-card p-4">
