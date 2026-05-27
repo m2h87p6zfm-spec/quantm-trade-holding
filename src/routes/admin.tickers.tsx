@@ -40,6 +40,28 @@ function saveLive(map: LiveMap) {
 }
 
 function AdminTickersDebug() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const checkAdmin = useServerFn(checkIsAdmin);
+
+  const adminQ = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => checkAdmin(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (!user) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (adminQ.data && !adminQ.data.isAdmin) {
+      navigate({ to: "/" });
+    }
+  }, [user, adminQ.data, navigate]);
+
+  const isAdmin = adminQ.data?.isAdmin === true;
   const s = MERGE_STATS;
 
   const regionBreakdown = useMemo(() => {
