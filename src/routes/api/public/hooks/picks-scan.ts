@@ -246,6 +246,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         } catch { /* leerer body → defaults */ }
 
         const out: Array<{ scope: string; result: Awaited<ReturnType<typeof runScan>> }> = [];
+        const buyPicksBySymbol = new Map<string, NonNullable<Awaited<ReturnType<typeof scanOne>>>>();
         for (const s of scopes) {
           try {
             const result = await runScan(s);
@@ -258,10 +259,89 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
             });
           }
         }
-        return new Response(
-          JSON.stringify({ ok: true, scans: out, ts: new Date().toISOString() }),
-          { status: 200, headers: JSON_HEADERS },
-        );
+
+        // Persist BUY picks into the Track Record (apex_analyses) for
+        // gapless history — dedupe per ticker per 24h so the hourly cron
+        // doesn't spam duplicates.
+        try {
+          const { data: cachedRows } = await supabaseAdmin
+            .from("picks_cache")
+            .select("picks, scope_key")
+            .in("scope_key", scopes.map(scopeKey));
+          for (const row of cachedRows ?? []) {
+            const picks = (row.picks as unknown as Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>>) ?? [];
+            for (const p of picks) {
+              if (p?.decision === "BUY" && p.symbol) {
+                if (!buyPicksBySymbol.has(p.symbol)) buyPicksBySymbol.set(p.symbol, p);
+              }
+            }
+          }
+          const symbols = [...buyPicksBySymbol.keys()];
+          let recorded = 0;
+          if (symbols.length > 0) {
+            const sinceIso = new Date(Date.now() - 24 * 3600_000).toISOString();
+            const { data: existing } = await supabaseAdmin
+              .from("apex_analyses")
+              .select("ticker, analyzed_at")
+              .in("ticker", symbols)
+              .gte("analyzed_at", sinceIso);
+            const skip = new Set((existing ?? []).map((r) => (r.ticker as string).toUpperCase()));
+            const toInsert = symbols
+              .filter((s) => !skip.has(s.toUpperCase()))
+              .map((s) => {
+                const p = buyPicksBySymbol.get(s)!;
+                return {
+                  ticker: s.toUpperCase(),
+                  name: p.name,
+                  sector: p.sector ?? null,
+                  asset_type: "Aktie" as const,
+                  verdict: "KAUF" as const,
+                  confidence_score: Math.round(p.confidence ?? 0),
+                  price_at_analysis: Number(p.last) || 0,
+                  indicators: {
+                    source: "cron-picks-scan",
+                    rsi: p.rsi,
+                    macdHist: p.macdHist,
+                    zScore: p.zScore,
+                    volatility: p.volatility,
+                    momentum: p.momentum,
+                    sma50: p.sma50,
+                    sma200: p.sma200,
+                    regime: p.regime,
+                    entry: p.entry,
+                    target: p.target,
+                    stop: p.stop,
+                    compositeScore: p.compositeScore,
+                  } as Record<string, unknown>,
+                };
+              })
+              .filter((r) => r.price_at_analysis > 0);
+            if (toInsert.length > 0) {
+              const { data: inserted, error: insErr } = await supabaseAdmin
+                .from("apex_analyses")
+                .insert(toInsert as never)
+                .select("id");
+              if (insErr) {
+                console.error("apex_analyses insert failed", insErr);
+              } else if (inserted && inserted.length > 0) {
+                recorded = inserted.length;
+                await supabaseAdmin
+                  .from("apex_outcomes")
+                  .insert(inserted.map((r) => ({ analysis_id: r.id as string })) as never);
+              }
+            }
+          }
+          return new Response(
+            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: recorded, ts: new Date().toISOString() }),
+            { status: 200, headers: JSON_HEADERS },
+          );
+        } catch (e) {
+          console.error("track-record persist failed", e);
+          return new Response(
+            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: 0, ts: new Date().toISOString() }),
+            { status: 200, headers: JSON_HEADERS },
+          );
+        }
       },
     },
   },
