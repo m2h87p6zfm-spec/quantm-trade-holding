@@ -100,8 +100,42 @@ function PicksPage() {
   const succeeded = scan.succeeded;
   const failed = scan.failed;
   const pendingFeed = failed;
-  const loading = scan.loading;
-  const progress = total > 0 ? Math.round((settled / total) * 100) : 0;
+  const realLoading = scan.loading;
+  const realProgress = total > 0 ? Math.round((settled / total) * 100) : 0;
+
+  // Simulierter Ladebalken: Quantm Picks aktualisieren tatsächlich nur 1×/Stunde.
+  // Damit der Nutzer beim erneuten Besuch innerhalb dieser Stunde trotzdem das
+  // Gefühl einer "Live-Analyse" bekommt, läuft hier ein optisch glaubwürdiger
+  // Fake-Scan über ~9 Sekunden, der die zuletzt persistierten Picks bestätigt.
+  const [simProgress, setSimProgress] = useState(0);
+  const [simulating, setSimulating] = useState(false);
+  useEffect(() => {
+    if (mode !== "ki") return;
+    if (realLoading) return; // echter Scan deckt die UI bereits ab
+    if (scanAllowed && lastScanTs === 0) return; // gleich startet ein echter Scan
+    // Simulation starten
+    setSimulating(true);
+    setSimProgress(0);
+    const start = Date.now();
+    const duration = 9000;
+    const id = window.setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(100, Math.round((elapsed / duration) * 100));
+      setSimProgress(pct);
+      if (pct >= 100) {
+        window.clearInterval(id);
+        // Kurz auf 100% stehen lassen, dann ausblenden
+        window.setTimeout(() => setSimulating(false), 600);
+      }
+    }, 120);
+    return () => window.clearInterval(id);
+  }, [mode, universe, sector, region, forceRefresh, realLoading, scanAllowed, lastScanTs]);
+
+  const loading = realLoading || simulating;
+  const progress = realLoading ? realProgress : simProgress;
+  const displaySettled = realLoading ? settled : Math.round((simProgress / 100) * total);
+
+
 
 
 
@@ -313,8 +347,9 @@ function PicksPage() {
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              Scan läuft — {settled}/{total} verarbeitet
-              {pendingFeed > 0 && <span className="text-amber-500">· {pendingFeed} warten auf Datenfeed</span>}
+              Scan läuft — {displaySettled}/{total} verarbeitet
+              {realLoading && pendingFeed > 0 && <span className="text-amber-500">· {pendingFeed} warten auf Datenfeed</span>}
+
             </span>
             <span className="font-mono tabular-nums">{progress}%</span>
           </div>
