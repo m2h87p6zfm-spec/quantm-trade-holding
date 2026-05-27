@@ -195,22 +195,31 @@ export function computeFactorScores(
   f.push({ key: "momentum_roc", label: "Rate-of-Change", score: rocScore, weight: weights.momentum_roc,
     rationale: `ROC10 ${(ind.momentum * 100).toFixed(2)}%` });
 
-  // 9) Macro / Regime alignment
+  // 9) Macro / Regime alignment — Regime-Basisscore + optionaler Risk-On/Off-Tilt
   const macroMap: Record<MarketRegime, number> = { bull: 0.6, bear: -0.6, chop: 0, high_vol: -0.2, low_vol: 0.3 };
-  f.push({ key: "macro_regime", label: "Macro Regime", score: macroMap[regime], weight: weights.macro_regime,
-    rationale: `Regime: ${regime}` });
+  let macroScore = macroMap[regime];
+  let macroRat = `Regime: ${regime}`;
+  if (typeof ext.riskOnOff === "number") {
+    const tilt = clamp(ext.riskOnOff, -1, 1) * 0.4; // bis ±0.4 Bias
+    macroScore = clamp(macroScore * 0.7 + tilt);
+    macroRat += ` · Risk-${ext.riskOnOff >= 0 ? "On" : "Off"} ${(ext.riskOnOff * 100).toFixed(0)}%`;
+  }
+  f.push({ key: "macro_regime", label: "Macro Regime", score: macroScore, weight: weights.macro_regime, rationale: macroRat });
 
   // 10) Geopolitical risk (Risk-Off, je höher desto bearish)
   const geo = clamp(-(ext.geopoliticalRisk ?? 0.2) * 2 + 0.4);
   f.push({ key: "geopolitical", label: "Geopolitical Risk", score: geo, weight: weights.geopolitical,
     rationale: ext.geopoliticalRisk != null ? `Geo-Risiko ${(ext.geopoliticalRisk * 100).toFixed(0)}%` : "Geo-Risiko: Default 20%" });
 
-  // 11) Sentiment — Contrarian an Extremen, neutral sonst
+  // 11) Sentiment — News-AI bevorzugt, sonst contrarian RSI-Fallback
   let sentScore = 0;
-  if (ind.rsi >= 75) sentScore = -0.6; // Euphorie → bearish
-  else if (ind.rsi <= 25) sentScore = 0.6; // Panik → bullish
-  f.push({ key: "sentiment", label: "Sentiment Contrarian", score: sentScore, weight: weights.sentiment,
-    rationale: ind.rsi >= 75 ? "Retail-Euphorie" : ind.rsi <= 25 ? "Kapitulation" : "Sentiment ruhig" });
+  let sentRat = "Sentiment ruhig";
+  if (typeof ext.newsSentiment === "number") {
+    sentScore = clamp(ext.newsSentiment);
+    sentRat = `News-Sentiment ${(sentScore * 100).toFixed(0)}%`;
+  } else if (ind.rsi >= 75) { sentScore = -0.6; sentRat = "Retail-Euphorie"; }
+  else if (ind.rsi <= 25)   { sentScore = 0.6;  sentRat = "Kapitulation"; }
+  f.push({ key: "sentiment", label: "News Sentiment", score: sentScore, weight: weights.sentiment, rationale: sentRat });
 
   // 12) Liquidity proxy — bb.width relativ
   const liq = clamp(0.5 - ind.bollinger.width * 2);
