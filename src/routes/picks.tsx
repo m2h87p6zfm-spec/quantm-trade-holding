@@ -507,7 +507,7 @@ function PodiumCard({ row, rank, watched, onToggleWatch }: { row: PickRowData; r
           <div className="truncate text-xs text-muted-foreground">{p.name} · {p.sector}</div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-border bg-background/40 p-2">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Konfidenz</div>
             <div className="font-mono text-xl font-bold text-primary tabular-nums">{report.confidence}%</div>
@@ -515,6 +515,10 @@ function PodiumCard({ row, rank, watched, onToggleWatch }: { row: PickRowData; r
           <div className="rounded-lg border border-border bg-background/40 p-2">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Upside</div>
             <div className="font-mono text-xl font-bold text-bull tabular-nums">+{upsidePct.toFixed(1)}%</div>
+          </div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
+            <div className="text-[10px] uppercase tracking-wider text-primary/80">Composite</div>
+            <div className="font-mono text-xl font-bold text-primary tabular-nums">{report.compositeScore ?? "—"}</div>
           </div>
         </div>
 
