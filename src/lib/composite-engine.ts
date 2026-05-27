@@ -122,6 +122,12 @@ export type ExternalInputs = {
   mcMedian?: number;          // monte-carlo median price
   spotPrice?: number;         // for forecast edge
   correlationDrift?: number;  // ΔCorrelation vs benchmark (last 20d)
+  /**
+   *  Historische Schlusskurse (chronologisch). Wenn vorhanden, kalibriert die
+   *  Engine GARCH(1,1) + 2-State-Markov-Regime-Switching für ein deutlich
+   *  realistischeres Monte-Carlo (Vola-Clustering & Marktphasen-Sensitivität).
+   */
+  historicalCloses?: number[];
 };
 
 // ---------------------------------------------------------------------------
