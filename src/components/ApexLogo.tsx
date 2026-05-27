@@ -7,16 +7,16 @@ type Props = {
 };
 
 /**
- * Quantm Trade brand lockup — Q-orbit monogram + wordmark.
- * Logo asset is white on transparent; in light mode it's inverted to dark
- * via a CSS filter so it stays legible on both themes.
+ * Quantm Trade brand mark — silver/metallic Q with upward arrow.
+ * The asset is silver on a transparent/dark background and renders
+ * legibly on both light and dark themes without inversion.
  */
 export function ApexLogo({ className = "h-6 w-auto" }: Props) {
   return (
     <img
       src={logoUrl}
       alt="Quantm Trade"
-      className={`${className} select-none [.light_&]:invert`}
+      className={`${className} select-none object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]`}
       draggable={false}
     />
   );
