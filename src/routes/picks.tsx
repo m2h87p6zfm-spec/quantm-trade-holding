@@ -16,6 +16,8 @@ import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PRODUCT_BY_SYMBOL } from "@/lib/products";
+import { ScanHistoryPanel } from "@/components/ScanHistoryPanel";
+
 
 
 function regimeLabel(r: MarketRegime) {
@@ -457,6 +459,11 @@ function PicksPage() {
           Aktuell keine BUY-Kandidaten in diesem Filter — die KI bleibt diszipliniert und schlägt nur vor, wenn die Konfidenz ≥ 60 % ist.
         </Card>
       )}
+
+      {mode === "ki" && (
+        <ScanHistoryPanel scopeKey={`${universe}|${sector}|${region}`} />
+      )}
+
 
       {mode === "ki" && loading && picks.length === 0 && cachedPicks.length > 0 && (
         <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-[11px] text-muted-foreground">
