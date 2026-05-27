@@ -407,6 +407,9 @@ export function buildDecision(
     invalidation,
     regime,
     adjustments,
+    metrics: analysis.metrics,
+    factors: analysis.composite.factors,
+    compositeScore: analysis.composite.scoreNormalized,
   };
 }
 
