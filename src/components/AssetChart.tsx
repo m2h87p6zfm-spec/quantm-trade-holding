@@ -381,7 +381,7 @@ function HoverTooltip({
   const displayAbs = convertFromUsd(abs, currency);
   const d = new Date(hover.time * 1000);
   const dateStr =
-    tf === "1D" || tf === "1W" || tf === "1M"
+    tf === "1D" || tf === "3D" || tf === "1W" || tf === "1M"
       ? d.toLocaleString(lang === "en" ? "en-US" : "de-DE", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })
       : d.toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
