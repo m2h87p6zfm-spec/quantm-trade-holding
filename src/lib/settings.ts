@@ -156,14 +156,75 @@ function write(s: StoredSettings) {
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
+// Globaler Sync-Status, damit alle useSettings-Instanzen denselben Supabase-
+// Snapshot teilen und nicht jede Komponente einen eigenen Fetch ausführt.
+let cloudHydrated = false;
+let pendingSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function pullFromCloud() {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) return;
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("settings")
+      .eq("user_id", uid)
+      .maybeSingle();
+    if (error || !data?.settings) return;
+    const remote = migrate(data.settings as any);
+    const local = read();
+    // Merge: Cloud-Werte für skalare Präferenzen gewinnen, lokale Watchlists
+    // bleiben falls die Cloud noch leer ist (Migration vom rein lokalen
+    // Zustand).
+    const merged: StoredSettings = { ...local, ...remote };
+    if ((!remote.watchlists || remote.watchlists.length === 0) && local.watchlists?.length) {
+      merged.watchlists = local.watchlists;
+      merged.activeWatchlistId = local.activeWatchlistId;
+    }
+    localStorage.setItem("ta_settings", JSON.stringify(merged));
+    queueMicrotask(() => window.dispatchEvent(new CustomEvent("ta_settings_change")));
+  } catch { /* offline / not signed in — localStorage genügt */ }
+}
+
+function pushToCloud(s: StoredSettings) {
+  if (typeof window === "undefined") return;
+  if (pendingSaveTimer) clearTimeout(pendingSaveTimer);
+  // Debounce: 600 ms nach der letzten Änderung schreiben.
+  pendingSaveTimer = setTimeout(async () => {
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth.user?.id;
+      if (!uid) return;
+      await supabase
+        .from("user_settings")
+        .upsert({ user_id: uid, settings: s as any, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+    } catch { /* still cached locally */ }
+  }, 600);
+}
+
 export function useSettings() {
   const [stored, setStored] = useState<StoredSettings>(DEFAULT);
+  const hydratedRef = useRef(false);
   useEffect(() => {
     setStored(read());
     const h = () => setStored(read());
     window.addEventListener("ta_settings_change", h);
     window.addEventListener("storage", h);
-    return () => { window.removeEventListener("ta_settings_change", h); window.removeEventListener("storage", h); };
+    // Beim Mount: Cloud-Snapshot einmalig holen + bei Auth-Wechsel neu laden.
+    if (!cloudHydrated) {
+      cloudHydrated = true;
+      void pullFromCloud();
+    }
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") void pullFromCloud();
+    });
+    hydratedRef.current = true;
+    return () => {
+      window.removeEventListener("ta_settings_change", h);
+      window.removeEventListener("storage", h);
+      sub.subscription.unsubscribe();
+    };
   }, []);
   useEffect(() => {
     if (stored.theme === "auto") return; // handled by useAutoTheme based on sun position
@@ -179,6 +240,7 @@ export function useSettings() {
       const { watchlist: _ignore, ...rest } = patch as any;
       const next: StoredSettings = { ...prev, ...rest };
       write(next);
+      pushToCloud(next);
       return next;
     });
   }, []);
