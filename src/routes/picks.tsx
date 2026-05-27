@@ -52,7 +52,7 @@ function PicksPage() {
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
-  const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
+  const [universe, setUniverse] = useState<"top" | "extended" | "all" | "combined">("top");
   const [mode, setMode] = useState<"ki" | "browse">("ki");
   const [query, setQuery] = useState("");
   const [forceRefresh, setForceRefresh] = useState(0);
