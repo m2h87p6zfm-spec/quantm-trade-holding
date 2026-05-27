@@ -143,7 +143,7 @@ const DICT: Record<Lang, Dict> = {
     "settings.filter": "Signale filtern",
     "settings.filter.hint": "Bestimme, welche Signale dir angezeigt werden.",
     "settings.minconf": "Mindest-Sicherheit",
-    "settings.minconf.hint": "Signale unter dieser Sicherheist-Schwelle werden nicht angezeigt.",
+    "settings.minconf.hint": "Signale unter dieser Sicherheits-Schwelle werden nicht angezeigt.",
     "settings.minconf.all": "Alle",
     "settings.minconf.strict": "Streng",
     "settings.hidelow": "Signale mit geringer Sicherheit ausblenden",
