@@ -5,6 +5,7 @@ import { usePortfolio, pnl, costBasis, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
 import { findProduct } from "@/lib/products";
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 import { whyNow } from "@/lib/analysis";
 
 import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
