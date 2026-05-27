@@ -17,10 +17,11 @@ import { useLang } from "@/lib/i18n";
  * Powered by lightweight-charts.
  */
 
-export type Timeframe = "1D" | "1W" | "1M" | "3M" | "YTD" | "1Y" | "5Y" | "MAX";
+export type Timeframe = "1D" | "3D" | "1W" | "1M" | "3M" | "YTD" | "1Y" | "5Y" | "MAX";
 
 const TIMEFRAMES: { id: Timeframe; label: string; interval: string; range: string; refetchMs: number }[] = [
   { id: "1D",  label: "1T",  interval: "5m",  range: "1d",  refetchMs: 60_000 },
+  { id: "3D",  label: "3T",  interval: "15m", range: "5d",  refetchMs: 120_000 },
   { id: "1W",  label: "1W",  interval: "15m", range: "5d",  refetchMs: 120_000 },
   { id: "1M",  label: "1M",  interval: "30m", range: "1mo", refetchMs: 300_000 },
   { id: "3M",  label: "3M",  interval: "1d",  range: "3mo", refetchMs: 0 },
