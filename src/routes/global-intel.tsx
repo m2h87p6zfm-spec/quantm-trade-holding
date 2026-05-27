@@ -1579,34 +1579,48 @@ function WorldMap({
             const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
             const propagationActive = !!chain;
             const isLit = !!chain?.routes.includes(f.id);
-            const opacity = propagationActive ? (isLit ? 0.95 : 0.18) : 0.55;
-            const width = propagationActive && isLit ? 1.6 : 0.9;
+            const opacity = propagationActive ? (isLit ? 0.95 : 0.15) : 0.6;
+            const width = propagationActive && isLit ? 1.6 : 1.0;
+            const stroke = isLit ? "oklch(0.85 0.12 78)" : color;
             return (
-              <g key={f.id}>
+              <g key={f.id} style={{ color: stroke }}>
+                {/* soft halo for smoother look */}
                 <path
                   d={d}
                   fill="none"
-                  stroke={isLit ? "oklch(0.85 0.12 78)" : color}
+                  stroke={stroke}
+                  strokeOpacity={opacity * 0.25}
+                  strokeWidth={width + 2.4}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={stroke}
                   strokeOpacity={opacity}
                   strokeWidth={width}
-                  strokeDasharray={dashed ? "3 3" : undefined}
-                  filter="url(#softGlow)"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray={dashed ? "4 4" : undefined}
+                  vectorEffect="non-scaling-stroke"
+                  markerEnd="url(#arrowFlow)"
                   style={{ transition: "stroke-opacity 320ms ease, stroke-width 320ms ease" }}
                 >
                   <title>{f.label} — {f.status} · {f.note}</title>
                 </path>
-                {isLit && (
-                  <circle r={2.2} fill="oklch(0.92 0.10 78)">
-                    <animateMotion dur="3.2s" repeatCount="indefinite" path={d} />
-                  </circle>
-                )}
+                {/* gentle traveling pulse on every flow for liveliness */}
+                <circle r={1.4} fill={stroke} opacity={isLit ? 0.95 : 0.55}>
+                  <animateMotion dur={`${isLit ? 2.4 : 5.0}s`} repeatCount="indefinite" path={d} />
+                </circle>
               </g>
             );
           })}
         </g>
       )}
 
-      {/* Tension lines */}
+      {/* Tension lines — animated dash motion for a "live" feel */}
       {layers.tensions && (
         <g>
           {TENSIONS.map((t) => {
@@ -1615,18 +1629,34 @@ function WorldMap({
             if (!a || !b) return null;
             const color = RISK_COLOR[t.level];
             const d = curvedPath(a, b);
+            const isHigh = t.level === "high";
             return (
-              <path
-                key={t.id}
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeOpacity={selectedEvent ? 0.2 : t.level === "high" ? 0.55 : 0.4}
-                strokeWidth={t.level === "high" ? 0.9 : 0.7}
-                strokeDasharray="1 3"
-              >
-                <title>{t.from} ↔ {t.to} — {t.topic} · {t.impact}</title>
-              </path>
+              <g key={t.id}>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={selectedEvent ? 0.18 : isHigh ? 0.32 : 0.22}
+                  strokeWidth={isHigh ? 2.2 : 1.6}
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                  pointerEvents="none"
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={selectedEvent ? 0.3 : isHigh ? 0.85 : 0.6}
+                  strokeWidth={isHigh ? 0.9 : 0.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeDasharray="6 5"
+                  vectorEffect="non-scaling-stroke"
+                >
+                  <animate attributeName="stroke-dashoffset" from="0" to="-22" dur={isHigh ? "1.6s" : "2.4s"} repeatCount="indefinite" />
+                  <title>{t.from} ↔ {t.to} — {t.topic} · {t.impact}</title>
+                </path>
+              </g>
             );
           })}
         </g>
