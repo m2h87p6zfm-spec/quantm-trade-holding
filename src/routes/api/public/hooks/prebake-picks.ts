@@ -14,6 +14,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PRODUCTS } from "@/lib/products";
 import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
 import { adaptiveCandleTtl } from "@/lib/twelvedata.server";
+import { requireCronSecret } from "@/lib/api-auth.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -45,9 +46,12 @@ export const Route = createFileRoute("/api/public/hooks/prebake-picks")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        // Idempotenter Cache-Warm-Job — nur Lese-/Cache-Writes, keine
-        // User-Daten, kein State-Wechsel. Auth-frei wie andere
-        // /api/public/hooks/* Cron-Endpunkte des Projekts.
+        // Cron-secret guard — prevents internet users from triggering
+        // hundreds of external API calls on demand.
+        const denied = requireCronSecret(request);
+        if (denied) return denied;
+
+
 
 
         const url = new URL(request.url);
