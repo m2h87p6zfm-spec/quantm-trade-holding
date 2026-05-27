@@ -107,6 +107,27 @@ function LoginPage() {
           </div>
         </div>
 
+        {/* Why us vs TradingView/Bloomberg — instant clarity, no scroll */}
+        <div className="mb-6 rounded-xl border border-border/60 bg-card/40 p-4 backdrop-blur">
+          <p className="text-center text-[12px] font-semibold tracking-tight text-foreground">
+            {t("login.vs.title")}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 text-[11px] leading-snug">
+            <div className="space-y-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground/70">{t("login.vs.themLabel")}</div>
+              <p className="text-muted-foreground">✗ {t("login.vs.them1")}</p>
+              <p className="text-muted-foreground">✗ {t("login.vs.them2")}</p>
+              <p className="text-muted-foreground">✗ {t("login.vs.them3")}</p>
+            </div>
+            <div className="space-y-1.5">
+              <div className="text-[10px] uppercase tracking-wider text-primary/90">{t("login.vs.usLabel")}</div>
+              <p className="text-foreground">✓ {t("login.vs.us1")}</p>
+              <p className="text-foreground">✓ {t("login.vs.us2")}</p>
+              <p className="text-foreground">✓ {t("login.vs.us3")}</p>
+            </div>
+          </div>
+        </div>
+
         {pendingEmail && (
           <div className="mb-4 rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
             <p className="font-semibold text-foreground">Bitte bestätige deine E-Mail-Adresse</p>
