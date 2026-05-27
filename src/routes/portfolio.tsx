@@ -256,7 +256,24 @@ function PortfolioPage() {
     [positions],
   );
   const rows = useCockpitData(allSymbols);
-  const rowMap = useMemo(() => new Map(rows.map((r) => [r.symbol, r])), [rows]);
+  // Live-Kurse: SSE für Premium, sonst Polling alle 30 s. Damit aktualisieren
+  // sich Portfolio-Wert, P&L und Analytics ohne Reload, sobald sich Preise
+  // bewegen (statt erst nach 1 h aus dem Kerzen-Cache).
+  const { quotes: liveQuotes, lastUpdate, tier, connected } = useLiveQuotes(allSymbols, allSymbols.length > 0);
+  const rowMap = useMemo(() => {
+    const m = new Map<string, CockpitRow>();
+    for (const r of rows) {
+      const live = liveQuotes[r.symbol];
+      if (live && Number.isFinite(live.c) && live.c > 0) {
+        const prev = Number.isFinite(live.pc) && live.pc > 0 ? live.pc : r.prev;
+        const change = prev ? ((live.c - prev) / prev) * 100 : r.change;
+        m.set(r.symbol, { ...r, last: live.c, prev, change });
+      } else {
+        m.set(r.symbol, r);
+      }
+    }
+    return m;
+  }, [rows, liveQuotes]);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
