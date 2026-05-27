@@ -968,6 +968,27 @@ export type Database = {
         }
         Relationships: []
       }
+      market_context_cache: {
+        Row: {
+          cache_key: string
+          expires_at: string
+          fetched_at: string
+          payload: Json
+        }
+        Insert: {
+          cache_key: string
+          expires_at: string
+          fetched_at?: string
+          payload: Json
+        }
+        Update: {
+          cache_key?: string
+          expires_at?: string
+          fetched_at?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       memory_quality: {
         Row: {
           created_at: string | null
