@@ -221,18 +221,14 @@ const TRADER_TYPES: { v: TraderType; lk: keyof typeof T; dk: keyof typeof T }[] 
   { v: "long_term_investor", lk: "tt_long_l", dk: "tt_long_d" },
   { v: "swing_trader", lk: "tt_swing_l", dk: "tt_swing_d" },
   { v: "day_trader", lk: "tt_day_l", dk: "tt_day_d" },
-  { v: "options_trader", lk: "tt_opt_l", dk: "tt_opt_d" },
-  { v: "crypto_trader", lk: "tt_crypto_l", dk: "tt_crypto_d" },
   { v: "mixed", lk: "tt_mixed_l", dk: "tt_mixed_d" },
 ];
 
+// Wir bieten ausschließlich Aktien & ETFs an — daher nur die zugehörigen
+// Hauptwährungen (USD, EUR, CHF) zur Auswahl.
 const CURRENCIES: { v: PreferredCurrency; sym: string; k: keyof typeof T }[] = [
   { v: "USD", sym: "$", k: "ccy_USD" },
   { v: "EUR", sym: "€", k: "ccy_EUR" },
-  { v: "GBP", sym: "£", k: "ccy_GBP" },
-  { v: "AUD", sym: "A$", k: "ccy_AUD" },
-  { v: "CAD", sym: "C$", k: "ccy_CAD" },
-  { v: "JPY", sym: "¥", k: "ccy_JPY" },
   { v: "CHF", sym: "Fr.", k: "ccy_CHF" },
 ];
 
@@ -253,7 +249,6 @@ const NOTIFS: { v: NotifKey; lk: keyof typeof T; dk: keyof typeof T }[] = [
 const STARTER_LISTS: { id: string; name: string; symbols: string[]; tagline: string }[] = [
   { id: "ai-tech", name: "AI & Technology", tagline: "NVDA, MSFT, GOOGL …", symbols: ["NVDA", "MSFT", "GOOGL", "META", "AMD", "AVGO", "TSM", "ASML", "PLTR"] },
   { id: "large-cap", name: "Large Cap Stocks", tagline: "AAPL, MSFT, AMZN …", symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "BRK.B", "JPM", "V", "WMT", "JNJ"] },
-  { id: "crypto", name: "Crypto Leaders", tagline: "BTC, ETH, SOL …", symbols: ["BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "AVAX-USD"] },
   { id: "high-vol", name: "High Volatility", tagline: "TSLA, COIN, MSTR …", symbols: ["TSLA", "COIN", "MSTR", "ARKK", "RIOT", "MARA", "PLTR"] },
   { id: "dividend", name: "Dividend Stocks", tagline: "KO, JNJ, PG …", symbols: ["KO", "JNJ", "PG", "T", "VZ", "XOM", "MMM", "MO"] },
   { id: "energy", name: "Energy & Commodities", tagline: "XOM, CVX, XLE …", symbols: ["XOM", "CVX", "COP", "XLE", "USO", "GLD", "SLV"] },
@@ -495,7 +490,7 @@ export function OnboardingGate() {
           )}
           {step === 5 && (
             <Question title={tt("ccyTitle")} hint={tt("ccyHint")}>
-              <Grid cols={4}>
+              <Grid cols={3}>
                 {CURRENCIES.map((g) => (
                   <Choice
                     key={g.v}
