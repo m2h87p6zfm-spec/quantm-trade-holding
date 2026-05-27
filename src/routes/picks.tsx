@@ -347,8 +347,9 @@ function PicksPage() {
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-              Scan läuft — {settled}/{total} verarbeitet
-              {pendingFeed > 0 && <span className="text-amber-500">· {pendingFeed} warten auf Datenfeed</span>}
+              Scan läuft — {displaySettled}/{total} verarbeitet
+              {realLoading && pendingFeed > 0 && <span className="text-amber-500">· {pendingFeed} warten auf Datenfeed</span>}
+
             </span>
             <span className="font-mono tabular-nums">{progress}%</span>
           </div>
