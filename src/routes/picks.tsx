@@ -79,11 +79,12 @@ function PicksPage() {
       if (q) list = list.filter((p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
       return list;
     }
-    if (universe === "top") list = list.slice(0, 80);
-    else if (universe === "extended") list = list.slice(80, 250);
-    else list = list.slice(250);
-
+    // Echte Markt-Kapitalisierungs-Buckets statt Listen-Slicing.
+    const wantCap: Product["cap"] =
+      universe === "top" ? "large" : universe === "extended" ? "mid" : "small";
+    list = list.filter((p) => p.cap === wantCap);
     return list;
+
   }, [sector, region, universe, mode, query]);
 
   // Symbols to scan (KI mode only). Stable identity so the scanner hook
