@@ -395,7 +395,7 @@ function PicksPage() {
                 onClick={() => setUniverse(u)}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
               >
-                {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
+                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : "Small Caps · 50"}
               </button>
             ))}
           </div>
