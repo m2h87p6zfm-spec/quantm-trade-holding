@@ -1,13 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { MERGE_STATS, PRODUCTS } from "@/lib/products";
 import { PRODUCTS_EXTRA2 } from "@/lib/products-extra2";
 import { Card } from "@/components/ui/card";
 import { authedFetch } from "@/lib/authed-fetch";
+import { checkIsAdmin } from "@/lib/self-healing.functions";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/admin/tickers")({
   component: AdminTickersDebug,
-  head: () => ({ meta: [{ title: "Admin · Ticker-Merge Debug" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin · Ticker-Merge Debug" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
 });
 
 type LiveStatus = "available" | "unavailable" | "error";
