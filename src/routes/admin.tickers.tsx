@@ -1,13 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { MERGE_STATS, PRODUCTS } from "@/lib/products";
 import { PRODUCTS_EXTRA2 } from "@/lib/products-extra2";
 import { Card } from "@/components/ui/card";
 import { authedFetch } from "@/lib/authed-fetch";
+import { checkIsAdmin } from "@/lib/self-healing.functions";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/admin/tickers")({
   component: AdminTickersDebug,
-  head: () => ({ meta: [{ title: "Admin · Ticker-Merge Debug" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin · Ticker-Merge Debug" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
 });
 
 type LiveStatus = "available" | "unavailable" | "error";
@@ -31,6 +40,28 @@ function saveLive(map: LiveMap) {
 }
 
 function AdminTickersDebug() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const checkAdmin = useServerFn(checkIsAdmin);
+
+  const adminQ = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: () => checkAdmin(),
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (!user) {
+      navigate({ to: "/login" });
+      return;
+    }
+    if (adminQ.data && !adminQ.data.isAdmin) {
+      navigate({ to: "/" });
+    }
+  }, [user, adminQ.data, navigate]);
+
+  const isAdmin = adminQ.data?.isAdmin === true;
   const s = MERGE_STATS;
 
   const regionBreakdown = useMemo(() => {
@@ -44,6 +75,13 @@ function AdminTickersDebug() {
     for (const p of PRODUCTS) map.set(p.sector, (map.get(p.sector) ?? 0) + 1);
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, []);
+
+  if (!user || adminQ.isLoading) {
+    return <div className="p-8 text-muted-foreground">Lädt…</div>;
+  }
+  if (!isAdmin) {
+    return <div className="p-8 text-muted-foreground">Kein Zugriff.</div>;
+  }
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
