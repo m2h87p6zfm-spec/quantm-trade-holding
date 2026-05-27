@@ -145,6 +145,8 @@ function read(): StoredSettings {
 
 function write(s: StoredSettings) {
   localStorage.setItem("ta_settings", JSON.stringify(s));
+  // Cross-Tab + Cloud-Sync (debounced).
+  pushToCloud(s);
   // Defer the cross-instance notification so we don't synchronously call
   // setState on other useSettings consumers (e.g. RootComponent) while
   // the current component is still rendering. React 18 would otherwise
