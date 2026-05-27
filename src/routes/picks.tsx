@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass } from "lucide-react";
+import { Sparkles, TrendingUp, Trophy, Crown, Medal, Zap, Target, ShieldAlert, ArrowRight, Filter, RefreshCw, Search, Compass, Activity, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PRODUCTS, type Product } from "@/lib/products";
 import { fetchCandles, getApiKey } from "@/lib/finnhub";
@@ -37,6 +37,12 @@ const REGIONS = ["Alle", "US", "DE", "EU", "UK", "JP"] as const;
 type Sector = (typeof SECTORS)[number];
 type Region = (typeof REGIONS)[number];
 
+// Hourly throttle: Quantm Picks laufen den vollen Composite-Engine-Scan
+// (15-Faktor Bayesian + Monte-Carlo) nur einmal pro Stunde, um API-Credits
+// und Rechenzeit zu sparen. Letztes Scan-Datum wird pro Filter persistiert.
+const PICKS_REFRESH_MS = 60 * 60 * 1000; // 1 Stunde
+const lastScanKey = (u: string, s: string, r: string) => `apex_picks_lastscan_${u}_${s}_${r}`;
+
 function PicksPage() {
   const t = useT();
   const { user } = useAuth();
@@ -46,6 +52,20 @@ function PicksPage() {
   const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
   const [mode, setMode] = useState<"ki" | "browse">("ki");
   const [query, setQuery] = useState("");
+  const [forceRefresh, setForceRefresh] = useState(0);
+
+  // Track ob ein neuer Scan jetzt erlaubt ist (älter als 1h oder manuell getriggert)
+  const SCAN_KEY = lastScanKey(universe, sector, region);
+  const [lastScanTs, setLastScanTs] = useState<number>(0);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SCAN_KEY);
+      setLastScanTs(raw ? Number(raw) : 0);
+    } catch { setLastScanTs(0); }
+  }, [SCAN_KEY, forceRefresh]);
+  const ageMs = Date.now() - lastScanTs;
+  const scanAllowed = ageMs >= PICKS_REFRESH_MS || forceRefresh > 0;
+  const nextRefreshMin = Math.max(0, Math.ceil((PICKS_REFRESH_MS - ageMs) / 60000));
 
   const filtered = useMemo<Product[]>(() => {
     let list = PRODUCTS;
@@ -56,7 +76,6 @@ function PicksPage() {
       if (q) list = list.filter((p) => p.symbol.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
       return list;
     }
-    // Tier-Scan: top = 80 liquideste · extended = 250 · all = volles Universum (~600)
     if (universe === "top") list = list.slice(0, 80);
     else if (universe === "extended") list = list.slice(0, 250);
     return list;
@@ -66,10 +85,12 @@ function PicksPage() {
     queries: (mode === "ki" ? filtered : []).map((p) => ({
       queryKey: ["candles", p.symbol],
       queryFn: () => fetchCandles(p.symbol, "D", 260),
-      enabled: !!getApiKey() && mode === "ki",
-      staleTime: 12 * 60 * 60 * 1000,
+      // Stündlicher Throttle: nur abrufen wenn letzter Scan ≥ 1h her ist
+      enabled: !!getApiKey() && mode === "ki" && scanAllowed,
+      staleTime: PICKS_REFRESH_MS, // 1h — verhindert Refetch innerhalb der Stunde
       gcTime: 24 * 60 * 60 * 1000,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
       retry: 1,
     })),
   });
@@ -200,15 +221,18 @@ function PicksPage() {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return;
       const { ts, data } = JSON.parse(raw);
-      if (Date.now() - ts < 30 * 60 * 1000) setCachedPicks(data);
+      // 1h Cache — passend zum stündlichen Composite-Engine-Scan
+      if (Date.now() - ts < PICKS_REFRESH_MS) setCachedPicks(data);
     } catch { /* ignore */ }
   }, [CACHE_KEY]);
   useEffect(() => {
     if (loading || picks.length === 0) return;
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: picks }));
+      localStorage.setItem(SCAN_KEY, String(Date.now()));
+      setLastScanTs(Date.now());
     } catch { /* ignore */ }
-  }, [CACHE_KEY, loading, picks]);
+  }, [CACHE_KEY, SCAN_KEY, loading, picks]);
 
   // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
   // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
@@ -246,8 +270,31 @@ function PicksPage() {
               </button>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
+              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length || cachedPicks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
             </div>
+            {mode === "ki" && (
+              <div className="flex flex-wrap items-center justify-end gap-2 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-primary">
+                  <Activity className="h-2.5 w-2.5" /> Composite Engine · 15 Faktoren
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="h-2.5 w-2.5" />
+                  {lastScanTs === 0
+                    ? "Bereit zum Scan"
+                    : scanAllowed
+                      ? "Update verfügbar"
+                      : `Nächstes Update in ${nextRefreshMin} min`}
+                </span>
+                <button
+                  onClick={() => setForceRefresh((x) => x + 1)}
+                  disabled={!scanAllowed && lastScanTs !== 0}
+                  className="inline-flex items-center gap-1 rounded border border-border bg-background/40 px-1.5 py-0.5 hover:bg-accent/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={scanAllowed ? "Manuell aktualisieren" : `In ${nextRefreshMin} min wieder verfügbar`}
+                >
+                  <RefreshCw className="h-2.5 w-2.5" /> Refresh
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -310,7 +357,7 @@ function PicksPage() {
             <div className="h-full bg-gradient-to-r from-primary to-violet-accent transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
           <p className="mt-2 text-[10px] text-muted-foreground">
-            Picks werden aus einem deterministischen Score (Z-Score, RSI, MACD, Trend, Sharpe) berechnet, nicht von einer KI geraten. Das hält die Auswahl reproduzierbar und spart deine <span className="text-foreground font-semibold">AI-Credits</span> für die individuelle Analyse.
+            <span className="text-primary font-semibold">Quantm Composite Engine</span> — 15 Faktoren (Momentum, Trend, Mean-Reversion, Volatilität, Volumen, Makro-Regime, Geopolitik), 10 000-Pfad-Monte-Carlo &amp; Bayesianisches Posterior. Läuft <span className="text-foreground font-semibold">stündlich einmal</span>, um API-Credits zu sparen.
           </p>
         </div>
       )}
@@ -460,7 +507,7 @@ function PodiumCard({ row, rank, watched, onToggleWatch }: { row: PickRowData; r
           <div className="truncate text-xs text-muted-foreground">{p.name} · {p.sector}</div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-border bg-background/40 p-2">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Konfidenz</div>
             <div className="font-mono text-xl font-bold text-primary tabular-nums">{report.confidence}%</div>
@@ -468,6 +515,10 @@ function PodiumCard({ row, rank, watched, onToggleWatch }: { row: PickRowData; r
           <div className="rounded-lg border border-border bg-background/40 p-2">
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Upside</div>
             <div className="font-mono text-xl font-bold text-bull tabular-nums">+{upsidePct.toFixed(1)}%</div>
+          </div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
+            <div className="text-[10px] uppercase tracking-wider text-primary/80">Composite</div>
+            <div className="font-mono text-xl font-bold text-primary tabular-nums">{report.compositeScore ?? "—"}</div>
           </div>
         </div>
 
