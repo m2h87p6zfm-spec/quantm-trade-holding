@@ -254,7 +254,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
             console.error("picks-scan failed for scope", scopeKey(s), e);
             out.push({
               scope: scopeKey(s),
-              result: { total: 0, succeeded: 0, failed: 0, picks: 0 },
+              result: { total: 0, succeeded: 0, failed: 0, picks: 0, preserved: false },
             });
           }
         }
