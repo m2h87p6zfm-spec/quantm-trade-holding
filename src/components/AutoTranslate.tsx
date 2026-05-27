@@ -139,6 +139,7 @@ export function AutoTranslate() {
           });
           for (const [src, tr] of Object.entries(res.map ?? {})) {
             cacheRef.current.set(src, tr);
+            reverse.add(tr);
           }
           // Mark unfetched-but-attempted as identity (avoid retry storms)
           for (const s of chunk) {
