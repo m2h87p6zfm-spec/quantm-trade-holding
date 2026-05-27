@@ -1472,6 +1472,9 @@ function WorldMap({
         <pattern id="dots" width="6" height="6" patternUnits="userSpaceOnUse">
           <circle cx="1" cy="1" r="0.5" fill="oklch(0.5 0.02 260)" opacity="0.10" />
         </pattern>
+        <marker id="arrowFlow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" opacity="0.85" />
+        </marker>
       </defs>
 
       <rect x={-MAP_W} y={-MAP_H} width={MAP_W * 3} height={MAP_H * 3} fill="url(#oceanBg)" />
