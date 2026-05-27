@@ -1428,20 +1428,26 @@ function WorldMap({
   const graticule = geoGraticule10();
   const project = (lng: number, lat: number) => geo.projection([lng, lat]) ?? [0, 0];
 
+  // Smooth great-circle-ish cubic bezier: two control points offset perpendicular
+  // to the chord. Produces a continuously curving arc (C1 continuity) — much
+  // softer than a single Q quadratic kink.
   const curvedPath = (a: [number, number], b: [number, number]) => {
     const [x1, y1] = project(a[0], a[1]);
     const [x2, y2] = project(b[0], b[1]);
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
     const dx = x2 - x1;
     const dy = y2 - y1;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const nx = -dy / (dist || 1);
-    const ny = dx / (dist || 1);
-    const k = Math.min(80, dist * 0.18);
-    const cx = mx + nx * k;
-    const cy = my + ny * k;
-    return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    // Perpendicular unit vector (always bend "northward" on screen for a globe feel)
+    let nx = -dy / dist;
+    let ny = dx / dist;
+    if (ny > 0) { nx = -nx; ny = -ny; } // ensure bend lifts upward visually
+    const bend = Math.min(110, dist * 0.22);
+    // Two control points at 1/3 and 2/3 along the chord, lifted by `bend`
+    const c1x = x1 + dx * 0.33 + nx * bend;
+    const c1y = y1 + dy * 0.33 + ny * bend;
+    const c2x = x1 + dx * 0.67 + nx * bend;
+    const c2y = y1 + dy * 0.67 + ny * bend;
+    return `M ${x1} ${y1} C ${c1x} ${c1y} ${c2x} ${c2y} ${x2} ${y2}`;
   };
 
   return (
