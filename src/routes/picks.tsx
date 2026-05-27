@@ -159,8 +159,10 @@ function PicksPage() {
   }, [universe, sector, region, forceRefresh]);
 
   const scan = useCandleScan(scanSymbols, {
-    // Wenn Server-Cache da ist, brauchen wir den Browser-Scan gar nicht.
-    enabled: !!getApiKey() && mode === "ki" && scanAllowed && serverLoaded && !serverPicks,
+    // Performance: Browser scannt NIE selbst mehr. Wir zeigen ausschließlich
+    // das stündlich aktualisierte Server-Ergebnis aus `picks_cache`.
+    // Qualität bleibt identisch — derselbe Composite-Engine-Code läuft serverseitig.
+    enabled: false,
     runId: forceRefresh,
     concurrency: 8,
     days: 260,
