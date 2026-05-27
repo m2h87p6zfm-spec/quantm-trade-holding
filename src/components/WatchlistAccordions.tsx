@@ -172,6 +172,7 @@ type SectionDef = {
   emphasis: "up" | "down" | "neutral";
   tier: Tier;
   colSpan: 3 | 4 | 6 | 8 | 12;
+  rowGroup?: string;
 };
 
 const accentHoverBorder = (hex: string) => `hover:border-[${hex}]/50`;
@@ -405,18 +406,29 @@ export function WatchlistAccordions({
     const lows52 = [...rows].filter((r) => r.low52).sort((a, b) => pctToLow52(a) - pctToLow52(b)).slice(0, 10);
 
     return [
-      { id: "winners", icon: Trophy, accent: "#FFB020", title: tr("Markt-Gewinner", "Market Winners"), rows: winners, emphasis: "up", tier: "priority", colSpan: 4 },
-      { id: "losers", icon: TrendingDown, accent: "#FF3B5C", title: tr("Größte Verlierer", "Biggest Losers"), rows: losers, emphasis: "down", tier: "priority", colSpan: 4 },
-      { id: "gainers", icon: TrendingUp, accent: "#22FF88", title: tr("Top-Gewinner heute", "Top Gainers Today"), rows: gainers, emphasis: "up", tier: "priority", colSpan: 4 },
-      { id: "volume", icon: BarChart3, accent: "#8B9EFF", title: tr("Top-Volumen", "Top Volume"), rows: topVolume, emphasis: "neutral", tier: "compact", colSpan: 3 },
-      { id: "active", icon: Activity, accent: "#FF6B35", title: tr("Aktivste Werte", "Most Active"), rows: mostActive, emphasis: "neutral", tier: "compact", colSpan: 3 },
-      { id: "highs", icon: Flame, accent: "#22FF88", title: tr("52-Wochen-Hochs", "52-Week Highs"), rows: highs52, emphasis: "up", tier: "compact", colSpan: 3 },
-      { id: "lows", icon: TrendingDown, accent: "#FF3B5C", title: tr("52-Wochen-Tiefs", "52-Week Lows"), rows: lows52, emphasis: "down", tier: "compact", colSpan: 3 },
+      { id: "winners", icon: Trophy, accent: "#FFB020", title: tr("Markt-Gewinner", "Market Winners"), rows: winners, emphasis: "up", tier: "priority", colSpan: 4, rowGroup: "movers" },
+      { id: "losers", icon: TrendingDown, accent: "#FF3B5C", title: tr("Größte Verlierer", "Biggest Losers"), rows: losers, emphasis: "down", tier: "priority", colSpan: 4, rowGroup: "movers" },
+      { id: "gainers", icon: TrendingUp, accent: "#22FF88", title: tr("Top-Gewinner heute", "Top Gainers Today"), rows: gainers, emphasis: "up", tier: "priority", colSpan: 4, rowGroup: "movers" },
+      { id: "volume", icon: BarChart3, accent: "#8B9EFF", title: tr("Top-Volumen", "Top Volume"), rows: topVolume, emphasis: "neutral", tier: "compact", colSpan: 3, rowGroup: "stats" },
+      { id: "active", icon: Activity, accent: "#FF6B35", title: tr("Aktivste Werte", "Most Active"), rows: mostActive, emphasis: "neutral", tier: "compact", colSpan: 3, rowGroup: "stats" },
+      { id: "highs", icon: Flame, accent: "#22FF88", title: tr("52-Wochen-Hochs", "52-Week Highs"), rows: highs52, emphasis: "up", tier: "compact", colSpan: 3, rowGroup: "stats" },
+      { id: "lows", icon: TrendingDown, accent: "#FF3B5C", title: tr("52-Wochen-Tiefs", "52-Week Lows"), rows: lows52, emphasis: "down", tier: "compact", colSpan: 3, rowGroup: "stats" },
     ];
   }, [rows, tr]);
 
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
-  const toggle = (id: string) => setOpenMap((m) => ({ ...m, [id]: !m[id] }));
+  const toggle = (id: string) =>
+    setOpenMap((m) => {
+      const section = sections.find((s) => s.id === id);
+      if (section?.rowGroup) {
+        const groupIds = sections.filter((s) => s.rowGroup === section.rowGroup).map((s) => s.id);
+        const next = !m[id];
+        const updated = { ...m };
+        for (const gid of groupIds) updated[gid] = next;
+        return updated;
+      }
+      return { ...m, [id]: !m[id] };
+    });
   const allIds = [...prependItems.map((p) => p.id), ...sections.map((s) => s.id)];
   const expandAll = () => setOpenMap(Object.fromEntries(allIds.map((id) => [id, true])));
   const collapseAll = () => setOpenMap({});
