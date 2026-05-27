@@ -259,7 +259,7 @@ function PortfolioPage() {
   // Live-Kurse: SSE für Premium, sonst Polling alle 30 s. Damit aktualisieren
   // sich Portfolio-Wert, P&L und Analytics ohne Reload, sobald sich Preise
   // bewegen (statt erst nach 1 h aus dem Kerzen-Cache).
-  const { quotes: liveQuotes, lastUpdate, tier, connected } = useLiveQuotes(allSymbols, allSymbols.length > 0);
+  const { quotes: liveQuotes } = useLiveQuotes(allSymbols, allSymbols.length > 0);
   const rowMap = useMemo(() => {
     const m = new Map<string, CockpitRow>();
     for (const r of rows) {
