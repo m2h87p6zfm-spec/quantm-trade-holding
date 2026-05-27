@@ -270,10 +270,78 @@ function AccordionSection({
 }
 
 /* --------------------------------------------------------------------- */
+/*  Custom (children-based) accordion section                             */
+/* --------------------------------------------------------------------- */
+
+export type CustomAccordionItem = {
+  id: string;
+  icon: typeof TrendingUp;
+  accent: string;
+  title: string;
+  preview?: React.ReactNode;
+  content: React.ReactNode;
+  /** Make the box span more columns in the grid. */
+  span?: "default" | "wide" | "full";
+};
+
+function CustomAccordionSection({
+  item,
+  open,
+  onToggle,
+}: {
+  item: CustomAccordionItem;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-sm transition-colors">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-background/40 sm:px-4"
+      >
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+          style={{
+            background: `color-mix(in oklab, ${item.accent} 14%, transparent)`,
+            boxShadow: `inset 0 0 0 1px color-mix(in oklab, ${item.accent} 35%, transparent)`,
+            color: item.accent,
+          }}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <h3 className="shrink-0 text-[13px] font-semibold tracking-tight text-foreground">
+          {item.title}
+        </h3>
+        <div className="ml-auto flex min-w-0 items-center gap-1.5 overflow-hidden text-[10px] text-muted-foreground/80">
+          {item.preview}
+        </div>
+        <ChevronDown
+          className={`ml-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-t border-border p-3 sm:p-4">{item.content}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------- */
 /*  Main                                                                  */
 /* --------------------------------------------------------------------- */
 
-export function WatchlistAccordions() {
+export function WatchlistAccordions({
+  prependItems = [],
+}: {
+  prependItems?: CustomAccordionItem[];
+}) {
   const tr = useTr();
   const rows = useCockpitData(MOVERS_UNIVERSE);
 
@@ -303,14 +371,15 @@ export function WatchlistAccordions() {
 
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
   const toggle = (id: string) => setOpenMap((m) => ({ ...m, [id]: !m[id] }));
-  const expandAll = () => setOpenMap(Object.fromEntries(sections.map((s) => [s.id, true])));
+  const allIds = [...prependItems.map((p) => p.id), ...sections.map((s) => s.id)];
+  const expandAll = () => setOpenMap(Object.fromEntries(allIds.map((id) => [id, true])));
   const collapseAll = () => setOpenMap({});
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {tr("Märkte", "Markets")}
+          {tr("Märkte & Watchlist", "Markets & Watchlist")}
         </h2>
         <div className="flex items-center gap-1.5">
           <button
@@ -331,6 +400,24 @@ export function WatchlistAccordions() {
       </div>
 
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {prependItems.map((item) => (
+          <div
+            key={item.id}
+            className={
+              item.span === "full"
+                ? "md:col-span-2 xl:col-span-3"
+                : item.span === "wide"
+                  ? "md:col-span-2 xl:col-span-2"
+                  : ""
+            }
+          >
+            <CustomAccordionSection
+              item={item}
+              open={!!openMap[item.id]}
+              onToggle={() => toggle(item.id)}
+            />
+          </div>
+        ))}
         {sections.map((s) => (
           <AccordionSection
             key={s.id}
