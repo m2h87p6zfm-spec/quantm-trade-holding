@@ -270,8 +270,31 @@ function PicksPage() {
               </button>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
+              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length || cachedPicks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
             </div>
+            {mode === "ki" && (
+              <div className="flex flex-wrap items-center justify-end gap-2 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-primary">
+                  <Activity className="h-2.5 w-2.5" /> Composite Engine · 15 Faktoren
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="h-2.5 w-2.5" />
+                  {lastScanTs === 0
+                    ? "Bereit zum Scan"
+                    : scanAllowed
+                      ? "Update verfügbar"
+                      : `Nächstes Update in ${nextRefreshMin} min`}
+                </span>
+                <button
+                  onClick={() => setForceRefresh((x) => x + 1)}
+                  disabled={!scanAllowed && lastScanTs !== 0}
+                  className="inline-flex items-center gap-1 rounded border border-border bg-background/40 px-1.5 py-0.5 hover:bg-accent/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title={scanAllowed ? "Manuell aktualisieren" : `In ${nextRefreshMin} min wieder verfügbar`}
+                >
+                  <RefreshCw className="h-2.5 w-2.5" /> Refresh
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
