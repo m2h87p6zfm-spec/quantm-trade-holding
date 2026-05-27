@@ -312,7 +312,7 @@ function PicksPage() {
 
   // Während ein neuer Scan läuft und noch keine frischen Treffer da sind,
   // zeigen wir die zuletzt persistierten Picks an (statt eines leeren Screens).
-  const displayPicks = picks.length > 0 ? picks : cachedPicks;
+  const displayPicks = serverPicks ?? (picks.length > 0 ? picks : cachedPicks);
   const podium = displayPicks.slice(0, 3);
   const rest = displayPicks.slice(3);
 
