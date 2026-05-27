@@ -41,6 +41,42 @@ function tdToCandles(raw: TdCandles | null): Candle[] {
   })).filter((k) => Number.isFinite(k.c));
 }
 
+// Kleine Helfer: exponentielles Backoff mit Jitter. Bei "leichten" Fehlern
+// (Netzwerk-Hänger, 429/5xx, leere Antwort) versuchen wir bis zu N-mal, bevor
+// wir auf den Backup-Provider wechseln. So fallen kurze Provider-Hänger nicht
+// als "Ohne Daten" in den Scan-Report.
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+async function withRetry<T>(
+  label: string,
+  fn: () => Promise<T>,
+  isOk: (v: T) => boolean,
+  attempts = 3,
+  baseDelayMs = 250,
+): Promise<T | null> {
+  let last: T | null = null;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const v = await fn();
+      if (isOk(v)) return v;
+      last = v;
+    } catch (err) {
+      // bei harten Fehlern (z. B. 401/403) macht Wiederholen keinen Sinn —
+      // wir loggen leise und brechen den Retry ab.
+      const msg = String((err as Error)?.message ?? err);
+      if (/\b(401|403|404)\b/.test(msg)) {
+        console.warn(`[fetchCandles] ${label} hard error, skip retry:`, msg);
+        return null;
+      }
+    }
+    if (i < attempts - 1) {
+      const jitter = Math.floor(Math.random() * 120);
+      await sleep(baseDelayMs * Math.pow(2, i) + jitter);
+    }
+  }
+  return last;
+}
+
 export async function fetchCandles(symbol: string, range = "1y", interval = "1d"): Promise<Candle[]> {
   const sym = symbol.toUpperCase();
   const ttl = adaptiveCandleTtl(60 * 60);
@@ -49,18 +85,51 @@ export async function fetchCandles(symbol: string, range = "1y", interval = "1d"
     const hit = await sharedGet<Candle[]>(key);
     if (hit && !hit.stale && hit.value?.length) return hit.value;
 
-    let candles = tdToCandles(await fetchYahooCandles(sym, interval, range));
-    if (candles.length < 60) {
-      const td = await getCandlesCached(sym, interval, range, ttl);
-      candles = tdToCandles(td.value);
+    const enough = (cs: Candle[]) => cs.length >= 60;
+
+    // 1) Primär: Yahoo (kein Quota), bis zu 3 Versuche mit Backoff.
+    let candles =
+      (await withRetry(
+        `yahoo ${sym}`,
+        async () => tdToCandles(await fetchYahooCandles(sym, interval, range)),
+        enough,
+        3,
+        250,
+      )) ?? [];
+
+    // 2) Fallback: Twelve Data, bis zu 2 Versuche.
+    if (!enough(candles)) {
+      const td =
+        (await withRetry(
+          `td ${sym}`,
+          async () => tdToCandles((await getCandlesCached(sym, interval, range, ttl)).value),
+          enough,
+          2,
+          400,
+        )) ?? [];
+      if (enough(td)) candles = td;
     }
-    if (candles.length < 60) {
-      const cached = await fetchYahooChartCached(sym, interval, range, ttl);
-      candles = cached.value ? toCandles(cached.value) : [];
+
+    // 3) Letzter Anker: Yahoo-Chart-Cache (eigener Pfad, oft noch warm).
+    if (!enough(candles)) {
+      const cachedYahoo =
+        (await withRetry(
+          `yahoo-cache ${sym}`,
+          async () => {
+            const c = await fetchYahooChartCached(sym, interval, range, ttl);
+            return c.value ? toCandles(c.value) : [];
+          },
+          enough,
+          2,
+          400,
+        )) ?? [];
+      if (cachedYahoo.length) candles = cachedYahoo;
     }
+
     if (candles.length) void sharedSet(key, candles, ttl);
     return candles;
-  } catch {
+  } catch (err) {
+    console.warn(`[fetchCandles] ${symbol} failed:`, (err as Error)?.message);
     return [];
   }
 }
