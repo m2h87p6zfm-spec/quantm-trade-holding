@@ -52,7 +52,7 @@ function PicksPage() {
   const { settings, toggleWatch } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [region, setRegion] = useState<Region>("Alle");
-  const [universe, setUniverse] = useState<"top" | "extended" | "all">("top");
+  const [universe, setUniverse] = useState<"top" | "extended" | "all" | "combined">("top");
   const [mode, setMode] = useState<"ki" | "browse">("ki");
   const [query, setQuery] = useState("");
   const [forceRefresh, setForceRefresh] = useState(0);
@@ -80,9 +80,14 @@ function PicksPage() {
       return list;
     }
     // Echte Markt-Kapitalisierungs-Buckets statt Listen-Slicing.
-    const wantCap: Product["cap"] =
-      universe === "top" ? "large" : universe === "extended" ? "mid" : "small";
-    list = list.filter((p) => p.cap === wantCap);
+    // "combined" = alle drei Buckets in einem Scan.
+    if (universe === "combined") {
+      list = list.filter((p) => p.cap === "large" || p.cap === "mid" || p.cap === "small");
+    } else {
+      const wantCap: Product["cap"] =
+        universe === "top" ? "large" : universe === "extended" ? "mid" : "small";
+      list = list.filter((p) => p.cap === wantCap);
+    }
     return list;
 
   }, [sector, region, universe, mode, query]);
@@ -181,7 +186,7 @@ function PicksPage() {
     setSimProgress(0);
     const start = Date.now();
     // Bei größerem Universum etwas länger animieren, fühlt sich realistischer an.
-    const duration = universe === "all" ? 9000 : universe === "extended" ? 6000 : 4000;
+    const duration = universe === "combined" ? 11000 : universe === "all" ? 9000 : universe === "extended" ? 6000 : 4000;
     const id = window.setInterval(() => {
       const elapsed = Date.now() - start;
       const pct = Math.min(100, Math.round((elapsed / duration) * 100));
@@ -238,7 +243,7 @@ function PicksPage() {
       rows.push({ p, ind, regime, report, upsidePct, score, change, last });
     }
     rows.sort((a, b) => b.score - a.score);
-    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : 50;
+    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : universe === "all" ? 50 : 60;
     return rows.slice(0, topN);
   }, [scan.results, filtered, settings.risk, mode, universe]);
 
@@ -390,13 +395,13 @@ function PicksPage() {
         {mode === "ki" && (
           <div className="ml-auto flex items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
-            {(["top", "extended", "all"] as const).map((u) => (
+            {(["top", "extended", "all", "combined"] as const).map((u) => (
               <button
                 key={u}
                 onClick={() => setUniverse(u)}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
               >
-                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : "Small Caps · 50"}
+                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : u === "all" ? "Small Caps · 50" : "Alle · 60"}
               </button>
             ))}
           </div>

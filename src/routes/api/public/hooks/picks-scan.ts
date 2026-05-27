@@ -24,7 +24,7 @@ const CORS = {
 } as const;
 const JSON_HEADERS = { "Content-Type": "application/json", ...CORS } as const;
 
-type Scope = { universe: "top" | "extended" | "all"; sector: string; region: string };
+type Scope = { universe: "top" | "extended" | "all" | "combined"; sector: string; region: string };
 
 function scopeKey(s: Scope) {
   return `${s.universe}|${s.sector}|${s.region}`;
@@ -34,10 +34,13 @@ function filterUniverse(s: Scope): Product[] {
   let list = PRODUCTS;
   if (s.sector !== "Alle") list = list.filter((p) => p.sector === s.sector);
   if (s.region !== "Alle") list = list.filter((p) => p.region === s.region);
-  // Universum = Marktkapitalisierungs-Bucket. Jeder Tab liefert andere Namen.
-  const wantCap: Product["cap"] =
-    s.universe === "top" ? "large" : s.universe === "extended" ? "mid" : "small";
-  list = list.filter((p) => p.cap === wantCap);
+  if (s.universe === "combined") {
+    list = list.filter((p) => p.cap === "large" || p.cap === "mid" || p.cap === "small");
+  } else {
+    const wantCap: Product["cap"] =
+      s.universe === "top" ? "large" : s.universe === "extended" ? "mid" : "small";
+    list = list.filter((p) => p.cap === wantCap);
+  }
   return list;
 
 }
@@ -113,7 +116,7 @@ async function runScan(scope: Scope, concurrency = 6) {
   });
   await Promise.all(workers);
   results.sort((a, b) => b.score - a.score);
-  const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : 50;
+  const topN = scope.universe === "top" ? 10 : scope.universe === "extended" ? 25 : scope.universe === "all" ? 50 : 60;
   const top = results.slice(0, topN);
 
   await supabaseAdmin
@@ -144,11 +147,12 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
         const authErr = requireCronSecret(request);
         if (authErr) return authErr;
 
-        // Default: scannt alle drei Cap-Buckets über das gesamte Universum.
+        // Default: scannt alle Cap-Buckets + Combined-Scope.
         let scopes: Scope[] = [
           { universe: "top", sector: "Alle", region: "Alle" },
           { universe: "extended", sector: "Alle", region: "Alle" },
           { universe: "all", sector: "Alle", region: "Alle" },
+          { universe: "combined", sector: "Alle", region: "Alle" },
         ];
         try {
           const body = (await request.json()) as { scopes?: Scope[] } | null;
