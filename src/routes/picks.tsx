@@ -119,8 +119,8 @@ function PicksPage() {
     if (mode !== "ki") return [];
     const rows: Row[] = [];
     for (let i = 0; i < filtered.length; i++) {
-      const c = candleQs[i]?.data;
       const p = filtered[i];
+      const c = scan.results.get(p.symbol);
       if (!c || !c.c || c.c.length < 60) continue;
       const ind = computeAll(c.c);
       const sig = scoreIndicators(ind, settings.risk);
@@ -140,7 +140,7 @@ function PicksPage() {
     }
     rows.sort((a, b) => b.score - a.score);
     return rows.slice(0, 15);
-  }, [candleQs, filtered, settings.risk, mode]);
+  }, [scan.results, filtered, settings.risk, mode]);
 
   // Persist BUY picks into the public Track Record (dedup per symbol per day).
   const recordedRef = useRef<Set<string>>(new Set());
