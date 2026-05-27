@@ -280,7 +280,7 @@ export const AssetChart = memo(function AssetChart({
   // Time-axis format on timeframe change
   useEffect(() => {
     chartRef.current?.applyOptions({
-      timeScale: { timeVisible: tf === "1D", secondsVisible: false },
+      timeScale: { timeVisible: tf === "1D" || tf === "3D", secondsVisible: false },
     });
   }, [tf]);
 
