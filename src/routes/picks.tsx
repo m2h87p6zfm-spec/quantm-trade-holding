@@ -167,37 +167,30 @@ function PicksPage() {
   const realLoading = scan.loading;
   const realProgress = total > 0 ? Math.round((settled / total) * 100) : 0;
 
-  // Simulierter Ladebalken: läuft EINMAL pro Filter-Kombination und nur dann
-  // erneut, wenn der Nutzer explizit auf "Refresh" klickt. Sobald der Scan
-  // (echt oder simuliert) durchgelaufen ist, bleibt die UI ruhig.
-  const SIM_KEY = `apex_picks_simdone_${universe}_${sector}_${region}`;
+  // Simulierter Ladebalken: läuft bei jedem Mount/Filterwechsel kurz,
+  // um zu zeigen, dass die stündlich aktualisierten Picks frisch geladen werden.
   const [simProgress, setSimProgress] = useState(0);
   const [simulating, setSimulating] = useState(false);
   useEffect(() => {
     if (mode !== "ki") return;
     if (realLoading) return; // echter Scan deckt die UI bereits ab
-    if (scanAllowed && lastScanTs === 0) return; // gleich startet ein echter Scan
-    // Nur simulieren, wenn für diese Filter-Kombo noch nicht gelaufen
-    // ODER der Nutzer manuell aktualisiert hat (forceRefresh > 0).
-    let alreadyDone = false;
-    try { alreadyDone = sessionStorage.getItem(SIM_KEY) === "1"; } catch { /* ignore */ }
-    if (alreadyDone && forceRefresh === 0) return;
     setSimulating(true);
     setSimProgress(0);
     const start = Date.now();
-    const duration = 9000;
+    // Bei größerem Universum etwas länger animieren, fühlt sich realistischer an.
+    const duration = universe === "all" ? 9000 : universe === "extended" ? 6000 : 4000;
     const id = window.setInterval(() => {
       const elapsed = Date.now() - start;
       const pct = Math.min(100, Math.round((elapsed / duration) * 100));
       setSimProgress(pct);
       if (pct >= 100) {
         window.clearInterval(id);
-        try { sessionStorage.setItem(SIM_KEY, "1"); } catch { /* ignore */ }
-        window.setTimeout(() => setSimulating(false), 600);
+        window.setTimeout(() => setSimulating(false), 500);
       }
-    }, 120);
+    }, 100);
     return () => window.clearInterval(id);
-  }, [mode, SIM_KEY, forceRefresh, realLoading, scanAllowed, lastScanTs]);
+  }, [mode, universe, sector, region, forceRefresh, realLoading]);
+
 
 
   const loading = realLoading || simulating;
