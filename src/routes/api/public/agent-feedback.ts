@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { createClient } from "@supabase/supabase-js";
+import { requireUserId } from "@/lib/api-auth.server";
 
 type Body = {
   session_id?: string;
@@ -80,29 +80,23 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-async function resolveUserId(request: Request): Promise<string | null> {
-  const auth = request.headers.get("Authorization");
-  if (!auth?.startsWith("Bearer ")) return null;
-  try {
-    const url = process.env.SUPABASE_URL!;
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-    const sb = createClient(url, key, {
-      global: { headers: { Authorization: auth } },
-      auth: { persistSession: false },
-    });
-    const { data } = await sb.auth.getUser();
-    return data.user?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
 export const Route = createFileRoute("/api/public/agent-feedback")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
         try {
+          // Require authentication — prevents unauthenticated spam into ai_chat_feedback.
+          const auth = await requireUserId(request);
+          if (auth instanceof Response) {
+            // Re-emit with CORS headers so the browser surfaces the 401.
+            return new Response(auth.body, {
+              status: auth.status,
+              headers: { "Content-Type": "application/json", ...CORS },
+            });
+          }
+          const user_id = auth;
+
           const body = (await request.json()) as Body;
           if (body.rating !== 1 && body.rating !== -1) {
             return new Response(JSON.stringify({ error: "Invalid rating" }), {
@@ -110,7 +104,6 @@ export const Route = createFileRoute("/api/public/agent-feedback")({
               headers: { "Content-Type": "application/json", ...CORS },
             });
           }
-          const user_id = await resolveUserId(request);
           const assistant = (body.assistant_message ?? "").slice(0, 8000);
           const prompt = (body.user_prompt ?? "").slice(0, 4000);
 
