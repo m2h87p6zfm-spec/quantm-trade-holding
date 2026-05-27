@@ -197,9 +197,10 @@ export function AutoTranslate() {
       for (const tn of textNodes) {
         const orig = (tn.nodeValue ?? "").trim();
         if (!orig) continue;
+        // Already a translated value — leave alone
+        if (reverse.has(orig)) continue;
         const hit = cacheRef.current.get(orig);
         if (hit && hit !== orig) {
-          // Preserve leading/trailing whitespace
           const raw = tn.nodeValue ?? "";
           const lead = raw.match(/^\s*/)?.[0] ?? "";
           const tail = raw.match(/\s*$/)?.[0] ?? "";
