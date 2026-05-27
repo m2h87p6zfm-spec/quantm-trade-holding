@@ -103,17 +103,21 @@ function PicksPage() {
   const realLoading = scan.loading;
   const realProgress = total > 0 ? Math.round((settled / total) * 100) : 0;
 
-  // Simulierter Ladebalken: Quantm Picks aktualisieren tatsächlich nur 1×/Stunde.
-  // Damit der Nutzer beim erneuten Besuch innerhalb dieser Stunde trotzdem das
-  // Gefühl einer "Live-Analyse" bekommt, läuft hier ein optisch glaubwürdiger
-  // Fake-Scan über ~9 Sekunden, der die zuletzt persistierten Picks bestätigt.
+  // Simulierter Ladebalken: läuft EINMAL pro Filter-Kombination und nur dann
+  // erneut, wenn der Nutzer explizit auf "Refresh" klickt. Sobald der Scan
+  // (echt oder simuliert) durchgelaufen ist, bleibt die UI ruhig.
+  const SIM_KEY = `apex_picks_simdone_${universe}_${sector}_${region}`;
   const [simProgress, setSimProgress] = useState(0);
   const [simulating, setSimulating] = useState(false);
   useEffect(() => {
     if (mode !== "ki") return;
     if (realLoading) return; // echter Scan deckt die UI bereits ab
     if (scanAllowed && lastScanTs === 0) return; // gleich startet ein echter Scan
-    // Simulation starten
+    // Nur simulieren, wenn für diese Filter-Kombo noch nicht gelaufen
+    // ODER der Nutzer manuell aktualisiert hat (forceRefresh > 0).
+    let alreadyDone = false;
+    try { alreadyDone = sessionStorage.getItem(SIM_KEY) === "1"; } catch { /* ignore */ }
+    if (alreadyDone && forceRefresh === 0) return;
     setSimulating(true);
     setSimProgress(0);
     const start = Date.now();
@@ -124,12 +128,13 @@ function PicksPage() {
       setSimProgress(pct);
       if (pct >= 100) {
         window.clearInterval(id);
-        // Kurz auf 100% stehen lassen, dann ausblenden
+        try { sessionStorage.setItem(SIM_KEY, "1"); } catch { /* ignore */ }
         window.setTimeout(() => setSimulating(false), 600);
       }
     }, 120);
     return () => window.clearInterval(id);
-  }, [mode, universe, sector, region, forceRefresh, realLoading, scanAllowed, lastScanTs]);
+  }, [mode, SIM_KEY, forceRefresh, realLoading, scanAllowed, lastScanTs]);
+
 
   const loading = realLoading || simulating;
   const progress = realLoading ? realProgress : simProgress;
