@@ -34,10 +34,10 @@ function filterUniverse(s: Scope): Product[] {
   let list = PRODUCTS;
   if (s.sector !== "Alle") list = list.filter((p) => p.sector === s.sector);
   if (s.region !== "Alle") list = list.filter((p) => p.region === s.region);
-  // Universum = Bucket, nicht nur Pool. So liefert jeder Tab andere Namen.
-  if (s.universe === "top") list = list.slice(0, 80);              // Large Caps
-  else if (s.universe === "extended") list = list.slice(80, 250);  // Mid Caps
-  else list = list.slice(250);                                      // Small/Micro Caps
+  // Universum = Marktkapitalisierungs-Bucket. Jeder Tab liefert andere Namen.
+  const wantCap: Product["cap"] =
+    s.universe === "top" ? "large" : s.universe === "extended" ? "mid" : "small";
+  list = list.filter((p) => p.cap === wantCap);
   return list;
 
 }
