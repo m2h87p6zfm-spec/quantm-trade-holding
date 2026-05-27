@@ -116,22 +116,24 @@ export function FirstRunTour() {
   }, [user]);
   useLayoutEffect(() => {
     if (!open) return;
-    const update = () => {
+    const measure = () => {
       const el = findTarget(STEPS[step].target);
       if (!el) { setRect(null); return; }
-      el.scrollIntoView({ block: "center", behavior: "smooth" });
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
-    update();
-    const onResize = () => update();
+    // Scroll target into view ONCE per step (not every 250ms — that
+    // interfered with taps on mobile because the page kept scrolling
+    // under the user's finger).
+    const el = findTarget(STEPS[step].target);
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    measure();
+    const onResize = () => measure();
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
-    const interval = window.setInterval(update, 250); // keep aligned while layout settles
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
-      window.clearInterval(interval);
     };
   }, [open, step]);
 
@@ -220,24 +222,25 @@ export function FirstRunTour() {
 
       {/* Tooltip card */}
       <div
-        className="absolute rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-5 sm:p-5"
+        className="absolute rounded-2xl border border-border/60 bg-card/95 backdrop-blur-xl shadow-2xl shadow-primary/20 p-5 sm:p-6 pointer-events-auto"
         style={tipStyle}
         role="dialog"
         aria-label={s.title}
       >
         <button
           onClick={close}
+          type="button"
           aria-label="Tour schließen"
-          className="absolute right-2 top-2 inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="absolute right-2 top-2 inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+        <div className="text-[12px] font-semibold uppercase tracking-[0.18em] text-primary/80">
           Tour · {step + 1} / {STEPS.length}
         </div>
-        <div className="mt-1.5 text-lg sm:text-lg font-semibold tracking-tight text-foreground pr-8">{s.title}</div>
-        <p className="mt-2 text-[15px] sm:text-[14px] leading-relaxed text-muted-foreground">{s.body}</p>
+        <div className="mt-1.5 text-xl sm:text-xl font-semibold tracking-tight text-foreground pr-10">{s.title}</div>
+        <p className="mt-2 text-[16px] sm:text-[15px] leading-relaxed text-muted-foreground">{s.body}</p>
 
         {/* Progress dots */}
         <div className="mt-4 flex items-center gap-1">
@@ -249,21 +252,21 @@ export function FirstRunTour() {
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-2">
+        <div className="mt-5 flex items-center justify-between gap-2">
           <button
             onClick={close}
             type="button"
-            className="text-[13px] sm:text-[12px] text-muted-foreground hover:text-foreground transition-colors py-2 px-1"
+            className="text-[14px] sm:text-[13px] text-muted-foreground hover:text-foreground transition-colors py-2 px-1 min-h-[44px]"
           >
             Überspringen
           </button>
           <div className="flex items-center gap-2">
             {step > 0 && (
-              <Button variant="ghost" size="default" onClick={prev} type="button" className="text-[14px]">
+              <Button variant="ghost" size="lg" onClick={prev} type="button" className="text-[15px] min-h-[44px]">
                 <ArrowLeft className="h-4 w-4 mr-1" /> Zurück
               </Button>
             )}
-            <Button size="default" onClick={next} type="button" className="text-[14px] min-w-[110px]">
+            <Button size="lg" onClick={next} type="button" className="text-[15px] min-w-[120px] min-h-[44px]">
               {isLast ? (
                 <>
                   <Check className="h-4 w-4 mr-1.5" /> Fertig
