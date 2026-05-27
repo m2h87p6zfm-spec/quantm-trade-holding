@@ -1,4 +1,4 @@
-import { ShieldAlert, ShieldCheck, TrendingDown, TrendingUp, Minus, Brain, Building2, Telescope, AlertTriangle } from "lucide-react";
+import { ShieldAlert, ShieldCheck, TrendingDown, TrendingUp, Minus, Brain, Building2, Telescope, AlertTriangle, Sigma, Target, Percent, Activity } from "lucide-react";
 import type { DecisionReport } from "@/lib/analysis";
 
 /**
