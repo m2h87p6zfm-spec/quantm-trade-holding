@@ -79,11 +79,30 @@ export const AssetChart = memo(function AssetChart({
 
   const data = useMemo(() => {
     if (!q.data?.c || !q.data?.t) return [];
-    const c = q.data.c;
-    const t = q.data.t;
-    const v = q.data.v ?? [];
+    let c = q.data.c;
+    let t = q.data.t;
+    let v = q.data.v ?? [];
+    // Yahoo's `range=1d/5d` häufig liefert Vortags-Candles mit zurück (Pre-Market-
+    // Lücken, halbe Session). Wir trimmen client-seitig auf die zuletzt gewünschten
+    // Handelstage, damit "1T" wirklich nur 1 Tag zeigt und "3T" wirklich 3.
+    if ((tf === "1D" || tf === "3D") && t.length) {
+      const wantDays = tf === "1D" ? 1 : 3;
+      // Unique UTC-Datum pro Candle (US-Session liegt ganz auf einem UTC-Tag)
+      const dateOf = (ts: number) => {
+        const d = new Date(ts * 1000);
+        return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      };
+      const uniqueDates: string[] = [];
+      for (const ts of t) {
+        const k = dateOf(ts);
+        if (uniqueDates[uniqueDates.length - 1] !== k) uniqueDates.push(k);
+      }
+      const keep = new Set(uniqueDates.slice(-wantDays));
+      const idx = t.findIndex((ts) => keep.has(dateOf(ts)));
+      if (idx > 0) { c = c.slice(idx); t = t.slice(idx); v = v.slice(idx); }
+    }
     return c.map((close, i) => ({ time: t[i] as number, close, volume: v[i] ?? 0 }));
-  }, [q.data]);
+  }, [q.data, tf]);
 
   const first = data[0]?.close ?? 0;
   const last = data[data.length - 1]?.close ?? 0;
