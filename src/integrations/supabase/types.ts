@@ -1288,6 +1288,36 @@ export type Database = {
         }
         Relationships: []
       }
+      translations_cache: {
+        Row: {
+          created_at: string
+          hit_count: number
+          source_hash: string
+          source_lang: string
+          source_text: string
+          target_lang: string
+          translated_text: string
+        }
+        Insert: {
+          created_at?: string
+          hit_count?: number
+          source_hash: string
+          source_lang?: string
+          source_text: string
+          target_lang: string
+          translated_text: string
+        }
+        Update: {
+          created_at?: string
+          hit_count?: number
+          source_hash?: string
+          source_lang?: string
+          source_text?: string
+          target_lang?: string
+          translated_text?: string
+        }
+        Relationships: []
+      }
       user_portfolio_positions: {
         Row: {
           broker_currency: string | null
