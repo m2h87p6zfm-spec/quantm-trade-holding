@@ -16,6 +16,8 @@ import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PRODUCT_BY_SYMBOL } from "@/lib/products";
+import { ScanHistoryPanel } from "@/components/ScanHistoryPanel";
+
 
 
 function regimeLabel(r: MarketRegime) {
