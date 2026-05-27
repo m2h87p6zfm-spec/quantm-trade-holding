@@ -173,6 +173,17 @@ async function runScan(scope: Scope, concurrency = 3) {
         },
         { onConflict: "scope_key" },
       );
+    await supabaseAdmin.from("scan_history").insert({
+      scope_key: scopeKey(scope),
+      universe: scope.universe,
+      sector: scope.sector,
+      region: scope.region,
+      total_scanned: total,
+      succeeded,
+      failed,
+      picks_count: prevArr.length,
+      preserved: true,
+    });
     return { total, succeeded, failed, picks: prevArr.length, preserved: true };
   }
 
@@ -192,8 +203,20 @@ async function runScan(scope: Scope, concurrency = 3) {
       },
       { onConflict: "scope_key" },
     );
-  return { total, succeeded, failed, picks: top.length };
+  await supabaseAdmin.from("scan_history").insert({
+    scope_key: scopeKey(scope),
+    universe: scope.universe,
+    sector: scope.sector,
+    region: scope.region,
+    total_scanned: total,
+    succeeded,
+    failed,
+    picks_count: top.length,
+    preserved: false,
+  });
+  return { total, succeeded, failed, picks: top.length, preserved: false };
 }
+
 
 export const Route = createFileRoute("/api/public/hooks/picks-scan")({
   server: {
