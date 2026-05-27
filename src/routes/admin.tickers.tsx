@@ -76,6 +76,13 @@ function AdminTickersDebug() {
     return [...map.entries()].sort((a, b) => b[1] - a[1]);
   }, []);
 
+  if (!user || adminQ.isLoading) {
+    return <div className="p-8 text-muted-foreground">Lädt…</div>;
+  }
+  if (!isAdmin) {
+    return <div className="p-8 text-muted-foreground">Kein Zugriff.</div>;
+  }
+
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
       <header className="space-y-1">
