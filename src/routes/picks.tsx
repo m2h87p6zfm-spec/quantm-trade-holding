@@ -105,15 +105,25 @@ function PicksPage() {
   const [serverLoaded, setServerLoaded] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    setServerLoaded(false);
     const key = `${universe}|${sector}|${region}`;
+    // Clear stale picks from a different scope immediately so the UI never
+    // shows candidates that don't belong to the currently selected filter.
+    setServerPicks(null);
+    setServerLoaded(false);
     (async () => {
       const { data } = await supabase
         .from("picks_cache")
-        .select("picks")
+        .select("picks, scope_key")
         .eq("scope_key", key)
         .maybeSingle();
       if (cancelled) return;
+      // Defence-in-depth: only accept the row if its scope_key matches the
+      // one we asked for. Prevents any race where a late response from a
+      // previous filter overwrites the new selection.
+      if (data && data.scope_key !== key) {
+        setServerLoaded(true);
+        return;
+      }
       const raw = (data?.picks as unknown[] | undefined) ?? [];
       const rows: PickRowData[] = raw.map((r) => {
         const x = r as Record<string, unknown>;
