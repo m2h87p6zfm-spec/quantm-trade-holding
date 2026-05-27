@@ -137,7 +137,6 @@ function Cockpit() {
               accent: "#22FF88",
               title: t("cockpit.sentiment.title"),
               colSpan: 4,
-              colSpan: 4,
               summary: (
                 <span className="hidden items-center gap-1.5 font-mono text-[10px] tabular-nums sm:inline-flex">
                   <span className="text-[#22FF88]">{longCount}</span>
