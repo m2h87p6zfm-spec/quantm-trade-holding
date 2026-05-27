@@ -368,7 +368,7 @@ function PicksPage() {
               </button>
             </div>
             <div className="text-[11px] text-muted-foreground">
-              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {picks.length || cachedPicks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
+              {mode === "ki" ? <><span className="font-mono font-bold text-primary">{total}</span> gescannt · {displayPicks.length} BUY</> : <><span className="font-mono font-bold text-primary">{filtered.length}</span> Treffer</>}
             </div>
             {mode === "ki" && (
               <div className="flex flex-wrap items-center justify-end gap-2 text-[10px] text-muted-foreground">
