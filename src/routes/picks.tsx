@@ -395,13 +395,13 @@ function PicksPage() {
         {mode === "ki" && (
           <div className="ml-auto flex items-center gap-1.5">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground mr-1">Umfang:</span>
-            {(["top", "extended", "all"] as const).map((u) => (
+            {(["top", "extended", "all", "combined"] as const).map((u) => (
               <button
                 key={u}
                 onClick={() => setUniverse(u)}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
               >
-                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : "Small Caps · 50"}
+                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : u === "all" ? "Small Caps · 50" : "Alle · 60"}
               </button>
             ))}
           </div>
