@@ -80,7 +80,9 @@ function PicksPage() {
       return list;
     }
     if (universe === "top") list = list.slice(0, 80);
-    else if (universe === "extended") list = list.slice(0, 250);
+    else if (universe === "extended") list = list.slice(80, 250);
+    else list = list.slice(250);
+
     return list;
   }, [sector, region, universe, mode, query]);
 
@@ -235,8 +237,10 @@ function PicksPage() {
       rows.push({ p, ind, regime, report, upsidePct, score, change, last });
     }
     rows.sort((a, b) => b.score - a.score);
-    return rows.slice(0, 15);
-  }, [scan.results, filtered, settings.risk, mode]);
+    const topN = universe === "top" ? 10 : universe === "extended" ? 25 : 50;
+    return rows.slice(0, topN);
+  }, [scan.results, filtered, settings.risk, mode, universe]);
+
 
   // Persist BUY picks into the public Track Record (dedup per symbol per day).
   const recordedRef = useRef<Set<string>>(new Set());
@@ -391,7 +395,7 @@ function PicksPage() {
                 onClick={() => setUniverse(u)}
                 className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${universe === u ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-accent/40"}`}
               >
-                {u === "top" ? "Top 80" : u === "extended" ? "Erweitert 250" : `Vollständig (${PRODUCTS.length})`}
+                {u === "top" ? "Large Caps · 10" : u === "extended" ? "Mid Caps · 25" : "Small Caps · 50"}
               </button>
             ))}
           </div>
