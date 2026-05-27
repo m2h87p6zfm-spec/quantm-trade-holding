@@ -7,6 +7,15 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
+// Cron endpoints under /api/public/* may also authenticate via the standard
+// Supabase anon `apikey` header (canonical pg_cron pattern). We accept either
+// the legacy x-cron-secret OR the anon key.
+function isAnonApiKey(request: Request): boolean {
+  const got = request.headers.get("apikey") ?? "";
+  const expected = process.env.SUPABASE_PUBLISHABLE_KEY ?? "";
+  return !!got && !!expected && got === expected;
+}
+
 // ============================================================
 // Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
 // Iteriert über das gewählte Universum (Top 80 / Erweitert 250),
