@@ -22,7 +22,6 @@ import {
   Check,
   Sparkles,
   ShieldCheck,
-  TrendingUp,
   Newspaper,
   Bell,
   Wallet,
@@ -37,69 +36,218 @@ import {
   Languages,
 } from "lucide-react";
 
+/* ─────────────────── Language (forced step 0) ─────────────────── */
+
 type LangCode = "de" | "en";
-const LANGUAGES: { v: LangCode; label: string; native: string }[] = [
-  { v: "de", label: "German", native: "Deutsch" },
-  { v: "en", label: "English", native: "English" },
+const LANGUAGES: { v: LangCode; label: string; native: string; flag: string }[] = [
+  { v: "de", label: "German", native: "Deutsch", flag: "🇩🇪" },
+  { v: "en", label: "English", native: "English", flag: "🇬🇧" },
 ];
 
-/* ─────────────────── Option catalogs ─────────────────── */
+/* ─────────────────── Bilingual dictionary ─────────────────── */
 
-const AGES: { v: AgeRange; label: string }[] = [
-  { v: "under_18", label: "Under 18" },
-  { v: "18_24", label: "18 – 24" },
-  { v: "25_34", label: "25 – 34" },
-  { v: "35_44", label: "35 – 44" },
-  { v: "45_plus", label: "45+" },
+type Tr = Record<string, { de: string; en: string }>;
+const T: Tr = {
+  brand: { de: "Quantm Trade · Onboarding", en: "Quantm Trade · Onboarding" },
+  step: { de: "Schritt", en: "Step" },
+  of: { de: "von", en: "of" },
+  private: { de: "Privat & verschlüsselt", en: "Private & encrypted" },
+  back: { de: "Zurück", en: "Back" },
+  next: { de: "Weiter", en: "Next" },
+  getStarted: { de: "Loslegen", en: "Get started" },
+  continue: { de: "Weiter", en: "Continue" },
+  activate: { de: "Quantm Trade aktivieren", en: "Activate Quantm Trade" },
+  calibrating: { de: "Kalibriere…", en: "Calibrating…" },
+
+  // Language step
+  langTitle: { de: "Bitte wähle deine Sprache", en: "Please choose your language" },
+  langHint: {
+    de: "Diese Auswahl bestimmt die Sprache der gesamten Plattform. Du kannst sie jederzeit in den Einstellungen ändern.",
+    en: "This selection determines the language of the entire platform. You can change it any time in settings.",
+  },
+
+  // Welcome step
+  welcome: { de: "Willkommen bei ", en: "Welcome to " },
+  welcomeHint: {
+    de: "Bevor wir deine Plattform kalibrieren, lies bitte unsere rechtlichen Bedingungen und bestätige sie.",
+    en: "Before we calibrate your platform, please review our legal terms and confirm them.",
+  },
+  riskNotice: { de: "Wichtiger Hinweis zum Risiko.", en: "Important risk notice." },
+  riskBody: {
+    de: "Quantm Trade stellt ausschließlich informationsbasierte Inhalte, Marktdaten und algorithmische Analysen bereit. Wir bieten keine Anlageberatung, Vermögensverwaltung oder individuelle Empfehlung im Sinne der MiFID II / WpHG. Der Handel mit Finanzinstrumenten birgt erhebliche Verlustrisiken, bis hin zum Totalverlust des eingesetzten Kapitals. Vergangene Performance ist kein Indikator für zukünftige Ergebnisse. AI-generierte Signale sind probabilistisch und können fehlerhaft sein. Treffe Handelsentscheidungen ausschließlich auf eigene Verantwortung.",
+    en: "Quantm Trade provides information, market data and algorithmic analysis only. We do not provide investment advice, portfolio management or individual recommendations under MiFID II / WpHG. Trading financial instruments carries substantial risk of loss, up to the total loss of invested capital. Past performance is not an indicator of future results. AI-generated signals are probabilistic and can be wrong. Make trading decisions at your own responsibility.",
+  },
+
+  // Consent
+  consentAge: {
+    de: "Ich bestätige, dass ich mindestens 18 Jahre alt bin.",
+    en: "I confirm I am at least 18 years old.",
+  },
+  consentTermsPre: { de: "Ich akzeptiere die ", en: "I accept the " },
+  consentTermsLink: { de: "Allgemeinen Geschäftsbedingungen (AGB)", en: "Terms and Conditions" },
+  consentTermsPost: { de: " von Quantm Trade.", en: " of Quantm Trade." },
+  consentPrivacyPre: { de: "Ich habe die ", en: "I have read the " },
+  consentPrivacyLink: { de: "Datenschutzerklärung", en: "Privacy Policy" },
+  consentPrivacyPost: {
+    de: " gelesen und stimme der Verarbeitung meiner Daten zu.",
+    en: " and consent to the processing of my data.",
+  },
+  consentRisk: {
+    de: "Ich habe die Risikohinweise verstanden und nehme zur Kenntnis, dass Quantm Trade keine Anlageberatung leistet und nicht für Handelsverluste haftet.",
+    en: "I have understood the risk disclosures and acknowledge that Quantm Trade does not provide investment advice and is not liable for trading losses.",
+  },
+
+  // Steps
+  ageTitle: { de: "In welcher Altersgruppe bist du?", en: "What age range are you in?" },
+  ageHint: {
+    de: "Wir nutzen das ausschließlich zur Personalisierung — niemals an Dritte weitergegeben.",
+    en: "We use this purely for personalization — never shared with third parties.",
+  },
+  expTitle: { de: "Wie erfahren bist du an den Finanzmärkten?", en: "How experienced are you with financial markets?" },
+  expHint: { de: "Bestimmt Tiefe der AI-Erklärungen und Komplexität des Dashboards.", en: "Sets the depth of AI explanations and the complexity of your dashboard." },
+  traderTitle: { de: "Was für ein Trader bist du?", en: "What type of trader are you?" },
+  traderHint: { de: "Priorisiert deine Signal-Feeds, Charts und Insights.", en: "Prioritizes your signal feeds, charts and insights." },
+  ccyTitle: { de: "In welcher Währung soll die Plattform rechnen?", en: "What currency should the platform use?" },
+  ccyHint: { de: "Wird überall im Dashboard, Watchlist, Portfolio und in AI-Insights angewendet.", en: "Applied across dashboard, watchlist, portfolio and AI insights." },
+  riskTitle: { de: "Welches Risikolevel ist für dich passend?", en: "What level of risk are you comfortable with?" },
+  riskHint: { de: "Steuert AI-Konfidenz-Threshold und Signal-Aggressivität.", en: "Controls AI confidence threshold and signal aggressiveness." },
+  notifTitle: { de: "Welche Updates möchtest du erhalten?", en: "What updates would you like to receive?" },
+  notifHint: { de: "Du kannst das jederzeit in den Einstellungen anpassen.", en: "You can adjust this any time in settings." },
+  sourcesTitle: { de: "Wähle deine vertrauenswürdigen Quellen", en: "Choose your trusted financial sources" },
+  sourcesHint: {
+    de: "Diese Publisher dominieren deinen Haupt-News-Feed. Wichtige Headlines anderer Quellen erscheinen separat in der Sidebar.",
+    en: "These publishers dominate your main news feed. Important headlines from other sources appear separately in the sidebar.",
+  },
+  starterTitle: { de: "Starter-Watchlists", en: "Starter watchlists" },
+  starterHint: { de: "Optional. Ausgewählte Listen werden direkt in deiner Watchlist verfügbar.", en: "Optional. Selected lists will be available in your watchlist immediately." },
+  symbolsWord: { de: "Symbole", en: "symbols" },
+
+  // Summary
+  summaryBadge: { de: "AI-Profil kalibriert", en: "AI Profile Calibrated" },
+  summaryTitle: { de: "Dein Quantm Trade Profil", en: "Your Quantm Trade profile" },
+  summarySub: { de: "Diese Konfiguration steuert ab sofort deine gesamte Plattform-Erfahrung.", en: "This configuration controls your entire platform experience from now on." },
+  sumTrader: { de: "Trader-Typ", en: "Trader Type" },
+  sumExp: { de: "Erfahrung", en: "Experience" },
+  sumRisk: { de: "Risikoprofil", en: "Risk Profile" },
+  sumCcy: { de: "Währung", en: "Currency" },
+  sumMarkets: { de: "Märkte", en: "Markets" },
+  sumSources: { de: "Vertrauensquellen", en: "Trusted Sources" },
+  aiTransparency: { de: "AI-Transparenz.", en: "AI transparency." },
+  aiTransparencyBody: {
+    de: "Unsere Engine analysiert Marktdaten, Volatilität, Sentiment und historische Muster, um probabilistische Insights zu generieren. Signale werden kontinuierlich rekalibriert, sobald sich Marktbedingungen ändern. Keine Garantie für zukünftige Performance.",
+    en: "Our engine analyzes market data, volatility, sentiment and historical patterns to generate probabilistic insights. Signals are continuously recalibrated as market conditions change. No guarantee of future performance.",
+  },
+  aiAck: { de: "Ich verstehe und stimme zu.", en: "I understand and agree." },
+
+  // Option labels — Ages
+  age_under_18: { de: "Unter 18", en: "Under 18" },
+  age_18_24: { de: "18 – 24", en: "18 – 24" },
+  age_25_34: { de: "25 – 34", en: "25 – 34" },
+  age_35_44: { de: "35 – 44", en: "35 – 44" },
+  age_45_plus: { de: "45+", en: "45+" },
+
+  // Experience
+  exp_beginner_l: { de: "Anfänger", en: "Beginner" },
+  exp_beginner_d: { de: "Neu im Markt – klare, einfache Erklärungen", en: "New to markets – clear, simple explanations" },
+  exp_intermediate_l: { de: "Fortgeschritten", en: "Intermediate" },
+  exp_intermediate_d: { de: "Solide Grundlagen – ausgewogene Tiefe", en: "Solid foundations – balanced depth" },
+  exp_advanced_l: { de: "Profi", en: "Advanced" },
+  exp_advanced_d: { de: "Institutionelle Tiefe, Fachvokabular, volle Indikatoren", en: "Institutional depth, jargon, full indicators" },
+
+  // Trader types
+  tt_beginner_l: { de: "Einsteiger", en: "Beginner Investor" },
+  tt_beginner_d: { de: "Sicheres Lernen, kuratierte Setups", en: "Safe learning, curated setups" },
+  tt_long_l: { de: "Langfrist-Investor", en: "Long-term Investor" },
+  tt_long_d: { de: "Makro-Insights, Portfolio-Fokus", en: "Macro insights, portfolio focus" },
+  tt_swing_l: { de: "Swing-Trader", en: "Swing Trader" },
+  tt_swing_d: { de: "Tage bis Wochen, Momentum-Signale", en: "Days to weeks, momentum signals" },
+  tt_day_l: { de: "Day-Trader", en: "Day Trader" },
+  tt_day_d: { de: "Intraday-Charts und Echtzeit-Signale", en: "Intraday charts and real-time signals" },
+  tt_opt_l: { de: "Options-Trader", en: "Options Trader" },
+  tt_opt_d: { de: "Volatilität, Greeks, Strategien", en: "Volatility, Greeks, strategies" },
+  tt_crypto_l: { de: "Crypto-Trader", en: "Crypto Trader" },
+  tt_crypto_d: { de: "24/7 Märkte, High-Vol Setups", en: "24/7 markets, high-vol setups" },
+  tt_mixed_l: { de: "Mixed Strategy", en: "Mixed Strategy" },
+  tt_mixed_d: { de: "Quer durch alle Anlageklassen", en: "Across all asset classes" },
+
+  // Currencies
+  ccy_USD: { de: "US-Dollar", en: "US Dollar" },
+  ccy_EUR: { de: "Euro", en: "Euro" },
+  ccy_GBP: { de: "Britisches Pfund", en: "British Pound" },
+  ccy_AUD: { de: "Australischer Dollar", en: "Australian Dollar" },
+  ccy_CAD: { de: "Kanadischer Dollar", en: "Canadian Dollar" },
+  ccy_JPY: { de: "Japanischer Yen", en: "Japanese Yen" },
+  ccy_CHF: { de: "Schweizer Franken", en: "Swiss Franc" },
+
+  // Risks
+  r_low_l: { de: "Niedriges Risiko", en: "Low Risk" },
+  r_low_d: { de: "Konfidenz-Threshold ≥ 80%, defensive Setups", en: "Confidence threshold ≥ 80%, defensive setups" },
+  r_med_l: { de: "Mittleres Risiko", en: "Medium Risk" },
+  r_med_d: { de: "Konfidenz ≥ 60%, ausgewogene Frequenz", en: "Confidence ≥ 60%, balanced frequency" },
+  r_high_l: { de: "Hohes Risiko", en: "High Risk" },
+  r_high_d: { de: "Konfidenz ≥ 50%, mehr Setups, höhere Vola", en: "Confidence ≥ 50%, more setups, higher volatility" },
+
+  // Notifications
+  n_realtime_l: { de: "AI-Trading-Signale", en: "AI Trading Signals" },
+  n_realtime_d: { de: "Echtzeit-Signale aus der Quant-Engine", en: "Real-time signals from the quant engine" },
+  n_breakout_l: { de: "Breaking Market News", en: "Breaking Market News" },
+  n_breakout_d: { de: "Marktbewegende Headlines", en: "Market-moving headlines" },
+  n_daily_l: { de: "Portfolio & Tageszusammenfassung", en: "Portfolio & Daily Summary" },
+  n_daily_d: { de: "Tägliche Zusammenfassung deiner Holdings", en: "Daily summary of your holdings" },
+  n_weekly_l: { de: "Wochenreports", en: "Weekly Reports" },
+  n_weekly_d: { de: "Wöchentliche Performance & Trends", en: "Weekly performance & trends" },
+};
+
+const t = (k: keyof typeof T, lang: LangCode) => T[k][lang];
+
+/* ─────────────────── Option catalogs (use t-keys) ─────────────────── */
+
+const AGES: { v: AgeRange; k: keyof typeof T }[] = [
+  { v: "under_18", k: "age_under_18" },
+  { v: "18_24", k: "age_18_24" },
+  { v: "25_34", k: "age_25_34" },
+  { v: "35_44", k: "age_35_44" },
+  { v: "45_plus", k: "age_45_plus" },
 ];
 
-const EXPERIENCE: { v: ExperienceLevel; label: string; desc: string }[] = [
-  { v: "beginner", label: "Beginner", desc: "Neu im Markt – klare, einfache Erklärungen" },
-  { v: "intermediate", label: "Intermediate", desc: "Solide Grundlagen – ausgewogene Tiefe" },
-  { v: "advanced", label: "Advanced", desc: "Institutionelle Tiefe, Fachvokabular, volle Indikatoren" },
+const EXPERIENCE: { v: ExperienceLevel; lk: keyof typeof T; dk: keyof typeof T }[] = [
+  { v: "beginner", lk: "exp_beginner_l", dk: "exp_beginner_d" },
+  { v: "intermediate", lk: "exp_intermediate_l", dk: "exp_intermediate_d" },
+  { v: "advanced", lk: "exp_advanced_l", dk: "exp_advanced_d" },
 ];
 
-const TRADER_TYPES: { v: TraderType; label: string; desc: string }[] = [
-  { v: "beginner_investor", label: "Beginner Investor", desc: "Sicheres Lernen, kuratierte Setups" },
-  { v: "long_term_investor", label: "Long-term Investor", desc: "Makro-Insights, Portfolio-Fokus" },
-  { v: "swing_trader", label: "Swing Trader", desc: "Tage bis Wochen, Momentum-Signale" },
-  { v: "day_trader", label: "Day Trader", desc: "Intraday-Charts und Echtzeit-Signale" },
-  { v: "options_trader", label: "Options Trader", desc: "Volatilität, Greeks, Strategien" },
-  { v: "crypto_trader", label: "Crypto Trader", desc: "24/7 Märkte, High-Vol Setups" },
-  { v: "mixed", label: "Mixed Strategy", desc: "Quer durch alle Anlageklassen" },
+const TRADER_TYPES: { v: TraderType; lk: keyof typeof T; dk: keyof typeof T }[] = [
+  { v: "beginner_investor", lk: "tt_beginner_l", dk: "tt_beginner_d" },
+  { v: "long_term_investor", lk: "tt_long_l", dk: "tt_long_d" },
+  { v: "swing_trader", lk: "tt_swing_l", dk: "tt_swing_d" },
+  { v: "day_trader", lk: "tt_day_l", dk: "tt_day_d" },
+  { v: "options_trader", lk: "tt_opt_l", dk: "tt_opt_d" },
+  { v: "crypto_trader", lk: "tt_crypto_l", dk: "tt_crypto_d" },
+  { v: "mixed", lk: "tt_mixed_l", dk: "tt_mixed_d" },
 ];
 
-const CURRENCIES: { v: PreferredCurrency; label: string; sym: string }[] = [
-  { v: "USD", label: "US-Dollar", sym: "$" },
-  { v: "EUR", label: "Euro", sym: "€" },
-  { v: "GBP", label: "British Pound", sym: "£" },
-  { v: "AUD", label: "Australian Dollar", sym: "A$" },
-  { v: "CAD", label: "Canadian Dollar", sym: "C$" },
-  { v: "JPY", label: "Japanese Yen", sym: "¥" },
-  { v: "CHF", label: "Swiss Franc", sym: "Fr." },
+const CURRENCIES: { v: PreferredCurrency; sym: string; k: keyof typeof T }[] = [
+  { v: "USD", sym: "$", k: "ccy_USD" },
+  { v: "EUR", sym: "€", k: "ccy_EUR" },
+  { v: "GBP", sym: "£", k: "ccy_GBP" },
+  { v: "AUD", sym: "A$", k: "ccy_AUD" },
+  { v: "CAD", sym: "C$", k: "ccy_CAD" },
+  { v: "JPY", sym: "¥", k: "ccy_JPY" },
+  { v: "CHF", sym: "Fr.", k: "ccy_CHF" },
 ];
 
-const RISKS: { v: RiskLevel; label: string; desc: string }[] = [
-  { v: "low", label: "Low Risk", desc: "Konfidenz-Threshold ≥ 80%, defensive Setups" },
-  { v: "medium", label: "Medium Risk", desc: "Konfidenz ≥ 60%, ausgewogene Frequenz" },
-  { v: "high", label: "High Risk", desc: "Konfidenz ≥ 50%, mehr Setups, höhere Vola" },
-];
-
-const MARKETS: { v: Market; label: string; desc?: string }[] = [
-  { v: "stocks", label: "Stocks", desc: "Einzelaktien US / EU / DE" },
-  { v: "etfs", label: "ETFs", desc: "Index-, Sektor- und Themen-ETFs" },
-  { v: "crypto", label: "Crypto", desc: "BTC, ETH und Top-Altcoins" },
-  { v: "forex", label: "Forex", desc: "Major & Minor FX-Paare" },
-  { v: "commodities", label: "Commodities", desc: "Öl, Gold, Industriemetalle" },
-  { v: "mixed", label: "Mixed Portfolio", desc: "Quer über alle Klassen" },
+const RISKS: { v: RiskLevel; lk: keyof typeof T; dk: keyof typeof T }[] = [
+  { v: "low", lk: "r_low_l", dk: "r_low_d" },
+  { v: "medium", lk: "r_med_l", dk: "r_med_d" },
+  { v: "high", lk: "r_high_l", dk: "r_high_d" },
 ];
 
 type NotifKey = "notif_realtime" | "notif_daily" | "notif_weekly" | "notif_breakout";
-const NOTIFS: { v: NotifKey; label: string; desc: string }[] = [
-  { v: "notif_realtime", label: "AI Trading Signals", desc: "Echtzeit-Signale aus der Quant-Engine" },
-  { v: "notif_breakout", label: "Breaking Market News", desc: "Marktbewegende Headlines" },
-  { v: "notif_daily", label: "Portfolio & Daily Summary", desc: "Tägliche Zusammenfassung deiner Holdings" },
-  { v: "notif_weekly", label: "Weekly Reports", desc: "Wöchentliche Performance & Trends" },
+const NOTIFS: { v: NotifKey; lk: keyof typeof T; dk: keyof typeof T }[] = [
+  { v: "notif_realtime", lk: "n_realtime_l", dk: "n_realtime_d" },
+  { v: "notif_breakout", lk: "n_breakout_l", dk: "n_breakout_d" },
+  { v: "notif_daily", lk: "n_daily_l", dk: "n_daily_d" },
+  { v: "notif_weekly", lk: "n_weekly_l", dk: "n_weekly_d" },
 ];
 
 const STARTER_LISTS: { id: string; name: string; symbols: string[]; tagline: string }[] = [
@@ -113,7 +261,7 @@ const STARTER_LISTS: { id: string; name: string; symbols: string[]; tagline: str
 
 const CURRENCY_TO_BASE: Record<PreferredCurrency, BaseCurrency> = {
   USD: "USD", EUR: "EUR", GBP: "GBP", CHF: "CHF",
-  AUD: "USD", CAD: "USD", JPY: "USD", // fallback for unsupported BaseCurrency keys
+  AUD: "USD", CAD: "USD", JPY: "USD",
 };
 
 /* ─────────────────── Wizard state ─────────────────── */
@@ -137,7 +285,6 @@ type Answers = {
 };
 
 const initialAnswers: Answers = {
-  // Markets-Step entfernt — wir bieten ohnehin nur Aktien & ETFs an, daher beide standardmäßig aktiv.
   markets: ["stocks", "etfs"],
   notifications: { notif_realtime: true, notif_breakout: true, notif_daily: true, notif_weekly: false },
   trusted_sources: ["reuters", "bloomberg", "yahoo"],
@@ -149,27 +296,27 @@ const initialAnswers: Answers = {
   age_confirmed: false,
 };
 
-/* Map trader_type → derived trading_goal + ai_style so the existing AI logic stays untouched. */
 function deriveProfile(a: Answers): { trading_goal: TradingGoal; ai_style: AIStyle; usage_freq: "daily" | "weekly" | "occasional" } {
-  const t = a.trader_type ?? "long_term_investor";
+  const tt = a.trader_type ?? "long_term_investor";
   const tradingGoal: TradingGoal =
-    t === "long_term_investor" || t === "beginner_investor" ? "long_term"
-    : t === "day_trader" || t === "options_trader" ? "aggressive"
+    tt === "long_term_investor" || tt === "beginner_investor" ? "long_term"
+    : tt === "day_trader" || tt === "options_trader" ? "aggressive"
     : "active";
   const aiStyle: AIStyle =
     a.risk_level === "low" ? "conservative"
     : a.risk_level === "high" ? "aggressive"
     : "balanced";
   const freq: "daily" | "weekly" | "occasional" =
-    t === "day_trader" || t === "options_trader" || t === "crypto_trader" ? "daily"
-    : t === "swing_trader" || t === "mixed" ? "weekly"
+    tt === "day_trader" || tt === "options_trader" || tt === "crypto_trader" ? "daily"
+    : tt === "swing_trader" || tt === "mixed" ? "weekly"
     : "occasional";
   return { trading_goal: tradingGoal, ai_style: aiStyle, usage_freq: freq };
 }
 
 /* ─────────────────── Component ─────────────────── */
 
-const TOTAL_STEPS = 12; // 0 welcome · 1 language · 2 age · 3 exp · 4 trader · 5 currency · 6 risk · 7 markets · 8 notif · 9 sources · 10 starter · 11 trust+summary
+// Steps: 0 language · 1 welcome · 2 age · 3 exp · 4 trader · 5 currency · 6 risk · 7 notif · 8 sources · 9 starter · 10 summary
+const TOTAL_STEPS = 11;
 
 export function OnboardingGate() {
   const { user, loading: authLoading } = useAuth();
@@ -180,40 +327,38 @@ export function OnboardingGate() {
   const [a, setA] = useState<Answers>(initialAnswers);
   const [saving, setSaving] = useState(false);
 
-  // Detect UI language from browser before the user picks one, then follow their choice.
-  const browserLang: LangCode = useMemo(() => {
-    if (typeof navigator === "undefined") return "en";
-    return navigator.language?.toLowerCase().startsWith("de") ? "de" : "en";
-  }, []);
-  const uiLang: LangCode = a.language ?? browserLang;
+  const uiLang: LangCode = a.language ?? "de";
+  const tt = (k: keyof typeof T) => t(k, uiLang);
 
   if (authLoading || loading || !user || !profile) return null;
-  // If already completed, AuthGate handles the redirect — do NOT navigate during render here
-  // (caused a flicker loop between / and /onboarding).
   if (profile.onboarding_completed) return null;
 
   const canNext = (() => {
-    if (step === 0) return a.terms_accepted && a.privacy_accepted && a.risk_disclosure_accepted && a.age_confirmed;
-    if (step === 1) return !!a.language;
+    if (step === 0) return !!a.language;
+    if (step === 1) return a.terms_accepted && a.privacy_accepted && a.risk_disclosure_accepted && a.age_confirmed;
     if (step === 2) return !!a.age_range;
     if (step === 3) return !!a.experience_level;
     if (step === 4) return !!a.trader_type;
     if (step === 5) return !!a.preferred_currency;
     if (step === 6) return !!a.risk_level;
-    if (step === 7) return true; // Markets-Step übersprungen (Defaults gesetzt)
-    if (step === 8) return Object.values(a.notifications).some(Boolean);
-    if (step === 9) return a.trusted_sources.length > 0;
-    if (step === 10) return true; // starter watchlists optional
-    if (step === 11) return a.ai_transparency_ack;
+    if (step === 7) return Object.values(a.notifications).some(Boolean);
+    if (step === 8) return a.trusted_sources.length > 0;
+    if (step === 9) return true;
+    if (step === 10) return a.ai_transparency_ack;
     return false;
   })();
+
+  const pickLanguage = (lang: LangCode) => {
+    setA((s) => ({ ...s, language: lang }));
+    // Persist immediately so the rest of the app + AutoTranslate engine use it from now on.
+    update({ language: lang });
+  };
 
   const finish = () => {
     if (!a.experience_level || !a.trader_type || !a.preferred_currency || !a.risk_level || a.markets.length === 0) return;
     setSaving(true);
     const derived = deriveProfile(a);
 
-    // 1. Persist to settings (localStorage → instantly reflected across the app).
     update({
       ...(a.language ? { language: a.language } : {}),
       currency: CURRENCY_TO_BASE[a.preferred_currency],
@@ -225,15 +370,11 @@ export function OnboardingGate() {
       notifBreakingNews: a.notifications.notif_breakout,
     });
 
-    // 2. Create selected starter watchlists.
     for (const id of a.starter_watchlists) {
       const preset = STARTER_LISTS.find((p) => p.id === id);
       if (preset) createWatchlistWithSymbols(preset.name, preset.symbols);
     }
 
-    // 3. Fire-and-forget profile persistence — the hook does an optimistic
-    //    local update so we can navigate immediately without waiting for the
-    //    Supabase round-trip.
     void completeOnboarding({
       trading_goal: derived.trading_goal,
       risk_level: a.risk_level,
@@ -253,51 +394,49 @@ export function OnboardingGate() {
       notif_breakout: a.notifications.notif_breakout,
     });
 
-    // Navigate immediately — AuthGate sees onboarding_completed=true from the optimistic update.
     navigate({ to: "/", replace: true });
   };
 
-  const stepIcon = [Sparkles, Languages, Calendar, GraduationCap, Briefcase, Coins, ShieldCheck, Globe2, Bell, Newspaper, Wallet, CircuitBoard][step];
-  const StepIcon = stepIcon ?? Sparkles;
+  const stepIcons = [Languages, Sparkles, Calendar, GraduationCap, Briefcase, Coins, ShieldCheck, Bell, Newspaper, Wallet, CircuitBoard];
+  const StepIcon = stepIcons[step] ?? Sparkles;
   const progressPct = Math.round((step / (TOTAL_STEPS - 1)) * 100);
+
+  const goBack = () => setStep((s) => Math.max(0, s - 1));
+  const goNext = () => setStep((s) => Math.min(TOTAL_STEPS - 1, s + 1));
 
   return (
     <Dialog open onOpenChange={() => {}}>
       <DialogContent
-        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden flex flex-col max-h-[92vh]"
+        data-no-translate
+        className="max-w-3xl border-border/40 bg-[oklch(0.13_0.02_265)]/95 p-0 backdrop-blur-xl shadow-2xl shadow-primary/10 overflow-hidden flex flex-col max-h-[92vh] w-[calc(100vw-1rem)] sm:w-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Quantm Trade Onboarding</DialogTitle>
+
         {/* Ambient AI background */}
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
           <div className="absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl" />
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.5) 1px,transparent 1px)",
-              backgroundSize: "32px 32px",
-            }}
-          />
         </div>
 
         {/* Header */}
-        <div className="relative flex items-center justify-between border-b border-border/30 px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
+        <div className="relative flex items-center justify-between border-b border-border/30 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
               <StepIcon className="h-4 w-4 text-primary" />
             </div>
-            <div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Quantm Trade · Onboarding</div>
+            <div className="min-w-0">
+              <div className="truncate text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {tt("brand")}
+              </div>
               <div className="text-sm font-semibold text-foreground">
-                Step {Math.min(step + 1, TOTAL_STEPS)} of {TOTAL_STEPS}
+                {tt("step")} {Math.min(step + 1, TOTAL_STEPS)} {tt("of")} {TOTAL_STEPS}
               </div>
             </div>
           </div>
           <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-border/40 bg-background/40 px-2.5 py-1 text-[10px] text-muted-foreground">
-            <Lock className="h-3 w-3" /> {uiLang === "en" ? "Private & encrypted" : "Privat & verschlüsselt"}
+            <Lock className="h-3 w-3" /> {tt("private")}
           </div>
         </div>
 
@@ -310,8 +449,11 @@ export function OnboardingGate() {
         </div>
 
         {/* Body */}
-        <div className="relative px-6 py-6 sm:px-8 sm:py-8 min-h-[360px] flex-1 overflow-y-auto">
+        <div className="relative px-4 sm:px-8 py-5 sm:py-8 min-h-[340px] flex-1 overflow-y-auto">
           {step === 0 && (
+            <LanguageStep value={a.language} onPick={pickLanguage} />
+          )}
+          {step === 1 && (
             <WelcomeStep
               lang={uiLang}
               terms={a.terms_accepted}
@@ -324,50 +466,35 @@ export function OnboardingGate() {
               setAge={(v) => setA((s) => ({ ...s, age_confirmed: v }))}
             />
           )}
-          {step === 1 && (
-            <Question title="Which language would you like to use?" hint="Wähle deine bevorzugte Sprache für die Plattform. Du kannst dies jederzeit in den Einstellungen ändern.">
-              <Grid cols={3}>
-                {LANGUAGES.map((g) => (
-                  <Choice
-                    key={g.v}
-                    active={a.language === g.v}
-                    onClick={() => setA((s) => ({ ...s, language: g.v }))}
-                    label={g.native}
-                    desc={g.label}
-                  />
-                ))}
-              </Grid>
-            </Question>
-          )}
           {step === 2 && (
-            <Question title="What age range are you in?" hint="Wir nutzen das ausschließlich zur Personalisierung — niemals an Dritte weitergegeben.">
+            <Question title={tt("ageTitle")} hint={tt("ageHint")}>
               <Grid cols={5}>
                 {AGES.map((g) => (
-                  <Choice key={g.v} active={a.age_range === g.v} onClick={() => setA((s) => ({ ...s, age_range: g.v }))} label={g.label} />
+                  <Choice key={g.v} active={a.age_range === g.v} onClick={() => setA((s) => ({ ...s, age_range: g.v }))} label={tt(g.k)} />
                 ))}
               </Grid>
             </Question>
           )}
           {step === 3 && (
-            <Question title="How experienced are you with financial markets?" hint="Bestimmt Tiefe der AI-Erklärungen und Komplexität des Dashboards.">
+            <Question title={tt("expTitle")} hint={tt("expHint")}>
               <Grid cols={3}>
                 {EXPERIENCE.map((g) => (
-                  <Choice key={g.v} active={a.experience_level === g.v} onClick={() => setA((s) => ({ ...s, experience_level: g.v }))} label={g.label} desc={g.desc} />
+                  <Choice key={g.v} active={a.experience_level === g.v} onClick={() => setA((s) => ({ ...s, experience_level: g.v }))} label={tt(g.lk)} desc={tt(g.dk)} />
                 ))}
               </Grid>
             </Question>
           )}
           {step === 4 && (
-            <Question title="What type of trader are you?" hint="Priorisiert deine Signal-Feeds, Charts und Insights.">
+            <Question title={tt("traderTitle")} hint={tt("traderHint")}>
               <Grid cols={2}>
                 {TRADER_TYPES.map((g) => (
-                  <Choice key={g.v} active={a.trader_type === g.v} onClick={() => setA((s) => ({ ...s, trader_type: g.v }))} label={g.label} desc={g.desc} />
+                  <Choice key={g.v} active={a.trader_type === g.v} onClick={() => setA((s) => ({ ...s, trader_type: g.v }))} label={tt(g.lk)} desc={tt(g.dk)} />
                 ))}
               </Grid>
             </Question>
           )}
           {step === 5 && (
-            <Question title="What currency should the platform use?" hint="Wird überall im Dashboard, Watchlist, Portfolio und in AI-Insights angewendet.">
+            <Question title={tt("ccyTitle")} hint={tt("ccyHint")}>
               <Grid cols={4}>
                 {CURRENCIES.map((g) => (
                   <Choice
@@ -375,40 +502,40 @@ export function OnboardingGate() {
                     active={a.preferred_currency === g.v}
                     onClick={() => setA((s) => ({ ...s, preferred_currency: g.v }))}
                     label={`${g.sym} ${g.v}`}
-                    desc={g.label}
+                    desc={tt(g.k)}
                   />
                 ))}
               </Grid>
             </Question>
           )}
           {step === 6 && (
-            <Question title="What level of risk are you comfortable with?" hint="Steuert AI-Konfidenz-Threshold und Signal-Aggressivität.">
+            <Question title={tt("riskTitle")} hint={tt("riskHint")}>
               <Grid cols={3}>
                 {RISKS.map((g) => (
-                  <Choice key={g.v} active={a.risk_level === g.v} onClick={() => setA((s) => ({ ...s, risk_level: g.v }))} label={g.label} desc={g.desc} />
+                  <Choice key={g.v} active={a.risk_level === g.v} onClick={() => setA((s) => ({ ...s, risk_level: g.v }))} label={tt(g.lk)} desc={tt(g.dk)} />
                 ))}
               </Grid>
             </Question>
           )}
-          {/* step === 7 (Markets) entfernt — wir bieten ausschließlich Aktien & ETFs an */}
-          {step === 8 && (
-            <Question title="What updates would you like to receive?" hint="Du kannst das jederzeit in den Einstellungen anpassen.">
+          {step === 7 && (
+            <Question title={tt("notifTitle")} hint={tt("notifHint")}>
               <div className="space-y-2">
                 {NOTIFS.map((n) => {
                   const on = a.notifications[n.v];
                   return (
                     <button
+                      type="button"
                       key={n.v}
                       onClick={() => setA((s) => ({ ...s, notifications: { ...s.notifications, [n.v]: !s.notifications[n.v] } }))}
-                      className={`w-full flex items-center justify-between rounded-lg border p-3 text-left transition ${
+                      className={`w-full flex items-center justify-between rounded-lg border p-3 text-left transition min-h-[56px] ${
                         on ? "border-primary/50 bg-primary/10 ring-1 ring-primary/30" : "border-border/50 bg-background/30 hover:border-foreground/30"
                       }`}
                     >
-                      <div>
-                        <div className={`text-sm font-semibold ${on ? "text-primary" : "text-foreground"}`}>{n.label}</div>
-                        <div className="text-[11px] text-muted-foreground mt-0.5">{n.desc}</div>
+                      <div className="min-w-0 pr-3">
+                        <div className={`text-sm font-semibold ${on ? "text-primary" : "text-foreground"}`}>{tt(n.lk)}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">{tt(n.dk)}</div>
                       </div>
-                      <div className={`h-5 w-9 rounded-full p-0.5 transition ${on ? "bg-primary" : "bg-muted"}`}>
+                      <div className={`h-5 w-9 shrink-0 rounded-full p-0.5 transition ${on ? "bg-primary" : "bg-muted"}`}>
                         <div className={`h-4 w-4 rounded-full bg-background shadow transition-transform ${on ? "translate-x-4" : "translate-x-0"}`} />
                       </div>
                     </button>
@@ -417,17 +544,15 @@ export function OnboardingGate() {
               </div>
             </Question>
           )}
-          {step === 9 && (
-            <Question
-              title="Choose Your Trusted Financial Sources"
-              hint="Diese Publisher dominieren deinen Haupt-News-Feed. Wichtige Headlines anderer Quellen erscheinen separat in der Sidebar."
-            >
+          {step === 8 && (
+            <Question title={tt("sourcesTitle")} hint={tt("sourcesHint")}>
               <Grid cols={4}>
                 {NEWS_SOURCES.map((src) => {
                   const meta = AGENCY_META[src];
                   const on = a.trusted_sources.includes(src);
                   return (
                     <button
+                      type="button"
                       key={src}
                       onClick={() =>
                         setA((s) => ({
@@ -437,7 +562,7 @@ export function OnboardingGate() {
                             : [...s.trusted_sources, src],
                         }))
                       }
-                      className={`group relative flex flex-col items-center gap-2 rounded-xl border p-3 transition ${
+                      className={`group relative flex flex-col items-center gap-2 rounded-xl border p-3 transition min-h-[88px] ${
                         on ? "border-primary/60 bg-primary/10 ring-1 ring-primary/40" : "border-border/50 bg-background/30 hover:border-foreground/30"
                       }`}
                     >
@@ -450,16 +575,14 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 10 && (
-            <Question
-              title="Starter watchlists"
-              hint="Optional. Ausgewählte Listen werden direkt in deiner Watchlist verfügbar."
-            >
+          {step === 9 && (
+            <Question title={tt("starterTitle")} hint={tt("starterHint")}>
               <Grid cols={3}>
                 {STARTER_LISTS.map((l) => {
                   const on = a.starter_watchlists.includes(l.id);
                   return (
                     <button
+                      type="button"
                       key={l.id}
                       onClick={() =>
                         setA((s) => ({
@@ -469,13 +592,13 @@ export function OnboardingGate() {
                             : [...s.starter_watchlists, l.id],
                         }))
                       }
-                      className={`relative rounded-xl border p-3 text-left transition ${
+                      className={`relative rounded-xl border p-3 text-left transition min-h-[92px] ${
                         on ? "border-primary/60 bg-primary/10 ring-1 ring-primary/40" : "border-border/50 bg-background/30 hover:border-foreground/30"
                       }`}
                     >
                       <div className={`text-sm font-semibold ${on ? "text-primary" : "text-foreground"}`}>{l.name}</div>
                       <div className="mt-0.5 font-mono text-[10px] text-muted-foreground">{l.tagline}</div>
-                      <div className="mt-2 font-mono text-[9px] text-muted-foreground/70">{l.symbols.length} Symbole</div>
+                      <div className="mt-2 font-mono text-[9px] text-muted-foreground/70">{l.symbols.length} {tt("symbolsWord")}</div>
                       {on && <Check className="absolute right-2 top-2 h-3 w-3 text-primary" />}
                     </button>
                   );
@@ -483,28 +606,50 @@ export function OnboardingGate() {
               </Grid>
             </Question>
           )}
-          {step === 11 && <SummaryStep a={a} ack={a.ai_transparency_ack} setAck={(v) => setA((s) => ({ ...s, ai_transparency_ack: v }))} />}
+          {step === 10 && (
+            <SummaryStep
+              a={a}
+              lang={uiLang}
+              ack={a.ai_transparency_ack}
+              setAck={(v) => setA((s) => ({ ...s, ai_transparency_ack: v }))}
+            />
+          )}
         </div>
 
         {/* Footer */}
-        <div className="relative flex items-center justify-between border-t border-border/30 bg-background/30 px-6 py-3.5">
+        <div className="relative flex items-center justify-between gap-2 border-t border-border/30 bg-background/30 px-4 sm:px-6 py-3">
           <Button
+            type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setStep((s) => Math.max(0, s - 1 === 7 ? 6 : s - 1))}
+            onClick={goBack}
             disabled={step === 0}
+            className="min-h-[40px]"
           >
-            <ChevronLeft className="h-4 w-4 mr-1" /> {uiLang === "en" ? "Back" : "Zurück"}
+            <ChevronLeft className="h-4 w-4 mr-1" /> {tt("back")}
           </Button>
-          <div className="font-mono text-[10px] tabular-nums text-muted-foreground">{progressPct}%</div>
+          <div className="font-mono text-[10px] tabular-nums text-muted-foreground hidden sm:block">{progressPct}%</div>
           {step < TOTAL_STEPS - 1 ? (
-            <Button size="sm" onClick={() => setStep((s) => (s + 1 === 7 ? 8 : s + 1))} disabled={!canNext}>
-              {step === 0 ? (uiLang === "en" ? "Get started" : "Loslegen") : (uiLang === "en" ? "Next" : "Weiter")} <ChevronRight className="h-4 w-4 ml-1" />
+            <Button
+              type="button"
+              size="sm"
+              onClick={goNext}
+              disabled={!canNext}
+              className="min-h-[40px]"
+            >
+              {step === 0 ? tt("continue") : step === 1 ? tt("getStarted") : tt("next")}
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button size="sm" onClick={finish} disabled={!canNext || saving} className="bg-gradient-to-r from-primary to-violet-500 text-primary-foreground">
+            <Button
+              type="button"
+              size="sm"
+              onClick={finish}
+              disabled={!canNext || saving}
+              className="min-h-[40px] bg-gradient-to-r from-primary to-violet-500 text-primary-foreground"
+            >
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Check className="h-4 w-4 mr-1" />}
-              {saving ? "Kalibriere…" : "Quantm Trade aktivieren"}
+              {saving ? tt("calibrating") : tt("activate")}
             </Button>
           )}
         </div>
@@ -514,6 +659,57 @@ export function OnboardingGate() {
 }
 
 /* ─────────────────── Sub-components ─────────────────── */
+
+function LanguageStep({ value, onPick }: { value?: LangCode; onPick: (v: LangCode) => void }) {
+  // This step is fully bilingual (shows both languages side-by-side) since the
+  // user has not yet picked. Once picked, the rest of the wizard is strictly
+  // single-language.
+  return (
+    <div className="py-2">
+      <div className="text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/30 to-violet-500/30 ring-1 ring-primary/40 mb-4">
+          <Languages className="h-6 w-6 text-primary" />
+        </div>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
+          Bitte wähle deine Sprache
+          <span className="block text-base sm:text-lg font-normal text-muted-foreground mt-1">
+            Please choose your language
+          </span>
+        </h2>
+        <p className="mt-3 text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+          Diese Auswahl steuert die gesamte Plattform. · This selection controls the entire platform.
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
+        {LANGUAGES.map((l) => {
+          const active = value === l.v;
+          return (
+            <button
+              type="button"
+              key={l.v}
+              onClick={() => onPick(l.v)}
+              className={`flex items-center gap-4 rounded-xl border p-4 text-left transition min-h-[72px] ${
+                active
+                  ? "border-primary/60 bg-primary/10 ring-2 ring-primary/40 shadow-[0_0_28px_-10px_oklch(0.7_0.18_265)]"
+                  : "border-border/50 bg-background/30 hover:border-foreground/30 active:scale-[0.99]"
+              }`}
+            >
+              <span className="text-3xl leading-none">{l.flag}</span>
+              <div className="min-w-0 flex-1">
+                <div className={`text-base font-semibold ${active ? "text-primary" : "text-foreground"}`}>
+                  {l.native}
+                </div>
+                <div className="text-[11px] text-muted-foreground">{l.label}</div>
+              </div>
+              {active && <Check className="h-5 w-5 text-primary shrink-0" />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function WelcomeStep({
   lang,
@@ -536,7 +732,7 @@ function WelcomeStep({
   setRisk: (v: boolean) => void;
   setAge: (v: boolean) => void;
 }) {
-  const en = lang === "en";
+  const tt = (k: keyof typeof T) => t(k, lang);
   return (
     <div className="py-2">
       <div className="text-center">
@@ -544,97 +740,53 @@ function WelcomeStep({
           <Sparkles className="h-6 w-6 text-primary" />
         </div>
         <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
-          {en ? "Welcome to " : "Willkommen bei "}
+          {tt("welcome")}
           <span className="bg-gradient-to-r from-primary to-violet-400 bg-clip-text text-transparent">Quantm Trade</span>
         </h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-          {en
-            ? "Before we calibrate your platform, please review our legal terms and confirm them."
-            : "Bevor wir deine Plattform kalibrieren, lies bitte unsere rechtlichen Bedingungen und bestätige sie."}
+          {tt("welcomeHint")}
         </p>
       </div>
 
-      {/* Risk disclosure banner */}
       <div className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
         <div className="flex items-start gap-2.5">
           <ShieldCheck className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
           <div className="text-[11px] leading-relaxed text-amber-100/90">
-            <span className="font-semibold text-amber-200">
-              {en ? "Important risk notice." : "Wichtiger Hinweis zum Risiko."}
-            </span>{" "}
-            {en
-              ? "Quantm Trade provides information, market data and algorithmic analysis only. We do not provide investment advice, portfolio management or individual recommendations under MiFID II / WpHG. Trading financial instruments carries substantial risk of loss, up to the total loss of invested capital. Past performance is not an indicator of future results. AI-generated signals are probabilistic and can be wrong. Make trading decisions at your own responsibility."
-              : "Quantm Trade stellt ausschließlich informationsbasierte Inhalte, Marktdaten und algorithmische Analysen bereit. Wir bieten keine Anlageberatung, Vermögensverwaltung oder individuelle Empfehlung im Sinne der MiFID II / WpHG. Der Handel mit Finanzinstrumenten birgt erhebliche Verlustrisiken, bis hin zum Totalverlust des eingesetzten Kapitals. Vergangene Performance ist kein Indikator für zukünftige Ergebnisse. AI-generierte Signale sind probabilistisch und können fehlerhaft sein. Treffe Handelsentscheidungen ausschließlich auf eigene Verantwortung."}
+            <span className="font-semibold text-amber-200">{tt("riskNotice")}</span>{" "}
+            {tt("riskBody")}
           </div>
         </div>
       </div>
 
-      {/* Acceptance checkboxes */}
       <div className="mt-4 space-y-2">
-        <ConsentRow
-          checked={age}
-          onChange={setAge}
-          label={
-            en
-              ? <>I confirm I am <span className="font-semibold text-foreground">at least 4 years old</span>.</>
-              : <>Ich bestätige, dass ich <span className="font-semibold text-foreground">mindestens 4 Jahre alt</span> bin.</>
-          }
-        />
+        <ConsentRow checked={age} onChange={setAge} label={tt("consentAge")} />
         <ConsentRow
           checked={terms}
           onChange={setTerms}
           label={
-            en ? (
-              <>
-                I accept the{" "}
-                <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                  Terms and Conditions
-                </a>
-                {" "}of Quantm Trade.
-              </>
-            ) : (
-              <>
-                Ich akzeptiere die{" "}
-                <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                  Allgemeinen Geschäftsbedingungen (AGB)
-                </a>
-                {" "}von Quantm Trade.
-              </>
-            )
+            <>
+              {tt("consentTermsPre")}
+              <a href="/agb" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                {tt("consentTermsLink")}
+              </a>
+              {tt("consentTermsPost")}
+            </>
           }
         />
         <ConsentRow
           checked={privacy}
           onChange={setPrivacy}
           label={
-            en ? (
-              <>
-                I have read the{" "}
-                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                  Privacy Policy
-                </a>
-                {" "}and consent to the processing of my data.
-              </>
-            ) : (
-              <>
-                Ich habe die{" "}
-                <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
-                  Datenschutzerklärung
-                </a>
-                {" "}gelesen und stimme der Verarbeitung meiner Daten zu.
-              </>
-            )
+            <>
+              {tt("consentPrivacyPre")}
+              <a href="/datenschutz" target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-2 hover:text-primary/80">
+                {tt("consentPrivacyLink")}
+              </a>
+              {tt("consentPrivacyPost")}
+            </>
           }
         />
-        <ConsentRow
-          checked={risk}
-          onChange={setRisk}
-          label={
-            en
-              ? <>I have understood the <span className="font-semibold text-foreground">risk disclosures</span> and acknowledge that Quantm Trade <span className="font-semibold text-foreground">does not provide investment advice</span> and is not liable for trading losses.</>
-              : <>Ich habe die <span className="font-semibold text-foreground">Risikohinweise</span> verstanden und nehme zur Kenntnis, dass Quantm Trade <span className="font-semibold text-foreground">keine Anlageberatung</span> leistet und nicht für Handelsverluste haftet.</>
-          }
-        />
+        <ConsentRow checked={risk} onChange={setRisk} label={tt("consentRisk")} />
       </div>
     </div>
   );
@@ -650,7 +802,7 @@ function ConsentRow({
   label: React.ReactNode;
 }) {
   return (
-    <label className={`flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer select-none transition ${
+    <label className={`flex items-start gap-2.5 rounded-lg border p-3 cursor-pointer select-none transition min-h-[52px] ${
       checked ? "border-primary/50 bg-primary/5" : "border-border/50 bg-background/30 hover:border-foreground/30"
     }`}>
       <input
@@ -664,10 +816,30 @@ function ConsentRow({
   );
 }
 
-function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v: boolean) => void }) {
-  const traderLabel = TRADER_TYPES.find((t) => t.v === a.trader_type)?.label ?? "—";
-  const riskLabel = RISKS.find((r) => r.v === a.risk_level)?.label ?? "—";
-  const expLabel = EXPERIENCE.find((e) => e.v === a.experience_level)?.label ?? "—";
+function SummaryStep({
+  a,
+  lang,
+  ack,
+  setAck,
+}: {
+  a: Answers;
+  lang: LangCode;
+  ack: boolean;
+  setAck: (v: boolean) => void;
+}) {
+  const tt = (k: keyof typeof T) => t(k, lang);
+  const traderLabel = useMemo(() => {
+    const item = TRADER_TYPES.find((x) => x.v === a.trader_type);
+    return item ? tt(item.lk) : "—";
+  }, [a.trader_type, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  const riskLabel = useMemo(() => {
+    const item = RISKS.find((x) => x.v === a.risk_level);
+    return item ? tt(item.lk) : "—";
+  }, [a.risk_level, lang]); // eslint-disable-line react-hooks/exhaustive-deps
+  const expLabel = useMemo(() => {
+    const item = EXPERIENCE.find((x) => x.v === a.experience_level);
+    return item ? tt(item.lk) : "—";
+  }, [a.experience_level, lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const ccy = CURRENCIES.find((c) => c.v === a.preferred_currency);
   const sourceLabels = useMemo(
     () => a.trusted_sources.map((s) => AGENCY_META[s].label),
@@ -678,19 +850,19 @@ function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v:
     <div className="space-y-5">
       <div className="text-center">
         <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
-          <Sparkles className="h-3 w-3" /> AI Profile Calibrated
+          <Sparkles className="h-3 w-3" /> {tt("summaryBadge")}
         </div>
-        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">Dein Quantm Trade Profil</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Diese Konfiguration steuert ab sofort deine gesamte Plattform-Erfahrung.</p>
+        <h2 className="mt-3 font-display text-xl sm:text-2xl font-bold tracking-tight">{tt("summaryTitle")}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{tt("summarySub")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <SummaryRow icon={Briefcase} label="Trader Type" value={traderLabel} />
-        <SummaryRow icon={GraduationCap} label="Experience" value={expLabel} />
-        <SummaryRow icon={ShieldCheck} label="Risk Profile" value={riskLabel} />
-        <SummaryRow icon={Coins} label="Currency" value={ccy ? `${ccy.sym} ${ccy.v}` : "—"} />
-        <SummaryRow icon={Globe2} label="Markets" value={a.markets.map((m) => MARKETS.find((x) => x.v === m)?.label).filter(Boolean).join(" · ") || "—"} />
-        <SummaryRow icon={Newspaper} label="Trusted Sources" value={sourceLabels.join(" · ") || "—"} />
+        <SummaryRow icon={Briefcase} label={tt("sumTrader")} value={traderLabel} />
+        <SummaryRow icon={GraduationCap} label={tt("sumExp")} value={expLabel} />
+        <SummaryRow icon={ShieldCheck} label={tt("sumRisk")} value={riskLabel} />
+        <SummaryRow icon={Coins} label={tt("sumCcy")} value={ccy ? `${ccy.sym} ${ccy.v}` : "—"} />
+        <SummaryRow icon={Globe2} label={tt("sumMarkets")} value={a.markets.length > 0 ? "Stocks · ETFs" : "—"} />
+        <SummaryRow icon={Newspaper} label={tt("sumSources")} value={sourceLabels.join(" · ") || "—"} />
       </div>
 
       <div className="rounded-xl border border-border/50 bg-background/40 p-4">
@@ -699,10 +871,8 @@ function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v:
             <CircuitBoard className="h-4 w-4 text-primary" />
           </div>
           <div className="text-xs leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-foreground">AI-Transparenz.</span>{" "}
-            Unsere Engine analysiert Marktdaten, Volatilität, Sentiment und historische Muster, um
-            probabilistische Insights zu generieren. Signale werden kontinuierlich rekalibriert,
-            sobald sich Marktbedingungen ändern. Keine Garantie für zukünftige Performance.
+            <span className="font-semibold text-foreground">{tt("aiTransparency")}</span>{" "}
+            {tt("aiTransparencyBody")}
           </div>
         </div>
         <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
@@ -712,7 +882,7 @@ function SummaryStep({ a, ack, setAck }: { a: Answers; ack: boolean; setAck: (v:
             onChange={(e) => setAck(e.target.checked)}
             className="h-3.5 w-3.5 rounded border-border bg-background accent-primary"
           />
-          <span className="text-[11px] text-muted-foreground">Ich verstehe und stimme zu.</span>
+          <span className="text-[11px] text-muted-foreground">{tt("aiAck")}</span>
         </label>
       </div>
     </div>
@@ -752,8 +922,9 @@ function Grid({ cols, children }: { cols: 2 | 3 | 4 | 5; children: React.ReactNo
 function Choice({ active, onClick, label, desc }: { active: boolean; onClick: () => void; label: string; desc?: string }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`rounded-lg border p-3 text-left transition-all ${
+      className={`rounded-lg border p-3 text-left transition-all min-h-[56px] active:scale-[0.99] ${
         active
           ? "border-primary/60 bg-primary/10 ring-1 ring-primary/40 shadow-[0_0_24px_-12px_oklch(0.7_0.18_265)]"
           : "border-border/50 bg-background/30 hover:border-foreground/30"
