@@ -288,7 +288,7 @@ function PicksPage() {
   // damit Tab-Switch / Browser-Background-Kill nicht den ganzen Scan
   // verliert. Beim nächsten Mount sehen wir sofort die letzten Treffer
   // (max. 30 min alt), während der Hintergrund-Scan still neu läuft.
-  const CACHE_KEY = `apex_picks_cache_${universe}_${sector}_${region}`;
+  const CACHE_KEY = `apex_picks_cache_v2_${universe}_${sector}_${region}`;
   const [cachedPicks, setCachedPicks] = useState<typeof picks>([]);
   useEffect(() => {
     try {
