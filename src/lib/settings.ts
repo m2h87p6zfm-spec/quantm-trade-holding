@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import type { RiskProfile } from "./analysis";
+import { supabase } from "@/integrations/supabase/client";
 
 export type Watchlist = { id: string; name: string; symbols: string[]; emoji?: string; color?: string };
 
