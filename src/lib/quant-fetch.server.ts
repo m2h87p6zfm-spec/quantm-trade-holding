@@ -1,8 +1,12 @@
-// Helpers to pull candles for the APEX engine via the existing Yahoo cache.
+// Helpers to pull candles for the APEX engine. For the large Quantum Picks
+// scan we try Yahoo's public chart feed first, then fall back to the existing
+// Twelve Data adapter. This avoids treating provider quota misses as stock
+// analysis failures.
 import { fetchYahooChartCached } from "@/lib/yahoo-cache.server";
+import { fetchYahooCandles } from "@/lib/yahoo-fallback.server";
+import { getCandlesCached, adaptiveCandleTtl, type TdCandles } from "@/lib/twelvedata.server";
 import { apexAnalyze, type Candle, type ApexReport } from "@/lib/quant.server";
 import { sharedGet, sharedSet } from "@/lib/shared-cache.server";
-import { adaptiveCandleTtl } from "@/lib/twelvedata.server";
 
 function toCandles(raw: any): Candle[] {
   const r = raw?.chart?.result?.[0];
@@ -25,13 +29,37 @@ function toCandles(raw: any): Candle[] {
   return out;
 }
 
+function tdToCandles(raw: TdCandles | null): Candle[] {
+  if (!raw?.c?.length) return [];
+  return raw.c.map((c, i) => ({
+    t: Number(raw.t?.[i] ?? 0),
+    o: Number(raw.o?.[i] ?? c),
+    h: Number(raw.h?.[i] ?? c),
+    l: Number(raw.l?.[i] ?? c),
+    c: Number(c),
+    v: Number(raw.v?.[i] ?? 0),
+  })).filter((k) => Number.isFinite(k.c));
+}
+
 export async function fetchCandles(symbol: string, range = "1y", interval = "1d"): Promise<Candle[]> {
+  const sym = symbol.toUpperCase();
+  const ttl = adaptiveCandleTtl(60 * 60);
+  const key = `candles:${sym}:${interval}:${range}`;
   try {
-    // Daily-Candles: adaptive TTL (1h offen / 12h zu). Intraday-Aufrufer
-    // setzen den Range entsprechend; hier wird der Default-Case (1y/1d) optimiert.
-    const ttl = adaptiveCandleTtl(60 * 60);
-    const cached = await fetchYahooChartCached(symbol.toUpperCase(), interval, range, ttl);
-    return cached.value ? toCandles(cached.value) : [];
+    const hit = await sharedGet<Candle[]>(key);
+    if (hit && !hit.stale && hit.value?.length) return hit.value;
+
+    let candles = tdToCandles(await fetchYahooCandles(sym, interval, range));
+    if (candles.length < 60) {
+      const td = await getCandlesCached(sym, interval, range, ttl);
+      candles = tdToCandles(td.value);
+    }
+    if (candles.length < 60) {
+      const cached = await fetchYahooChartCached(sym, interval, range, ttl);
+      candles = cached.value ? toCandles(cached.value) : [];
+    }
+    if (candles.length) void sharedSet(key, candles, ttl);
+    return candles;
   } catch {
     return [];
   }
