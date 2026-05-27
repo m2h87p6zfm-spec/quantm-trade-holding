@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, BookOpen, Bot, Brain, Calendar, CreditCard, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Radar, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
+import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -83,9 +83,9 @@ export function AppSidebar() {
             <ApexLogo className={collapsed ? "h-8 w-8" : "h-10 w-10"} />
           </div>
           {!collapsed && (
-            <div className="flex flex-col leading-tight gap-1">
-              <ApexWordmark className="h-4 w-auto" />
-              <span className="text-[10px] text-muted-foreground">{t("side.tagline")}</span>
+            <div className="flex flex-col leading-tight">
+              <span className="text-lg font-bold tracking-tight text-foreground">Quantm <span className="font-light text-muted-foreground">Trade</span></span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("side.tagline")}</span>
             </div>
           )}
         </div>
