@@ -546,7 +546,7 @@ function LayerControls({
     <button
       onClick={onClick}
       className={`flex items-center gap-1.5 rounded px-2 py-1 text-[10px] font-mono uppercase tracking-wider transition ${
-        on ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
+        on ? "bg-primary/15 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:text-foreground"
       }`}
     >
       <Icon className="h-3 w-3" />
@@ -555,14 +555,19 @@ function LayerControls({
   );
   const heatModes: HeatmapMode[] = ["none", "risk", "influence", "stability", "inflation"];
   return (
-    <div className="absolute right-4 top-4 z-10 flex flex-col items-end gap-1.5">
-      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+    <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.10] bg-black/30 px-3 py-2 backdrop-blur">
+      <div className="flex items-center gap-2 font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        <Activity className="h-3 w-3 text-primary" />
+        <span>Intel Layer · 2D</span>
+      </div>
+      <span className="mx-1 h-4 w-px bg-white/10" />
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/40 p-1">
         <Layers className="ml-1 h-3 w-3 text-muted-foreground" />
         <Item on={layers.trade} onClick={() => setLayers({ ...layers, trade: !layers.trade })} icon={RouteIcon} label="Flows" />
         <Item on={layers.tensions} onClick={() => setLayers({ ...layers, tensions: !layers.tensions })} icon={Flame} label="Tensions" />
         <Item on={layers.events} onClick={() => setLayers({ ...layers, events: !layers.events })} icon={Eye} label="Events" />
       </div>
-      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/55 p-1 backdrop-blur-md">
+      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-black/40 p-1">
         <Gauge className="ml-1 h-3 w-3 text-muted-foreground" />
         <span className="mr-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">Heatmap</span>
         {heatModes.map((m) => (
@@ -570,7 +575,7 @@ function LayerControls({
             key={m}
             onClick={() => setLayers({ ...layers, heatmap: m })}
             className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider transition ${
-              layers.heatmap === m ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"
+              layers.heatmap === m ? "bg-primary/20 text-primary ring-1 ring-primary/30" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {HEATMAP_LABEL[m]}
