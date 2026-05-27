@@ -277,19 +277,11 @@ function PicksPage() {
                 <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-primary">
                   <Activity className="h-2.5 w-2.5" /> Composite Engine · 15 Faktoren
                 </span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-2.5 w-2.5" />
-                  {lastScanTs === 0
-                    ? "Bereit zum Scan"
-                    : scanAllowed
-                      ? "Update verfügbar"
-                      : `Nächstes Update in ${nextRefreshMin} min`}
-                </span>
                 <button
                   onClick={() => setForceRefresh((x) => x + 1)}
                   disabled={!scanAllowed && lastScanTs !== 0}
                   className="inline-flex items-center gap-1 rounded border border-border bg-background/40 px-1.5 py-0.5 hover:bg-accent/40 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title={scanAllowed ? "Manuell aktualisieren" : `In ${nextRefreshMin} min wieder verfügbar`}
+                  title="Manuell aktualisieren"
                 >
                   <RefreshCw className="h-2.5 w-2.5" /> Refresh
                 </button>
