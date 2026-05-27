@@ -304,7 +304,7 @@ function AgentResponse({ symbol, userQuery, cachedText, onDone }: { symbol: stri
   const sig = scoreIndicators(indicators, settings.risk);
   const regime = detectRegime(indicators);
   const scenarioTag = deriveScenarioTag(indicators, regime);
-  const rawDecision = buildDecision(symbol, productName, indicators, sig, regime);
+  const rawDecision = buildDecision(symbol, productName, indicators, sig, regime, { historicalCloses: candles.data.c });
   const stable = stabilizeDecision(symbol, rawDecision.decision, rawDecision.confidence);
   const decision = stable.decision === rawDecision.decision
     ? { ...rawDecision, adjustments: [...rawDecision.adjustments, `Stabilität: ${stable.reason}`] }
