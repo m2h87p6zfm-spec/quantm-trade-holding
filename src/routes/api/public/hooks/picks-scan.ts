@@ -267,7 +267,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
             .select("picks, scope_key")
             .in("scope_key", scopes.map(scopeKey));
           for (const row of cachedRows ?? []) {
-            const picks = (row.picks as unknown as Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>>) ?? [];
+            const picks = (row.picks as unknown as PickRow[]) ?? [];
             for (const p of picks) {
               if (p?.decision === "BUY" && p.symbol) {
                 if (!buyPicksBySymbol.has(p.symbol)) buyPicksBySymbol.set(p.symbol, p);
