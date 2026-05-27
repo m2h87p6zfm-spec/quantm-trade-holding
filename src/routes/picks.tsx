@@ -80,7 +80,9 @@ function PicksPage() {
       return list;
     }
     if (universe === "top") list = list.slice(0, 80);
-    else if (universe === "extended") list = list.slice(0, 250);
+    else if (universe === "extended") list = list.slice(80, 250);
+    else list = list.slice(250);
+
     return list;
   }, [sector, region, universe, mode, query]);
 
