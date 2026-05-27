@@ -3,7 +3,10 @@ export type Product = {
   name: string;
   sector: "Technologie" | "Energie" | "Finanzen" | "Gesundheit" | "Konsum" | "Industrie" | "Rohstoffe" | "Index";
   region: "US" | "DE" | "EU" | "UK" | "JP";
+  /** Marktkapitalisierungs-Klasse — wird beim Mergen aus der Source-Liste abgeleitet. */
+  cap?: "large" | "mid" | "small";
 };
+
 
 import { PRODUCTS_EXTRA } from "./products-extra";
 import { PRODUCTS_EXTRA2 } from "./products-extra2";
@@ -890,14 +893,23 @@ const _dupExtra: string[] = [];
 const _dupExtra2: string[] = [];
 const _perSource: Record<MergeSource, number> = { base: 0, extra: 0, extra2: 0 };
 
+function _capForSource(src: MergeSource): Product["cap"] {
+  // Heuristik: BASE = kuratierte Blue Chips/Mega-Caps, EXTRA = Mid Caps,
+  // EXTRA2 = Small/Micro Caps. Reicht für saubere Bucket-Trennung in der UI.
+  if (src === "base") return "large";
+  if (src === "extra") return "mid";
+  return "small";
+}
+
 function _mergeWith(list: Product[], src: MergeSource, dupSink?: string[]): Product[] {
   const out: Product[] = [];
+  const defaultCap = _capForSource(src);
   for (const p of list) {
     const key = p.symbol.toUpperCase();
     if (_seen.has(key)) { dupSink?.push(key); continue; }
     _seen.add(key);
     _perSource[src]++;
-    out.push(p);
+    out.push({ ...p, cap: p.cap ?? defaultCap });
   }
   return out;
 }
@@ -905,6 +917,7 @@ function _mergeWith(list: Product[], src: MergeSource, dupSink?: string[]): Prod
 const _mergedBase = _mergeWith(PRODUCTS_BASE, "base");
 const _mergedExtra = _mergeWith(PRODUCTS_EXTRA, "extra", _dupExtra);
 const _mergedExtra2 = _mergeWith(PRODUCTS_EXTRA2, "extra2", _dupExtra2);
+
 
 export const PRODUCTS: Product[] = [..._mergedBase, ..._mergedExtra, ..._mergedExtra2];
 
