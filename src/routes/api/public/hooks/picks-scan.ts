@@ -64,6 +64,11 @@ async function scanOne(p: Product) {
     const regime = detectRegime(ind);
     const report = buildDecision(p.symbol, p.name, ind, sig, regime, {
       historicalCloses: c.c,
+    }, {
+      // Der Vollscan läuft über hunderte bis tausende Werte. 10k MC-Pfade pro
+      // Aktie sprengen im Serverless-Worker das CPU-Limit; 1.2k bleibt stabil
+      // und nutzt dieselbe Engine/Signal-Logik.
+      monteCarloPaths: 1_200,
     });
     if (report.decision !== "BUY") return null;
     const last = c.c.at(-1) ?? 0;
@@ -104,7 +109,7 @@ async function scanOne(p: Product) {
   }
 }
 
-async function runScan(scope: Scope, concurrency = 6) {
+async function runScan(scope: Scope, concurrency = 3) {
   const universe = filterUniverse(scope);
   const total = universe.length;
   const results: Array<NonNullable<Awaited<ReturnType<typeof scanOne>>>> = [];
