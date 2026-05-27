@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, BookOpen, Bot, Brain, Calendar, CreditCard, Globe2, Info, LineChart, ListOrdered, Lock, LogIn, LogOut, Microscope, Newspaper, Radar, Settings as SettingsIcon, ShieldCheck, Sigma, Sparkles, TrendingUp, User as UserIcon, Wallet } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
+import { ApexLogo } from "@/components/ApexLogo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/useSubscription";
