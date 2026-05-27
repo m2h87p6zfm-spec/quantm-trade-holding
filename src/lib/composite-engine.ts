@@ -611,12 +611,29 @@ export function analyzeComposite(
   const composite = computeFactorScores(ind, regime, ext);
   // μ-Schätzung: konservativ aus Sharpe & Volatilität (μ = Sharpe·σ + rf-proxy)
   const mu = opts.muOverride ?? (ind.sharpe * ind.volatility + 0.035);
+
+  // GARCH(1,1) + 2-State-Regime-Switching kalibrieren, sofern historische
+  // Kurse vorliegen. So wird die Simulation marktphasen-sensitiv (Vola-
+  // Clustering + Calm/Turbulent-Wechsel) statt nur konstant-σ GBM.
+  const closes = ext.historicalCloses;
+  let mcOpts: MonteCarloOptions = {};
+  if (closes && closes.length >= 30) {
+    const returns = dailyLogReturns(closes);
+    if (returns.length >= 30) {
+      mcOpts = {
+        garch: calibrateGarch(returns),
+        regimeSwitch: calibrateRegimeSwitching(returns),
+      };
+    }
+  }
+
   const mc = monteCarloAdvanced(
     ind.price,
     mu,
     Math.max(0.05, ind.volatility),
     opts.horizonDays ?? 30,
     opts.paths ?? 10_000,
+    mcOpts,
   );
   // Forecast-Edge nachreichen, falls nicht von außen geliefert
   if (ext.mcMedian == null) {
