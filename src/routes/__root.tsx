@@ -38,6 +38,7 @@ import { Footer } from "@/components/Footer";
 import { ApexLogo } from "@/components/ApexLogo";
 import { MarketRegimePill } from "@/components/MarketRegimePill";
 import { useAutoTheme } from "@/hooks/use-auto-theme";
+import { AutoTranslate } from "@/components/AutoTranslate";
 
 
 import appCss from "../styles.css?url";
