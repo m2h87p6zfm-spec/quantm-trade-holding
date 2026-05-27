@@ -172,6 +172,7 @@ type SectionDef = {
   emphasis: "up" | "down" | "neutral";
   tier: Tier;
   colSpan: 3 | 4 | 6 | 8 | 12;
+  rowGroup?: string;
 };
 
 const accentHoverBorder = (hex: string) => `hover:border-[${hex}]/50`;
