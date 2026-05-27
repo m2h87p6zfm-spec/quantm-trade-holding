@@ -460,6 +460,11 @@ function PicksPage() {
         </Card>
       )}
 
+      {mode === "ki" && (
+        <ScanHistoryPanel scopeKey={`${universe}|${sector}|${region}`} />
+      )}
+
+
       {mode === "ki" && loading && picks.length === 0 && cachedPicks.length > 0 && (
         <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-[11px] text-muted-foreground">
           Zuletzt gefundene Picks werden angezeigt, während der neue Scan im Hintergrund läuft.
