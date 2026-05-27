@@ -116,22 +116,24 @@ export function FirstRunTour() {
   }, [user]);
   useLayoutEffect(() => {
     if (!open) return;
-    const update = () => {
+    const measure = () => {
       const el = findTarget(STEPS[step].target);
       if (!el) { setRect(null); return; }
-      el.scrollIntoView({ block: "center", behavior: "smooth" });
       const r = el.getBoundingClientRect();
       setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
-    update();
-    const onResize = () => update();
+    // Scroll target into view ONCE per step (not every 250ms — that
+    // interfered with taps on mobile because the page kept scrolling
+    // under the user's finger).
+    const el = findTarget(STEPS[step].target);
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+    measure();
+    const onResize = () => measure();
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
-    const interval = window.setInterval(update, 250); // keep aligned while layout settles
     return () => {
       window.removeEventListener("resize", onResize);
       window.removeEventListener("scroll", onResize, true);
-      window.clearInterval(interval);
     };
   }, [open, step]);
 
