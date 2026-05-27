@@ -186,6 +186,13 @@ export function whyNow(ind: IndicatorSet, sig: Signal): string {
 //  INSTITUTIONAL DECISION ENGINE (BUY / SELL / HOLD)
 // ============================================================
 import type { MarketRegime } from "./ai-learning";
+import {
+  analyzeComposite,
+  type CompositeAnalysis,
+  type ExternalInputs,
+  type FactorScore,
+  type SignalMetrics,
+} from "./composite-engine";
 
 export type Decision = "BUY" | "SELL" | "HOLD";
 export type RiskLevel = "Niedrig" | "Mittel" | "Hoch";
@@ -207,6 +214,10 @@ export type DecisionReport = {
   invalidation: string;
   regime: MarketRegime;
   adjustments: string[];       // Welche Filter haben Confidence verändert
+  // --- NEU: Multi-Faktor Composite + quantitative Signal-Metriken --------
+  metrics?: SignalMetrics;
+  factors?: FactorScore[];
+  compositeScore?: number;      // 0–100
 };
 
 function regimeLabelDe(r: MarketRegime): string {
