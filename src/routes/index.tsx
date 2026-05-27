@@ -132,115 +132,111 @@ function Cockpit() {
             <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("cockpit.section.market")}</h2>
             <span className="text-[12px] text-muted-foreground/60 tabular-nums">{t("cockpit.section.analyzed", { n: rows.length })}</span>
           </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {/* Sentiment */}
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-muted-foreground">{t("cockpit.sentiment.title")}</span>
-                <span className="text-[11px] tabular-nums text-muted-foreground/60">
-                  {sentimentTotal} {sentimentTotal === 1 ? "Wert" : "Werte"}
-                </span>
-              </div>
-              {/* Drei Stat-Karten: Label oben, große Zahl mittig, Prozent unten – klar gruppiert */}
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)", tip: "Bullish: Aktien mit positivem Signal – Kursanstieg wahrscheinlich (Long-Setup)." },
-                  { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)", tip: "Neutral: Kein klares Signal – Seitwärtsbewegung oder abwarten." },
-                  { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)", tip: "Bearish: Aktien mit negativem Signal – Kursrückgang wahrscheinlich (Short-Setup)." },
-                ].map((s) => {
-                  const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
-                  return (
-                    <div
-                      key={s.k}
-                      title={s.tip}
-                      className="flex cursor-help flex-col items-center justify-between gap-2 rounded-xl border px-2 py-3 text-center"
-                      style={{ background: s.tint, borderColor: s.border }}
-                    >
-                      <span className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wider text-foreground/80">
-                        <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
-                        {s.k}
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="font-mono text-2xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
-                          {s.v}
+
+          {/* Unified compact accordion grid: Marktstimmung + Meine Watchlist + Indices
+              sit side-by-side with Markt-Gewinner, Top-Gewinner, Aktivste Werte … */}
+          <WatchlistAccordions
+            prependItems={[
+              {
+                id: "sentiment",
+                icon: Activity,
+                accent: "#22FF88",
+                title: t("cockpit.sentiment.title"),
+                preview: (
+                  <span className="hidden items-center gap-1.5 sm:inline-flex">
+                    <span className="font-mono tabular-nums text-[#22FF88]">{longCount}</span>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span className="font-mono tabular-nums text-[#8B9EFF]">{neutralCount}</span>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span className="font-mono tabular-nums text-[#FF3B5C]">{shortCount}</span>
+                  </span>
+                ),
+                content: (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { k: t("cockpit.sentiment.bullish"), v: longCount, color: "#22FF88", tint: "rgba(34,255,136,0.08)", border: "rgba(34,255,136,0.25)" },
+                        { k: t("cockpit.sentiment.neutral"), v: neutralCount, color: "#8B9EFF", tint: "rgba(139,158,255,0.10)", border: "rgba(139,158,255,0.30)" },
+                        { k: t("cockpit.sentiment.bearish"), v: shortCount, color: "#FF3B5C", tint: "rgba(255,59,92,0.08)", border: "rgba(255,59,92,0.25)" },
+                      ].map((s) => {
+                        const pct = sentimentTotal > 0 ? Math.round((s.v / sentimentTotal) * 100) : 0;
+                        return (
+                          <div
+                            key={s.k}
+                            className="flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-center"
+                            style={{ background: s.tint, borderColor: s.border }}
+                          >
+                            <span className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider text-foreground/80">
+                              <span className="h-1 w-1 rounded-full" style={{ background: s.color }} />
+                              {s.k}
+                            </span>
+                            <span className="font-mono text-xl font-bold leading-none tabular-nums" style={{ color: s.color }}>
+                              {s.v}
+                            </span>
+                            <span className="text-[10px] tabular-nums" style={{ color: s.color, opacity: 0.85 }}>{pct}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full bg-[#22FF88]" style={{ width: sentimentTotal > 0 ? `${(longCount / sentimentTotal) * 100}%` : "0%" }} />
+                      <div className="h-full bg-[#8B9EFF]/60" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
+                      <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                id: "indices",
+                icon: Sparkles,
+                accent: "#8B9EFF",
+                title: t("cockpit.indices.title"),
+                preview: (
+                  <span className="hidden items-center gap-1.5 sm:inline-flex">
+                    {indices.slice(0, 2).map((i) => {
+                      const up = (i.change ?? 0) >= 0;
+                      return (
+                        <span key={i.symbol} className={`font-mono tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                          {i.symbol} {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(1)}%`}
                         </span>
-                        <span className="text-[10px] tabular-nums text-muted-foreground/70">/ {sentimentTotal}</span>
-                      </div>
-                      <span className="text-[10px] tabular-nums" style={{ color: s.color, opacity: 0.85 }}>{pct}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Verteilungsbalken darunter als visuelle Zusammenfassung */}
-              <div className="mt-4 flex h-1.5 overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-[#22FF88]" style={{ width: sentimentTotal > 0 ? `${(longCount / sentimentTotal) * 100}%` : "0%" }} />
-                <div className="h-full bg-[#8B9EFF]/60" style={{ width: sentimentTotal > 0 ? `${(neutralCount / sentimentTotal) * 100}%` : "0%" }} />
-                <div className="h-full bg-[#FF3B5C]" style={{ width: sentimentTotal > 0 ? `${(shortCount / sentimentTotal) * 100}%` : "0%" }} />
-              </div>
-              {/* Kurze Legende, damit die Begriffe sofort verständlich sind */}
-              <ul className="mt-3 space-y-1 text-[11px] leading-snug text-muted-foreground">
-                <li className="flex gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#22FF88" }} />
-                  <span><span className="font-medium text-foreground/85">Bullish</span> – positives Signal, Long-Setup (Kursanstieg erwartet).</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#8B9EFF" }} />
-                  <span><span className="font-medium text-foreground/85">Neutral</span> – kein klares Signal, Seitwärtsphase oder abwarten.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: "#FF3B5C" }} />
-                  <span><span className="font-medium text-foreground/85">Bearish</span> – negatives Signal, Short-Setup (Kursrückgang erwartet).</span>
-                </li>
-              </ul>
-
-            </div>
-
-
-
-            {/* Indizes */}
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[13px] font-medium text-muted-foreground">{t("cockpit.indices.title")}</span>
-              </div>
-              {/* Mobile: horizontal scroll chips */}
-              <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {indices.map((i) => {
-                  const up = (i.change ?? 0) >= 0;
-                  return (
-                    <div key={i.symbol} className="flex shrink-0 flex-col gap-1 rounded-xl border border-border bg-background px-3 py-2 min-w-[120px]">
-                      <span className="text-[11px] text-muted-foreground">{i.label}</span>
-                      <span className={`font-mono text-[14px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
-                        {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Desktop: grid */}
-              <div className="hidden sm:grid grid-cols-2 gap-x-6 gap-y-3">
-                {indices.map((i) => {
-                  const up = (i.change ?? 0) >= 0;
-                  return (
-                    <div key={i.symbol} className="flex items-center justify-between">
-                      <span className="text-[13px] text-foreground/70">{i.label}</span>
-                      <span className={`font-mono text-[13px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
-                        {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+                      );
+                    })}
+                  </span>
+                ),
+                content: (
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    {indices.map((i) => {
+                      const up = (i.change ?? 0) >= 0;
+                      return (
+                        <div key={i.symbol} className="flex items-center justify-between">
+                          <span className="text-[12px] text-foreground/70">{i.label}</span>
+                          <span className={`font-mono text-[12px] font-semibold tabular-nums ${i.change == null ? "text-muted-foreground/60" : up ? "text-[#22FF88]" : "text-[#FF3B5C]"}`}>
+                            {i.change == null ? "—" : `${up ? "+" : ""}${i.change.toFixed(2)}%`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ),
+              },
+              {
+                id: "watchlist",
+                icon: ListChecks,
+                accent: "#22FF88",
+                title: t("watchlist.title"),
+                span: "full",
+                preview: (
+                  <span className="font-mono tabular-nums text-muted-foreground/80">
+                    {settings.watchlist.length}
+                  </span>
+                ),
+                content: <WatchlistSignalsPanel />,
+              },
+            ] satisfies CustomAccordionItem[]}
+          />
         </section>
 
-        {/* BEREICH 2 — Watchlist (Hauptfokus) */}
-        <section>
-          <WatchlistSignalsPanel />
-        </section>
 
-        {/* BEREICH 2b — Markets accordion */}
-        <WatchlistAccordions />
 
         {/* BEREICH 3 — Zusätzliche Insights (collapsible) */}
         <section>
