@@ -180,6 +180,13 @@ export function OnboardingGate() {
   const [a, setA] = useState<Answers>(initialAnswers);
   const [saving, setSaving] = useState(false);
 
+  // Detect UI language from browser before the user picks one, then follow their choice.
+  const browserLang: LangCode = useMemo(() => {
+    if (typeof navigator === "undefined") return "en";
+    return navigator.language?.toLowerCase().startsWith("de") ? "de" : "en";
+  }, []);
+  const uiLang: LangCode = a.language ?? browserLang;
+
   if (authLoading || loading || !user || !profile) return null;
   // If already completed, AuthGate handles the redirect — do NOT navigate during render here
   // (caused a flicker loop between / and /onboarding).
