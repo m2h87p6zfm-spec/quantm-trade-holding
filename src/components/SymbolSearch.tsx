@@ -285,6 +285,15 @@ export function SymbolSearch({
           <div
             ref={menuRef}
             id={menuId}
+            role="listbox"
+            // Prevent the input from blurring when the user taps a result —
+            // keeps the mobile keyboard stable and avoids spurious "outside" focus.
+            onMouseDown={(e) => e.preventDefault()}
+            onTouchStart={(e) => {
+              // Don't preventDefault here (would block scrolling inside the menu),
+              // but stop the event from bubbling to ancestors that might close us.
+              e.stopPropagation();
+            }}
             className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",
