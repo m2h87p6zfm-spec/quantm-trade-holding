@@ -264,7 +264,7 @@ function PortfolioPage() {
   // Live-Kurse: SSE für Premium, sonst Polling alle 30 s. Damit aktualisieren
   // sich Portfolio-Wert, P&L und Analytics ohne Reload, sobald sich Preise
   // bewegen (statt erst nach 1 h aus dem Kerzen-Cache).
-  const { quotes: liveQuotes } = useLiveQuotes(allSymbols, allSymbols.length > 0);
+  const { quotes: liveQuotes, refetch: refetchLive } = useLiveQuotes(allSymbols, allSymbols.length > 0);
   const rowMap = useMemo(() => {
     const m = new Map<string, CockpitRow>();
     for (const r of rows) {
@@ -284,14 +284,23 @@ function PortfolioPage() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      await queryClient.invalidateQueries({ predicate: (q) => {
-        const k = q.queryKey?.[0];
-        return k === "quote" || k === "quotes-batch" || k === "candles" || k === "cockpit";
-      }});
+      // 1) Live-Kurse SOFORT neu vom Server holen (umgeht den 30-s-Poll-Tick)
+      // 2) react-query Kerzen/Quote-Caches invalidieren → triggert Refetch
+      //    in allen abonnierten Komponenten (Cockpit, useQuote-Hooks)
+      await Promise.all([
+        refetchLive(),
+        queryClient.invalidateQueries({
+          predicate: (q) => {
+            const k = q.queryKey?.[0];
+            return k === "quote" || k === "quotes-batch" || k === "candles" || k === "cockpit" || k === "cockpit-row";
+          },
+          refetchType: "active",
+        }),
+      ]);
       setLastRefresh(Date.now());
-      toast.success(t("portfolio.refresh.success") || "Kurse aktualisiert");
+      toast.success("Kurse aktualisiert");
     } catch {
-      toast.error(t("portfolio.refresh.error") || "Aktualisierung fehlgeschlagen");
+      toast.error("Aktualisierung fehlgeschlagen");
     } finally {
       setRefreshing(false);
     }
