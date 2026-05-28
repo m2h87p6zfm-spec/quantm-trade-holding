@@ -142,7 +142,8 @@ export function SymbolSearch({
 
       {/* Dropdown */}
       {open && q.trim() && (
-        <div className="absolute z-50 left-0 right-0 mt-1 max-h-80 overflow-auto rounded-lg border border-border bg-popover shadow-xl">
+        <div className="absolute z-50 left-0 right-0 mt-2 max-h-96 overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/10">
+
           {loading && hits.length === 0 ? (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche weltweit (Twelve Data)…</div>
           ) : hits.length === 0 ? (
