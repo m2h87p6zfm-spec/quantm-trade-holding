@@ -12,23 +12,31 @@ import { IndicatorInfoButton } from "@/components/IndicatorInfo";
 import { QuantFinancePanel } from "@/components/QuantFinancePanel";
 import { fetchNewsSentiment } from "@/lib/news-sentiment";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useTr, useLang } from "@/lib/i18n";
+import type { Lang } from "@/lib/i18n/types";
 
 type Signal = "pos" | "neg" | "neu";
 
-function fmt(n: number | undefined | null, d = 2): string {
-  if (n == null || !isFinite(n)) return "—";
-  return n.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+function locale(lang: Lang): string {
+  return lang === "en" ? "en-US" : "de-DE";
 }
-function fmtPct(n: number | undefined | null, d = 1): string {
+function fmt(n: number | undefined | null, d = 2, lang: Lang = "de"): string {
   if (n == null || !isFinite(n)) return "—";
-  return `${n >= 0 ? "+" : ""}${n.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d })}%`;
+  return n.toLocaleString(locale(lang), { minimumFractionDigits: d, maximumFractionDigits: d });
 }
-function fmtBig(n: number | undefined | null): string {
+function fmtPct(n: number | undefined | null, d = 1, lang: Lang = "de"): string {
   if (n == null || !isFinite(n)) return "—";
-  if (n >= 1e12) return `${(n / 1e12).toFixed(2)} Bio.`;
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)} Mrd.`;
-  if (n >= 1e6) return `${(n / 1e6).toFixed(2)} Mio.`;
-  return n.toLocaleString("de-DE");
+  return `${n >= 0 ? "+" : ""}${n.toLocaleString(locale(lang), { minimumFractionDigits: d, maximumFractionDigits: d })}%`;
+}
+function fmtBig(n: number | undefined | null, lang: Lang = "de"): string {
+  if (n == null || !isFinite(n)) return "—";
+  const units = lang === "en"
+    ? { t: "T", g: "B", m: "M" }
+    : { t: "Bio.", g: "Mrd.", m: "Mio." };
+  if (n >= 1e12) return `${(n / 1e12).toFixed(2)} ${units.t}`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(2)} ${units.g}`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(2)} ${units.m}`;
+  return n.toLocaleString(locale(lang));
 }
 
 function SignalDot({ s }: { s: Signal }) {
