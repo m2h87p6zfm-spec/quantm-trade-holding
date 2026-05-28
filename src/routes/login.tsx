@@ -194,7 +194,9 @@ function LoginPage() {
       }
       const verified = await waitForSessionReady();
       if (!verified?.access_token) {
-        toast.error("Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.");
+        toast.error(
+          "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
+        );
         return;
       }
       acceptSession(verified);
