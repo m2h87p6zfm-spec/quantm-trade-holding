@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,6 +30,37 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
       },
     );
   });
+}
+
+async function waitForSessionReady(initialSession?: Session | null): Promise<Session | null> {
+  if (initialSession?.access_token && initialSession.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: initialSession.access_token,
+      refresh_token: initialSession.refresh_token,
+    });
+  }
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const { data: sessionData } = await withTimeout(
+      supabase.auth.getSession(),
+      5000,
+      "Sitzungsprüfung dauert zu lange",
+    );
+    if (sessionData.session?.access_token) {
+      const { data: userData, error } = await withTimeout(
+        supabase.auth.getUser(),
+        5000,
+        "Benutzerprüfung dauert zu lange",
+      );
+      if (!error && userData.user) return sessionData.session;
+    }
+
+    const refreshed = await supabase.auth.refreshSession().catch(() => null);
+    if (refreshed?.data.session?.access_token) return refreshed.data.session;
+    await new Promise((resolve) => window.setTimeout(resolve, 150 * (attempt + 1)));
+  }
+
+  return null;
 }
 
 export const Route = createFileRoute("/login")({
@@ -81,33 +113,12 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        acceptSession(data.session);
-        // Verify the session is actually persisted/active before navigating.
-        // Some browsers (Safari, private mode) need an extra tick before
-        // localStorage reads back the new session, and AuthGate on "/" will
-        // otherwise bounce the user right back to /login.
-        let verified = data.session;
-        for (let attempt = 0; attempt < 5; attempt += 1) {
-          const { data: check } = await withTimeout(
-            supabase.auth.getSession(),
-            5000,
-            "Sitzungsprüfung dauert zu lange",
-          );
-          if (check.session?.access_token) {
-            verified = check.session;
-            break;
-          }
-          await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
-        }
+        const verified = await waitForSessionReady(data.session);
         if (!verified?.access_token) {
-          const refreshed = await refreshSession().catch(() => null);
-          if (!refreshed?.access_token) {
-            toast.error(
-              "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
-            );
-            return;
-          }
-          verified = refreshed;
+          toast.error(
+            "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
+          );
+          return;
         }
         acceptSession(verified);
         navigate({ to: "/", replace: true });
@@ -172,19 +183,8 @@ function LoginPage() {
     setBusy(true);
     setRememberMe(remember);
     try {
-      const topWindow = window.top;
-      if (topWindow && window.self !== topWindow) {
-        const params = new URLSearchParams({
-          provider,
-          redirect_uri: `${window.location.origin}/auth/confirm`,
-          state: crypto.randomUUID(),
-        });
-        if (provider === "google") params.set("prompt", "select_account");
-        topWindow.location.href = `${window.location.origin}/~oauth/initiate?${params.toString()}`;
-        return;
-      }
       const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: `${window.location.origin}/auth/confirm`,
+        redirect_uri: window.location.origin,
         extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
       });
       if (result.redirected) return;
@@ -192,7 +192,14 @@ function LoginPage() {
         toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
         return;
       }
-      await refreshSession().catch(() => null);
+      const verified = await waitForSessionReady();
+      if (!verified?.access_token) {
+        toast.error(
+          "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
+        );
+        return;
+      }
+      acceptSession(verified);
       navigate({ to: "/", replace: true });
     } catch {
       toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
