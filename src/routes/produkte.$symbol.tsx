@@ -18,6 +18,7 @@ import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
 import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { usePickVerdict } from "@/hooks/usePickVerdict";
 import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
 import { QuantFinancePanel } from "@/components/QuantFinancePanel";
 
@@ -104,7 +105,12 @@ function ProductDetail() {
   const live = useLiveQuotes([symbol], true);
 
   const watched = settings.watchlist.includes(symbol);
-  const sig = indicators ? scoreIndicators(indicators, settings.risk) : null;
+  const liveSig = indicators ? scoreIndicators(indicators, settings.risk) : null;
+  // Prefer the cached Quantm-Picks verdict so the label here matches the picks page.
+  const pickVerdict = usePickVerdict(symbol);
+  const sig = pickVerdict && liveSig
+    ? { ...liveSig, verdict: pickVerdict.verdict, confidence: pickVerdict.confidence }
+    : liveSig;
   const closes = candles.data?.c ?? [];
   const last = closes.at(-1) ?? indicators?.price ?? 0;
   const prev = closes.at(-2) ?? last;
