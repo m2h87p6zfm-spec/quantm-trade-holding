@@ -29,14 +29,14 @@ function ApexLoadingScreen() {
         <div
           className="h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent"
           style={{
-            width: "clamp(7rem, 28vw, 18rem)",
-            marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)",
+            width: "clamp(6rem, 22vw, 14rem)",
+            marginTop: "clamp(0.625rem, 1.8vh + 0.4vw, 1.75rem)",
           }}
         />
         <div
           className="relative overflow-hidden"
           style={{
-            marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)",
+            marginTop: "clamp(0.625rem, 1.8vh + 0.4vw, 1.75rem)",
             height: "clamp(2rem, 4.5vw + 2vh, 4.5rem)",
             maxWidth: "min(80%, 22rem)",
           }}

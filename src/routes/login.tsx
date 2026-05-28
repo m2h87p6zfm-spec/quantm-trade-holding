@@ -87,9 +87,9 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <Link to="/" className="flex items-center justify-center gap-2 mb-6 text-foreground/80 hover:text-foreground">
+        <Link to="/" className="mb-7 flex items-center justify-center gap-2.5 sm:gap-3 text-foreground/85 hover:text-foreground">
           <ApexLogo className="h-8 w-8 sm:h-10 sm:w-10" />
-          <span className="font-semibold tracking-tight">Quantm Trade</span>
+          <span className="text-base sm:text-lg font-semibold tracking-tight leading-none">Quantm Trade</span>
         </Link>
 
         {/* Focused value-prop */}
