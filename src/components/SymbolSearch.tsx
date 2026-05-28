@@ -119,7 +119,9 @@ export function SymbolSearch({
     setOpen(false);
   }
 
-  const menuLeft = menuRect ? Math.max(12, Math.min(menuRect.left, window.innerWidth - menuRect.width - 12)) : 0;
+  const menuLeft = menuRect
+    ? Math.max(12, Math.min(menuRect.left, window.innerWidth - menuRect.width - 12))
+    : 0;
 
   return (
     <div ref={boxRef} className="relative w-full">
