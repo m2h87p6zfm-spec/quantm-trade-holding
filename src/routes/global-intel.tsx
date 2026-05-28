@@ -916,6 +916,7 @@ function ContextAccordion({
 
 function StrategicBriefing() {
   const snap = useMemo(deriveSnapshot, []);
+  const headline = useGlobalHeadline();
   const s = GLOBAL_SUMMARY;
 
   // Direction inference for the 4 driver cards.
