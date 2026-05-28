@@ -206,9 +206,12 @@ function pushToCloud(s: StoredSettings) {
 }
 
 export function useSettings() {
-  const [stored, setStored] = useState<StoredSettings>(DEFAULT);
+  // Lazy initializer reads localStorage synchronously on first client render so
+  // the saved language/theme is active immediately — no English flash on reload.
+  const [stored, setStored] = useState<StoredSettings>(() => read());
   const hydratedRef = useRef(false);
   useEffect(() => {
+    // Re-read in case another tab wrote between render and mount.
     setStored(read());
     const h = () => setStored(read());
     window.addEventListener("ta_settings_change", h);
