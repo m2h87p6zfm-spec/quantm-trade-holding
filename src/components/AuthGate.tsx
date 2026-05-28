@@ -21,15 +21,32 @@ function ApexLoadingScreen() {
             "radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%), radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)",
         }}
       />
-      <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)]">
-        <ApexLogo className="h-36 w-36 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72" />
+      <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)] animate-[apexfade_700ms_ease-out_both]">
+        <div className="relative overflow-hidden">
+          <ApexLogo className="h-36 w-36 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
+        </div>
         <div className="mt-8 sm:mt-10 md:mt-12 h-px w-40 sm:w-48 md:w-56 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
-        <ApexWordmark className="mt-8 sm:mt-10 md:mt-12 h-12 w-auto sm:h-16 md:h-20 lg:h-28 max-w-full opacity-95" />
+        <div className="relative mt-8 sm:mt-10 md:mt-12 overflow-hidden">
+          <ApexWordmark className="h-12 w-auto sm:h-16 md:h-20 lg:h-28 max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        </div>
         <div className="relative mt-8 sm:mt-10 md:mt-12 h-[2px] w-40 sm:w-48 md:w-56 overflow-hidden rounded-full bg-white/[0.06]">
           <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
         </div>
       </div>
-      <style>{`@keyframes apexbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(420%); } }`}</style>
+      <style>{`
+        @keyframes apexbar { 0% { transform: translateX(-100%); } 100% { transform: translateX(420%); } }
+        @keyframes apexshimmer { 0% { transform: translateX(-100%); } 60%, 100% { transform: translateX(200%); } }
+        @keyframes apexbreathe { 0%, 100% { opacity: 0.82; } 50% { opacity: 1; } }
+        @keyframes apexfade { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-\\[apexshimmer_2\\.6s_ease-in-out_infinite\\],
+          .animate-\\[apexbreathe_3\\.2s_ease-in-out_infinite\\],
+          .animate-\\[apexbar_1\\.4s_cubic-bezier\\(0\\.4\\,0\\,0\\.2\\,1\\)_infinite\\],
+          .animate-\\[apexfade_700ms_ease-out_both\\] { animation: none !important; }
+        }
+      `}</style>
     </main>
   );
 }
