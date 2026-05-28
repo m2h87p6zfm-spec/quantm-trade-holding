@@ -23,12 +23,12 @@ function ApexLoadingScreen() {
       />
       <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)] animate-[apexfade_700ms_ease-out_both]">
         <div className="relative overflow-hidden">
-          <ApexLogo className="h-36 w-36 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
+          <ApexLogo className="h-24 w-24 sm:h-36 sm:w-36 md:h-44 md:w-44 lg:h-52 lg:w-52 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
         <div className="mt-6 sm:mt-8 md:mt-10 h-px w-32 sm:w-44 md:w-56 bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent" />
         <div className="relative mt-6 sm:mt-8 md:mt-10 overflow-hidden">
-          <ApexWordmark className="h-12 w-auto sm:h-16 md:h-20 lg:h-28 max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
+          <ApexWordmark className="h-20 w-auto sm:h-28 md:h-36 lg:h-44 max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
         <div className="relative mt-10 sm:mt-12 md:mt-14 h-[2px] w-32 sm:w-44 md:w-56 overflow-hidden rounded-full bg-white/[0.06]">
