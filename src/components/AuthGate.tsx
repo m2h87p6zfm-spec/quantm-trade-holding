@@ -21,11 +21,11 @@ function ApexLoadingScreen() {
             "radial-gradient(ellipse at center, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%), radial-gradient(ellipse at center, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)",
         }}
       />
-      <div className="relative flex flex-col items-center px-6">
-        <ApexLogo className="h-56 w-56 sm:h-72 sm:w-72" />
-        <div className="mt-12 h-px w-56 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
-        <ApexWordmark className="mt-12 h-20 w-auto sm:h-28 opacity-95" />
-        <div className="relative mt-12 h-[2px] w-56 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)]">
+        <ApexLogo className="h-36 w-36 sm:h-52 sm:w-52 md:h-64 md:w-64 lg:h-72 lg:w-72" />
+        <div className="mt-8 sm:mt-10 md:mt-12 h-px w-40 sm:w-48 md:w-56 bg-gradient-to-r from-transparent via-zinc-400/40 to-transparent" />
+        <ApexWordmark className="mt-8 sm:mt-10 md:mt-12 h-12 w-auto sm:h-16 md:h-20 lg:h-28 max-w-full opacity-95" />
+        <div className="relative mt-8 sm:mt-10 md:mt-12 h-[2px] w-40 sm:w-48 md:w-56 overflow-hidden rounded-full bg-white/[0.06]">
           <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
         </div>
       </div>
