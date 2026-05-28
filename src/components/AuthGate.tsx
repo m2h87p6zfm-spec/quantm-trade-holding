@@ -187,6 +187,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, []);
 
+  // Watchdog: never keep the splash up for more than 12s. If auth or the
+  // trading-profile fetch stalls (slow network, background tab, transient
+  // Supabase hiccup), force-release the splash so the app can render and
+  // surface its own loading/error UI instead of an indefinite splash screen.
+  const [watchdogElapsed, setWatchdogElapsed] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setWatchdogElapsed(true), 12000);
+    return () => clearTimeout(t);
+  }, []);
+
   // If a Supabase auth link redirected the user back to any page other than
   // /auth/confirm with auth tokens / codes / errors in the URL, forward the
   // full URL (search + hash) to /auth/confirm so it can complete the flow.
@@ -218,7 +228,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
 
 
-  if (authLoading || (user && profileLoading) || !minSplashElapsed) {
+  const stillLoading = authLoading || (user && profileLoading);
+  if ((stillLoading && !watchdogElapsed) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
   }
 
