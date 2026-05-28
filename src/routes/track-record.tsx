@@ -530,8 +530,8 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-xl font-semibold">Alle Vorhersagen</h2>
+      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Alle Vorhersagen</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Suche Aktie oder Ticker…" className="pl-9 w-64 bg-white/[0.03] border-border/60" />
