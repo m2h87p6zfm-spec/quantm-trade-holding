@@ -489,6 +489,7 @@ export function ApexDashboard({
 
 // ---------- Loading Animation ----------
 export function ApexLoading({ name }: { name: string }) {
+  const tr = useTr();
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10">
       <div className="relative">
@@ -498,10 +499,10 @@ export function ApexLoading({ name }: { name: string }) {
         </div>
       </div>
       <div className="text-center">
-        <div className="text-sm font-bold tracking-wide">APEX analysiert {name}…</div>
+        <div className="text-sm font-bold tracking-wide">{tr(`APEX analysiert ${name}…`, `APEX is analyzing ${name}…`)}</div>
         <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
           <Activity className="h-3 w-3 animate-pulse" />
-          Indikatoren · Fundamentaldaten · Live-News
+          {tr("Indikatoren · Fundamentaldaten · Live-News", "Indicators · Fundamentals · Live news")}
         </div>
       </div>
     </div>
