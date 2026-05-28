@@ -1023,7 +1023,7 @@ function StrategicBriefing() {
         </div>
         <div className="rounded-lg border border-white/[0.06] bg-white/[0.01] px-4">
           <ContextAccordion icon={Eye} title="Why markets are reacting this way" defaultOpen>
-            <p>{s.headline}</p>
+            <p>{headline}</p>
             <p className="mt-2 text-foreground/65">
               The combination of a firm dollar, sticky inflation pressure and decelerating
               global growth is driving capital toward US assets and away from the rest of the
