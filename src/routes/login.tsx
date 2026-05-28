@@ -159,7 +159,7 @@ function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { emailRedirectTo: window.location.origin + "/auth/confirm" },
+        options: { emailRedirectTo: window.location.origin },
       });
       if (error) {
         toast.error(toAuthMessage(error.message, "signup"));
