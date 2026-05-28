@@ -41,6 +41,7 @@ export function SymbolSearch({
   const [staged, setStaged] = useState<string[]>([]);
   const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
   const exists = new Set(existing.map((s) => s.toUpperCase()));
 
@@ -60,7 +61,8 @@ export function SymbolSearch({
   // Close on outside click
   useEffect(() => {
     function onDown(e: MouseEvent) {
-      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!boxRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -158,6 +160,7 @@ export function SymbolSearch({
       {/* Dropdown */}
       {open && q.trim() && menuRect && createPortal(
         <div
+          ref={menuRef}
           id={menuId}
           className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
           style={{
