@@ -22,7 +22,7 @@ function ApexLoadingScreen() {
         }}
       />
       <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)] animate-[apexfade_700ms_ease-out_both]">
-        <div className="relative overflow-hidden" style={{ width: "clamp(6rem, 18vw + 4vh, 13rem)", height: "clamp(6rem, 18vw + 4vh, 13rem)" }}>
+        <div className="relative overflow-hidden" style={{ width: "clamp(3rem, 8vw + 2vh, 6rem)", height: "clamp(3rem, 8vw + 2vh, 6rem)" }}>
           <ApexLogo className="h-full w-full animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
@@ -35,7 +35,7 @@ function ApexLoadingScreen() {
         />
         <div
           className="relative overflow-hidden max-w-full"
-          style={{ marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)", height: "clamp(3rem, 6vw + 3vh, 8rem)" }}
+          style={{ marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)", height: "clamp(1.5rem, 3vw + 1.5vh, 3.5rem)" }}
         >
           <ApexWordmark className="h-full w-auto max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
