@@ -5,7 +5,7 @@
 // Countries not listed here fall back to the German source. Add more entries
 // in future sprints to extend English coverage.
 
-import type { CountryIntel } from "./global-intel-data";
+import type { CountryIntel } from "./types";
 
 export const GLOBAL_SUMMARY_HEADLINE_EN =
   "US resilience vs. global slowdown — USD stays firm, commodities mixed, EMs under pressure.";
