@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LegalLinks } from "@/components/LegalLinks";
+import { ApexLogo } from "@/components/ApexLogo";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth/confirm")({
   head: () => ({
@@ -110,8 +112,15 @@ function AuthConfirmPage() {
   }, [navigate]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12 text-foreground">
       <div className="w-full max-w-md">
+        <Link
+          to="/"
+          className="mb-8 flex items-center justify-center gap-2 text-foreground/80 hover:text-foreground"
+        >
+          <ApexLogo className="h-8 w-8 sm:h-10 sm:w-10" />
+          <span className="font-semibold tracking-tight">Quantm Trade</span>
+        </Link>
       <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-xl shadow-primary/5">
         {status === "verifying" && (
           <>
