@@ -100,8 +100,8 @@ export function SymbolSearch({
 
   return (
     <div ref={boxRef} className="relative w-full">
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-card/80 backdrop-blur px-3 py-2 focus-within:border-primary/60 transition-colors">
-        <Search className="h-4 w-4 text-muted-foreground shrink-0" />
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card/80 backdrop-blur px-4 py-3 shadow-sm focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+        <Search className="h-5 w-5 text-muted-foreground shrink-0" />
         <input
           autoFocus={autoFocus}
           value={q}
@@ -112,18 +112,19 @@ export function SymbolSearch({
             if (e.key === "Escape") { setOpen(false); }
           }}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/60 focus:outline-none min-w-0"
+          className="flex-1 bg-transparent text-base placeholder:text-muted-foreground/60 focus:outline-none min-w-0"
         />
-        {loading && <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />}
+        {loading && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
         {!compact && staged.length > 0 && (
           <button
             onClick={commit}
-            className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-2.5 py-1 text-[11px] font-semibold hover:bg-primary/90"
+            className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-semibold hover:bg-primary/90"
           >
-            <Plus className="h-3 w-3" /> {staged.length} hinzufügen
+            <Plus className="h-3.5 w-3.5" /> {staged.length} hinzufügen
           </button>
         )}
       </div>
+
 
       {/* Staged chips */}
       {!compact && staged.length > 0 && (
@@ -141,7 +142,8 @@ export function SymbolSearch({
 
       {/* Dropdown */}
       {open && q.trim() && (
-        <div className="absolute z-50 left-0 right-0 mt-1 max-h-80 overflow-auto rounded-lg border border-border bg-popover shadow-xl">
+        <div className="absolute z-50 left-0 right-0 mt-2 max-h-96 overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/10">
+
           {loading && hits.length === 0 ? (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche weltweit (Twelve Data)…</div>
           ) : hits.length === 0 ? (
