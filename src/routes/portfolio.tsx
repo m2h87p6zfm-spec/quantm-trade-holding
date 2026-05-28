@@ -252,6 +252,9 @@ function PortfolioPage() {
   const t = useT();
   const { positions, remove } = usePortfolio();
   const { max, tier } = usePortfolioLimit(positions.length);
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<number>(() => Date.now());
 
   const allSymbols = useMemo(
     () => Array.from(new Set(positions.map((p) => p.symbol))),
@@ -277,6 +280,23 @@ function PortfolioPage() {
     return m;
   }, [rows, liveQuotes]);
 
+  async function handleRefresh() {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await queryClient.invalidateQueries({ predicate: (q) => {
+        const k = q.queryKey?.[0];
+        return k === "quote" || k === "quotes-batch" || k === "candles" || k === "cockpit";
+      }});
+      setLastRefresh(Date.now());
+      toast.success(t("portfolio.refresh.success") || "Kurse aktualisiert");
+    } catch {
+      toast.error(t("portfolio.refresh.error") || "Aktualisierung fehlgeschlagen");
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
       {/* Header */}
@@ -290,6 +310,15 @@ function PortfolioPage() {
             {t("page.portfolio.subtitle")}
           </p>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary/40 hover:text-primary disabled:opacity-60 transition"
+          title={`Zuletzt: ${new Date(lastRefresh).toLocaleTimeString()}`}
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Lädt…" : "Jetzt aktualisieren"}
+        </button>
         <div className="text-xs text-muted-foreground">
           {positions.length} / {max === Infinity ? "∞" : max} {t("common.positions")}
           {tier === "free" && ` · ${t("portfolio.limit.free")}`}
