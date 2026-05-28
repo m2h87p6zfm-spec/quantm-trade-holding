@@ -259,15 +259,24 @@ export function SymbolSearch({
           <div
             ref={menuRef}
             id={menuId}
-            className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
+            className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",
               zIndex: 9999,
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
               ...(placement === "above"
-                ? { top: Math.max(8, menuRect.top - 8 - Math.min(384, menuRect.top - 16)), maxHeight: Math.max(160, menuRect.top - 16) }
-                : { top: menuRect.bottom + 8, maxHeight: Math.max(160, window.innerHeight - menuRect.bottom - 16) }),
+                ? (() => {
+                    const avail = Math.max(160, menuRect.top - vpTop - 8 - safeTop);
+                    const h = Math.min(isMobile ? vpHeight * 0.6 : 384, avail);
+                    return { top: menuRect.top - 8 - h, maxHeight: h };
+                  })()
+                : (() => {
+                    const avail = Math.max(160, vpTop + vpHeight - menuRect.bottom - 8 - safeBottom);
+                    const h = Math.min(isMobile ? vpHeight * 0.6 : 384, avail);
+                    return { top: menuRect.bottom + 8, maxHeight: h };
+                  })()),
               left: menuLeft,
-              width: Math.min(menuRect.width, window.innerWidth - 24),
+              width: menuWidth,
             }}
           >
             {loading && hits.length === 0 ? (
