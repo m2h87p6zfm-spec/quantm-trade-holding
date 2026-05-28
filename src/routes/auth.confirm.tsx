@@ -51,14 +51,16 @@ function AuthConfirmPage() {
 
         // 2) PKCE flow (?code=...) — exchange code for a session.
         const code = url.searchParams.get("code");
+        const tokenHash = url.searchParams.get("token_hash");
+        const typeParam = url.searchParams.get("type");
+        const hasImplicitToken = hashParams.has("access_token") || hashParams.has("refresh_token");
+        const hasConfirmationPayload = Boolean(code || (tokenHash && typeParam) || hasImplicitToken);
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(href);
           if (error) throw error;
         }
 
         // 3) Token-hash flow (?token_hash=...&type=...) — verify OTP server-side.
-        const tokenHash = url.searchParams.get("token_hash");
-        const typeParam = url.searchParams.get("type");
         if (tokenHash && typeParam) {
           const { error } = await supabase.auth.verifyOtp({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -83,6 +85,12 @@ function AuthConfirmPage() {
         }
 
         if (cancelled) return;
+
+        if (!session && !hasConfirmationPayload) {
+          setStatus("error");
+          setMessage("Der Bestätigungslink ist ungültig oder unvollständig. Bitte fordere eine neue E-Mail an.");
+          return;
+        }
 
         // Email verification links may confirm the account without creating a
         // browser session. That is still a successful verification; send the
