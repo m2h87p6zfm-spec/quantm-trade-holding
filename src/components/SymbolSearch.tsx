@@ -119,6 +119,8 @@ export function SymbolSearch({
     setOpen(false);
   }
 
+  const menuLeft = menuRect ? Math.max(12, Math.min(menuRect.left, window.innerWidth - menuRect.width - 12)) : 0;
+
   return (
     <div ref={boxRef} className="relative w-full">
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card/80 backdrop-blur px-4 py-3 shadow-sm focus-within:border-primary/70 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
@@ -126,6 +128,8 @@ export function SymbolSearch({
         <input
           autoFocus={autoFocus}
           value={q}
+          aria-controls={open ? menuId : undefined}
+          aria-expanded={open}
           onFocus={() => setOpen(true)}
           onChange={(e) => {
             setQ(e.target.value);
@@ -181,9 +185,11 @@ export function SymbolSearch({
             id={menuId}
             className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
+              isolation: "isolate",
+              zIndex: 9999,
               top: menuRect.bottom + 8,
-              left: menuRect.left,
-              width: menuRect.width,
+              left: menuLeft,
+              width: Math.min(menuRect.width, window.innerWidth - 24),
             }}
           >
             {loading && hits.length === 0 ? (
