@@ -143,6 +143,7 @@ function LoginPage() {
 
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
+    setRememberMe(remember);
     try {
       const topWindow = window.top;
       if (topWindow && window.self !== topWindow) {
