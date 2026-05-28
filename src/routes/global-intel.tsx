@@ -130,6 +130,7 @@ function GlobalIntelPage() {
   const [error, setError] = useState<string | null>(null);
   const [utc, setUtc] = useState<string>("");
   const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true, heatmap: "none" });
+  const countryMap = useCountryMap();
 
   useEffect(() => {
     const tick = () => {
