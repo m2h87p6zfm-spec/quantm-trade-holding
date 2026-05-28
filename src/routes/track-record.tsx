@@ -117,11 +117,11 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
     <div className="min-h-screen bg-background text-foreground">
       <PublicHeader />
       <Hero correct={correct} total={completed.length} accuracy={accuracy} avgBuyReturn={avgBuyReturn90} />
-      <main className="max-w-7xl mx-auto px-4 md:px-6 pb-20 space-y-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 pb-12 space-y-5">
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/[0.03] p-1 w-fit">
           <button
             onClick={() => setTab("record")}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
               tab === "record" ? "bg-cyan-500 text-black" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -129,7 +129,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
           </button>
           <button
             onClick={() => setTab("learning")}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
               tab === "learning" ? "bg-violet-500 text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -146,12 +146,16 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
               assetType={assetType} setAssetType={setAssetType}
               result={result} setResult={setResult}
             />
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2"><PerformanceChart analyses={completed} /></div>
+              <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
+            </div>
             <IndicatorAccuracy analyses={completed} />
-            <PerformanceChart analyses={completed} />
-            <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
+            <div className="grid lg:grid-cols-3 gap-5">
+              <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
+              <div className="lg:col-span-2"><BestWorst analyses={completed} /></div>
+            </div>
             <AnalysisTable analyses={filtered} />
-            <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
-            <BestWorst analyses={completed} />
             <Methodology />
             <CTA />
           </>
@@ -205,33 +209,30 @@ function PublicFooter() {
 function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; total: number; accuracy: number; avgBuyReturn: number | null }) {
   return (
     <section className="relative overflow-hidden border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-14 md:py-20 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-6 relative">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
+            </div>
+            <h1 className="text-lg md:text-2xl font-bold tracking-tight leading-snug">
+              Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
+              <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
+            </h1>
+          </div>
+          <div className="grid grid-cols-3 gap-2 lg:gap-3 lg:shrink-0">
+            <KpiCard label="Genauigkeit" value={`${formatNumber(accuracy, 1)} %`} accent="cyan">
+              <AccuracyDonut value={accuracy} />
+            </KpiCard>
+            <KpiCard label="Analysen" value={formatNumber(total)} accent="emerald" />
+            <KpiCard
+              label="Ø KAUF 90d"
+              value={avgBuyReturn != null ? formatPercent(avgBuyReturn, 2) : "—"}
+              accent={avgBuyReturn != null && avgBuyReturn >= 0 ? "emerald" : "red"}
+            />
+          </div>
         </div>
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight max-w-4xl">
-          Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
-          <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-          <KpiCard label="Gesamtgenauigkeit" value={`${formatNumber(accuracy, 1)} %`} accent="cyan">
-            <AccuracyDonut value={accuracy} />
-          </KpiCard>
-          <KpiCard label="Analysen abgeschlossen" value={formatNumber(total)} accent="emerald">
-            <p className="text-xs text-muted-foreground mt-2">Mit mindestens 30 Tagen Bewertungszeitraum</p>
-          </KpiCard>
-          <KpiCard
-            label="Ø Rendite bei KAUF-Signal"
-            value={avgBuyReturn != null ? formatPercent(avgBuyReturn, 2) : "—"}
-            accent={avgBuyReturn != null && avgBuyReturn >= 0 ? "emerald" : "red"}
-          >
-            <p className="text-xs text-muted-foreground mt-2">Hypothetische Rendite nach 90 Tagen</p>
-          </KpiCard>
-        </div>
-        <p className="text-xs text-muted-foreground mt-8 max-w-3xl">
-          Alle Daten basieren auf abgeschlossenen Quantm-Analysen mit einem Bewertungszeitraum von mindestens 30 Tagen. Keine Anlageberatung.
-        </p>
       </div>
     </section>
   );
@@ -240,9 +241,9 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
 function KpiCard({ label, value, accent, children }: { label: string; value: string; accent: "cyan" | "emerald" | "red"; children?: React.ReactNode }) {
   const color = accent === "cyan" ? "text-cyan-400" : accent === "emerald" ? "text-emerald-400" : "text-red-400";
   return (
-    <Card className="bg-white/[0.03] border-border/60 p-5">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className={`text-4xl md:text-5xl font-bold tabular-nums mt-2 ${color}`}>{value}</p>
+    <Card className="bg-white/[0.03] border-border/60 px-3 py-2 lg:min-w-[120px]">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className={`text-xl md:text-2xl font-bold tabular-nums mt-0.5 ${color}`}>{value}</p>
       {children}
     </Card>
   );
@@ -253,7 +254,7 @@ function AccuracyDonut({ value }: { value: number }) {
   const c = 2 * Math.PI * r;
   const dash = (value / 100) * c;
   return (
-    <svg viewBox="0 0 80 80" className="w-20 h-20 mt-3 -rotate-90">
+    <svg viewBox="0 0 80 80" className="w-8 h-8 mt-1 -rotate-90">
       <circle cx="40" cy="40" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
       <circle cx="40" cy="40" r={r} stroke="currentColor" className="text-cyan-400" strokeWidth="8" fill="none" strokeDasharray={`${dash} ${c}`} strokeLinecap="round" />
     </svg>
@@ -270,30 +271,32 @@ function FilterBar(props: {
   result: (typeof RESULTS)[number]; setResult: (v: (typeof RESULTS)[number]) => void;
 }) {
   return (
-    <Card className="bg-white/[0.03] border-border/60 p-4 space-y-3">
-      <FilterRow label="Zeitraum">
-        {PERIODS.map((p) => <Chip key={p.id} active={props.period === p.id} onClick={() => props.setPeriod(p.id)}>{p.label}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Urteil">
-        {VERDICTS.map((v) => <Chip key={v} active={props.verdict === v} onClick={() => props.setVerdict(v)}>{v}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Sektor">
-        {SECTORS.map((s) => <Chip key={s} active={props.sector === s} onClick={() => props.setSector(s)}>{s}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Finanzart">
-        {ASSET_TYPES.map((a) => <Chip key={a} active={props.assetType === a} onClick={() => props.setAssetType(a)}>{a}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Ergebnis">
-        {RESULTS.map((r) => <Chip key={r} active={props.result === r} onClick={() => props.setResult(r)}>{r}</Chip>)}
-      </FilterRow>
+    <Card className="bg-white/[0.03] border-border/60 p-2.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <FilterRow label="Zeitraum">
+          {PERIODS.map((p) => <Chip key={p.id} active={props.period === p.id} onClick={() => props.setPeriod(p.id)}>{p.label}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Urteil">
+          {VERDICTS.map((v) => <Chip key={v} active={props.verdict === v} onClick={() => props.setVerdict(v)}>{v}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Finanzart">
+          {ASSET_TYPES.map((a) => <Chip key={a} active={props.assetType === a} onClick={() => props.setAssetType(a)}>{a}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Ergebnis">
+          {RESULTS.map((r) => <Chip key={r} active={props.result === r} onClick={() => props.setResult(r)}>{r}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Sektor">
+          {SECTORS.map((s) => <Chip key={s} active={props.sector === s} onClick={() => props.setSector(s)}>{s}</Chip>)}
+        </FilterRow>
+      </div>
     </Card>
   );
 }
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 flex-wrap">
-      <span className="text-xs uppercase tracking-widest text-muted-foreground w-24 pt-1.5 shrink-0">{label}</span>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground shrink-0">{label}</span>
+      <div className="flex flex-wrap gap-1">{children}</div>
     </div>
   );
 }
@@ -301,7 +304,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs border transition ${
+      className={`px-2.5 py-0.5 rounded-full text-[11px] border transition ${
         active ? "bg-cyan-500 text-black border-cyan-400 font-semibold" : "border-border/60 text-muted-foreground hover:text-foreground hover:border-white/20"
       }`}
     >
@@ -358,7 +361,7 @@ function IndicatorAccuracy({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Genauigkeit nach Indikator</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Genauigkeit nach Indikator</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Noch keine bewerteten Indikatoren.</p>}
         {stats.map((s) => {
@@ -409,9 +412,9 @@ function PerformanceChart({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Performance über Zeit</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Performance über Zeit</h2>
       <Card className="bg-white/[0.03] border-border/60 p-4">
-        <div className="h-80">
+        <div className="h-56">
           {series.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Noch keine ausreichenden Daten.</div>
           ) : (
@@ -461,7 +464,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Quantm vs. Markt</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quantm vs. Markt</h2>
       <Card className="bg-white/[0.03] border-border/60 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/[0.04] text-xs uppercase tracking-widest text-muted-foreground">
@@ -527,8 +530,8 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-xl font-semibold">Alle Vorhersagen</h2>
+      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Alle Vorhersagen</h2>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => { setQ(e.target.value); setPage(0); }} placeholder="Suche Aktie oder Ticker…" className="pl-9 w-64 bg-white/[0.03] border-border/60" />
@@ -649,7 +652,7 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Stärken nach Sektor</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Stärken nach Sektor</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Noch keine Sektor-Daten.</p>}
         {stats.map((s) => {
@@ -721,7 +724,7 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
 function Methodology() {
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Wie bewertet Quantm?</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Wie bewertet Quantm?</h2>
       <Card className="bg-white/[0.03] border-border/60 p-2">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="indikatoren">
