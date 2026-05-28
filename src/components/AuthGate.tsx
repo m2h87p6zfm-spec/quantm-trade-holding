@@ -35,12 +35,9 @@ function ApexLoadingScreen() {
         />
         <div
           className="relative overflow-hidden max-w-full"
-          style={{ marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)" }}
+          style={{ marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)", height: "clamp(3rem, 6vw + 3vh, 8rem)" }}
         >
-          <ApexWordmark
-            className="w-auto max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]"
-            style={{ height: "clamp(3rem, 6vw + 3vh, 8rem)" }}
-          />
+          <ApexWordmark className="h-full w-auto max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
         <div
