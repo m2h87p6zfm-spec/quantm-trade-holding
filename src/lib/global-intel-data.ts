@@ -9,3 +9,5 @@ export * from "./global-intel/trade-flows";
 export * from "./global-intel/tensions";
 export * from "./global-intel/market-feed";
 export * from "./global-intel/country-extras";
+export * from "./global-intel/hooks";
+
