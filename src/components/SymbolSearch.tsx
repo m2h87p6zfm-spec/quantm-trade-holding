@@ -76,7 +76,6 @@ export function SymbolSearch({
 
   useEffect(() => {
     if (!open || !q.trim()) return;
-    const MENU_MAX_H = 384; // matches max-h-96
     const GAP = 8;
 
     let raf = 0;
@@ -86,27 +85,31 @@ export function SymbolSearch({
       const el = boxRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
+      // Use visualViewport so the on-screen keyboard on mobile is taken into account.
+      const vv = window.visualViewport;
+      const vh = vv?.height ?? window.innerHeight;
+      const vw = vv?.width ?? window.innerWidth;
+      const vTop = vv?.offsetTop ?? 0;
 
       // Visibility check: is the input itself clipped/hidden behind a sticky element?
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const onScreen =
-        rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+        rect.bottom > vTop && rect.top < vTop + vh && rect.right > 0 && rect.left < vw;
       let visible = onScreen;
-      if (onScreen && cx >= 0 && cx < vw && cy >= 0 && cy < vh) {
+      if (onScreen && cx >= 0 && cx < vw && cy >= vTop && cy < vTop + vh) {
         const hit = document.elementFromPoint(cx, cy);
         visible = !!hit && (el.contains(hit) || hit.contains(el));
       }
 
-      // Flip above when not enough room below
-      const spaceBelow = vh - rect.bottom - GAP;
-      const spaceAbove = rect.top - GAP;
+      // Flip above when not enough room below (mobile keyboards eat the bottom).
+      const spaceBelow = vTop + vh - rect.bottom - GAP;
+      const spaceAbove = rect.top - vTop - GAP;
+      const MIN_BELOW = 180; // need at least ~3 rows visible
       const nextPlacement: "below" | "above" =
-        spaceBelow < Math.min(220, MENU_MAX_H) && spaceAbove > spaceBelow ? "above" : "below";
+        spaceBelow < MIN_BELOW && spaceAbove > spaceBelow ? "above" : "below";
 
-      const sig = `${rect.top}|${rect.left}|${rect.width}|${rect.bottom}|${nextPlacement}|${visible}`;
+      const sig = `${rect.top}|${rect.left}|${rect.width}|${rect.bottom}|${vh}|${vTop}|${nextPlacement}|${visible}`;
       if (sig !== lastSig) {
         lastSig = sig;
         setMenuRect(rect);
@@ -123,6 +126,8 @@ export function SymbolSearch({
 
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
     const ro = new ResizeObserver(update);
     if (boxRef.current) ro.observe(boxRef.current);
 
@@ -130,6 +135,8 @@ export function SymbolSearch({
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
       ro.disconnect();
     };
   }, [open, q]);
@@ -169,9 +176,25 @@ export function SymbolSearch({
     setOpen(false);
   }
 
-  const menuLeft = menuRect
-    ? Math.max(12, Math.min(menuRect.left, window.innerWidth - menuRect.width - 12))
-    : 0;
+  const vv = typeof window !== "undefined" ? window.visualViewport : null;
+  const vpWidth = vv?.width ?? (typeof window !== "undefined" ? window.innerWidth : 0);
+  const vpHeight = vv?.height ?? (typeof window !== "undefined" ? window.innerHeight : 0);
+  const vpTop = vv?.offsetTop ?? 0;
+  const isMobile = vpWidth < 640;
+  // Safe-area insets (iOS notch / home indicator)
+  const safeTop = 8;
+  const safeBottom = 8;
+
+  const menuWidth = isMobile
+    ? vpWidth - 16
+    : menuRect
+      ? Math.min(menuRect.width, vpWidth - 24)
+      : 0;
+  const menuLeft = isMobile
+    ? 8
+    : menuRect
+      ? Math.max(12, Math.min(menuRect.left, vpWidth - menuWidth - 12))
+      : 0;
 
   return (
     <div ref={boxRef} className="relative w-full">
@@ -236,15 +259,24 @@ export function SymbolSearch({
           <div
             ref={menuRef}
             id={menuId}
-            className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
+            className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",
               zIndex: 9999,
+              paddingBottom: "env(safe-area-inset-bottom, 0px)",
               ...(placement === "above"
-                ? { top: Math.max(8, menuRect.top - 8 - Math.min(384, menuRect.top - 16)), maxHeight: Math.max(160, menuRect.top - 16) }
-                : { top: menuRect.bottom + 8, maxHeight: Math.max(160, window.innerHeight - menuRect.bottom - 16) }),
+                ? (() => {
+                    const avail = Math.max(160, menuRect.top - vpTop - 8 - safeTop);
+                    const h = Math.min(isMobile ? vpHeight * 0.6 : 384, avail);
+                    return { top: menuRect.top - 8 - h, maxHeight: h };
+                  })()
+                : (() => {
+                    const avail = Math.max(160, vpTop + vpHeight - menuRect.bottom - 8 - safeBottom);
+                    const h = Math.min(isMobile ? vpHeight * 0.6 : 384, avail);
+                    return { top: menuRect.bottom + 8, maxHeight: h };
+                  })()),
               left: menuLeft,
-              width: Math.min(menuRect.width, window.innerWidth - 24),
+              width: menuWidth,
             }}
           >
             {loading && hits.length === 0 ? (
