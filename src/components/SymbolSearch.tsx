@@ -133,6 +133,8 @@ export function SymbolSearch({
       ro.disconnect();
     };
   }, [open, q]);
+
+  function reachedLimit(extra = 0): boolean {
     if (limit == null || !Number.isFinite(limit)) return false;
     const count = (currentCount ?? existing.length) + staged.length + extra;
     return count >= limit;
