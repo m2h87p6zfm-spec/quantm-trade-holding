@@ -24,7 +24,7 @@ export function ApexWordmark({ className = "h-5 w-auto" }: Props) {
     <img
       src={wordmarkUrl}
       alt="Quantm Trade"
-      className={`${className} select-none object-contain`}
+      className={`${className} select-none object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.55)]`}
       draggable={false}
     />
   );
