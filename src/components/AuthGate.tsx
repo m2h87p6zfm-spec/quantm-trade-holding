@@ -3,7 +3,7 @@ import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { FirstRunTour } from "@/components/FirstRunTour";
-import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
+import { ApexLogo } from "@/components/ApexLogo";
 
 /**
  * Brand splash — silver Q + wordmark on a deep, vignetted canvas.
@@ -79,17 +79,18 @@ function ApexLoadingScreen() {
           </div>
         </div>
 
-        {/* Wordmark */}
+        {/* Wordmark — matches sidebar header style */}
         <div
-          className="relative overflow-hidden mx-auto"
-          style={{
-            marginTop: "clamp(1rem, 2.4vh + 0.5vw, 2rem)",
-            height: "clamp(2.5rem, 5vw + 2vh, 4.75rem)",
-            maxWidth: "min(90%, 26rem)",
-          }}
+          className="flex items-baseline justify-center"
+          style={{ marginTop: "clamp(1rem, 2.4vh + 0.5vw, 2rem)" }}
         >
-          <ApexWordmark className="h-full w-auto max-w-full opacity-100" />
-          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+          <span
+            className="font-bold tracking-tight text-foreground leading-none"
+            style={{ fontSize: "clamp(1.75rem, 3.6vw + 1.2vh, 3rem)" }}
+          >
+            Quantm{" "}
+            <span className="font-medium text-muted-foreground">Trade</span>
+          </span>
         </div>
 
         {/* Tagline — quiet, confident */}
