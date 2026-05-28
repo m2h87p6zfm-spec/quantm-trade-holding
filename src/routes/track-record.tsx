@@ -209,33 +209,30 @@ function PublicFooter() {
 function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; total: number; accuracy: number; avgBuyReturn: number | null }) {
   return (
     <section className="relative overflow-hidden border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-14 md:py-20 relative">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-6 relative">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
+            </div>
+            <h1 className="text-lg md:text-2xl font-bold tracking-tight leading-snug">
+              Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
+              <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
+            </h1>
+          </div>
+          <div className="grid grid-cols-3 gap-2 lg:gap-3 lg:shrink-0">
+            <KpiCard label="Genauigkeit" value={`${formatNumber(accuracy, 1)} %`} accent="cyan">
+              <AccuracyDonut value={accuracy} />
+            </KpiCard>
+            <KpiCard label="Analysen" value={formatNumber(total)} accent="emerald" />
+            <KpiCard
+              label="Ø KAUF 90d"
+              value={avgBuyReturn != null ? formatPercent(avgBuyReturn, 2) : "—"}
+              accent={avgBuyReturn != null && avgBuyReturn >= 0 ? "emerald" : "red"}
+            />
+          </div>
         </div>
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight max-w-4xl">
-          Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
-          <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
-        </h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-          <KpiCard label="Gesamtgenauigkeit" value={`${formatNumber(accuracy, 1)} %`} accent="cyan">
-            <AccuracyDonut value={accuracy} />
-          </KpiCard>
-          <KpiCard label="Analysen abgeschlossen" value={formatNumber(total)} accent="emerald">
-            <p className="text-xs text-muted-foreground mt-2">Mit mindestens 30 Tagen Bewertungszeitraum</p>
-          </KpiCard>
-          <KpiCard
-            label="Ø Rendite bei KAUF-Signal"
-            value={avgBuyReturn != null ? formatPercent(avgBuyReturn, 2) : "—"}
-            accent={avgBuyReturn != null && avgBuyReturn >= 0 ? "emerald" : "red"}
-          >
-            <p className="text-xs text-muted-foreground mt-2">Hypothetische Rendite nach 90 Tagen</p>
-          </KpiCard>
-        </div>
-        <p className="text-xs text-muted-foreground mt-8 max-w-3xl">
-          Alle Daten basieren auf abgeschlossenen Quantm-Analysen mit einem Bewertungszeitraum von mindestens 30 Tagen. Keine Anlageberatung.
-        </p>
       </div>
     </section>
   );
@@ -244,9 +241,9 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
 function KpiCard({ label, value, accent, children }: { label: string; value: string; accent: "cyan" | "emerald" | "red"; children?: React.ReactNode }) {
   const color = accent === "cyan" ? "text-cyan-400" : accent === "emerald" ? "text-emerald-400" : "text-red-400";
   return (
-    <Card className="bg-white/[0.03] border-border/60 p-5">
-      <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className={`text-4xl md:text-5xl font-bold tabular-nums mt-2 ${color}`}>{value}</p>
+    <Card className="bg-white/[0.03] border-border/60 px-3 py-2 lg:min-w-[120px]">
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className={`text-xl md:text-2xl font-bold tabular-nums mt-0.5 ${color}`}>{value}</p>
       {children}
     </Card>
   );
@@ -257,7 +254,7 @@ function AccuracyDonut({ value }: { value: number }) {
   const c = 2 * Math.PI * r;
   const dash = (value / 100) * c;
   return (
-    <svg viewBox="0 0 80 80" className="w-20 h-20 mt-3 -rotate-90">
+    <svg viewBox="0 0 80 80" className="w-8 h-8 mt-1 -rotate-90">
       <circle cx="40" cy="40" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
       <circle cx="40" cy="40" r={r} stroke="currentColor" className="text-cyan-400" strokeWidth="8" fill="none" strokeDasharray={`${dash} ${c}`} strokeLinecap="round" />
     </svg>
