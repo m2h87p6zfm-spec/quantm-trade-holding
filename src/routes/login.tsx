@@ -95,6 +95,7 @@ function LoginPage() {
 
   const signUp = async () => {
     setBusy(true);
+    setRememberMe(remember);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
