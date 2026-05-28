@@ -41,7 +41,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const t = useT();
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,7 +49,7 @@ function LoginPage() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/konto" });
+    if (!loading && user) navigate({ to: "/", replace: true });
   }, [user, loading, navigate]);
 
   const signIn = async () => {
@@ -71,8 +71,8 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        await supabase.auth.refreshSession().catch(() => null);
-        navigate({ to: "/konto" });
+        await refreshSession().catch(() => null);
+        navigate({ to: "/", replace: true });
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -126,13 +126,22 @@ function LoginPage() {
     }
   };
 
-  const signInGoogle = async () => {
+  const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-      if (result.error) toast.error(t("login.googleErr"));
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: `${window.location.origin}/auth/confirm`,
+        extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
+      });
+      if (result.redirected) return;
+      if (result.error) {
+        toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
+        return;
+      }
+      await refreshSession().catch(() => null);
+      navigate({ to: "/", replace: true });
     } catch {
-      toast.error(t("login.googleErr"));
+      toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
     } finally {
       setBusy(false);
     }
@@ -208,8 +217,11 @@ function LoginPage() {
               <TabsTrigger value="signup">{t("login.tab.signup")}</TabsTrigger>
             </TabsList>
 
-            <Button onClick={signInGoogle} disabled={busy} variant="outline" className="w-full mb-4">
+            <Button onClick={() => void signInOAuth("google")} disabled={busy} variant="outline" className="w-full mb-3">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("login.google")}
+            </Button>
+            <Button onClick={() => void signInOAuth("apple")} disabled={busy} variant="outline" className="w-full mb-4">
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("login.apple")}
             </Button>
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
