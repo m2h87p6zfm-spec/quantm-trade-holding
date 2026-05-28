@@ -147,7 +147,7 @@ function LoginPage() {
           state: crypto.randomUUID(),
         });
         if (provider === "google") params.set("prompt", "select_account");
-        topWindow.location.href = `/~oauth/initiate?${params.toString()}`;
+        topWindow.location.href = `${window.location.origin}/~oauth/initiate?${params.toString()}`;
         return;
       }
       const result = await lovable.auth.signInWithOAuth(provider, {
