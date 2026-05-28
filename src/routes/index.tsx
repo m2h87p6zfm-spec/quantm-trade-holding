@@ -115,12 +115,13 @@ function Cockpit() {
             <WatchlistSwitcher />
             <button
               onClick={() => setManageOpen(true)}
+              aria-label={t("cockpit.manage")}
               className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground"
             >
-              <ListPlus className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
+              <ListPlus className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
             </button>
-            <Link to="/produkte" className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground">
-              <Search className="h-3.5 w-3.5" /> {t("cockpit.catalog")}
+            <Link to="/produkte" aria-label={t("cockpit.catalog")} className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground">
+              <Search className="h-3.5 w-3.5" aria-hidden="true" /> {t("cockpit.catalog")}
             </Link>
           </div>
         </div>

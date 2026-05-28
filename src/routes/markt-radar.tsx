@@ -9,6 +9,18 @@ type Tab = "heatmap" | "sectors" | "correlations";
 
 export const Route = createFileRoute("/markt-radar")({
   component: MarktRadarPage,
+  head: () => ({
+    meta: [
+      { title: "Markt-Radar — Heatmap, Sektoren & Korrelationen | Quantm Trade" },
+      { name: "description", content: "Markt-Radar: Live-Heatmap nach Sektor, Sektor-Rotation und Korrelations-Matrix in einer Ansicht — schnelle Marktübersicht für Quant-Trader." },
+      { property: "og:title", content: "Markt-Radar — Quantm Trade" },
+      { property: "og:description", content: "Live-Heatmap, Sektor-Rotation und Korrelationen in einer Ansicht — schnelle Marktübersicht für Quant-Trader." },
+      { property: "og:url", content: "https://quantmtrade.com/markt-radar" },
+      { name: "twitter:title", content: "Markt-Radar — Quantm Trade" },
+      { name: "twitter:description", content: "Live-Heatmap, Sektor-Rotation und Korrelationen in einer Ansicht." },
+    ],
+    links: [{ rel: "canonical", href: "https://quantmtrade.com/markt-radar" }],
+  }),
   validateSearch: (s: Record<string, unknown>): { tab?: Tab } => {
     const t = s.tab;
     return t === "heatmap" || t === "sectors" || t === "correlations" ? { tab: t } : {};

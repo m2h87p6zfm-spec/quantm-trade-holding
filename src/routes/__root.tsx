@@ -85,11 +85,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://quantmtrade.com/" },
+      { property: "og:site_name", content: "Quantm Trade" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Quantm Trade",
+              url: "https://quantmtrade.com",
+              logo: "https://quantmtrade.com/favicon.ico",
+            },
+            {
+              "@type": "WebSite",
+              name: "Quantm Trade",
+              url: "https://quantmtrade.com",
+              description: "Statistischer Trading Agent — Quant-Analyse für private Trader.",
+            },
+          ],
+        }),
+      },
     ],
   }),
   shellComponent: RootShell,

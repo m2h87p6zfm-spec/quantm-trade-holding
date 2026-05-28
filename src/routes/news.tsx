@@ -15,7 +15,13 @@ export const Route = createFileRoute("/news")({
     meta: [
       { title: "Professional Newsroom — Quantm Trade" },
       { name: "description", content: "Tier-1 Marktnachrichten von Reuters, Bloomberg, Yahoo Finance, CNBC und Financial Times — gefiltert nach deinem Portfolio." },
+      { property: "og:title", content: "Professional Newsroom — Quantm Trade" },
+      { property: "og:description", content: "Tier-1 Finanznachrichten von Reuters, Bloomberg, Yahoo, CNBC und FT — gefiltert nach deinem Portfolio." },
+      { property: "og:url", content: "https://quantmtrade.com/news" },
+      { name: "twitter:title", content: "Professional Newsroom — Quantm Trade" },
+      { name: "twitter:description", content: "Tier-1 Finanznachrichten — gefiltert nach deinem Portfolio." },
     ],
+    links: [{ rel: "canonical", href: "https://quantmtrade.com/news" }],
   }),
   component: NewsPage,
 });
