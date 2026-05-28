@@ -361,7 +361,7 @@ function IndicatorAccuracy({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Genauigkeit nach Indikator</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Genauigkeit nach Indikator</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {stats.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Noch keine bewerteten Indikatoren.</p>}
         {stats.map((s) => {
@@ -412,9 +412,9 @@ function PerformanceChart({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Performance über Zeit</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Performance über Zeit</h2>
       <Card className="bg-white/[0.03] border-border/60 p-4">
-        <div className="h-80">
+        <div className="h-56">
           {series.length === 0 ? (
             <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Noch keine ausreichenden Daten.</div>
           ) : (
@@ -464,7 +464,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Quantm vs. Markt</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Quantm vs. Markt</h2>
       <Card className="bg-white/[0.03] border-border/60 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-white/[0.04] text-xs uppercase tracking-widest text-muted-foreground">
@@ -652,7 +652,7 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
 
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Stärken nach Sektor</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Stärken nach Sektor</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.length === 0 && <p className="text-sm text-muted-foreground col-span-full">Noch keine Sektor-Daten.</p>}
         {stats.map((s) => {
@@ -724,7 +724,7 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
 function Methodology() {
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-4">Wie bewertet Quantm?</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Wie bewertet Quantm?</h2>
       <Card className="bg-white/[0.03] border-border/60 p-2">
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="indikatoren">
