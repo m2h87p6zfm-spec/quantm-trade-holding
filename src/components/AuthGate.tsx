@@ -228,7 +228,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
 
 
-  const stillLoading = authLoading || (user && profileLoading);
+  const stillLoading = authLoading;
   if ((stillLoading && !watchdogElapsed) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
   }
