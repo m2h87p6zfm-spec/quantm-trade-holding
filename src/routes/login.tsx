@@ -49,6 +49,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [remember, setRemember] = useState<boolean>(() => getRememberMe());
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/", replace: true });
