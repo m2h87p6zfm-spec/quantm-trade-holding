@@ -1,4 +1,4 @@
-import { useState } from "react";
+import type * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, GripVertical, Plus } from "lucide-react";
@@ -36,7 +36,7 @@ export function ManageWatchlistDialog({ open, onOpenChange }: { open: boolean; o
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{t("watchlist.manage.title")}</DialogTitle>
