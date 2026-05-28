@@ -139,14 +139,15 @@ function LoginPage() {
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
-      if (window.self !== window.top) {
+      const topWindow = window.top;
+      if (topWindow && window.self !== topWindow) {
         const params = new URLSearchParams({
           provider,
           redirect_uri: `${window.location.origin}/auth/confirm`,
           state: crypto.randomUUID(),
         });
         if (provider === "google") params.set("prompt", "select_account");
-        window.top.location.href = `/~oauth/initiate?${params.toString()}`;
+        topWindow.location.href = `/~oauth/initiate?${params.toString()}`;
         return;
       }
       const result = await lovable.auth.signInWithOAuth(provider, {
@@ -158,7 +159,6 @@ function LoginPage() {
         toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
         return;
       }
-      acceptSession(result.tokens ? ({ access_token: result.tokens.access_token, refresh_token: result.tokens.refresh_token } as never) : null);
       await refreshSession().catch(() => null);
       navigate({ to: "/", replace: true });
     } catch {
