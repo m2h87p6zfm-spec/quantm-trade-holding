@@ -1374,6 +1374,7 @@ function WorldMap({
 }) {
   const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, MAP_W, MAP_H]);
   const animRef = useRef<number | null>(null);
+  const countryMap = useCountryMap();
 
   useEffect(() => {
     if (!world) return;
