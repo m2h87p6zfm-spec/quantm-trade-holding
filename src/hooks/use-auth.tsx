@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let authEventSeen = false;
     const loggedUsers = new Set<string>();
     const logLogin = (s: Session | null) => {
       const uid = s?.user?.id;
@@ -49,18 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void withTimeout(supabase.auth.getSession(), 8000)
       .then(({ data }) => {
-        if (!mounted) return;
+        if (!mounted || authEventSeen) return;
         setSession(data.session);
         setLoading(false);
       })
       .catch(() => {
-        if (!mounted) return;
+        if (!mounted || authEventSeen) return;
         setSession(null);
         setLoading(false);
       });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, s) => {
       if (!mounted) return;
+      authEventSeen = true;
       setSession(s);
       setLoading(false);
       if (evt === "SIGNED_IN") logLogin(s);
