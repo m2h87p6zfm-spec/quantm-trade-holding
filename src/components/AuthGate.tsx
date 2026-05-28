@@ -26,12 +26,27 @@ function ApexLoadingScreen() {
           <ApexLogo className="h-24 w-24 sm:h-36 sm:w-36 md:h-44 md:w-44 lg:h-52 lg:w-52 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
-        <div className="mt-6 sm:mt-8 md:mt-10 h-px w-32 sm:w-44 md:w-56 bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent" />
-        <div className="relative mt-6 sm:mt-8 md:mt-10 overflow-hidden">
+        <div
+          className="h-px bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent"
+          style={{
+            width: "clamp(7rem, 28vw, 18rem)",
+            marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)",
+          }}
+        />
+        <div
+          className="relative overflow-hidden"
+          style={{ marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)" }}
+        >
           <ApexWordmark className="h-20 w-auto sm:h-28 md:h-36 lg:h-44 max-w-full opacity-95 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
-        <div className="relative mt-10 sm:mt-12 md:mt-14 h-[2px] w-32 sm:w-44 md:w-56 overflow-hidden rounded-full bg-white/[0.06]">
+        <div
+          className="relative h-[2px] overflow-hidden rounded-full bg-white/[0.06]"
+          style={{
+            width: "clamp(7rem, 28vw, 18rem)",
+            marginTop: "clamp(1.25rem, 3.5vh + 0.5vw, 3.5rem)",
+          }}
+        >
           <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
         </div>
       </div>
