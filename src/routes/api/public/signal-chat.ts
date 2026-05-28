@@ -174,7 +174,9 @@ export const Route = createFileRoute("/api/public/signal-chat")({
             });
           }
           const body = (await request.json()) as { messages?: Msg[]; rows?: SignalRow[] };
-          const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
+          const messages = (Array.isArray(body.messages) ? body.messages.slice(-30) : []).map(
+            (m) => (m && m.role === "system" ? { ...m, role: "user" as const } : m),
+          );
           const rows = Array.isArray(body.rows) ? body.rows.slice(0, 80) : [];
           if (messages.length === 0) {
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), {
