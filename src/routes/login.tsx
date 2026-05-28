@@ -57,6 +57,7 @@ function LoginPage() {
 
   const signIn = async () => {
     setBusy(true);
+    setRememberMe(remember);
     const normalizedEmail = email.trim();
     try {
       const { data, error } = await withTimeout(
