@@ -162,6 +162,9 @@ const PUBLIC_PATHS = new Set<string>([
   "/passwort-zuruecksetzen",
   "/checkout/return",
   "/auth/confirm",
+  "/impressum",
+  "/agb",
+  "/datenschutz",
 ]);
 
 function isPublic(pathname: string): boolean {
@@ -169,6 +172,7 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith("/api/")) return true;
   return false;
 }
+
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
