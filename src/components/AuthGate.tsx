@@ -180,6 +180,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const publicRoute = isPublic(pathname);
 
+  // If a Supabase auth link redirected the user back to any page other than
+  // /auth/confirm with auth tokens / codes / errors in the URL, forward the
+  // full URL (search + hash) to /auth/confirm so it can complete the flow.
+  if (typeof window !== "undefined" && pathname !== "/auth/confirm") {
+    const search = window.location.search;
+    const hash = window.location.hash;
+    const combined = `${search}${hash}`;
+    const hasAuthPayload =
+      /[?#&](code|token_hash|access_token|refresh_token|error|error_description|type)=/.test(
+        combined,
+      );
+    if (hasAuthPayload) {
+      window.location.replace(`/auth/confirm${search}${hash}`);
+      return <ApexLoadingScreen />;
+    }
+  }
+
   // Enforce a minimum splash duration so the brand mark is legible on first paint.
   const [minSplashElapsed, setMinSplashElapsed] = useState(false);
   useEffect(() => {
@@ -190,6 +207,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (publicRoute) {
     return <>{children}</>;
   }
+
+
 
   if (authLoading || (user && profileLoading) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
