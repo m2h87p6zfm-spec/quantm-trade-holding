@@ -67,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .insert({ user_id: uid, user_agent: ua, provider, event: "SIGNED_IN" });
     };
 
-    void withTimeout(supabase.auth.getSession(), 8000)
+    void enforceRememberMePolicy()
+      .then(() => withTimeout(supabase.auth.getSession(), 8000))
       .then(({ data }) => {
         if (!mounted || decisiveAuthEventSeen) return;
         acceptSession(data.session ?? null);
