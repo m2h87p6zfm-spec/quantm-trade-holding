@@ -84,19 +84,15 @@ function AuthConfirmPage() {
 
         if (cancelled) return;
 
-        if (session) {
-          // Clean the URL so tokens don't linger in history.
-          window.history.replaceState(null, "", "/auth/confirm");
-          setStatus("success");
-          setTimeout(() => {
-            if (!cancelled) navigate({ to: "/" });
-          }, 600);
-        } else {
-          setStatus("error");
-          setMessage(
-            "Bestätigung war erfolgreich, aber es konnte keine Sitzung erstellt werden. Bitte melde dich erneut an.",
-          );
-        }
+        // Email verification links may confirm the account without creating a
+        // browser session. That is still a successful verification; send the
+        // user back to login instead of showing a generic failure screen.
+        window.history.replaceState(null, "", "/auth/confirm");
+        setStatus("success");
+        setMessage(session ? "" : "Deine E-Mail ist bestätigt. Bitte melde dich jetzt an.");
+        setTimeout(() => {
+          if (!cancelled) navigate({ to: session ? "/" : "/login" });
+        }, 900);
       } catch (e) {
         if (cancelled) return;
         const msg = e instanceof Error ? e.message : "Unbekannter Fehler bei der Bestätigung.";
@@ -141,7 +137,7 @@ function AuthConfirmPage() {
             </div>
             <h1 className="mt-4 text-lg font-semibold">E-Mail bestätigt</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Wir leiten dich jetzt in dein Dashboard weiter …
+              {message || "Wir leiten dich jetzt in dein Dashboard weiter …"}
             </p>
           </>
         )}
