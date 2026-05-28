@@ -2143,7 +2143,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
             </div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {chain.who.map((name) => {
-                const c = COUNTRIES_BY_NAME.get(name);
+                const c = countryMap.get(name);
                 return (
                   <span
                     key={name}
