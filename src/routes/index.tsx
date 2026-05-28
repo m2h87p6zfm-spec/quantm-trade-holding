@@ -99,32 +99,37 @@ function Cockpit() {
 
 
 
-        {/* Hero strip */}
-        <div className="flex flex-wrap items-end justify-between gap-3 sm:gap-4">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#22FF88] animate-pulse" />
-              {t("cockpit.live")}
+        {/* Hero */}
+        <header className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-background to-violet-accent/10 p-5 md:p-7">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+          <div className="pointer-events-none absolute -left-10 -bottom-16 h-48 w-48 rounded-full bg-violet-accent/15 blur-3xl" />
+          <div className="relative flex flex-wrap items-end justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                {t("cockpit.live")}
+              </div>
+              <h1 className="mt-3 font-display text-2xl md:text-3xl font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
+              <p className="mt-2 text-sm text-muted-foreground tabular-nums">
+                {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
+              </p>
             </div>
-            <h1 className="mt-3 text-[24px] sm:text-[32px] font-bold tracking-tight">{usingDefault ? t("cockpit.title.market") : t("cockpit.title.watchlist")}</h1>
-            <p className="mt-1 text-[13px] text-muted-foreground/70 tabular-nums">
-              {loading ? t("cockpit.sync", { loaded, total }) : t("cockpit.activeValues", { n: loaded })}
-            </p>
+            <div className="flex items-center gap-2">
+              <WatchlistSwitcher />
+              <button
+                onClick={() => setManageOpen(true)}
+                aria-label={t("cockpit.manage")}
+                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-border bg-background/40 px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-primary/40 hover:text-foreground"
+              >
+                <ListPlus className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
+              </button>
+              <Link to="/produkte" aria-label={t("cockpit.catalog")} className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-background/40 px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-primary/40 hover:text-foreground">
+                <Search className="h-3.5 w-3.5" aria-hidden="true" /> {t("cockpit.catalog")}
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <WatchlistSwitcher />
-            <button
-              onClick={() => setManageOpen(true)}
-              aria-label={t("cockpit.manage")}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground"
-            >
-              <ListPlus className="h-3.5 w-3.5" aria-hidden="true" /> <span className="hidden sm:inline">{t("cockpit.manage")}</span>
-            </button>
-            <Link to="/produkte" aria-label={t("cockpit.catalog")} className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-[13px] font-medium text-foreground/80 transition hover:border-[#22FF88]/40 hover:text-foreground">
-              <Search className="h-3.5 w-3.5" aria-hidden="true" /> {t("cockpit.catalog")}
-            </Link>
-          </div>
-        </div>
+        </header>
+
 
 
         {/* Markets & Watchlist — terminal-precision tiered grid.
