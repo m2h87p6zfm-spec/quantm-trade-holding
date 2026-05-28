@@ -205,7 +205,6 @@ function PublicFooter() {
 function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; total: number; accuracy: number; avgBuyReturn: number | null }) {
   return (
     <section className="relative overflow-hidden border-b border-border/60">
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-emerald-500/5 pointer-events-none" />
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-14 md:py-20 relative">
         <div className="flex items-center gap-2 mb-4">
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
