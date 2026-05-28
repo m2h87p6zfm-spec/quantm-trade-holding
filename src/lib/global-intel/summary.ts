@@ -1,5 +1,5 @@
 import type { Sentiment, RiskLevel, Strength, Trend, Mood } from "./types";
-import { GLOBAL_SUMMARY_HEADLINE_EN } from "../global-intel-data.en";
+import { GLOBAL_SUMMARY_HEADLINE_EN } from "./dict.en";
 import type { Lang } from "../i18n";
 
 export const GLOBAL_SUMMARY = {
