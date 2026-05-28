@@ -16,9 +16,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, s) => {
+    const loggedUsers = new Set<string>();
+    const logLogin = (s: Session | null) => {
+      const uid = s?.user?.id;
+      if (!uid || loggedUsers.has(uid)) return;
+      loggedUsers.add(uid);
+      const provider =
+        (s?.user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent : null;
+      // Fire-and-forget — Login darf nicht blockieren, falls Insert fehlschlägt
+      void supabase
+        .from("login_events")
+        .insert({ user_id: uid, user_agent: ua, provider, event: "SIGNED_IN" });
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, s) => {
       setSession(s);
       setLoading(false);
+      if (evt === "SIGNED_IN") logLogin(s);
+      if (evt === "SIGNED_OUT") loggedUsers.clear();
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
