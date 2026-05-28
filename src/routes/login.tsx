@@ -13,6 +13,22 @@ import { Loader2 } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useT } from "@/lib/i18n";
 
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+}
+
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
@@ -40,7 +56,11 @@ function LoginPage() {
     setBusy(true);
     const normalizedEmail = email.trim();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({ email: normalizedEmail, password }),
+        15000,
+        "Die Anmeldung dauert zu lange",
+      );
       if (error) {
         if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
           setPendingEmail(normalizedEmail);
@@ -50,7 +70,10 @@ function LoginPage() {
         toast.error(error.message);
         return;
       }
-      if (data.session) navigate({ to: "/konto" });
+      if (data.session) {
+        await supabase.auth.refreshSession().catch(() => null);
+        navigate({ to: "/konto" });
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       toast.error(`Anmeldung fehlgeschlagen: ${msg}. Bitte prüfe deine Internetverbindung.`);
