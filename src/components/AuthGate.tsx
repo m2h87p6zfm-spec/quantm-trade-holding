@@ -27,7 +27,7 @@ function ApexLoadingScreen() {
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
         <div
-          className="h-px bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent"
+          className="h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent"
           style={{
             width: "clamp(7rem, 28vw, 18rem)",
             marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)",
@@ -41,13 +41,13 @@ function ApexLoadingScreen() {
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
         </div>
         <div
-          className="relative h-[2px] overflow-hidden rounded-full bg-white/[0.06]"
+          className="relative h-[2px] overflow-hidden rounded-full bg-foreground/10"
           style={{
             width: "clamp(7rem, 28vw, 18rem)",
             marginTop: "clamp(1.25rem, 3.5vh + 0.5vw, 3.5rem)",
           }}
         >
-          <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-1/3 animate-[apexbar_1.4s_cubic-bezier(0.4,0,0.2,1)_infinite] bg-gradient-to-r from-transparent via-foreground to-transparent" />
         </div>
       </div>
       <style>{`
