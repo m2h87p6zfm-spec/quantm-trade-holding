@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const acceptSession = useCallback((nextSession: Session | null) => {
     setSession(nextSession);
     setLoading(false);
-  }, [acceptSession]);
+  }, []);
 
   const refreshSession = useCallback(async () => {
     setLoading(true);
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [acceptSession]);
 
   const value: AuthContextValue = {
     user: session?.user ?? null,
