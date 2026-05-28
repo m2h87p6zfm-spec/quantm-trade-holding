@@ -1,7 +1,16 @@
 import { Fragment, useEffect } from "react";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { startSelfHealing } from "@/lib/self-healing-service";
-import { Outlet, createRootRouteWithContext, HeadContent, Scripts, useRouter, useRouterState, Link, useNavigate } from "@tanstack/react-router";
+import {
+  Outlet,
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+  useRouter,
+  useRouterState,
+  Link,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useSettings } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
 import { AuthGate } from "@/components/AuthGate";
@@ -40,7 +49,6 @@ import { MarketRegimePill } from "@/components/MarketRegimePill";
 import { useAutoTheme } from "@/hooks/use-auto-theme";
 import { AutoTranslate } from "@/components/AutoTranslate";
 
-
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -64,7 +72,15 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold">{t("shell.errorTitle")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
-        <button onClick={() => { router.invalidate(); reset(); }} className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{t("shell.retry")}</button>
+        <button
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
+          className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+        >
+          {t("shell.retry")}
+        </button>
       </div>
     </div>
   );
@@ -76,13 +92,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Quantm Trade — Statistischer Trading Agent" },
-      { name: "description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
+      {
+        name: "description",
+        content:
+          "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit.",
+      },
       { property: "og:title", content: "Quantm Trade — Statistischer Trading Agent" },
       { name: "twitter:title", content: "Quantm Trade — Statistischer Trading Agent" },
-      { property: "og:description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
-      { name: "twitter:description", content: "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png" },
+      {
+        property: "og:description",
+        content:
+          "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger und Wall-Street-Broker-Einschätzungen in Echtzeit.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e4d1f07b-d89e-4393-a35e-f2dff0a7570d/id-preview-c9e3b082--4a6b9c55-24dc-4de1-a659-a1fd34d4af8e.lovable.app-1779403879423.png",
+      },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://quantmtrade.com/" },
@@ -125,8 +161,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="de" className="dark">
-      <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }
@@ -137,7 +178,11 @@ function RootComponent() {
   // host is invisible on the other, forcing users to log in again.
   if (typeof window !== "undefined" && window.location.hostname === "www.quantmtrade.com") {
     window.location.replace(
-      window.location.protocol + "//quantmtrade.com" + window.location.pathname + window.location.search + window.location.hash,
+      window.location.protocol +
+        "//quantmtrade.com" +
+        window.location.pathname +
+        window.location.search +
+        window.location.hash,
     );
   }
   const { settings: rootSettings } = useSettings();
@@ -214,7 +259,7 @@ function AppShell() {
           <div className="flex flex-1 w-full min-w-0">
             <AppSidebar />
             <div className="flex flex-1 flex-col relative min-w-0 pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
-              <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-border bg-card/80 px-3 backdrop-blur-xl overflow-hidden">
+              <header className="sticky top-0 z-30 flex h-12 items-center gap-2 overflow-hidden border-b border-border bg-card/80 px-3 backdrop-blur-xl">
                 <SidebarTrigger className="shrink-0 hidden lg:flex" />
                 <div className="h-5 w-px bg-border/60 shrink-0 hidden sm:block" />
                 <div className="ml-2 hidden sm:flex items-center gap-2 text-xs text-muted-foreground shrink-0">
@@ -234,23 +279,21 @@ function AppShell() {
                   <AuthHeaderButton />
                 </div>
               </header>
-              <main className="flex-1 overflow-x-hidden bg-mesh relative">
+              <main className="relative isolate flex-1 overflow-x-hidden bg-mesh">
                 <div className="absolute inset-x-0 top-0 h-64 bg-grid pointer-events-none opacity-40" />
-                <div className="relative z-10">
+                <div className="relative z-0">
                   <Outlet />
                 </div>
               </main>
               <DisclaimerBanner />
               <Footer />
             </div>
-
           </div>
           <MobileBottomNav />
         </div>
         <QuickPanel />
         <UpgradeModal />
         <AutoTranslate />
-        
       </SidebarProvider>
     </Fragment>
   );
@@ -265,27 +308,49 @@ function AuthHeaderButton() {
   if (!user) {
     return (
       <div className="flex items-center gap-1">
-        <Button asChild size="sm" variant="ghost" className="text-xs"><Link to="/login">{t("common.signIn")}</Link></Button>
-        <Button asChild size="sm" className="text-xs h-8"><Link to="/preise">{t("common.upgrade")}</Link></Button>
+        <Button asChild size="sm" variant="ghost" className="text-xs">
+          <Link to="/login">{t("common.signIn")}</Link>
+        </Button>
+        <Button asChild size="sm" className="text-xs h-8">
+          <Link to="/preise">{t("common.upgrade")}</Link>
+        </Button>
       </div>
     );
   }
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const displayName = (meta.full_name as string) || (meta.name as string) || user.email?.split("@")[0] || t("shell.accountFallback");
+  const displayName =
+    (meta.full_name as string) ||
+    (meta.name as string) ||
+    user.email?.split("@")[0] ||
+    t("shell.accountFallback");
   const avatarUrl = (meta.avatar_url as string) || (meta.picture as string) || undefined;
-  const initials = displayName.split(/\s+/).map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "A";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "A";
   const tierLabel = tier === "elite" ? "Quantm Elite" : tier === "pro" ? "Quantm Pro" : "Free";
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/50 transition-colors" aria-label={t("shell.profileMenu")}>
+        <button
+          className="flex items-center gap-2 rounded-full pl-1 pr-2 py-1 hover:bg-accent/50 transition-colors"
+          aria-label={t("shell.profileMenu")}
+        >
           <Avatar className="h-7 w-7">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-            <AvatarFallback className="text-[10px] bg-primary/15 text-primary">{initials}</AvatarFallback>
+            <AvatarFallback className="text-[10px] bg-primary/15 text-primary">
+              {initials}
+            </AvatarFallback>
           </Avatar>
-          <span className="hidden sm:inline text-xs font-medium text-foreground/90 max-w-[120px] truncate">{displayName}</span>
+          <span className="hidden sm:inline text-xs font-medium text-foreground/90 max-w-[120px] truncate">
+            {displayName}
+          </span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
@@ -293,12 +358,17 @@ function AuthHeaderButton() {
           <div className="flex items-center gap-3 py-1">
             <Avatar className="h-9 w-9">
               {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-              <AvatarFallback className="text-xs bg-primary/15 text-primary">{initials}</AvatarFallback>
+              <AvatarFallback className="text-xs bg-primary/15 text-primary">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-medium truncate">{displayName}</div>
               <div className="text-xs text-muted-foreground truncate">{user.email}</div>
-              <Badge variant={tier === "free" ? "outline" : "default"} className={`mt-1 text-[10px] ${tier === "elite" ? "bg-primary" : ""}`}>
+              <Badge
+                variant={tier === "free" ? "outline" : "default"}
+                className={`mt-1 text-[10px] ${tier === "elite" ? "bg-primary" : ""}`}
+              >
                 {tierLabel}
               </Badge>
             </div>
@@ -330,9 +400,7 @@ function AuthHeaderButton() {
         <DropdownMenuItem onSelect={() => navigate({ to: "/impressum" })}>
           Impressum
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate({ to: "/agb" })}>
-          AGB
-        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => navigate({ to: "/agb" })}>AGB</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => navigate({ to: "/datenschutz" })}>
           Datenschutz
         </DropdownMenuItem>

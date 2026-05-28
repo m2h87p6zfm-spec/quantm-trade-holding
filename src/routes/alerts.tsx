@@ -390,15 +390,17 @@ function AlertsPage() {
       )}
 
       {/* Creator */}
-      <AlertCreator
-        atLimit={atLimit}
-        max={max}
-        existingSymbols={active.map((a) => a.symbol)}
-        onCreate={async (rule) => {
-          await guardedAdd(rule);
-          toast.success(`Alert für ${rule.symbol} erstellt.`);
-        }}
-      />
+      <div className="relative z-20">
+        <AlertCreator
+          atLimit={atLimit}
+          max={max}
+          existingSymbols={active.map((a) => a.symbol)}
+          onCreate={async (rule) => {
+            await guardedAdd(rule);
+            toast.success(`Alert für ${rule.symbol} erstellt.`);
+          }}
+        />
+      </div>
 
       <Section
         title="Aktive Alerts"
@@ -509,7 +511,7 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
   }
 
   return (
-    <section className="relative z-20 overflow-visible rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
+    <section className="relative isolate overflow-visible rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-50"
