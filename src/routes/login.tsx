@@ -39,52 +39,79 @@ function LoginPage() {
   const signIn = async () => {
     setBusy(true);
     const normalizedEmail = email.trim();
-    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-    setBusy(false);
-    if (error) {
-      if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
-        setPendingEmail(normalizedEmail);
-        return toast.error("Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach (auch Spam-Ordner).", { duration: 8000 });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+      if (error) {
+        if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
+          setPendingEmail(normalizedEmail);
+          toast.error("Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach (auch Spam-Ordner).", { duration: 8000 });
+          return;
+        }
+        toast.error(error.message);
+        return;
       }
-      return toast.error(error.message);
-    }
-    if (data.session) {
-      navigate({ to: "/konto" });
+      if (data.session) navigate({ to: "/konto" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Anmeldung fehlgeschlagen: ${msg}. Bitte prüfe deine Internetverbindung.`);
+    } finally {
+      setBusy(false);
     }
   };
 
   const signUp = async () => {
     setBusy(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: window.location.origin + "/auth/confirm" },
-    });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    if (data.session) {
-      navigate({ to: "/" });
-    } else {
-      setPendingEmail(email);
-      toast.success("Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.", { duration: 10000 });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin + "/auth/confirm" },
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      if (data.session) {
+        navigate({ to: "/" });
+      } else {
+        setPendingEmail(email);
+        toast.success("Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.", { duration: 10000 });
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Registrierung fehlgeschlagen: ${msg}.`);
+    } finally {
+      setBusy(false);
     }
   };
 
   const resendConfirmation = async () => {
     if (!pendingEmail) return;
     setBusy(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Bestätigungs-E-Mail erneut gesendet.");
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Bestätigungs-E-Mail erneut gesendet.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Versand fehlgeschlagen: ${msg}.`);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const signInGoogle = async () => {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) {
-      setBusy(false);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+      if (result.error) toast.error(t("login.googleErr"));
+    } catch {
       toast.error(t("login.googleErr"));
+    } finally {
+      setBusy(false);
     }
   };
 
