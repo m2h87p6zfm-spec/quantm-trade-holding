@@ -29,6 +29,8 @@ import {
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { PRODUCTS } from "@/lib/products";
 import { useTr } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 /* --------------------------------------------------------------------- */
 /*  Liquid universe                                                       */
@@ -103,10 +105,12 @@ function StockRow({
   row,
   rank,
   emphasis,
+  currency,
 }: {
   row: CockpitRow;
   rank: number;
   emphasis: "up" | "down" | "neutral";
+  currency: string;
 }) {
   const meta = PRODUCT_MAP.get(row.symbol);
   const up = row.change >= 0;
@@ -139,9 +143,9 @@ function StockRow({
       <div className="w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-zinc-500">
         {formatVolume(row.volume)}
       </div>
-      <div className="w-16 shrink-0 text-right">
+      <div className="w-20 shrink-0 text-right">
         <div className="font-mono text-[11px] tabular-nums text-zinc-200">
-          ${row.last.toFixed(2)}
+          {formatCurrencyFromUsd(row.last, currency)}
         </div>
         <div
           className="flex items-center justify-end gap-0.5 font-mono text-[11px] font-semibold tabular-nums"
@@ -180,10 +184,12 @@ function AccordionSection({
   def,
   open,
   onToggle,
+  currency,
 }: {
   def: SectionDef;
   open: boolean;
   onToggle: () => void;
+  currency: string;
 }) {
   const Icon = def.icon;
   const top = def.rows[0];
@@ -287,7 +293,7 @@ function AccordionSection({
               {def.rows.length ? (
                 <div className="space-y-0.5">
                   {def.rows.map((r, i) => (
-                    <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} />
+                    <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} currency={currency} />
                   ))}
                 </div>
               ) : (
@@ -389,6 +395,7 @@ export function WatchlistAccordions({
   prependItems?: CustomAccordionItem[];
 }) {
   const tr = useTr();
+  const { settings } = useSettings();
   const rows = useCockpitData(MOVERS_UNIVERSE);
 
   const sections: SectionDef[] = useMemo(() => {
@@ -473,6 +480,7 @@ export function WatchlistAccordions({
             def={s}
             open={!!openMap[s.id]}
             onToggle={() => toggle(s.id)}
+            currency={settings.currency}
           />
         ))}
       </div>

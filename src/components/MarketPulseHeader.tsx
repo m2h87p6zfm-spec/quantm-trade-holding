@@ -6,6 +6,8 @@ import { ArrowUpRight, ArrowDownRight, Activity, Flame } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { fetchCandles } from "@/lib/finnhub";
 import type { CockpitRow } from "@/lib/cockpit";
+import { useSettings } from "@/lib/settings";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 const INDEX_TILES = [
   { symbol: "SPY", label: "S&P 500" },
@@ -17,6 +19,7 @@ const INDEX_TILES = [
 ];
 
 export function MarketPulseHeader({ rows }: { rows: CockpitRow[] }) {
+  const { settings } = useSettings();
   const qs = useQueries({
     queries: INDEX_TILES.map((t) => ({
       queryKey: ["candles", t.symbol],
@@ -138,15 +141,15 @@ export function MarketPulseHeader({ rows }: { rows: CockpitRow[] }) {
         </div>
 
         {/* Top Gainers */}
-        <MoversCard title="Top Gainers" icon={<Flame className="h-3 w-3 text-bull" />} items={gainers} positive />
+        <MoversCard title="Top Gainers" icon={<Flame className="h-3 w-3 text-bull" />} items={gainers} positive currency={settings.currency} />
         {/* Top Losers */}
-        <MoversCard title="Top Losers" icon={<Flame className="h-3 w-3 text-bear" />} items={losers} positive={false} />
+        <MoversCard title="Top Losers" icon={<Flame className="h-3 w-3 text-bear" />} items={losers} positive={false} currency={settings.currency} />
       </div>
     </div>
   );
 }
 
-function MoversCard({ title, icon, items, positive }: { title: string; icon: React.ReactNode; items: CockpitRow[]; positive: boolean }) {
+function MoversCard({ title, icon, items, positive, currency }: { title: string; icon: React.ReactNode; items: CockpitRow[]; positive: boolean; currency: string }) {
   return (
     <div className="rounded-xl border border-border/60 bg-card/60 backdrop-blur p-3">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5 mb-2">
@@ -164,7 +167,7 @@ function MoversCard({ title, icon, items, positive }: { title: string; icon: Rea
                 className="flex items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-accent/40 transition-colors"
               >
                 <span className="font-semibold text-xs">{r.symbol}</span>
-                <span className="font-mono text-xs text-muted-foreground tabular-nums">{r.last.toFixed(2)}</span>
+                <span className="font-mono text-xs text-muted-foreground tabular-nums">{formatCurrencyFromUsd(r.last, currency)}</span>
                 <span className={`font-mono text-xs font-semibold tabular-nums ${positive ? "text-bull" : "text-bear"}`}>
                   {r.change >= 0 ? "+" : ""}{r.change.toFixed(2)}%
                 </span>
