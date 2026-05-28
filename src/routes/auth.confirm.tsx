@@ -116,10 +116,10 @@ function AuthConfirmPage() {
       <div className="w-full max-w-md">
         <Link
           to="/"
-          className="mb-8 flex items-center justify-center gap-2 text-foreground/80 hover:text-foreground"
+          className="mb-8 flex items-center justify-center gap-2.5 sm:gap-3 text-foreground/85 hover:text-foreground"
         >
           <ApexLogo className="h-8 w-8 sm:h-10 sm:w-10" />
-          <span className="font-semibold tracking-tight">Quantm Trade</span>
+          <span className="text-base sm:text-lg font-semibold tracking-tight leading-none">Quantm Trade</span>
         </Link>
       <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-xl shadow-primary/5">
         {status === "verifying" && (
