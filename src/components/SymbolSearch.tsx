@@ -69,20 +69,27 @@ export function SymbolSearch({
   useEffect(() => {
     if (!open) return;
 
-    const isInside = (node: EventTarget | null): boolean => {
-      if (!(node instanceof Node)) return false;
-      return !!(boxRef.current?.contains(node) || menuRef.current?.contains(node));
+    const isInside = (event: Event): boolean => {
+      const path = event.composedPath();
+      if (path.some((node) => node === boxRef.current || node === menuRef.current)) return true;
+      const target = event.target;
+      if (!(target instanceof Node)) return false;
+      return !!(
+        boxRef.current?.contains(target) ||
+        menuRef.current?.contains(target) ||
+        (target instanceof Element && target.closest(`[data-symbol-search-menu="${menuId}"]`))
+      );
     };
 
     const onPointerDown = (e: PointerEvent) => {
       // Ignore clicks on the scrollbar (target === documentElement/body with no real element).
       if (e.target === document.documentElement || e.target === document.body) return;
-      if (!isInside(e.target)) setOpen(false);
+      if (!isInside(e)) setOpen(false);
     };
 
     const onFocusIn = (e: FocusEvent) => {
       // If focus moved to something outside both the input and the menu, close.
-      if (!isInside(e.target)) setOpen(false);
+      if (!isInside(e)) setOpen(false);
     };
 
     const onKey = (e: KeyboardEvent) => {
@@ -97,7 +104,7 @@ export function SymbolSearch({
       document.removeEventListener("focusin", onFocusIn);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, menuId]);
 
 
   useEffect(() => {
@@ -237,7 +244,7 @@ export function SymbolSearch({
             setOpen(true);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && hits[0]) stage(hits[0].symbol);
+            if (e.key === "Enter" && q.trim()) stage(hits[0]?.symbol ?? q);
             if (e.key === "Escape") {
               setOpen(false);
             }
@@ -285,6 +292,7 @@ export function SymbolSearch({
           <div
             ref={menuRef}
             id={menuId}
+            data-symbol-search-menu={menuId}
             role="listbox"
             // Prevent the input from blurring when the user taps a result —
             // keeps the mobile keyboard stable and avoids spurious "outside" focus.
@@ -294,13 +302,12 @@ export function SymbolSearch({
               // but stop the event from bubbling to ancestors that might close us.
               e.stopPropagation();
             }}
-            // The menu is portaled to <body>, so clicks would otherwise reach
-            // Radix Dialog's document-level "outside" listener and close the
-            // ManageWatchlistDialog before the result is staged/committed.
-            // Stop propagation in capture phase so the dialog stays open.
+            // The menu is portaled to <body>, so pointer events would otherwise
+            // reach Radix Dialog's outside listener and close the dialog before
+            // the result is staged. Only stop pointer propagation here; letting
+            // the click event reach child buttons is required for their onClick.
             onPointerDownCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
-            onClickCapture={(e) => e.stopPropagation()}
             className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",
