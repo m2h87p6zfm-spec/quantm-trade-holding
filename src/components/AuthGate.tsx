@@ -24,7 +24,7 @@ function ApexLoadingScreen() {
       <div className="relative flex flex-col items-center px-6 w-full max-w-[min(90vw,28rem)] animate-[apexfade_700ms_ease-out_both]">
         <div className="relative overflow-hidden" style={{ width: "clamp(3rem, 8vw + 2vh, 6rem)", height: "clamp(3rem, 8vw + 2vh, 6rem)" }}>
           <ApexLogo className="h-full w-full animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
-          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/8 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
         <div
           className="h-px bg-gradient-to-r from-transparent via-foreground/55 to-transparent"
@@ -42,7 +42,7 @@ function ApexLoadingScreen() {
           }}
         >
           <ApexWordmark className="h-full w-auto max-w-full opacity-100 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
-          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/12 to-transparent mix-blend-overlay" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/8 to-transparent" />
         </div>
         <div
           className="relative h-[2px] overflow-hidden rounded-full bg-foreground/15"
