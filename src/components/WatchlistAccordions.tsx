@@ -29,6 +29,8 @@ import {
 import { useCockpitData, type CockpitRow } from "@/lib/cockpit";
 import { PRODUCTS } from "@/lib/products";
 import { useTr } from "@/lib/i18n";
+import { useSettings } from "@/lib/settings";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 /* --------------------------------------------------------------------- */
 /*  Liquid universe                                                       */
@@ -103,10 +105,12 @@ function StockRow({
   row,
   rank,
   emphasis,
+  currency,
 }: {
   row: CockpitRow;
   rank: number;
   emphasis: "up" | "down" | "neutral";
+  currency: string;
 }) {
   const meta = PRODUCT_MAP.get(row.symbol);
   const up = row.change >= 0;
@@ -141,7 +145,7 @@ function StockRow({
       </div>
       <div className="w-16 shrink-0 text-right">
         <div className="font-mono text-[11px] tabular-nums text-zinc-200">
-          ${row.last.toFixed(2)}
+          {formatCurrencyFromUsd(row.last, currency)}
         </div>
         <div
           className="flex items-center justify-end gap-0.5 font-mono text-[11px] font-semibold tabular-nums"
