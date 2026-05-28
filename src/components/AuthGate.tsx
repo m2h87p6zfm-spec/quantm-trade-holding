@@ -162,6 +162,9 @@ const PUBLIC_PATHS = new Set<string>([
   "/passwort-zuruecksetzen",
   "/checkout/return",
   "/auth/confirm",
+  "/impressum",
+  "/agb",
+  "/datenschutz",
 ]);
 
 function isPublic(pathname: string): boolean {
@@ -169,6 +172,7 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith("/api/")) return true;
   return false;
 }
+
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -183,9 +187,36 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, []);
 
+  // If a Supabase auth link redirected the user back to any page other than
+  // /auth/confirm with auth tokens / codes / errors in the URL, forward the
+  // full URL (search + hash) to /auth/confirm so it can complete the flow.
+  const [authRedirecting, setAuthRedirecting] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (pathname === "/auth/confirm") return;
+    const search = window.location.search;
+    const hash = window.location.hash;
+    const combined = `${search}${hash}`;
+    const hasAuthPayload =
+      /[?#&](code|token_hash|access_token|refresh_token|error|error_description|type)=/.test(
+        combined,
+      );
+    if (hasAuthPayload) {
+      setAuthRedirecting(true);
+      window.location.replace(`/auth/confirm${search}${hash}`);
+    }
+  }, [pathname]);
+
+  if (authRedirecting) {
+    return <ApexLoadingScreen />;
+  }
+
+
   if (publicRoute) {
     return <>{children}</>;
   }
+
+
 
   if (authLoading || (user && profileLoading) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
