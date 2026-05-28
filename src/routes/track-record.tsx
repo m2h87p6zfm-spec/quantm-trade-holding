@@ -115,7 +115,6 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <PublicHeader />
       <Hero correct={correct} total={completed.length} accuracy={accuracy} avgBuyReturn={avgBuyReturn90} />
       <main className="max-w-7xl mx-auto px-4 md:px-6 pb-12 space-y-5">
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/[0.03] p-1 w-fit">
