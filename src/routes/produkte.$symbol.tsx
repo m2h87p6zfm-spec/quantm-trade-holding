@@ -18,6 +18,7 @@ import { AssetNewsPanel } from "@/components/AssetNewsPanel";
 import { AssetEventsPanel } from "@/components/AssetEventsPanel";
 import { RealtimeStatusBadge } from "@/components/RealtimeStatusBadge";
 import { useLiveQuotes } from "@/hooks/useLiveQuotes";
+import { usePickVerdict } from "@/hooks/usePickVerdict";
 import { convertFromUsd, formatCurrencyFromUsd, formatSignedAbs, axisDecimals } from "@/lib/format";
 import { QuantFinancePanel } from "@/components/QuantFinancePanel";
 
