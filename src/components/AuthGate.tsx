@@ -242,7 +242,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   const needsOnboarding =
-    user && pathname !== "/onboarding" && (profile === null || profile.onboarding_completed === false);
+    user &&
+    pathname !== "/onboarding" &&
+    (profile === null || profile.onboarding_completed === false);
   if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
