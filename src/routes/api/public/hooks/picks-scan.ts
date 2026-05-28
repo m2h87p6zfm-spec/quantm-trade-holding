@@ -7,10 +7,9 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
-// Cron endpoint — requires `x-cron-secret` header matching CRON_SECRET.
-// The public Supabase anon key is NOT accepted: it is embedded in every
-// client bundle, so accepting it would let any visitor trigger thousands of
-// upstream API calls (Yahoo/Twelve Data) on demand.
+// Cron endpoint — accepts either the private `x-cron-secret` header or the
+// managed scheduled-job `apikey` header. The latter is needed because pg_cron
+// jobs cannot read Lovable runtime secrets directly.
 
 // ============================================================
 // Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
@@ -25,9 +24,20 @@ import { detectRegime } from "@/lib/ai-learning";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, x-cron-secret",
+  "Access-Control-Allow-Headers": "Content-Type, apikey, x-cron-secret",
 } as const;
 const JSON_HEADERS = { "Content-Type": "application/json", ...CORS } as const;
+
+function requirePicksScanAuth(request: Request): Response | null {
+  const cronSecretAuth = requireCronSecret(request);
+  if (!cronSecretAuth) return null;
+
+  const expectedApiKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+  const providedApiKey = request.headers.get("apikey") ?? "";
+  if (expectedApiKey && providedApiKey === expectedApiKey) return null;
+
+  return cronSecretAuth;
+}
 
 type Scope = { universe: "top" | "extended" | "all" | "combined"; sector: string; region: string };
 
@@ -209,7 +219,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        const authErr = requireCronSecret(request);
+        const authErr = requirePicksScanAuth(request);
         if (authErr) return authErr;
 
 
