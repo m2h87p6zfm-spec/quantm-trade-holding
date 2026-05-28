@@ -1,6 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles, TrendingUp, TrendingDown, Target, Radio, X, ArrowLeftRight } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  Plus,
+  Trash2,
+  Zap,
+  Activity,
+  History,
+  Lock,
+  Sparkles,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Radio,
+  X,
+  ArrowLeftRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
@@ -17,28 +33,45 @@ export const Route = createFileRoute("/alerts")({
   head: () => ({
     meta: [
       { title: "Smart Alerts — Quantm Trade" },
-      { name: "description", content: "Schwellen-Alerts für Preis und Setup-Score mit Push-Benachrichtigungen." },
+      {
+        name: "description",
+        content: "Schwellen-Alerts für Preis und Setup-Score mit Push-Benachrichtigungen.",
+      },
     ],
   }),
 });
 
 function label(k: AlertRule["kind"]): string {
   switch (k) {
-    case "price_above": return "Preis ≥";
-    case "price_below": return "Preis ≤";
-    case "score_above": return "Score ≥";
-    case "score_below": return "Score ≤";
+    case "price_above":
+      return "Preis ≥";
+    case "price_below":
+      return "Preis ≤";
+    case "score_above":
+      return "Score ≥";
+    case "score_below":
+      return "Score ≤";
   }
 }
 
-function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: string) => void; onTrigger: (id: string) => void }) {
+function AlertCard({
+  a,
+  onRemove,
+  onTrigger,
+}: {
+  a: AlertRule;
+  onRemove: (id: string) => void;
+  onTrigger: (id: string) => void;
+}) {
   const isPrice = a.kind.startsWith("price");
   const isAbove = a.kind.endsWith("above");
   const q = useQuote(a.symbol, 30_000);
   const analysis = useAnalysis(a.symbol);
   const { settings } = useSettings();
   const price = q.data?.c;
-  const score = analysis.indicators ? scoreIndicators(analysis.indicators, settings.risk).score : undefined;
+  const score = analysis.indicators
+    ? scoreIndicators(analysis.indicators, settings.risk).score
+    : undefined;
   const value = isPrice ? price : score;
 
   useEffect(() => {
@@ -70,25 +103,38 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
   const accent = triggered
     ? "from-emerald-500/30 via-emerald-500/10 to-transparent"
     : near
-    ? "from-gold/30 via-gold/10 to-transparent"
-    : isAbove
-    ? "from-primary/25 via-primary/5 to-transparent"
-    : "from-violet-accent/25 via-violet-accent/5 to-transparent";
+      ? "from-gold/30 via-gold/10 to-transparent"
+      : isAbove
+        ? "from-primary/25 via-primary/5 to-transparent"
+        : "from-violet-accent/25 via-violet-accent/5 to-transparent";
 
   const ringColor = triggered
     ? "ring-emerald-500/40"
     : near
-    ? "ring-gold/40"
-    : "ring-border/60 hover:ring-primary/40";
+      ? "ring-gold/40"
+      : "ring-border/60 hover:ring-primary/40";
 
   return (
-    <div className={`group relative overflow-hidden rounded-xl border border-border/60 bg-card/60 p-4 ring-1 backdrop-blur transition-all hover:translate-y-[-1px] hover:shadow-[0_8px_30px_-12px_color-mix(in_oklab,var(--primary)_30%,transparent)] ${ringColor}`}>
+    <div
+      className={`group relative overflow-hidden rounded-xl border border-border/60 bg-card/60 p-4 ring-1 backdrop-blur transition-all hover:translate-y-[-1px] hover:shadow-[0_8px_30px_-12px_color-mix(in_oklab,var(--primary)_30%,transparent)] ${ringColor}`}
+    >
       {/* glow */}
-      <div aria-hidden className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent} opacity-60`} />
+      <div
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${accent} opacity-60`}
+      />
       {/* corner pulse */}
       {!triggered && (
-        <div aria-hidden className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-30 blur-2xl"
-          style={{ background: near ? "var(--gold)" : isAbove ? "var(--primary)" : "color-mix(in oklab, var(--violet-accent, var(--primary)) 80%, transparent)" }}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-30 blur-2xl"
+          style={{
+            background: near
+              ? "var(--gold)"
+              : isAbove
+                ? "var(--primary)"
+                : "color-mix(in oklab, var(--violet-accent, var(--primary)) 80%, transparent)",
+          }}
         />
       )}
 
@@ -98,8 +144,12 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
           {a.symbol.slice(0, 4)}
           {!triggered && (
             <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-              <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${near ? "bg-gold/70" : isAbove ? "bg-emerald-400/70" : "bg-rose-400/70"}`} />
-              <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ring-2 ring-card ${near ? "bg-gold" : isAbove ? "bg-emerald-400" : "bg-rose-400"}`} />
+              <span
+                className={`absolute inline-flex h-full w-full animate-ping rounded-full ${near ? "bg-gold/70" : isAbove ? "bg-emerald-400/70" : "bg-rose-400/70"}`}
+              />
+              <span
+                className={`relative inline-flex h-2.5 w-2.5 rounded-full ring-2 ring-card ${near ? "bg-gold" : isAbove ? "bg-emerald-400" : "bg-rose-400"}`}
+              />
             </span>
           )}
         </div>
@@ -110,7 +160,11 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
             <div className="flex items-center gap-2">
               <span className="text-base font-bold tracking-tight">{a.symbol}</span>
               <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-border/60">
-                {isPrice ? <Activity className="h-2.5 w-2.5 text-cyan-accent" /> : <Sparkles className="h-2.5 w-2.5 text-violet-accent" />}
+                {isPrice ? (
+                  <Activity className="h-2.5 w-2.5 text-cyan-accent" />
+                ) : (
+                  <Sparkles className="h-2.5 w-2.5 text-violet-accent" />
+                )}
                 {isPrice ? "Preis" : "Score"}
               </span>
             </div>
@@ -124,13 +178,21 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
           </div>
 
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-            {isAbove ? <TrendingUp className="h-3 w-3 text-emerald-400" /> : <TrendingDown className="h-3 w-3 text-rose-400" />}
+            {isAbove ? (
+              <TrendingUp className="h-3 w-3 text-emerald-400" />
+            ) : (
+              <TrendingDown className="h-3 w-3 text-rose-400" />
+            )}
             <span>
-              {isAbove ? "über" : "unter"} <span className="font-semibold tabular-nums text-foreground">{a.threshold}</span>
+              {isAbove ? "über" : "unter"}{" "}
+              <span className="font-semibold tabular-nums text-foreground">{a.threshold}</span>
             </span>
             {distance != null && (
-              <span className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${triggered ? "bg-emerald-500/15 text-emerald-400" : near ? "bg-gold/15 text-gold" : "bg-muted/40 text-muted-foreground"}`}>
-                {distance > 0 ? "+" : ""}{distance.toFixed(2)}%
+              <span
+                className={`ml-auto rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums ${triggered ? "bg-emerald-500/15 text-emerald-400" : near ? "bg-gold/15 text-gold" : "bg-muted/40 text-muted-foreground"}`}
+              >
+                {distance > 0 ? "+" : ""}
+                {distance.toFixed(2)}%
               </span>
             )}
           </div>
@@ -146,8 +208,12 @@ function AlertCard({ a, onRemove, onTrigger }: { a: AlertRule; onRemove: (id: st
           {/* Bottom: current value + status */}
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">aktuell</span>
-              <span className="text-lg font-bold tabular-nums tracking-tight">{value != null ? value.toFixed(2) : "…"}</span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                aktuell
+              </span>
+              <span className="text-lg font-bold tabular-nums tracking-tight">
+                {value != null ? value.toFixed(2) : "…"}
+              </span>
             </div>
             {triggered ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 ring-1 ring-emerald-500/30">
@@ -175,27 +241,46 @@ function AlertsPage() {
   const { guardedAdd, tier, max, count, atLimit } = useAlertsLimit();
 
   const active = useMemo(() => alerts.filter((a) => !a.triggeredAt), [alerts]);
-  const history = useMemo(() => alerts.filter((a) => a.triggeredAt).sort((a, b) => (b.triggeredAt! - a.triggeredAt!)), [alerts]);
+  const history = useMemo(
+    () => alerts.filter((a) => a.triggeredAt).sort((a, b) => b.triggeredAt! - a.triggeredAt!),
+    [alerts],
+  );
   const triggeredCount = history.length;
-  const quotaPct = Number.isFinite(max) ? Math.min(100, (count / Number(max)) * 100) : Math.min(100, count * 5);
+  const quotaPct = Number.isFinite(max)
+    ? Math.min(100, (count / Number(max)) * 100)
+    : Math.min(100, count * 5);
 
-  const { status: pushStatus, subscribe: subscribePush, unsubscribe: unsubscribePush } = usePushNotifications();
+  const {
+    status: pushStatus,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+  } = usePushNotifications();
 
   async function requestPush() {
-    if (pushStatus === "unsupported") return toast.error("Browser unterstützt keine Web-Push-Benachrichtigungen.");
-    if (pushStatus === "denied") return toast.error("Push wurde blockiert. Aktiviere Benachrichtigungen in den Browser-Einstellungen.");
+    if (pushStatus === "unsupported")
+      return toast.error("Browser unterstützt keine Web-Push-Benachrichtigungen.");
+    if (pushStatus === "denied")
+      return toast.error(
+        "Push wurde blockiert. Aktiviere Benachrichtigungen in den Browser-Einstellungen.",
+      );
     if (pushStatus === "subscribed") {
       const ok = await unsubscribePush();
       if (ok) toast.success("Push deaktiviert.");
       return;
     }
     const ok = await subscribePush();
-    if (ok) toast.success("Push aktiviert — du bekommst Benachrichtigungen auch bei geschlossenem Tab.");
+    if (ok)
+      toast.success("Push aktiviert — du bekommst Benachrichtigungen auch bei geschlossenem Tab.");
     else toast.error("Push konnte nicht aktiviert werden.");
   }
 
   const tierLabel = tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Elite";
-  const tierTint = tier === "elite" ? "text-gold ring-gold/40 bg-gold/10" : tier === "pro" ? "text-primary ring-primary/40 bg-primary/10" : "text-muted-foreground ring-border bg-muted/40";
+  const tierTint =
+    tier === "elite"
+      ? "text-gold ring-gold/40 bg-gold/10"
+      : tier === "pro"
+        ? "text-primary ring-primary/40 bg-primary/10"
+        : "text-muted-foreground ring-border bg-muted/40";
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 p-4 md:p-6">
@@ -235,7 +320,9 @@ function AlertsPage() {
                 <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent md:text-4xl">
                   {t("page.alerts.title")}
                 </h1>
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${tierTint}`}>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${tierTint}`}
+                >
                   <Sparkles className="h-2.5 w-2.5" /> {tierLabel}
                 </span>
                 <PushBadge status={pushStatus} />
@@ -249,16 +336,31 @@ function AlertsPage() {
             onClick={requestPush}
             className="group/btn relative inline-flex items-center gap-2 self-start overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 to-primary/5 px-5 py-3 text-sm font-semibold text-primary transition-all hover:border-primary/60 hover:shadow-[0_0_30px_-4px_color-mix(in_oklab,var(--primary)_60%,transparent)] md:self-auto"
           >
-            <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full" />
+            <span
+              aria-hidden
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-primary/20 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full"
+            />
             <BellRing className="relative h-4 w-4" />
-            <span className="relative">{pushStatus === "subscribed" ? "Push aktiv · deaktivieren" : "Push aktivieren"}</span>
+            <span className="relative">
+              {pushStatus === "subscribed" ? "Push aktiv · deaktivieren" : "Push aktivieren"}
+            </span>
           </button>
         </div>
 
         {/* Stat strip */}
         <div className="relative mt-7 grid grid-cols-3 gap-3 border-t border-border/40 pt-5">
-          <StatCard icon={<Activity className="h-3.5 w-3.5" />} label="Aktiv" value={active.length} tint="primary" />
-          <StatCard icon={<BellRing className="h-3.5 w-3.5" />} label="Ausgelöst" value={triggeredCount} tint="emerald" />
+          <StatCard
+            icon={<Activity className="h-3.5 w-3.5" />}
+            label="Aktiv"
+            value={active.length}
+            tint="primary"
+          />
+          <StatCard
+            icon={<BellRing className="h-3.5 w-3.5" />}
+            label="Ausgelöst"
+            value={triggeredCount}
+            tint="emerald"
+          />
           <StatCard
             icon={<Zap className="h-3.5 w-3.5" />}
             label="Kontingent"
@@ -273,9 +375,15 @@ function AlertsPage() {
         <div className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-gold/40 bg-gradient-to-r from-gold/15 via-gold/8 to-transparent px-5 py-4 text-sm shadow-[0_0_30px_-12px_color-mix(in_oklab,var(--gold)_50%,transparent)] sm:flex-row sm:items-center">
           <div className="flex items-center gap-2.5 text-gold">
             <Lock className="h-4 w-4 shrink-0" />
-            <span>Du hast dein Alert-Limit ({max}) erreicht. Upgrade für <strong>unlimitierte</strong> Smart Alerts.</span>
+            <span>
+              Du hast dein Alert-Limit ({max}) erreicht. Upgrade für <strong>unlimitierte</strong>{" "}
+              Smart Alerts.
+            </span>
           </div>
-          <Link to="/preise" className="inline-flex items-center gap-1 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-bold text-background shadow-md hover:bg-gold/90">
+          <Link
+            to="/preise"
+            className="inline-flex items-center gap-1 rounded-lg bg-gold px-3.5 py-1.5 text-xs font-bold text-background shadow-md hover:bg-gold/90"
+          >
             Upgrade <Sparkles className="h-3 w-3" />
           </Link>
         </div>
@@ -292,8 +400,17 @@ function AlertsPage() {
         }}
       />
 
-      <Section title="Aktive Alerts" count={active.length} icon={<Activity className="h-3.5 w-3.5" />}>
-        <CardGrid rows={active} onRemove={remove} onTrigger={markTriggered} empty="Noch keine aktiven Alerts — leg deinen ersten oben an." />
+      <Section
+        title="Aktive Alerts"
+        count={active.length}
+        icon={<Activity className="h-3.5 w-3.5" />}
+      >
+        <CardGrid
+          rows={active}
+          onRemove={remove}
+          onTrigger={markTriggered}
+          empty="Noch keine aktiven Alerts — leg deinen ersten oben an."
+        />
       </Section>
 
       {history.length > 0 && (
@@ -405,13 +522,16 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
           <Plus className="h-3.5 w-3.5 text-primary" />
         </div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Neuen Alert erstellen</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">
+          Neuen Alert erstellen
+        </h2>
       </div>
 
       {!symbol ? (
         <div className="relative z-50 space-y-3">
           <p className="text-xs text-muted-foreground">
-            Wähle eine Aktie — wir zeigen dir den aktuellen Kurs und du legst die Schwelle visuell fest.
+            Wähle eine Aktie — wir zeigen dir den aktuellen Kurs und du legst die Schwelle visuell
+            fest.
           </p>
           <SymbolSearch
             compact
@@ -434,10 +554,16 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
                   <span className="uppercase tracking-wider">aktuell</span>
                   <span className="text-lg font-bold tabular-nums text-foreground">
                     {mode === "price"
-                      ? currentPrice != null ? currentPrice.toFixed(2) : "…"
-                      : currentScore != null ? currentScore.toFixed(0) : "…"}
+                      ? currentPrice != null
+                        ? currentPrice.toFixed(2)
+                        : "…"
+                      : currentScore != null
+                        ? currentScore.toFixed(0)
+                        : "…"}
                   </span>
-                  {mode === "price" && quote.isFetching && <span className="text-[10px] text-primary">live</span>}
+                  {mode === "price" && quote.isFetching && (
+                    <span className="text-[10px] text-primary">live</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -454,7 +580,10 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
             <Toggle
               label="Worauf reagieren?"
               value={mode}
-              onChange={(v) => { setMode(v as "price" | "score"); setPct(5); }}
+              onChange={(v) => {
+                setMode(v as "price" | "score");
+                setPct(5);
+              }}
               options={[
                 { value: "price", label: "Preis", icon: <Activity className="h-3 w-3" /> },
                 { value: "score", label: "Setup-Score", icon: <Sparkles className="h-3 w-3" /> },
@@ -465,8 +594,16 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
               value={direction}
               onChange={(v) => setDirection(v as "above" | "below")}
               options={[
-                { value: "above", label: "Steigt über", icon: <TrendingUp className="h-3 w-3 text-emerald-400" /> },
-                { value: "below", label: "Fällt unter", icon: <TrendingDown className="h-3 w-3 text-rose-400" /> },
+                {
+                  value: "above",
+                  label: "Steigt über",
+                  icon: <TrendingUp className="h-3 w-3 text-emerald-400" />,
+                },
+                {
+                  value: "below",
+                  label: "Fällt unter",
+                  icon: <TrendingDown className="h-3 w-3 text-rose-400" />,
+                },
               ]}
             />
           </div>
@@ -486,8 +623,7 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
             <div className="text-xs text-muted-foreground">
               Auslöser:{" "}
               <span className="font-semibold text-foreground">
-                {mode === "price" ? "Preis" : "Score"}{" "}
-                {direction === "above" ? "≥" : "≤"}{" "}
+                {mode === "price" ? "Preis" : "Score"} {direction === "above" ? "≥" : "≤"}{" "}
                 <span className="tabular-nums text-primary">{threshold || "—"}</span>
               </span>
             </div>
@@ -496,12 +632,17 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
               disabled={submitting || atLimit || (mode === "price" && currentPrice == null)}
               className="group/add relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:shadow-primary/50 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover/add:translate-x-full" />
+              <span
+                aria-hidden
+                className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover/add:translate-x-full"
+              />
               <Plus className="relative h-4 w-4" /> <span className="relative">Alert anlegen</span>
             </button>
           </div>
           {atLimit && (
-            <p className="text-[11px] text-rose-400">Alert-Limit ({max}) erreicht. Upgrade für mehr.</p>
+            <p className="text-[11px] text-rose-400">
+              Alert-Limit ({max}) erreicht. Upgrade für mehr.
+            </p>
           )}
         </div>
       )}
@@ -522,7 +663,9 @@ function Toggle({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
       <div className="grid grid-cols-2 gap-1 rounded-lg border border-border/60 bg-background/40 p-1">
         {options.map((o) => {
           const active = value === o.value;
@@ -575,7 +718,9 @@ function ThresholdPicker({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ArrowLeftRight className="h-3 w-3" />
           <span className="tabular-nums font-semibold text-foreground">
-            {direction === "above" ? "+" : "−"}{pct}{isPrice ? "%" : " Punkte"}
+            {direction === "above" ? "+" : "−"}
+            {pct}
+            {isPrice ? "%" : " Punkte"}
           </span>
         </div>
       </div>
@@ -587,7 +732,9 @@ function ThresholdPicker({
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="flex flex-col items-center">
             <div className="h-3 w-3 rounded-full bg-foreground/70 ring-2 ring-background" />
-            <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">jetzt</div>
+            <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+              jetzt
+            </div>
             <div className="text-[10px] tabular-nums text-foreground">
               {anchor != null ? (isPrice ? anchor.toFixed(2) : Math.round(anchor)) : "…"}
             </div>
@@ -607,7 +754,9 @@ function ThresholdPicker({
                 direction === "above" ? "bg-emerald-400" : "bg-rose-400"
               }`}
             />
-            <div className={`mt-1 text-[9px] font-semibold uppercase tracking-wider ${direction === "above" ? "text-emerald-400" : "text-rose-400"}`}>
+            <div
+              className={`mt-1 text-[9px] font-semibold uppercase tracking-wider ${direction === "above" ? "text-emerald-400" : "text-rose-400"}`}
+            >
               Ziel
             </div>
             <div className="text-[10px] font-bold tabular-nums text-foreground">
@@ -639,7 +788,9 @@ function ThresholdPicker({
                 : "bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             }`}
           >
-            {direction === "above" ? "+" : "−"}{p}{isPrice ? "%" : ""}
+            {direction === "above" ? "+" : "−"}
+            {p}
+            {isPrice ? "%" : ""}
           </button>
         ))}
       </div>
@@ -647,7 +798,19 @@ function ThresholdPicker({
   );
 }
 
-function StatCard({ icon, label, value, tint, progress }: { icon: React.ReactNode; label: string; value: React.ReactNode; tint: "primary" | "emerald" | "gold" | "rose"; progress?: number }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  tint,
+  progress,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  tint: "primary" | "emerald" | "gold" | "rose";
+  progress?: number;
+}) {
   const tintMap = {
     primary: { text: "text-primary", bar: "bg-gradient-to-r from-primary to-cyan-accent" },
     emerald: { text: "text-emerald-400", bar: "bg-gradient-to-r from-emerald-500 to-emerald-300" },
@@ -656,14 +819,19 @@ function StatCard({ icon, label, value, tint, progress }: { icon: React.ReactNod
   }[tint];
   return (
     <div className="relative flex flex-col gap-1.5 rounded-xl border border-border/40 bg-background/30 px-3 py-2.5 backdrop-blur">
-      <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${tintMap.text}`}>
+      <div
+        className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${tintMap.text}`}
+      >
         {icon}
         {label}
       </div>
       <div className="text-2xl font-bold tabular-nums tracking-tight">{value}</div>
       {progress != null && (
         <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted/40">
-          <div className={`h-full rounded-full transition-all duration-700 ${tintMap.bar}`} style={{ width: `${progress}%` }} />
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${tintMap.bar}`}
+            style={{ width: `${progress}%` }}
+          />
         </div>
       )}
     </div>
@@ -673,26 +841,52 @@ function StatCard({ icon, label, value, tint, progress }: { icon: React.ReactNod
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</label>
+      <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </label>
       {children}
     </div>
   );
 }
 
-function Section({ title, count, icon, children }: { title: string; count: number; icon: React.ReactNode; children: React.ReactNode }) {
+function Section({
+  title,
+  count,
+  icon,
+  children,
+}: {
+  title: string;
+  count: number;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-foreground/80">
-        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15 text-primary ring-1 ring-primary/30">{icon}</span>
+        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/15 text-primary ring-1 ring-primary/30">
+          {icon}
+        </span>
         {title}
-        <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-bold text-foreground/70 ring-1 ring-border/60">{count}</span>
+        <span className="rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-bold text-foreground/70 ring-1 ring-border/60">
+          {count}
+        </span>
       </h2>
       {children}
     </div>
   );
 }
 
-function CardGrid({ rows, onRemove, onTrigger, empty }: { rows: AlertRule[]; onRemove: (id: string) => void; onTrigger: (id: string) => void; empty: string }) {
+function CardGrid({
+  rows,
+  onRemove,
+  onTrigger,
+  empty,
+}: {
+  rows: AlertRule[];
+  onRemove: (id: string) => void;
+  onTrigger: (id: string) => void;
+  empty: string;
+}) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/60 bg-card/30 px-6 py-14 text-center backdrop-blur">
@@ -709,7 +903,9 @@ function CardGrid({ rows, onRemove, onTrigger, empty }: { rows: AlertRule[]; onR
   }
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {rows.map((a) => <AlertCard key={a.id} a={a} onRemove={onRemove} onTrigger={onTrigger} />)}
+      {rows.map((a) => (
+        <AlertCard key={a.id} a={a} onRemove={onRemove} onTrigger={onTrigger} />
+      ))}
     </div>
   );
 }
