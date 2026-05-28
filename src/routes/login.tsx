@@ -41,7 +41,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const t = useT();
-  const { user, loading, refreshSession } = useAuth();
+  const { user, loading, acceptSession, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +77,8 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        await refreshSession().catch(() => null);
+        acceptSession(data.session);
+        void refreshSession().catch(() => null);
         navigate({ to: "/", replace: true });
       }
     } catch (e) {
@@ -138,6 +139,16 @@ function LoginPage() {
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
+      if (window.self !== window.top) {
+        const params = new URLSearchParams({
+          provider,
+          redirect_uri: `${window.location.origin}/auth/confirm`,
+          state: crypto.randomUUID(),
+        });
+        if (provider === "google") params.set("prompt", "select_account");
+        window.top.location.href = `/~oauth/initiate?${params.toString()}`;
+        return;
+      }
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: `${window.location.origin}/auth/confirm`,
         extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
@@ -147,6 +158,7 @@ function LoginPage() {
         toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
         return;
       }
+      acceptSession(result.tokens ? ({ access_token: result.tokens.access_token, refresh_token: result.tokens.refresh_token } as never) : null);
       await refreshSession().catch(() => null);
       navigate({ to: "/", replace: true });
     } catch {
