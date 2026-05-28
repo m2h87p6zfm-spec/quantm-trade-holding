@@ -82,7 +82,34 @@ function LoginPage() {
       }
       if (data.session) {
         acceptSession(data.session);
-        void refreshSession().catch(() => null);
+        // Verify the session is actually persisted/active before navigating.
+        // Some browsers (Safari, private mode) need an extra tick before
+        // localStorage reads back the new session, and AuthGate on "/" will
+        // otherwise bounce the user right back to /login.
+        let verified = data.session;
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          const { data: check } = await withTimeout(
+            supabase.auth.getSession(),
+            5000,
+            "Sitzungsprüfung dauert zu lange",
+          );
+          if (check.session?.access_token) {
+            verified = check.session;
+            break;
+          }
+          await new Promise((r) => setTimeout(r, 120 * (attempt + 1)));
+        }
+        if (!verified?.access_token) {
+          const refreshed = await refreshSession().catch(() => null);
+          if (!refreshed?.access_token) {
+            toast.error(
+              "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
+            );
+            return;
+          }
+          verified = refreshed;
+        }
+        acceptSession(verified);
         navigate({ to: "/", replace: true });
       }
     } catch (e) {
