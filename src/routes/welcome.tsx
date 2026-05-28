@@ -90,7 +90,7 @@ function WelcomePage() {
       {/* top bar */}
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6 pt-8">
         <div className="flex items-center gap-2 text-sm font-medium tracking-tight">
-          <ApexLogo className="h-5 w-5" />
+          <ApexLogo className="h-6 w-6 sm:h-7 sm:w-7" />
           <span>Quantm Intelligence</span>
         </div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
