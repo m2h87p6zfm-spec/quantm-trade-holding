@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Search, Plus, X, Loader2, Check, Lock } from "lucide-react";
 import { searchSymbols, type SymbolSearchHit } from "@/lib/finnhub";
 import { Link } from "@tanstack/react-router";
@@ -38,13 +39,20 @@ export function SymbolSearch({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [staged, setStaged] = useState<string[]>([]);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
   const exists = new Set(existing.map((s) => s.toUpperCase()));
 
   // Debounced search
   useEffect(() => {
     const term = q.trim();
-    if (!term) { setHits([]); setLoading(false); return; }
+    if (!term) {
+      setHits([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const t = setTimeout(async () => {
       const res = await searchSymbols(term);
@@ -57,11 +65,24 @@ export function SymbolSearch({
   // Close on outside click
   useEffect(() => {
     function onDown(e: MouseEvent) {
-      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!boxRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
     }
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
+
+  useEffect(() => {
+    if (!open || !q.trim()) return;
+    const updateRect = () => setMenuRect(boxRef.current?.getBoundingClientRect() ?? null);
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+    };
+  }, [open, q]);
 
   function reachedLimit(extra = 0): boolean {
     if (limit == null || !Number.isFinite(limit)) return false;
@@ -106,10 +127,15 @@ export function SymbolSearch({
           autoFocus={autoFocus}
           value={q}
           onFocus={() => setOpen(true)}
-          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onChange={(e) => {
+            setQ(e.target.value);
+            setOpen(true);
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && hits[0]) stage(hits[0].symbol);
-            if (e.key === "Escape") { setOpen(false); }
+            if (e.key === "Escape") {
+              setOpen(false);
+            }
           }}
           placeholder={placeholder}
           className="flex-1 bg-transparent text-base placeholder:text-muted-foreground/60 focus:outline-none min-w-0"
@@ -125,14 +151,19 @@ export function SymbolSearch({
         )}
       </div>
 
-
       {/* Staged chips */}
       {!compact && staged.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {staged.map((s) => (
-            <span key={s} className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary text-[11px] font-semibold px-2 py-0.5 ring-1 ring-primary/30">
+            <span
+              key={s}
+              className="inline-flex items-center gap-1 rounded-md bg-primary/15 text-primary text-[11px] font-semibold px-2 py-0.5 ring-1 ring-primary/30"
+            >
               {s}
-              <button onClick={() => setStaged((c) => c.filter((x) => x !== s))} aria-label={`${s} entfernen`}>
+              <button
+                onClick={() => setStaged((c) => c.filter((x) => x !== s))}
+                aria-label={`${s} entfernen`}
+              >
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -141,64 +172,94 @@ export function SymbolSearch({
       )}
 
       {/* Dropdown */}
-      {open && q.trim() && (
-        <div className="absolute z-50 left-0 right-0 mt-2 max-h-96 overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/10">
-
-          {loading && hits.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche weltweit (Twelve Data)…</div>
-          ) : hits.length === 0 ? (
-            <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-              Keine Treffer. <button onClick={() => stage(q)} className="text-primary hover:underline">"{q.toUpperCase()}" trotzdem hinzufügen</button>
-            </div>
-          ) : (
-            <ul className="py-1">
-              {hits.map((h) => {
-                const already = exists.has(h.symbol.toUpperCase()) || staged.includes(h.symbol.toUpperCase());
-                const inner = (
-                  <>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-semibold text-sm">{h.symbol}</span>
-                        {h.exchange && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{h.exchange}</span>}
-                        {h.type && <span className="text-[10px] rounded bg-muted px-1 py-0.5 text-muted-foreground">{h.type}</span>}
+      {open &&
+        q.trim() &&
+        menuRect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            id={menuId}
+            className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
+            style={{
+              top: menuRect.bottom + 8,
+              left: menuRect.left,
+              width: menuRect.width,
+            }}
+          >
+            {loading && hits.length === 0 ? (
+              <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                Suche weltweit (Twelve Data)…
+              </div>
+            ) : hits.length === 0 ? (
+              <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                Keine Treffer.{" "}
+                <button onClick={() => stage(q)} className="text-primary hover:underline">
+                  "{q.toUpperCase()}" trotzdem hinzufügen
+                </button>
+              </div>
+            ) : (
+              <ul className="py-1">
+                {hits.map((h) => {
+                  const already =
+                    exists.has(h.symbol.toUpperCase()) || staged.includes(h.symbol.toUpperCase());
+                  const inner = (
+                    <>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold text-sm">{h.symbol}</span>
+                          {h.exchange && (
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                              {h.exchange}
+                            </span>
+                          )}
+                          {h.type && (
+                            <span className="text-[10px] rounded bg-muted px-1 py-0.5 text-muted-foreground">
+                              {h.type}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">{h.name}</div>
                       </div>
-                      <div className="text-xs text-muted-foreground truncate">{h.name}</div>
-                    </div>
-                    {already ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-bull"><Check className="h-3 w-3" /> dabei</span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-primary"><Plus className="h-3 w-3" /> hinzufügen</span>
-                    )}
-                  </>
-                );
-                return (
-                  <li key={h.symbol}>
-                    {linkOnSelect ? (
-                      <Link
-                        to="/produkte/$symbol"
-                        params={{ symbol: h.symbol }}
-                        onClick={() => setOpen(false)}
-                        className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-accent/40 transition-colors"
-                      >
-                        {inner}
-                      </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={already}
-                        onClick={() => stage(h.symbol)}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent/40 transition-colors disabled:opacity-60 disabled:cursor-default"
-                      >
-                        {inner}
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
+                      {already ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-bull">
+                          <Check className="h-3 w-3" /> dabei
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-primary">
+                          <Plus className="h-3 w-3" /> hinzufügen
+                        </span>
+                      )}
+                    </>
+                  );
+                  return (
+                    <li key={h.symbol}>
+                      {linkOnSelect ? (
+                        <Link
+                          to="/produkte/$symbol"
+                          params={{ symbol: h.symbol }}
+                          onClick={() => setOpen(false)}
+                          className="flex items-center justify-between gap-3 px-3 py-2 hover:bg-accent/40 transition-colors"
+                        >
+                          {inner}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={already}
+                          onClick={() => stage(h.symbol)}
+                          className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent/40 transition-colors disabled:opacity-60 disabled:cursor-default"
+                        >
+                          {inner}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
