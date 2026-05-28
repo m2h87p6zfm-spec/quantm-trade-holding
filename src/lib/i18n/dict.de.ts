@@ -423,6 +423,8 @@ export const DE: Dict = {
     "login.tab.signup": "Registrieren",
     "login.google": "Mit Google anmelden",
     "login.googleErr": "Google Sign-in fehlgeschlagen",
+    "login.apple": "Mit Apple anmelden",
+    "login.appleErr": "Apple Sign-in fehlgeschlagen",
     "login.or": "oder",
     "login.email": "E-Mail",
     "login.password": "Passwort",
