@@ -257,7 +257,7 @@ function GlobalIntelPage() {
               <LayerControls layers={layers} setLayers={setLayers} />
 
               {hovered && (() => {
-                const hc = COUNTRIES_BY_NAME.get(hovered);
+                const hc = countryMap.get(hovered);
                 return (
                   <div className="pointer-events-none absolute bottom-16 left-4 z-10 max-w-[280px] rounded-lg border border-white/[0.14] bg-black/75 p-2.5 backdrop-blur-md">
                     <div className="flex items-center gap-1.5">
