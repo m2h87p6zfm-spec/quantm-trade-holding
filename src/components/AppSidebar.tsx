@@ -84,7 +84,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">
-              <span className="text-lg font-bold tracking-tight text-foreground">Quantm <span className="font-medium text-muted-foreground">Trade</span></span>
+              <span className="text-2xl font-bold tracking-tight text-foreground">Quantm <span className="font-medium text-muted-foreground">Trade</span></span>
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t("side.tagline")}</span>
             </div>
           )}
