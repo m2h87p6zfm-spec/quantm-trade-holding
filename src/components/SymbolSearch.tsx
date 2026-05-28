@@ -231,6 +231,7 @@ export function SymbolSearch({
       {open &&
         q.trim() &&
         menuRect &&
+        inputVisible &&
         createPortal(
           <div
             ref={menuRef}
@@ -239,7 +240,9 @@ export function SymbolSearch({
             style={{
               isolation: "isolate",
               zIndex: 9999,
-              top: menuRect.bottom + 8,
+              ...(placement === "above"
+                ? { top: Math.max(8, menuRect.top - 8 - Math.min(384, menuRect.top - 16)), maxHeight: Math.max(160, menuRect.top - 16) }
+                : { top: menuRect.bottom + 8, maxHeight: Math.max(160, window.innerHeight - menuRect.bottom - 16) }),
               left: menuLeft,
               width: Math.min(menuRect.width, window.innerWidth - 24),
             }}
