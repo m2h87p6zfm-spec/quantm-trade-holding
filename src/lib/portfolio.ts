@@ -259,16 +259,14 @@ export function pnl(pos: Position, price: number) {
 }
 
 export function costBasis(pos: Position) {
-  if (
-    pos.brokerCurrentValue &&
-    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
-  ) {
-    return (
-      pos.brokerInvested ??
-      (pos.brokerPnlAbs !== undefined
-        ? pos.brokerCurrentValue - pos.brokerPnlAbs
-        : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100))
-    );
+  if (pos.brokerInvested !== undefined && pos.brokerInvested > 0) return pos.brokerInvested;
+  if (Number.isFinite(pos.qty) && pos.qty > 0 && Number.isFinite(pos.entry) && pos.entry > 0) {
+    return pos.entry * pos.qty;
+  }
+  if (pos.brokerCurrentValue && (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)) {
+    return pos.brokerPnlAbs !== undefined
+      ? pos.brokerCurrentValue - pos.brokerPnlAbs
+      : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100);
   }
   return pos.entry * pos.qty;
 }
