@@ -249,7 +249,10 @@ export function ApexDashboard({
   quote?: Quote;
   regime: MarketRegime;
 }) {
-  // Candle-Objekte rekonstruieren
+  const tr = useTr();
+  const lang = useLang();
+
+  // Reconstruct candle objects
   const candleObjs: Candle[] = useMemo(() => candles.t.map((t, i) => ({
     t, o: candles.o[i], h: candles.h[i], l: candles.l[i], c: candles.c[i], v: candles.v[i],
   })), [candles]);
@@ -263,8 +266,8 @@ export function ApexDashboard({
   const lastVol = candles.v[candles.v.length - 1] ?? 0;
 
   const techRows = useMemo(
-    () => technicalSignals(indicators, stoch, atrVal, avgVol, lastVol),
-    [indicators, stoch, atrVal, avgVol, lastVol],
+    () => technicalSignals(indicators, stoch, atrVal, avgVol, lastVol, tr, lang),
+    [indicators, stoch, atrVal, avgVol, lastVol, tr, lang],
   );
   const posCount = techRows.filter((r) => r.signal === "pos").length;
   const negCount = techRows.filter((r) => r.signal === "neg").length;
@@ -273,45 +276,60 @@ export function ApexDashboard({
 
   // Verdict mapping
   const verdictColor = decision.decision === "BUY"
-    ? { bg: "bg-emerald-500/15 border-emerald-500/50", text: "text-emerald-400", bar: "bg-emerald-500", icon: TrendingUp, label: "KAUFEN" }
+    ? { bg: "bg-emerald-500/15 border-emerald-500/50", text: "text-emerald-400", bar: "bg-emerald-500", icon: TrendingUp, label: tr("KAUFEN", "BUY") }
     : decision.decision === "SELL"
-    ? { bg: "bg-rose-500/15 border-rose-500/50", text: "text-rose-400", bar: "bg-rose-500", icon: TrendingDown, label: "VERKAUFEN" }
-    : { bg: "bg-amber-400/15 border-amber-400/50", text: "text-amber-300", bar: "bg-amber-400", icon: MinusCircle, label: "HALTEN" };
+    ? { bg: "bg-rose-500/15 border-rose-500/50", text: "text-rose-400", bar: "bg-rose-500", icon: TrendingDown, label: tr("VERKAUFEN", "SELL") }
+    : { bg: "bg-amber-400/15 border-amber-400/50", text: "text-amber-300", bar: "bg-amber-400", icon: MinusCircle, label: tr("HALTEN", "HOLD") };
   const VerdictIcon = verdictColor.icon;
 
   // Fundamentals
   const fundamentals: Array<{ label: string; value: string; sub?: string; signal: Signal; infoKey?: string; rawValue?: any }> = [
-    { label: "Aktueller Kurs", value: `${fmt(indicators.price)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal, infoKey: "price", rawValue: { changePct: quote?.dp } },
-    { label: "Marktkapitalisierung", value: quote?.marketCap ? fmtBig(quote.marketCap) : "—", signal: "neu" as Signal, infoKey: "marketCap" },
-    { label: "52-W-Hoch", value: quote?.h52 ? fmt(quote.h52) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100)} v. ATH` : undefined, signal: "neu" as Signal, infoKey: "high52" },
-    { label: "52-W-Tief", value: quote?.l52 ? fmt(quote.l52) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100)} ü. ATL` : undefined, signal: "neu" as Signal, infoKey: "low52" },
-    { label: "Beta vs. Markt", value: fmt(indicators.beta, 2), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal, infoKey: "beta", rawValue: indicators.beta },
-    { label: "Sharpe Ratio (Qualität)", value: fmt(indicators.sharpe, 2), sub: indicators.sharpe > 1 ? "institutionell" : indicators.sharpe < 0 ? "unattraktiv" : "akzeptabel", signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal, infoKey: "sharpe", rawValue: indicators.sharpe },
+    { label: tr("Aktueller Kurs", "Current price"), value: `${fmt(indicators.price, 2, lang)} ${quote?.currency ?? ""}`, sub: quote?.dp != null ? fmtPct(quote.dp, 1, lang) : undefined, signal: (quote?.dp ?? 0) >= 0 ? "pos" : "neg" as Signal, infoKey: "price", rawValue: { changePct: quote?.dp } },
+    { label: tr("Marktkapitalisierung", "Market cap"), value: quote?.marketCap ? fmtBig(quote.marketCap, lang) : "—", signal: "neu" as Signal, infoKey: "marketCap" },
+    { label: tr("52-W-Hoch", "52-week high"), value: quote?.h52 ? fmt(quote.h52, 2, lang) : "—", sub: quote?.h52 ? `${fmtPct((indicators.price / quote.h52 - 1) * 100, 1, lang)} ${tr("v. ATH", "vs ATH")}` : undefined, signal: "neu" as Signal, infoKey: "high52" },
+    { label: tr("52-W-Tief", "52-week low"), value: quote?.l52 ? fmt(quote.l52, 2, lang) : "—", sub: quote?.l52 ? `${fmtPct((indicators.price / quote.l52 - 1) * 100, 1, lang)} ${tr("ü. ATL", "vs ATL")}` : undefined, signal: "neu" as Signal, infoKey: "low52" },
+    { label: tr("Beta vs. Markt", "Beta vs. market"), value: fmt(indicators.beta, 2, lang), signal: indicators.beta > 1.2 ? "neg" : indicators.beta < 0.8 ? "pos" : "neu" as Signal, infoKey: "beta", rawValue: indicators.beta },
+    { label: tr("Sharpe Ratio (Qualität)", "Sharpe Ratio (quality)"), value: fmt(indicators.sharpe, 2, lang), sub: indicators.sharpe > 1 ? tr("institutionell", "institutional") : indicators.sharpe < 0 ? tr("unattraktiv", "unattractive") : tr("akzeptabel", "acceptable"), signal: indicators.sharpe > 1 ? "pos" : indicators.sharpe < 0 ? "neg" : "neu" as Signal, infoKey: "sharpe", rawValue: indicators.sharpe },
   ];
   const fundamentalVerdict: Signal = fundamentals.filter((f) => f.signal === "pos").length >= fundamentals.filter((f) => f.signal === "neg").length ? "pos" : "neg";
 
   // News
   const news = useTopNews(symbol);
 
-  // Risiken
-  const risks: Array<{ title: string; desc: string; level: "Hoch" | "Mittel" | "Niedrig" }> = [];
+  // Risks
+  type RiskLevel = "high" | "medium" | "low";
+  const levelLabel = (lv: RiskLevel) => lv === "high" ? tr("Hoch", "High") : lv === "medium" ? tr("Mittel", "Medium") : tr("Niedrig", "Low");
+  const risks: Array<{ title: string; desc: string; level: RiskLevel }> = [];
   risks.push({
-    title: "Marktrisiko",
-    desc: regime === "bear" ? `Risk-Off-Umfeld — defensive Sektoren outperformen.` : regime === "high_vol" ? "Hohe Marktvolatilität, institutionelle Hände reduzieren Exposure." : "Marktphase stützt zyklische Positionen.",
-    level: regime === "bear" || regime === "high_vol" ? "Hoch" : regime === "chop" ? "Mittel" : "Niedrig",
+    title: tr("Marktrisiko", "Market risk"),
+    desc: regime === "bear"
+      ? tr("Risk-Off-Umfeld — defensive Sektoren outperformen.", "Risk-off environment — defensive sectors outperform.")
+      : regime === "high_vol"
+      ? tr("Hohe Marktvolatilität, institutionelle Hände reduzieren Exposure.", "High market volatility — institutional players reduce exposure.")
+      : tr("Marktphase stützt zyklische Positionen.", "Market phase supports cyclical positions."),
+    level: regime === "bear" || regime === "high_vol" ? "high" : regime === "chop" ? "medium" : "low",
   });
   risks.push({
-    title: "Volatilitätsrisiko",
-    desc: `Annualisierte Schwankung ${fmtPct(indicators.volatility * 100, 1)} — ATR ${fmt(atrVal)} entspricht ${fmt((atrVal / indicators.price) * 100, 2)} % Tagesbewegung.`,
-    level: indicators.volatility > 0.5 ? "Hoch" : indicators.volatility > 0.3 ? "Mittel" : "Niedrig",
+    title: tr("Volatilitätsrisiko", "Volatility risk"),
+    desc: tr(
+      `Annualisierte Schwankung ${fmtPct(indicators.volatility * 100, 1, lang)} — ATR ${fmt(atrVal, 2, lang)} entspricht ${fmt((atrVal / indicators.price) * 100, 2, lang)} % Tagesbewegung.`,
+      `Annualized volatility ${fmtPct(indicators.volatility * 100, 1, lang)} — ATR ${fmt(atrVal, 2, lang)} equals ${fmt((atrVal / indicators.price) * 100, 2, lang)}% daily move.`,
+    ),
+    level: indicators.volatility > 0.5 ? "high" : indicators.volatility > 0.3 ? "medium" : "low",
   });
   risks.push({
-    title: "Trend- & Momentum-Risiko",
-    desc: indicators.rsi >= 75 ? "RSI überkauft — Korrektur-Wahrscheinlichkeit erhöht." : indicators.rsi <= 25 ? "RSI überverkauft — kurzfristige Erholung möglich, mittelfristiger Trend bleibt schwach." : !isNaN(indicators.sma50) && !isNaN(indicators.sma200) && indicators.sma50 < indicators.sma200 ? "Death Cross aktiv — Trend strukturell negativ." : "Momentum-Lage neutral.",
-    level: indicators.rsi >= 75 || indicators.rsi <= 25 ? "Hoch" : "Mittel",
+    title: tr("Trend- & Momentum-Risiko", "Trend & momentum risk"),
+    desc: indicators.rsi >= 75
+      ? tr("RSI überkauft — Korrektur-Wahrscheinlichkeit erhöht.", "RSI overbought — correction probability elevated.")
+      : indicators.rsi <= 25
+      ? tr("RSI überverkauft — kurzfristige Erholung möglich, mittelfristiger Trend bleibt schwach.", "RSI oversold — short-term bounce possible, mid-term trend remains weak.")
+      : !isNaN(indicators.sma50) && !isNaN(indicators.sma200) && indicators.sma50 < indicators.sma200
+      ? tr("Death Cross aktiv — Trend strukturell negativ.", "Death Cross active — trend structurally negative.")
+      : tr("Momentum-Lage neutral.", "Momentum is neutral."),
+    level: indicators.rsi >= 75 || indicators.rsi <= 25 ? "high" : "medium",
   });
 
-  // Preisprognose (3 Szenarien, ATR-basiert über ~30 Handelstage)
+  // Price forecast (3 scenarios, ATR-based over ~30 trading days)
   const horizonDays = 30;
   const sigmaDay = indicators.volatility / Math.sqrt(252);
   const drift = decision.decision === "BUY" ? sigmaDay * 0.6 : decision.decision === "SELL" ? -sigmaDay * 0.6 : 0;
@@ -340,7 +358,7 @@ export function ApexDashboard({
           </div>
           <div className="flex-1 min-w-[160px]">
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground">Confidence</span>
+              <span className="text-muted-foreground">{tr("Konfidenz", "Confidence")}</span>
               <span className={`font-mono font-bold ${verdictColor.text}`}>{decision.confidence}%</span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-background/60">
@@ -351,63 +369,59 @@ export function ApexDashboard({
         <p className="mt-3 text-sm leading-relaxed text-foreground/90">{decision.reasoning}</p>
       </div>
 
-      {/* TECHNISCHE & STATISTISCHE ANALYSE — 2-Spalten-Layout für bessere Raumnutzung */}
       <div className="grid gap-4 lg:grid-cols-2 [&>*]:h-full">
 
-      <SectionCard icon={BarChart3} title="📈 Technische & statistische Analyse">
+      <SectionCard icon={BarChart3} title={tr("📈 Technische & statistische Analyse", "📈 Technical & statistical analysis")}>
         <div className="divide-y divide-border/40">
           {techRows.map((r) => (
             <Row key={r.label} label={r.label} value={r.value} sub={r.sub} signal={r.signal} infoKey={r.infoKey} rawValue={r.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">
-          <span className="text-muted-foreground">Technisches Gesamturteil</span>
+          <span className="text-muted-foreground">{tr("Technisches Gesamturteil", "Technical verdict")}</span>
           <span className="font-semibold">
-            <span className="text-emerald-400">🟢 {posCount} positiv</span>{" · "}
-            <span className="text-amber-300">🟡 {neuCount} neutral</span>{" · "}
-            <span className="text-rose-400">🔴 {negCount} negativ</span>
+            <span className="text-emerald-400">🟢 {posCount} {tr("positiv", "positive")}</span>{" · "}
+            <span className="text-amber-300">🟡 {neuCount} {tr("neutral", "neutral")}</span>{" · "}
+            <span className="text-rose-400">🔴 {negCount} {tr("negativ", "negative")}</span>
             {" → "}
             <span className={techVerdict === "pos" ? "text-emerald-400" : techVerdict === "neg" ? "text-rose-400" : "text-amber-300"}>
-              {techVerdict === "pos" ? "bullisches Bild" : techVerdict === "neg" ? "bärisches Bild" : "neutrales Bild"}
+              {techVerdict === "pos" ? tr("bullisches Bild", "bullish picture") : techVerdict === "neg" ? tr("bärisches Bild", "bearish picture") : tr("neutrales Bild", "neutral picture")}
             </span>
           </span>
         </div>
       </SectionCard>
 
-      {/* QUANTITATIVE FINANCE & MONTE CARLO */}
       <QuantFinancePanel symbol={symbol} candleObjs={candleObjs} price={indicators.price} />
 
-      {/* FUNDAMENTALANALYSE */}
-      <SectionCard icon={Landmark} title="💰 Fundamentalanalyse">
+      <SectionCard icon={Landmark} title={tr("💰 Fundamentalanalyse", "💰 Fundamentals")}>
         <div className="divide-y divide-border/40">
           {fundamentals.map((f) => (
             <Row key={f.label} label={f.label} value={f.value} sub={f.sub} signal={f.signal} infoKey={f.infoKey} rawValue={f.rawValue} />
           ))}
         </div>
         <div className="flex items-center justify-between border-t border-border/60 bg-background/30 px-4 py-3 text-xs">
-          <span className="text-muted-foreground">Fundamentales Gesamturteil</span>
+          <span className="text-muted-foreground">{tr("Fundamentales Gesamturteil", "Fundamental verdict")}</span>
           <span className={`font-semibold ${fundamentalVerdict === "pos" ? "text-emerald-400" : "text-rose-400"}`}>
             {fundamentalVerdict === "pos"
-              ? "Solides Qualitäts- und Risiko-Profil."
-              : "Erhöhtes Risiko — Marktsensitivität und Renditequalität beachten."}
+              ? tr("Solides Qualitäts- und Risiko-Profil.", "Solid quality and risk profile.")
+              : tr("Erhöhtes Risiko — Marktsensitivität und Renditequalität beachten.", "Elevated risk — watch market sensitivity and return quality.")}
           </span>
         </div>
       </SectionCard>
 
-      {/* NACHRICHTEN */}
-      <SectionCard icon={Newspaper} title="📰 Nachrichten & Katalysatoren">
-        {news.loading && <div className="px-4 py-6 text-sm text-muted-foreground">News werden geladen…</div>}
+      <SectionCard icon={Newspaper} title={tr("📰 Nachrichten & Katalysatoren", "📰 News & catalysts")}>
+        {news.loading && <div className="px-4 py-6 text-sm text-muted-foreground">{tr("News werden geladen…", "Loading news…")}</div>}
         {!news.loading && news.items.length === 0 && (
-          <div className="px-4 py-6 text-sm text-muted-foreground">Aktuell keine verifizierten Live-News.</div>
+          <div className="px-4 py-6 text-sm text-muted-foreground">{tr("Aktuell keine verifizierten Live-News.", "No verified live news right now.")}</div>
         )}
         <div className="divide-y divide-border/40">
           {news.items.map((n) => {
             const impact: Signal = n.sentiment === "bullish" ? "pos" : n.sentiment === "bearish" ? "neg" : "neu";
-            const impactLabel = n.sentiment === "bullish" ? "Positiv" : n.sentiment === "bearish" ? "Negativ" : "Neutral";
+            const impactLabel = n.sentiment === "bullish" ? tr("Positiv", "Positive") : n.sentiment === "bearish" ? tr("Negativ", "Negative") : tr("Neutral", "Neutral");
             return (
               <a key={n.uuid} href={n.link} target="_blank" rel="noopener noreferrer" className="block px-4 py-3 hover:bg-muted/30">
                 <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                  <span>{new Date(n.publishedAt).toLocaleDateString("de-DE")} · {n.publisher}</span>
+                  <span>{new Date(n.publishedAt).toLocaleDateString(locale(lang))} · {n.publisher}</span>
                   <span className={`inline-flex items-center gap-1 font-semibold ${impact === "pos" ? "text-emerald-400" : impact === "neg" ? "text-rose-400" : "text-amber-300"}`}>
                     <SignalDot s={impact} /> {impactLabel}
                   </span>
@@ -422,12 +436,11 @@ export function ApexDashboard({
         </div>
       </SectionCard>
 
-      {/* RISIKEN */}
-      <SectionCard icon={AlertTriangle} title="⚠️ Risiko-Analyse">
+      <SectionCard icon={AlertTriangle} title={tr("⚠️ Risiko-Analyse", "⚠️ Risk analysis")}>
         <div className="divide-y divide-border/40">
           {risks.map((r) => {
-            const color = r.level === "Hoch" ? "text-rose-400 bg-rose-500/10 border-rose-500/30"
-              : r.level === "Mittel" ? "text-amber-300 bg-amber-400/10 border-amber-400/30"
+            const color = r.level === "high" ? "text-rose-400 bg-rose-500/10 border-rose-500/30"
+              : r.level === "medium" ? "text-amber-300 bg-amber-400/10 border-amber-400/30"
               : "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
             return (
               <div key={r.title} className="flex items-start justify-between gap-3 px-4 py-3">
@@ -436,7 +449,7 @@ export function ApexDashboard({
                   <div className="text-xs text-muted-foreground">{r.desc}</div>
                 </div>
                 <span className={`shrink-0 rounded-md border px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${color}`}>
-                  {r.level}
+                  {levelLabel(r.level)}
                 </span>
               </div>
             );
@@ -445,30 +458,29 @@ export function ApexDashboard({
       </SectionCard>
       </div>
 
-      {/* PREISPROGNOSE */}
 
-      <SectionCard icon={Target} title="🔮 APEX Preisprognose · 30 Handelstage">
+      <SectionCard icon={Target} title={tr("🔮 APEX Preisprognose · 30 Handelstage", "🔮 APEX price forecast · 30 trading days")}>
         <div className="divide-y divide-border/40">
           {[
-            { name: "🟢 Bullisch", price: bullPrice, pct: bullPct, prob: probs[0], color: "text-emerald-400" },
-            { name: "🟡 Basisszenario", price: basePrice, pct: basePct, prob: probs[1], color: "text-amber-300" },
-            { name: "🔴 Bärisch", price: bearPrice, pct: bearPct, prob: probs[2], color: "text-rose-400" },
+            { name: tr("🟢 Bullisch", "🟢 Bullish"), price: bullPrice, pct: bullPct, prob: probs[0], color: "text-emerald-400" },
+            { name: tr("🟡 Basisszenario", "🟡 Base case"), price: basePrice, pct: basePct, prob: probs[1], color: "text-amber-300" },
+            { name: tr("🔴 Bärisch", "🔴 Bearish"), price: bearPrice, pct: bearPct, prob: probs[2], color: "text-rose-400" },
           ].map((s) => (
             <div key={s.name} className="grid grid-cols-3 items-center px-3 py-3 text-sm">
               <div className={`font-semibold ${s.color}`}>{s.name}</div>
               <div className="text-right">
-                <div className="font-mono text-base font-bold">{fmt(s.price)}</div>
-                <div className={`text-[10px] ${s.pct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{fmtPct(s.pct)}</div>
+                <div className="font-mono text-base font-bold">{fmt(s.price, 2, lang)}</div>
+                <div className={`text-[10px] ${s.pct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{fmtPct(s.pct, 1, lang)}</div>
               </div>
               <div className="text-right">
                 <div className="font-mono text-base font-semibold">{s.prob}%</div>
-                <div className="text-[10px] text-muted-foreground">Wahrscheinlichkeit</div>
+                <div className="text-[10px] text-muted-foreground">{tr("Wahrscheinlichkeit", "Probability")}</div>
               </div>
             </div>
           ))}
         </div>
         <div className="border-t border-border/60 bg-background/30 px-4 py-2 text-[10px] text-muted-foreground">
-          Modellbasiert (ATR/Volatilitäts-Drift, 2σ-Korridor) — keine Anlageberatung.
+          {tr("Modellbasiert (ATR/Volatilitäts-Drift, 2σ-Korridor) — keine Anlageberatung.", "Model-based (ATR / volatility drift, 2σ corridor) — not investment advice.")}
         </div>
       </SectionCard>
     </div>
