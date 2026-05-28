@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +22,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  refreshSession: () => Promise<Session | null>;
   signOut: () => Promise<void>;
 }
 
@@ -30,6 +31,17 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshSession = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await withTimeout(supabase.auth.getSession(), 8000);
+      setSession(data.session);
+      return data.session ?? null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -60,7 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, s) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((evt, s) => {
       if (!mounted) return;
       authEventSeen = true;
       setSession(s);
@@ -79,8 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     session,
     loading,
+    refreshSession,
     signOut: async () => {
       await supabase.auth.signOut();
+      setSession(null);
+      setLoading(false);
     },
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

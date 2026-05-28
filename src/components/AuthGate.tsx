@@ -88,8 +88,7 @@ function ApexLoadingScreen() {
             className="font-bold tracking-tight text-foreground leading-none"
             style={{ fontSize: "clamp(1.75rem, 3.6vw + 1.2vh, 3rem)" }}
           >
-            Quantm{" "}
-            <span className="font-medium text-muted-foreground">Trade</span>
+            Quantm <span className="font-medium text-muted-foreground">Trade</span>
           </span>
         </div>
 
@@ -173,7 +172,6 @@ function isPublic(pathname: string): boolean {
   return false;
 }
 
-
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useTradingProfile();
@@ -221,14 +219,11 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <ApexLoadingScreen />;
   }
 
-
   if (publicRoute) {
     return <>{children}</>;
   }
 
-
-
-  const stillLoading = authLoading || (user && profileLoading);
+  const stillLoading = authLoading;
   if ((stillLoading && !watchdogElapsed) || !minSplashElapsed) {
     return <ApexLoadingScreen />;
   }
@@ -237,8 +232,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (profileLoading) {
+    return <>{children}</>;
+  }
+
   const needsOnboarding =
-    user && pathname !== "/onboarding" && (profile === null || profile.onboarding_completed === false);
+    user &&
+    pathname !== "/onboarding" &&
+    (profile === null || profile.onboarding_completed === false);
   if (needsOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
