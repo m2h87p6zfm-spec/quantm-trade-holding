@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles, TrendingUp, TrendingDown, Target, Radio } from "lucide-react";
+import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles, TrendingUp, TrendingDown, Target, Radio, X, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
-import { ProductsDatalist } from "@/components/ProductsDatalist";
+import { SymbolSearch } from "@/components/SymbolSearch";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
@@ -173,9 +173,6 @@ function AlertsPage() {
   const t = useT();
   const { alerts, remove, markTriggered } = useAlerts();
   const { guardedAdd, tier, max, count, atLimit } = useAlertsLimit();
-  const [symbol, setSymbol] = useState("AAPL");
-  const [kind, setKind] = useState<AlertRule["kind"]>("price_above");
-  const [threshold, setThreshold] = useState(200);
 
   const active = useMemo(() => alerts.filter((a) => !a.triggeredAt), [alerts]);
   const history = useMemo(() => alerts.filter((a) => a.triggeredAt).sort((a, b) => (b.triggeredAt! - a.triggeredAt!)), [alerts]);
@@ -195,17 +192,6 @@ function AlertsPage() {
     const ok = await subscribePush();
     if (ok) toast.success("Push aktiviert — du bekommst Benachrichtigungen auch bei geschlossenem Tab.");
     else toast.error("Push konnte nicht aktiviert werden.");
-  }
-
-  function onAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!symbol || !Number.isFinite(threshold)) return;
-    if (atLimit) {
-      toast.error(`Alert-Limit erreicht (${max})`, { description: "Upgrade auf Pro für unlimitierte Smart Alerts." });
-      return;
-    }
-    guardedAdd({ symbol: symbol.toUpperCase(), kind, threshold });
-    toast.success(`Alert für ${symbol.toUpperCase()} erstellt.`);
   }
 
   const tierLabel = tier === "free" ? "Free" : tier === "pro" ? "Pro" : "Elite";
@@ -252,6 +238,7 @@ function AlertsPage() {
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${tierTint}`}>
                   <Sparkles className="h-2.5 w-2.5" /> {tierLabel}
                 </span>
+                <PushBadge status={pushStatus} />
               </div>
               <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
                 {t("page.alerts.subtitle")}
@@ -294,62 +281,16 @@ function AlertsPage() {
         </div>
       )}
 
-      {/* Create form */}
-      <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 40% 60% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 70%)",
-          }}
-        />
-        <div className="relative mb-5 flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
-            <Plus className="h-3.5 w-3.5 text-primary" />
-          </div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Neuen Alert erstellen</h2>
-        </div>
-        <form onSubmit={onAdd} className="relative grid gap-3 md:grid-cols-[1fr_1fr_140px_auto]">
-          <Field label="Symbol">
-            <input
-              list="apex-symbols-alerts"
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm font-semibold tracking-tight transition-all focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-            <ProductsDatalist id="apex-symbols-alerts" />
-          </Field>
-          <Field label="Bedingung">
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as AlertRule["kind"])}
-              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm transition-all focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="price_above">Preis steigt auf ≥</option>
-              <option value="price_below">Preis fällt auf ≤</option>
-              <option value="score_above">Setup-Score ≥</option>
-              <option value="score_below">Setup-Score ≤</option>
-            </select>
-          </Field>
-          <Field label="Schwelle">
-            <input
-              type="number"
-              step="any"
-              value={threshold}
-              onChange={(e) => setThreshold(parseFloat(e.target.value) || 0)}
-              className="w-full rounded-lg border border-input bg-background/60 px-3 py-2.5 text-sm tabular-nums transition-all focus:border-primary/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-            />
-          </Field>
-          <button
-            type="submit"
-            className="group/add relative self-end inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:shadow-primary/50 hover:brightness-110"
-          >
-            <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover/add:translate-x-full" />
-            <Plus className="relative h-4 w-4" /> <span className="relative">Anlegen</span>
-          </button>
-        </form>
-      </section>
+      {/* Creator */}
+      <AlertCreator
+        atLimit={atLimit}
+        max={max}
+        existingSymbols={active.map((a) => a.symbol)}
+        onCreate={async (rule) => {
+          await guardedAdd(rule);
+          toast.success(`Alert für ${rule.symbol} erstellt.`);
+        }}
+      />
 
       <Section title="Aktive Alerts" count={active.length} icon={<Activity className="h-3.5 w-3.5" />}>
         <CardGrid rows={active} onRemove={remove} onTrigger={markTriggered} empty="Noch keine aktiven Alerts — leg deinen ersten oben an." />
@@ -360,6 +301,348 @@ function AlertsPage() {
           <CardGrid rows={history} onRemove={remove} onTrigger={markTriggered} empty="" />
         </Section>
       )}
+    </div>
+  );
+}
+
+function PushBadge({ status }: { status: ReturnType<typeof usePushNotifications>["status"] }) {
+  if (status === "subscribed") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 ring-1 ring-emerald-500/30">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        </span>
+        Push live
+      </span>
+    );
+  }
+  if (status === "denied") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-400 ring-1 ring-rose-500/30">
+        Push blockiert
+      </span>
+    );
+  }
+  if (status === "unsupported") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground ring-1 ring-border/60">
+        Browser ohne Push
+      </span>
+    );
+  }
+  return null;
+}
+
+type CreatorProps = {
+  atLimit: boolean;
+  max: number;
+  existingSymbols: string[];
+  onCreate: (rule: { symbol: string; kind: AlertRule["kind"]; threshold: number }) => Promise<void>;
+};
+
+function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps) {
+  const [symbol, setSymbol] = useState<string | null>(null);
+  const [mode, setMode] = useState<"price" | "score">("price");
+  const [direction, setDirection] = useState<"above" | "below">("above");
+  // pct = relative deviation from anchor (price → current price, score → 50)
+  const [pct, setPct] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
+
+  const quote = useQuote(symbol ?? "", 30_000);
+  const analysis = useAnalysis(symbol ?? "");
+  const { settings } = useSettings();
+  const currentPrice = quote.data?.c;
+  const currentScore = analysis.indicators
+    ? scoreIndicators(analysis.indicators, settings.risk).score
+    : undefined;
+
+  const anchor = mode === "price" ? currentPrice : currentScore;
+  const threshold = useMemo(() => {
+    if (mode === "price") {
+      if (anchor == null) return 0;
+      const sign = direction === "above" ? 1 : -1;
+      return +(anchor * (1 + (sign * pct) / 100)).toFixed(2);
+    }
+    // score: clamp 0..100, anchor 50 by default
+    const sign = direction === "above" ? 1 : -1;
+    const base = anchor ?? 50;
+    return Math.max(0, Math.min(100, Math.round(base + sign * pct)));
+  }, [mode, direction, pct, anchor]);
+
+  function reset() {
+    setSymbol(null);
+    setPct(5);
+  }
+
+  async function submit() {
+    if (!symbol) return;
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+      toast.error("Schwellwert konnte nicht berechnet werden — Kurs noch nicht verfügbar.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const kind = `${mode}_${direction}` as AlertRule["kind"];
+      await onCreate({ symbol, kind, threshold });
+      reset();
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-50"
+        style={{
+          backgroundImage:
+            "radial-gradient(ellipse 40% 60% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 70%)",
+        }}
+      />
+      <div className="relative mb-5 flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
+          <Plus className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground/90">Neuen Alert erstellen</h2>
+      </div>
+
+      {!symbol ? (
+        <div className="relative space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Wähle eine Aktie — wir zeigen dir den aktuellen Kurs und du legst die Schwelle visuell fest.
+          </p>
+          <SymbolSearch
+            compact
+            existing={existingSymbols}
+            onAdd={(syms) => syms[0] && setSymbol(syms[0])}
+            placeholder="Aktie suchen — z. B. Rheinmetall, AAPL, Siemens, BMW.DE"
+          />
+        </div>
+      ) : (
+        <div className="relative space-y-5">
+          {/* Header row: symbol + current price + reset */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/25 to-primary/5 text-sm font-bold text-primary ring-1 ring-primary/30">
+                {symbol.slice(0, 4)}
+              </div>
+              <div>
+                <div className="text-base font-bold tracking-tight">{symbol}</div>
+                <div className="flex items-baseline gap-1.5 text-xs text-muted-foreground">
+                  <span className="uppercase tracking-wider">aktuell</span>
+                  <span className="text-lg font-bold tabular-nums text-foreground">
+                    {mode === "price"
+                      ? currentPrice != null ? currentPrice.toFixed(2) : "…"
+                      : currentScore != null ? currentScore.toFixed(0) : "…"}
+                  </span>
+                  {mode === "price" && quote.isFetching && <span className="text-[10px] text-primary">live</span>}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={reset}
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground"
+            >
+              <X className="h-3 w-3" /> Andere Aktie
+            </button>
+          </div>
+
+          {/* Mode + Direction toggles */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Toggle
+              label="Worauf reagieren?"
+              value={mode}
+              onChange={(v) => { setMode(v as "price" | "score"); setPct(5); }}
+              options={[
+                { value: "price", label: "Preis", icon: <Activity className="h-3 w-3" /> },
+                { value: "score", label: "Setup-Score", icon: <Sparkles className="h-3 w-3" /> },
+              ]}
+            />
+            <Toggle
+              label="Richtung"
+              value={direction}
+              onChange={(v) => setDirection(v as "above" | "below")}
+              options={[
+                { value: "above", label: "Steigt über", icon: <TrendingUp className="h-3 w-3 text-emerald-400" /> },
+                { value: "below", label: "Fällt unter", icon: <TrendingDown className="h-3 w-3 text-rose-400" /> },
+              ]}
+            />
+          </div>
+
+          {/* Visual threshold picker */}
+          <ThresholdPicker
+            mode={mode}
+            direction={direction}
+            anchor={anchor}
+            pct={pct}
+            setPct={setPct}
+            threshold={threshold}
+          />
+
+          {/* Submit */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground">
+              Auslöser:{" "}
+              <span className="font-semibold text-foreground">
+                {mode === "price" ? "Preis" : "Score"}{" "}
+                {direction === "above" ? "≥" : "≤"}{" "}
+                <span className="tabular-nums text-primary">{threshold || "—"}</span>
+              </span>
+            </div>
+            <button
+              onClick={submit}
+              disabled={submitting || atLimit || (mode === "price" && currentPrice == null)}
+              className="group/add relative inline-flex items-center justify-center gap-1.5 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition-all hover:shadow-primary/50 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span aria-hidden className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 group-hover/add:translate-x-full" />
+              <Plus className="relative h-4 w-4" /> <span className="relative">Alert anlegen</span>
+            </button>
+          </div>
+          {atLimit && (
+            <p className="text-[11px] text-rose-400">Alert-Limit ({max}) erreicht. Upgrade für mehr.</p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Toggle({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string; icon?: React.ReactNode }[];
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="grid grid-cols-2 gap-1 rounded-lg border border-border/60 bg-background/40 p-1">
+        {options.map((o) => {
+          const active = value === o.value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => onChange(o.value)}
+              className={`inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-semibold transition-all ${
+                active
+                  ? "bg-gradient-to-br from-primary/25 to-primary/10 text-foreground ring-1 ring-primary/40"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {o.icon}
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ThresholdPicker({
+  mode,
+  direction,
+  anchor,
+  pct,
+  setPct,
+  threshold,
+}: {
+  mode: "price" | "score";
+  direction: "above" | "below";
+  anchor: number | undefined;
+  pct: number;
+  setPct: (n: number) => void;
+  threshold: number;
+}) {
+  const isPrice = mode === "price";
+  const max = isPrice ? 50 : 50;
+  const presets = isPrice ? [1, 3, 5, 10, 20] : [5, 10, 20, 30, 40];
+
+  return (
+    <div className="space-y-3 rounded-xl border border-border/60 bg-background/40 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Abstand zum {isPrice ? "aktuellen Kurs" : "aktuellen Score"}
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ArrowLeftRight className="h-3 w-3" />
+          <span className="tabular-nums font-semibold text-foreground">
+            {direction === "above" ? "+" : "−"}{pct}{isPrice ? "%" : " Punkte"}
+          </span>
+        </div>
+      </div>
+
+      {/* Visual line: anchor in center, threshold marker offset by direction */}
+      <div className="relative h-12">
+        <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-border to-transparent" />
+        {/* anchor marker */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="flex flex-col items-center">
+            <div className="h-3 w-3 rounded-full bg-foreground/70 ring-2 ring-background" />
+            <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">jetzt</div>
+            <div className="text-[10px] tabular-nums text-foreground">
+              {anchor != null ? (isPrice ? anchor.toFixed(2) : Math.round(anchor)) : "…"}
+            </div>
+          </div>
+        </div>
+        {/* threshold marker */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 transition-all duration-300"
+          style={{
+            left: `${50 + (direction === "above" ? 1 : -1) * Math.min(45, (pct / max) * 45)}%`,
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <div className="flex flex-col items-center">
+            <div
+              className={`h-4 w-4 rounded-full ring-2 ring-background ${
+                direction === "above" ? "bg-emerald-400" : "bg-rose-400"
+              }`}
+            />
+            <div className={`mt-1 text-[9px] font-semibold uppercase tracking-wider ${direction === "above" ? "text-emerald-400" : "text-rose-400"}`}>
+              Ziel
+            </div>
+            <div className="text-[10px] font-bold tabular-nums text-foreground">
+              {threshold || "—"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input
+        type="range"
+        min={isPrice ? 0.5 : 1}
+        max={max}
+        step={isPrice ? 0.5 : 1}
+        value={pct}
+        onChange={(e) => setPct(parseFloat(e.target.value))}
+        className="w-full accent-primary"
+      />
+
+      <div className="flex flex-wrap gap-1.5">
+        {presets.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => setPct(p)}
+            className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition-all ${
+              pct === p
+                ? "bg-primary/20 text-primary ring-1 ring-primary/40"
+                : "bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+            }`}
+          >
+            {direction === "above" ? "+" : "−"}{p}{isPrice ? "%" : ""}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
