@@ -1,40 +1,90 @@
-# Kompletter Sprachumbau DE ↔ EN
+# Refactoring-Plan: Kompakter, modularer, KI-freundlicher Code
 
-Ziel: Wenn der User „English" wählt, sieht er **ausschließlich** englischen Text — und umgekehrt. Inklusive Rechtstexte. Inhalts-Datenfiles werden auf eine bilinguale `{de, en}`-Struktur umgestellt.
+**Ausgangslage:** ~60.000 Zeilen in `src/`, mehrere Dateien >700 Zeilen, einige Routes über 2.000–3.000 Zeilen (`global-intel.tsx`, `global-intel-data.ts`). Dictionary (`i18n.ts`) ist 1.173 Zeilen in einem File. Mehrere Komponenten mischen Daten-Logik, UI, State und Side Effects.
 
-## Realistischer Umfang
+**Eiserne Regel:** Kein Pixel verändert sich. Keine neuen Features, keine Verhaltensänderungen, keine API-Änderungen. Reines Verschieben, Aufteilen, Entdoppeln.
 
-Betroffen sind ≈ 30 Dateien mit ~1.000+ deutschen Strings, davon allein **2.349 Zeilen** in `src/lib/global-intel-data.ts`. Das passt nicht in eine einzige Antwort. Ich liefere das in **fünf aufeinanderfolgenden Sprints**, jeder einzeln lauffähig & in sich abgeschlossen. Nach Sprint 1 startest du einfach „weiter" und ich mache den nächsten Sprint — bis alles fertig ist.
+## Strategie
 
-## Sprint 1 — Fundament + aktuelle Seite (jetzt sofort)
+Reines „Move + Split + De-dupe". Öffentliche Exports (Symbol + Signatur) bleiben erhalten — die alten Pfade werden als Re-Export-Barrels stehen gelassen, damit kein einziger Import in den Routes/Komponenten gebrochen wird.
 
-1. **Helper `useTr(de, en)`** zu `src/lib/i18n.ts` hinzufügen — erlaubt Inline-Übersetzung in JSX ohne neuen Dictionary-Key.
-2. **`global-intel-data.ts`** auf bilinguale Struktur umstellen:
-   - Alle übersetzbaren String-Felder (`summary`, `pivotalEvent.*`, `geopolitics.tensions`, `impact.*`, `positives[]`, `negatives[]`, `GLOBAL_SUMMARY.headline`, `EVENTS[].*`, `TRADE_FLOWS[].*`, `TENSIONS[].*`, `MARKET_FEED[].*`, `COUNTRY_EXTRAS.*`) → `{ de: string; en: string }`.
-   - Selektor-Helper `pickLang(field, lang)` exportieren.
-   - `RISK_LABEL` bilingual.
-3. **`global-intel.tsx`** + **`country-derived.ts`** + **`MostTrackedCountries.tsx`** auf den Selektor umstellen. Alle hardcoded deutschen Strings in JSX → `useTr(...)`.
+```text
+src/
+├── routes/                  (unverändert in Pfaden; Inhalte verkleinert)
+├── components/              (UI-Atome; Feature-Komponenten ziehen in features/)
+│   └── ui/                  (shadcn — nicht anfassen)
+├── features/                NEU — fachliche Module
+│   ├── global-intel/        global-intel.tsx wird zerlegt
+│   ├── portfolio/           PortfolioCommandCenter, EditPortfolioDialog, etc.
+│   ├── onboarding/          OnboardingGate, FirstRunTour
+│   ├── picks/               picks-Route + Sub-Komponenten
+│   └── analyse/             analyse-Route + Helper
+├── lib/                     pure Domain-Logik
+│   ├── i18n/                de.ts, en.ts, index.ts (Helper unverändert)
+│   ├── global-intel/        data.ts → countries/, events.ts, tensions.ts, feed.ts, extras.ts
+│   ├── products/            products.ts + products-extra*.ts werden gemerged & gesplittet
+│   └── ...
+└── hooks/                   unverändert
+```
 
-## Sprint 2 — Hauptrouten
+## Phasen (jede Phase eigenständig auslieferbar)
 
-`picks.tsx`, `analyse.tsx`, `produkte.$symbol.tsx`, `explain-trade.tsx`, `track-record.tsx`, `ai-learning.tsx`, `sectors.tsx`, `correlations.tsx`, `alerts.tsx`, `methodology.tsx`, `about.tsx`, `index.tsx` — hardcoded deutsche Strings via `useTr` oder neue i18n-Keys übersetzen.
+### Phase 1 — i18n splitten (Quick Win)
+- `src/lib/i18n.ts` → `src/lib/i18n/{index.ts, dict.de.ts, dict.en.ts, types.ts, hooks.ts}`
+- `index.ts` re-exportiert alles wie bisher (`useT`, `useTr`, `useLang`, etc.) → 0 Import-Bruch
+- Ziel: 1.173 Zeilen → 4 Files à ~300 Zeilen
 
-## Sprint 3 — Komponenten
+### Phase 2 — global-intel-data splitten
+- 2.392 Zeilen aufteilen nach logischen Blöcken: `countries.ts`, `events.ts`, `trade-flows.ts`, `tensions.ts`, `market-feed.ts`, `country-extras.ts`, `global-summary.ts`
+- Selektor (`pickLang`) + Typen in `global-intel/types.ts`
+- Alter Import `@/lib/global-intel-data` bleibt als Barrel-Re-Export erhalten
 
-`BrokerAssessment`, `IndicatorBreakdown`, `Disclaimer`, `OnboardingGate`, `ApexDashboard`, `PortfolioCommandCenter`, `FirstRunTour`, `PortfolioAnalytics`, `LearningProgressBlock`, `CausalEngineCard`, `FeaturePreviewPopover` (Mocks).
+### Phase 3 — global-intel.tsx Route zerlegen
+- 3.004 Zeilen → Route-Shell (~200 Zeilen) + `features/global-intel/`:
+  - `WorldMap.tsx`, `CountryCard.tsx`, `EventsPanel.tsx`, `TensionsPanel.tsx`, `TradeFlowsPanel.tsx`, `MarketFeedPanel.tsx`, `CountryDetail.tsx`
+- Pure Helper (Computations) in `lib/global-intel/derive.ts`
+- Identische JSX-Ausgabe — nur Komposition wird verschoben
 
-## Sprint 4 — Rechtstexte
+### Phase 4 — Große Komponenten teilen
+- `PortfolioCommandCenter.tsx` (1.121) → `features/portfolio/command-center/{Header, Holdings, Chat, FileImport, Summary}.tsx`
+- `OnboardingGate.tsx` (932) → `features/onboarding/{Step1..StepN}.tsx` + `state.ts`
+- `explain-trade.tsx` (925), `analyse.tsx` (823), `track-record.tsx` (785), `picks.tsx` (730), `MarketMovers.tsx` (750): jeweils Sub-Sektionen extrahieren
+- Pattern überall gleich: Route-Datei bleibt am alten Pfad, importiert aus `features/<name>/`
 
-`agb.tsx`, `datenschutz.tsx`, `impressum.tsx` — vollständige englische Übersetzung mit dem üblichen Hinweis „German version is legally binding".
+### Phase 5 — Dedupe & Cleanup
+- `products.ts` + `products-extra.ts` + `products-extra2.ts` zusammenführen und nach Sektor splitten (`products/{us-stocks, etfs, crypto, fx, commodities}.ts`)
+- Tote Imports entfernen (`ts-prune`-Check)
+- Doppelte Utility-Funktionen identifizieren (z. B. format-Helper, Date-Helper) und konsolidieren in `lib/utils/*`
+- Magische Strings in Komponenten in Konstanten oder i18n-Keys ziehen (nur wo es bereits hardcoded ist — keine neuen Übersetzungen)
 
-## Sprint 5 — Cleanup & Audit
+## Technisches Vorgehen pro Datei
 
-`rg`-Sweep nach restlichen `[äöüß]` außerhalb von Strings/Kommentaren. Letzte UI-Komponenten (Banners, Tooltips, Toasts) abräumen. Tests gegen beide Sprachen prüfen.
+1. Datei lesen, logische Blöcke identifizieren (oft durch Kommentar-Header markiert).
+2. Sub-Dateien anlegen, Blöcke kopieren, Imports korrigieren.
+3. Original-Datei wird zum dünnen Barrel: `export * from "./<sub>"`.
+4. Build laufen lassen → bei Fehlern reparieren, bevor zur nächsten Datei.
+5. Niemals Logik anfassen. Nur Cut/Paste + Imports.
 
-## Technische Details
+## Sicherheits-Netze
 
-- **Bilinguale Felder**: `type Bi = { de: string; en: string }`. Wo Arrays existieren (`positives`, `negatives`, `newsKeywords`), wird jedes Element zu `Bi`.
-- **Selektor**: `export const pick = (b: Bi, lang: Lang) => b[lang]` — in Komponenten via `const lang = useLang(); pick(country.summary, lang)`.
-- **`useTr`-Helper**: `export function useTr() { const lang = useLang(); return (de: string, en: string) => lang === "en" ? en : de; }` — für JSX-only Strings ohne Dictionary-Overhead.
-- Keine Änderung an bestehenden Dictionary-Keys (DE+EN sind bereits symmetrisch mit 521 Keys).
-- Übersetzungen werden professionell formuliert, nicht wörtlich — passend zum Finanz-/Trading-Kontext.
+- Nach jeder Phase: TypeScript-Build muss grün sein (passiert automatisch).
+- Re-Export-Barrels an alten Pfaden → 0 Import-Bruch in Routes und Komponenten.
+- Keine Default-Exports umstellen (Symbol-Identität bleibt).
+- Kein Format-Tool über bestehenden Code laufen lassen (würde Diffs aufblähen ohne Mehrwert).
+
+## Auslieferung
+
+Wegen der Größe (~60k LoC, fünf Phasen) liefere ich **Phase für Phase** in separaten Antworten. Du schreibst „weiter" nach jeder Phase. Phase 1 starte ich direkt nach deinem OK.
+
+## Geschätzter Impact
+
+| Datei | Vorher | Nachher (Route/Hauptdatei) |
+|-------|-------:|---------------------------:|
+| `global-intel.tsx` | 3.004 | ~200 + 7 Sub-Komponenten |
+| `global-intel-data.ts` | 2.392 | ~50 Barrel + 7 Sub-Files |
+| `i18n.ts` | 1.173 | ~80 Barrel + DE/EN je ~450 |
+| `PortfolioCommandCenter.tsx` | 1.121 | ~150 + 5 Sub-Komponenten |
+| `OnboardingGate.tsx` | 932 | ~120 + Steps |
+| Routes >700 LoC | Σ ~5.000 | ~200 je Route + Features |
+
+**Netto:** gleiche Funktionalität, ca. 10–15 % weniger Code durch Dedupe, deutlich bessere Auffindbarkeit.
