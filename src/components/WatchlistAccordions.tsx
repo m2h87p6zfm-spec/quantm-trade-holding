@@ -184,10 +184,12 @@ function AccordionSection({
   def,
   open,
   onToggle,
+  currency,
 }: {
   def: SectionDef;
   open: boolean;
   onToggle: () => void;
+  currency: string;
 }) {
   const Icon = def.icon;
   const top = def.rows[0];
@@ -291,7 +293,7 @@ function AccordionSection({
               {def.rows.length ? (
                 <div className="space-y-0.5">
                   {def.rows.map((r, i) => (
-                    <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} />
+                    <StockRow key={r.symbol} row={r} rank={i + 1} emphasis={def.emphasis} currency={currency} />
                   ))}
                 </div>
               ) : (
@@ -393,6 +395,7 @@ export function WatchlistAccordions({
   prependItems?: CustomAccordionItem[];
 }) {
   const tr = useTr();
+  const { settings } = useSettings();
   const rows = useCockpitData(MOVERS_UNIVERSE);
 
   const sections: SectionDef[] = useMemo(() => {
@@ -477,6 +480,7 @@ export function WatchlistAccordions({
             def={s}
             open={!!openMap[s.id]}
             onToggle={() => toggle(s.id)}
+            currency={settings.currency}
           />
         ))}
       </div>
