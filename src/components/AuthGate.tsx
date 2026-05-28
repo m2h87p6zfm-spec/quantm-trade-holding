@@ -37,8 +37,8 @@ function ApexLoadingScreen() {
           className="relative overflow-hidden mx-auto"
           style={{
             marginTop: "clamp(0.625rem, 1.8vh + 0.4vw, 1.75rem)",
-            height: "clamp(2rem, 4.5vw + 2vh, 4.5rem)",
-            maxWidth: "min(80%, 22rem)",
+            height: "clamp(3.25rem, 7vw + 3vh, 7.5rem)",
+            maxWidth: "min(95%, 32rem)",
           }}
         >
           <ApexWordmark className="h-full w-auto max-w-full opacity-100 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
