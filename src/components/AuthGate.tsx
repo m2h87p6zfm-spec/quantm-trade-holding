@@ -42,7 +42,7 @@ function ApexLoadingScreen() {
           }}
         >
           <ApexWordmark className="h-full w-auto max-w-full opacity-100 animate-[apexbreathe_3.2s_ease-in-out_infinite]" />
-          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/12 to-transparent mix-blend-overlay" />
+          <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-foreground/8 to-transparent" />
         </div>
         <div
           className="relative h-[2px] overflow-hidden rounded-full bg-foreground/15"
