@@ -109,7 +109,7 @@ function ProductDetail() {
   // Prefer the cached Quantm-Picks verdict so the label here matches the picks page.
   const pickVerdict = usePickVerdict(symbol);
   const sig = pickVerdict && liveSig
-    ? { verdict: pickVerdict.verdict, confidence: pickVerdict.confidence }
+    ? { ...liveSig, verdict: pickVerdict.verdict, confidence: pickVerdict.confidence }
     : liveSig;
   const closes = candles.data?.c ?? [];
   const last = closes.at(-1) ?? indicators?.price ?? 0;
