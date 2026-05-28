@@ -85,6 +85,24 @@ export function resolveTicker(query: string): string | null {
     if (wordHit(lower, k)) return ALIASES[k];
   }
 
+  // Generische / portfolio-/markt-weite Fragen ("Welche Aktien sollte ich
+  // verkaufen?", "Which stocks should I sell?", "Was sind die besten Aktien?")
+  // dürfen NIEMALS in Schritt 2 versehentlich auf einen Firmennamen-Token wie
+  // "real" → Alexandria Real Estate matchen. Sobald die Frage plural / allgemein
+  // klingt UND kein Alias aus Schritt 1 traf, geben wir hier ohne Ticker zurück
+  // — die KI antwortet dann frei (Portfolio-Kontext, Markt-Übersicht …) statt
+  // eine zufällige Einzel-Aktie zu analysieren.
+  const GENERIC_QUESTION =
+    /\b(which|what stocks?|should i (buy|sell|hold)|recommend|welche|welcher|welches|sollte ich|sollten wir|empfehl|aktien|stocks)\b/i;
+  if (GENERIC_QUESTION.test(lower)) {
+    // Trotzdem: wenn ein EXPLIZITER Großbuchstaben-Ticker im Original steht
+    // ("Should I sell NVDA?"), den ehrlich zurückgeben.
+    for (const m of query.matchAll(/\b[A-Z]{2,5}(?:[.:-][A-Z]{1,5})?\b/g)) {
+      if (!TICKER_BLOCKLIST.has(m[0])) return m[0];
+    }
+    return null;
+  }
+
   // 2) Firmenname-Token-Match. Längere Tokens haben Vorrang
   //    ("rheinmetall"=11 schlägt "meta"=4 deutlich).
   const candidates: Array<{ symbol: string; score: number }> = [];
