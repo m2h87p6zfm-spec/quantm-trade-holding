@@ -89,11 +89,25 @@ export function useAlerts() {
   }, []);
 
   useEffect(() => {
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
       const uid = sess.session?.user?.id;
       if (uid) await migrateLocalAlerts(uid);
       await refresh();
+
+      if (cancelled || !uid) return;
+      // Realtime: andere Tabs / Cron-Trigger.
+      // Channel-Topic enthält die User-ID — damit greift die RLS auf
+      // realtime.messages, die Subscriptions auf Topics ohne eigene
+      // User-ID blockiert (verhindert das Mitlesen fremder Alerts).
+      const channelName = `price_alerts_self:${uid}:${Math.random().toString(36).slice(2)}`;
+      ch = supabase
+        .channel(channelName)
+        .on("postgres_changes", { event: "*", schema: "public", table: "price_alerts" }, () => refresh())
+        .subscribe();
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
@@ -103,20 +117,10 @@ export function useAlerts() {
       refresh();
     });
 
-    // Realtime: andere Tabs / Cron-Trigger.
-    // Eindeutiger Channelname pro Mount — sonst wirft Supabase Realtime
-    // beim zweiten Mount (StrictMode / Route-Remount) den Fehler
-    // "cannot add `postgres_changes` callbacks ... after subscribe()",
-    // weil ein bestehender Channel mit gleichem Namen wiederverwendet wird.
-    const channelName = `price_alerts_self:${Math.random().toString(36).slice(2)}`;
-    const ch = supabase
-      .channel(channelName)
-      .on("postgres_changes", { event: "*", schema: "public", table: "price_alerts" }, () => refresh())
-      .subscribe();
-
     return () => {
+      cancelled = true;
       sub.subscription.unsubscribe();
-      supabase.removeChannel(ch);
+      if (ch) supabase.removeChannel(ch);
     };
   }, [refresh]);
 
