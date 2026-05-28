@@ -492,7 +492,7 @@ export function MarketMovers() {
           {gainers.length ? (
             <div className="space-y-1">
               {gainers.map((r, i) => (
-                <StockRow key={r.symbol} row={r} mode="up" rank={i + 1} />
+                <StockRow key={r.symbol} row={r} mode="up" rank={i + 1} currency={settings.currency} />
               ))}
             </div>
           ) : (
@@ -509,7 +509,7 @@ export function MarketMovers() {
           {losers.length ? (
             <div className="space-y-1">
               {losers.map((r, i) => (
-                <StockRow key={r.symbol} row={r} mode="down" rank={i + 1} />
+                <StockRow key={r.symbol} row={r} mode="down" rank={i + 1} currency={settings.currency} />
               ))}
             </div>
           ) : (
@@ -541,6 +541,7 @@ export function MarketMovers() {
                   row={r}
                   mode="active"
                   rank={i + 1}
+                  currency={settings.currency}
                   extra={
                     <div className="flex flex-col items-end gap-1">
                       <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
