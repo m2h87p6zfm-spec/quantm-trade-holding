@@ -76,7 +76,6 @@ export function SymbolSearch({
 
   useEffect(() => {
     if (!open || !q.trim()) return;
-    const MENU_MAX_H = 384; // matches max-h-96
     const GAP = 8;
 
     let raf = 0;
@@ -86,27 +85,31 @@ export function SymbolSearch({
       const el = boxRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
+      // Use visualViewport so the on-screen keyboard on mobile is taken into account.
+      const vv = window.visualViewport;
+      const vh = vv?.height ?? window.innerHeight;
+      const vw = vv?.width ?? window.innerWidth;
+      const vTop = vv?.offsetTop ?? 0;
 
       // Visibility check: is the input itself clipped/hidden behind a sticky element?
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const onScreen =
-        rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+        rect.bottom > vTop && rect.top < vTop + vh && rect.right > 0 && rect.left < vw;
       let visible = onScreen;
-      if (onScreen && cx >= 0 && cx < vw && cy >= 0 && cy < vh) {
+      if (onScreen && cx >= 0 && cx < vw && cy >= vTop && cy < vTop + vh) {
         const hit = document.elementFromPoint(cx, cy);
         visible = !!hit && (el.contains(hit) || hit.contains(el));
       }
 
-      // Flip above when not enough room below
-      const spaceBelow = vh - rect.bottom - GAP;
-      const spaceAbove = rect.top - GAP;
+      // Flip above when not enough room below (mobile keyboards eat the bottom).
+      const spaceBelow = vTop + vh - rect.bottom - GAP;
+      const spaceAbove = rect.top - vTop - GAP;
+      const MIN_BELOW = 180; // need at least ~3 rows visible
       const nextPlacement: "below" | "above" =
-        spaceBelow < Math.min(220, MENU_MAX_H) && spaceAbove > spaceBelow ? "above" : "below";
+        spaceBelow < MIN_BELOW && spaceAbove > spaceBelow ? "above" : "below";
 
-      const sig = `${rect.top}|${rect.left}|${rect.width}|${rect.bottom}|${nextPlacement}|${visible}`;
+      const sig = `${rect.top}|${rect.left}|${rect.width}|${rect.bottom}|${vh}|${vTop}|${nextPlacement}|${visible}`;
       if (sig !== lastSig) {
         lastSig = sig;
         setMenuRect(rect);
@@ -123,6 +126,8 @@ export function SymbolSearch({
 
     window.addEventListener("resize", update);
     window.addEventListener("scroll", update, true);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
     const ro = new ResizeObserver(update);
     if (boxRef.current) ro.observe(boxRef.current);
 
@@ -130,6 +135,8 @@ export function SymbolSearch({
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", update);
       window.removeEventListener("scroll", update, true);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
       ro.disconnect();
     };
   }, [open, q]);
