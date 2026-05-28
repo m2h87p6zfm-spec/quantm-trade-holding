@@ -117,11 +117,11 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
     <div className="min-h-screen bg-background text-foreground">
       <PublicHeader />
       <Hero correct={correct} total={completed.length} accuracy={accuracy} avgBuyReturn={avgBuyReturn90} />
-      <main className="max-w-7xl mx-auto px-4 md:px-6 pb-20 space-y-10">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 pb-12 space-y-5">
         <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-white/[0.03] p-1 w-fit">
           <button
             onClick={() => setTab("record")}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
               tab === "record" ? "bg-cyan-500 text-black" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -129,7 +129,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
           </button>
           <button
             onClick={() => setTab("learning")}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
               tab === "learning" ? "bg-violet-500 text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -146,12 +146,16 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
               assetType={assetType} setAssetType={setAssetType}
               result={result} setResult={setResult}
             />
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2"><PerformanceChart analyses={completed} /></div>
+              <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
+            </div>
             <IndicatorAccuracy analyses={completed} />
-            <PerformanceChart analyses={completed} />
-            <BenchmarkTable buyAnalyses={buyAnalyses} benchmarks={data.benchmarks} />
+            <div className="grid lg:grid-cols-3 gap-5">
+              <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
+              <div className="lg:col-span-2"><BestWorst analyses={completed} /></div>
+            </div>
             <AnalysisTable analyses={filtered} />
-            <SectorHeatmap analyses={completed} onPick={(s) => setSector(s as (typeof SECTORS)[number])} />
-            <BestWorst analyses={completed} />
             <Methodology />
             <CTA />
           </>
