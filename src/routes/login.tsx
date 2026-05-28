@@ -109,7 +109,7 @@ function LoginPage() {
           );
           return;
         }
-        toast.error(error.message);
+        toast.error(toAuthMessage(error.message, "signin"));
         return;
       }
       if (data.session) {
@@ -125,7 +125,7 @@ function LoginPage() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Anmeldung fehlgeschlagen: ${msg}. Bitte prüfe deine Internetverbindung.`);
+      toast.error(toAuthMessage(msg, "signin"));
     } finally {
       setBusy(false);
     }
@@ -135,19 +135,22 @@ function LoginPage() {
     setBusy(true);
     setRememberMe(remember);
     try {
+      const normalizedEmail = email.trim();
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: { emailRedirectTo: window.location.origin + "/auth/confirm" },
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(toAuthMessage(error.message, "signup"));
         return;
       }
       if (data.session) {
-        navigate({ to: "/" });
+        const verified = await waitForSessionReady(data.session);
+        if (verified?.access_token) acceptSession(verified);
+        navigate({ to: "/", replace: true });
       } else {
-        setPendingEmail(email);
+        setPendingEmail(normalizedEmail);
         toast.success(
           "Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.",
           { duration: 10000 },
@@ -155,7 +158,7 @@ function LoginPage() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Registrierung fehlgeschlagen: ${msg}.`);
+      toast.error(toAuthMessage(msg, "signup"));
     } finally {
       setBusy(false);
     }
