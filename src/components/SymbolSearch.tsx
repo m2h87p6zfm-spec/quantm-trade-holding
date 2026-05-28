@@ -294,6 +294,13 @@ export function SymbolSearch({
               // but stop the event from bubbling to ancestors that might close us.
               e.stopPropagation();
             }}
+            // The menu is portaled to <body>, so clicks would otherwise reach
+            // Radix Dialog's document-level "outside" listener and close the
+            // ManageWatchlistDialog before the result is staged/committed.
+            // Stop propagation in capture phase so the dialog stays open.
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerUpCapture={(e) => e.stopPropagation()}
+            onClickCapture={(e) => e.stopPropagation()}
             className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",

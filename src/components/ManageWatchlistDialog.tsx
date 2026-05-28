@@ -1,4 +1,4 @@
-import { useState } from "react";
+import type * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, GripVertical, Plus } from "lucide-react";
@@ -12,46 +12,31 @@ import { useT } from "@/lib/i18n";
 export function ManageWatchlistDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const t = useT();
   const { settings, addSymbols, removeSymbol, reorderActive } = useSettings();
-  const [items, setItems] = useState<string[]>(settings.watchlist);
-
-  // Sync when settings change externally
-  if (open && items.join(",") !== settings.watchlist.join(",") && items.length === 0) {
-    setItems(settings.watchlist);
-  }
+  // Read directly from settings so adds/removes (including those triggered
+  // from elsewhere) reflect immediately — no stale local mirror.
+  const items = settings.watchlist;
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    setItems((cur) => {
-      const oldIdx = cur.indexOf(active.id as string);
-      const newIdx = cur.indexOf(over.id as string);
-      if (oldIdx < 0 || newIdx < 0) return cur;
-      const next = arrayMove(cur, oldIdx, newIdx);
-      reorderActive(next);
-      return next;
-    });
+    const oldIdx = items.indexOf(active.id as string);
+    const newIdx = items.indexOf(over.id as string);
+    if (oldIdx < 0 || newIdx < 0) return;
+    reorderActive(arrayMove(items, oldIdx, newIdx));
   }
 
   function handleRemove(sym: string) {
-    setItems((cur) => cur.filter((x) => x !== sym));
     removeSymbol(sym);
   }
 
   function handleAdd(syms: string[]) {
     addSymbols(syms);
-    setItems((cur) => Array.from(new Set([...cur, ...syms.map((s) => s.toUpperCase())])));
-  }
-
-  // Hydrate items list from settings when dialog opens
-  function handleOpen(v: boolean) {
-    if (v) setItems(settings.watchlist);
-    onOpenChange(v);
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>{t("watchlist.manage.title")}</DialogTitle>
