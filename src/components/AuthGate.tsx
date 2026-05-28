@@ -3,7 +3,7 @@ import { Navigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { FirstRunTour } from "@/components/FirstRunTour";
-import { ApexLogo, ApexWordmark } from "@/components/ApexLogo";
+import { ApexLogo } from "@/components/ApexLogo";
 
 /**
  * Brand splash — silver Q + wordmark on a deep, vignetted canvas.
