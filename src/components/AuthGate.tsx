@@ -202,6 +202,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (pathname === "/auth/confirm") return;
+    if (pathname === "/passwort-zuruecksetzen") return;
     const search = window.location.search;
     const hash = window.location.hash;
     const combined = `${search}${hash}`;

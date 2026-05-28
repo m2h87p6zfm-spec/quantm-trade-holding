@@ -63,6 +63,26 @@ async function waitForSessionReady(initialSession?: Session | null): Promise<Ses
   return null;
 }
 
+function toAuthMessage(message: string, mode: "signin" | "signup") {
+  const lower = message.toLowerCase();
+  if (lower.includes("invalid login credentials")) {
+    return "E-Mail oder Passwort ist falsch. Falls du dich gerade registriert hast, bestätige zuerst deine E-Mail-Adresse.";
+  }
+  if (lower.includes("email not confirmed") || lower.includes("not confirmed") || lower.includes("confirm")) {
+    return "Bitte bestätige zuerst deine E-Mail-Adresse. Schau auch im Spam-Ordner nach.";
+  }
+  if (lower.includes("user already registered") || lower.includes("already registered")) {
+    return "Für diese E-Mail-Adresse gibt es bereits ein Konto. Bitte melde dich an oder nutze Passwort vergessen.";
+  }
+  if (lower.includes("signup is disabled")) {
+    return "Registrierung ist aktuell deaktiviert. Ich habe sie gerade wieder aktiviert – bitte versuche es erneut.";
+  }
+  if (lower.includes("timeout") || lower.includes("dauert zu lange") || lower.includes("load failed") || lower.includes("failed to fetch")) {
+    return `${mode === "signin" ? "Anmeldung" : "Registrierung"} konnte wegen eines Netzwerk-/Preview-Problems nicht abgeschlossen werden. Bitte versuche es erneut oder teste kurz die veröffentlichte Seite.`;
+  }
+  return `${mode === "signin" ? "Anmeldung" : "Registrierung"} fehlgeschlagen: ${message}`;
+}
+
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
@@ -109,7 +129,7 @@ function LoginPage() {
           );
           return;
         }
-        toast.error(error.message);
+        toast.error(toAuthMessage(error.message, "signin"));
         return;
       }
       if (data.session) {
@@ -125,7 +145,7 @@ function LoginPage() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Anmeldung fehlgeschlagen: ${msg}. Bitte prüfe deine Internetverbindung.`);
+      toast.error(toAuthMessage(msg, "signin"));
     } finally {
       setBusy(false);
     }
@@ -135,19 +155,22 @@ function LoginPage() {
     setBusy(true);
     setRememberMe(remember);
     try {
+      const normalizedEmail = email.trim();
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
-        options: { emailRedirectTo: window.location.origin + "/auth/confirm" },
+        options: { emailRedirectTo: window.location.origin },
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(toAuthMessage(error.message, "signup"));
         return;
       }
       if (data.session) {
-        navigate({ to: "/" });
+        const verified = await waitForSessionReady(data.session);
+        if (verified?.access_token) acceptSession(verified);
+        navigate({ to: "/", replace: true });
       } else {
-        setPendingEmail(email);
+        setPendingEmail(normalizedEmail);
         toast.success(
           "Account erstellt! Bitte bestätige jetzt deine E-Mail-Adresse, um dich anmelden zu können.",
           { duration: 10000 },
@@ -155,7 +178,7 @@ function LoginPage() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Registrierung fehlgeschlagen: ${msg}.`);
+      toast.error(toAuthMessage(msg, "signup"));
     } finally {
       setBusy(false);
     }
