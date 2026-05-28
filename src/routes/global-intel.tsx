@@ -13,7 +13,6 @@ import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
 import {
   COUNTRIES,
-  COUNTRIES_BY_NAME,
   COUNTRY_COORDS,
   COUNTRY_EXTRAS,
   EVENTS,
