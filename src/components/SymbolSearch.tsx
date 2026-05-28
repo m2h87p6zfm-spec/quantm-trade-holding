@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Search, Plus, X, Loader2, Check, Lock } from "lucide-react";
 import { searchSymbols, type SymbolSearchHit } from "@/lib/finnhub";
 import { Link } from "@tanstack/react-router";
@@ -38,7 +39,9 @@ export function SymbolSearch({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [staged, setStaged] = useState<string[]>([]);
+  const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
   const exists = new Set(existing.map((s) => s.toUpperCase()));
 
   // Debounced search
@@ -62,6 +65,18 @@ export function SymbolSearch({
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
+
+  useEffect(() => {
+    if (!open || !q.trim()) return;
+    const updateRect = () => setMenuRect(boxRef.current?.getBoundingClientRect() ?? null);
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect, true);
+    return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect, true);
+    };
+  }, [open, q]);
 
   function reachedLimit(extra = 0): boolean {
     if (limit == null || !Number.isFinite(limit)) return false;
@@ -141,8 +156,16 @@ export function SymbolSearch({
       )}
 
       {/* Dropdown */}
-      {open && q.trim() && (
-        <div className="absolute z-50 left-0 right-0 mt-2 max-h-96 overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/10">
+      {open && q.trim() && menuRect && createPortal(
+        <div
+          id={menuId}
+          className="fixed z-[9999] max-h-[min(24rem,calc(100vh-7rem))] overflow-auto rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
+          style={{
+            top: menuRect.bottom + 8,
+            left: menuRect.left,
+            width: menuRect.width,
+          }}
+        >
 
           {loading && hits.length === 0 ? (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground">Suche weltweit (Twelve Data)…</div>
@@ -197,7 +220,8 @@ export function SymbolSearch({
               })}
             </ul>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
