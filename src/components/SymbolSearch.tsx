@@ -40,6 +40,8 @@ export function SymbolSearch({
   const [open, setOpen] = useState(false);
   const [staged, setStaged] = useState<string[]>([]);
   const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
+  const [placement, setPlacement] = useState<"below" | "above">("below");
+  const [inputVisible, setInputVisible] = useState(true);
   const boxRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
@@ -74,13 +76,61 @@ export function SymbolSearch({
 
   useEffect(() => {
     if (!open || !q.trim()) return;
-    const updateRect = () => setMenuRect(boxRef.current?.getBoundingClientRect() ?? null);
-    updateRect();
-    window.addEventListener("resize", updateRect);
-    window.addEventListener("scroll", updateRect, true);
+    const MENU_MAX_H = 384; // matches max-h-96
+    const GAP = 8;
+
+    let raf = 0;
+    let lastSig = "";
+
+    const update = () => {
+      const el = boxRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+
+      // Visibility check: is the input itself clipped/hidden behind a sticky element?
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const onScreen =
+        rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+      let visible = onScreen;
+      if (onScreen && cx >= 0 && cx < vw && cy >= 0 && cy < vh) {
+        const hit = document.elementFromPoint(cx, cy);
+        visible = !!hit && (el.contains(hit) || hit.contains(el));
+      }
+
+      // Flip above when not enough room below
+      const spaceBelow = vh - rect.bottom - GAP;
+      const spaceAbove = rect.top - GAP;
+      const nextPlacement: "below" | "above" =
+        spaceBelow < Math.min(220, MENU_MAX_H) && spaceAbove > spaceBelow ? "above" : "below";
+
+      const sig = `${rect.top}|${rect.left}|${rect.width}|${rect.bottom}|${nextPlacement}|${visible}`;
+      if (sig !== lastSig) {
+        lastSig = sig;
+        setMenuRect(rect);
+        setPlacement(nextPlacement);
+        setInputVisible(visible);
+      }
+    };
+
+    const loop = () => {
+      update();
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    const ro = new ResizeObserver(update);
+    if (boxRef.current) ro.observe(boxRef.current);
+
     return () => {
-      window.removeEventListener("resize", updateRect);
-      window.removeEventListener("scroll", updateRect, true);
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+      ro.disconnect();
     };
   }, [open, q]);
 
@@ -181,6 +231,7 @@ export function SymbolSearch({
       {open &&
         q.trim() &&
         menuRect &&
+        inputVisible &&
         createPortal(
           <div
             ref={menuRef}
@@ -189,7 +240,9 @@ export function SymbolSearch({
             style={{
               isolation: "isolate",
               zIndex: 9999,
-              top: menuRect.bottom + 8,
+              ...(placement === "above"
+                ? { top: Math.max(8, menuRect.top - 8 - Math.min(384, menuRect.top - 16)), maxHeight: Math.max(160, menuRect.top - 16) }
+                : { top: menuRect.bottom + 8, maxHeight: Math.max(160, window.innerHeight - menuRect.bottom - 16) }),
               left: menuLeft,
               width: Math.min(menuRect.width, window.innerWidth - 24),
             }}
