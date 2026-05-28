@@ -69,6 +69,7 @@ import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
+import { Route as ApiPublicHooksRefreshPortfoliosRouteImport } from './routes/api/public/hooks/refresh-portfolios'
 import { Route as ApiPublicHooksPrebakePicksRouteImport } from './routes/api/public/hooks/prebake-picks'
 import { Route as ApiPublicHooksPicksScanRouteImport } from './routes/api/public/hooks/picks-scan'
 import { Route as ApiPublicHooksEvaluateAlertsRouteImport } from './routes/api/public/hooks/evaluate-alerts'
@@ -377,6 +378,12 @@ const ApiPublicHooksTrackOutcomesRoute =
     path: '/api/public/hooks/track-outcomes',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksRefreshPortfoliosRoute =
+  ApiPublicHooksRefreshPortfoliosRouteImport.update({
+    id: '/api/public/hooks/refresh-portfolios',
+    path: '/api/public/hooks/refresh-portfolios',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksPrebakePicksRoute =
   ApiPublicHooksPrebakePicksRouteImport.update({
     id: '/api/public/hooks/prebake-picks',
@@ -464,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
+  '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -530,6 +538,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
+  '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -597,6 +606,7 @@ export interface FileRoutesById {
   '/api/public/hooks/evaluate-alerts': typeof ApiPublicHooksEvaluateAlertsRoute
   '/api/public/hooks/picks-scan': typeof ApiPublicHooksPicksScanRoute
   '/api/public/hooks/prebake-picks': typeof ApiPublicHooksPrebakePicksRoute
+  '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
+    | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -731,6 +742,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
+    | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   id:
@@ -797,6 +809,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/evaluate-alerts'
     | '/api/public/hooks/picks-scan'
     | '/api/public/hooks/prebake-picks'
+    | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -864,6 +877,7 @@ export interface RootRouteChildren {
   ApiPublicHooksEvaluateAlertsRoute: typeof ApiPublicHooksEvaluateAlertsRoute
   ApiPublicHooksPicksScanRoute: typeof ApiPublicHooksPicksScanRoute
   ApiPublicHooksPrebakePicksRoute: typeof ApiPublicHooksPrebakePicksRoute
+  ApiPublicHooksRefreshPortfoliosRoute: typeof ApiPublicHooksRefreshPortfoliosRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
@@ -1290,6 +1304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksTrackOutcomesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-portfolios': {
+      id: '/api/public/hooks/refresh-portfolios'
+      path: '/api/public/hooks/refresh-portfolios'
+      fullPath: '/api/public/hooks/refresh-portfolios'
+      preLoaderRoute: typeof ApiPublicHooksRefreshPortfoliosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/prebake-picks': {
       id: '/api/public/hooks/prebake-picks'
       path: '/api/public/hooks/prebake-picks'
@@ -1384,6 +1405,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksEvaluateAlertsRoute: ApiPublicHooksEvaluateAlertsRoute,
   ApiPublicHooksPicksScanRoute: ApiPublicHooksPicksScanRoute,
   ApiPublicHooksPrebakePicksRoute: ApiPublicHooksPrebakePicksRoute,
+  ApiPublicHooksRefreshPortfoliosRoute: ApiPublicHooksRefreshPortfoliosRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
