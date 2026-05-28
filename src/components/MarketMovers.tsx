@@ -42,6 +42,7 @@ import { MiniSpark } from "@/components/MiniSpark";
 import { SectorHeatmap } from "@/components/SectorHeatmap";
 import { useTr } from "@/lib/i18n";
 import { useSettings } from "@/lib/settings";
+import { formatCurrencyFromUsd } from "@/lib/format";
 
 /* ---------------------------------------------------------------------- */
 /*  Curated movers universe — ~50 highly liquid US large caps + key ETFs  */
@@ -168,11 +169,13 @@ function StockRow({
   mode,
   rank,
   extra,
+  currency,
 }: {
   row: CockpitRow;
   mode: "up" | "down" | "active";
   rank: number;
   extra?: React.ReactNode;
+  currency: string;
 }) {
   const meta = PRODUCT_MAP.get(row.symbol);
   const up = row.change >= 0;
@@ -214,7 +217,7 @@ function StockRow({
       <MiniSpark data={sparkData} color={color} className="h-7 w-20 shrink-0" />
       <div className="w-20 shrink-0 text-right">
         <div className="font-mono text-[13px] tabular-nums text-foreground">
-          ${row.last.toFixed(2)}
+          {formatCurrencyFromUsd(row.last, currency)}
         </div>
         <div
           className="flex items-center justify-end gap-0.5 font-mono text-[12px] font-semibold tabular-nums"
