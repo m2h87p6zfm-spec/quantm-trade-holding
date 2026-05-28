@@ -114,5 +114,18 @@ export function useLiveQuotes(symbols: string[], enabled = true): {
     };
   }, [key, enabled, visible]);
 
-  return { quotes, connected, lastUpdate, tier };
+  const refetch = useCallback(async () => {
+    if (!key) return;
+    try {
+      const res = await authedFetch(`/api/public/quotes-batch?symbols=${encodeURIComponent(key)}&t=${Date.now()}`);
+      if (!res.ok) return;
+      const json = (await res.json()) as { quotes?: LiveQuotes; lastUpdated?: number };
+      if (json.quotes) {
+        setQuotes((prev) => ({ ...prev, ...json.quotes }));
+        setLastUpdate(json.lastUpdated ?? Date.now());
+      }
+    } catch { /* noop */ }
+  }, [key]);
+
+  return { quotes, connected, lastUpdate, tier, refetch };
 }
