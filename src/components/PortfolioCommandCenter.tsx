@@ -915,7 +915,7 @@ function PhotoImportPanel({ atLimit }: { atLimit: boolean }) {
               key={f.id}
               className="group relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-muted"
             >
-              <img src={f.url} alt={f.file.name} className="h-full w-full object-cover" />
+              <img src={f.url} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
                 onClick={(e) => {

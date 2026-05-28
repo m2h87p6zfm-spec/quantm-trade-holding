@@ -8,4 +8,4 @@ Disallow: /passwort-vergessen
 Disallow: /passwort-zuruecksetzen
 Disallow: /checkout.return
 
-Sitemap: https://quantm-trade-holding.lovable.app/sitemap.xml
+Sitemap: https://quantmtrade.com/sitemap.xml

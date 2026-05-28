@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { PRODUCTS } from "@/lib/products";
 
-const BASE_URL = "https://quantm-trade-holding.lovable.app";
+const BASE_URL = "https://quantmtrade.com";
 
 interface SitemapEntry {
   path: string;
@@ -32,6 +32,14 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/track-record", changefreq: "weekly", priority: "0.7" },
           { path: "/ai-learning", changefreq: "weekly", priority: "0.5" },
           { path: "/welcome", changefreq: "monthly", priority: "0.5" },
+          { path: "/agb", changefreq: "monthly", priority: "0.3" },
+          { path: "/agent", changefreq: "weekly", priority: "0.6" },
+          { path: "/alerts", changefreq: "weekly", priority: "0.5" },
+          { path: "/backtest", changefreq: "weekly", priority: "0.5" },
+          { path: "/correlations", changefreq: "daily", priority: "0.6" },
+          { path: "/sectors", changefreq: "daily", priority: "0.6" },
+          { path: "/markt-radar", changefreq: "daily", priority: "0.7" },
+          { path: "/explain-trade", changefreq: "weekly", priority: "0.5" },
         ];
 
         const tickerPaths: SitemapEntry[] = PRODUCTS.map((p) => ({

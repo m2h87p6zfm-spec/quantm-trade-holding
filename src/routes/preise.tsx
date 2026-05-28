@@ -21,8 +21,12 @@ export const Route = createFileRoute("/preise")({
   head: () => ({
     meta: [
       { title: "Preise — Quantm Trade" },
-      { name: "description", content: "Free, Pro 9,99 €/Monat und Elite 19,99 €/Monat." },
+      { name: "description", content: "Quantm Trade Pläne: Free zum Einstieg, Pro für 9,99 €/Monat mit AI-Signalen, Elite für 19,99 €/Monat mit voller Quant-Suite." },
+      { property: "og:title", content: "Preise — Quantm Trade" },
+      { property: "og:description", content: "Quantm Trade Pläne: Free zum Einstieg, Pro für 9,99 €/Monat mit AI-Signalen, Elite für 19,99 €/Monat mit voller Quant-Suite." },
+      { property: "og:url", content: "https://quantmtrade.com/preise" },
     ],
+    links: [{ rel: "canonical", href: "https://quantmtrade.com/preise" }],
   }),
   component: PricingPage,
 });

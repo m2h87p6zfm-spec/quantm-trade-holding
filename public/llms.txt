@@ -1,0 +1,33 @@
+# Quantm Trade
+
+> Statistischer Trading Agent — datengetriebene Marktanalyse mit Z-Score, RSI, MACD, Bollinger Bands, Broker-Konsens und Monte-Carlo-Simulation für private Trader.
+
+Quantm Trade liefert klare Kauf-, Halte- und Verkaufssignale aus quantitativen Modellen. Die Plattform kombiniert Echtzeit-Marktdaten, Sentiment, Wall-Street-Broker-Ratings und KI-Erklärungen — keine Chart-Lektüre, keine Indikator-Interpretation nötig.
+
+## Pages
+
+- [Home](/): Cockpit mit Watchlist, Marktstimmung, KI-Insights.
+- [Pricing](/preise): Free, Pro (9,99 €/Monat), Elite (19,99 €/Monat).
+- [About](/about): Mission und Hintergrund des Projekts.
+- [Methodology](/methodology): Wie Signale berechnet werden — RSI, MACD, Bollinger, Z-Score, Monte Carlo.
+- [Product Catalog](/produkte): Alle abgedeckten Tickers und Märkte.
+- [Picks](/picks): Tägliche Top-Signale aus dem Quant-Modell.
+- [Markt-Radar](/markt-radar): Heatmap, Sektor-Rotation und Korrelationen.
+- [News](/news): Tier-1 Finanznachrichten gefiltert nach Portfolio.
+- [Global Intel](/global-intel): Geopolitik und makroökonomischer Kontext.
+- [Track Record](/track-record): Historische Performance der Signale.
+- [Screener](/screener): Aktien nach quantitativen Kriterien filtern.
+- [Heatmap](/heatmap): Marktübersicht nach Sektor und Performance.
+- [Sectors](/sectors): Sektor-Rotation und relative Stärke.
+- [Correlations](/correlations): Korrelations-Matrix für Risiko-Management.
+- [Calendar](/kalender): Earnings, Makro-Events, Zentralbank-Termine.
+- [Markets](/maerkte): Indizes, Devisen, Rohstoffe in Echtzeit.
+
+## Optional
+
+- [Alerts](/alerts): Persönliche Preis- und Signal-Alerts.
+- [Backtest](/backtest): Strategien gegen historische Daten testen.
+- [AI Learning](/ai-learning): Wie das Modell aus Outcomes lernt.
+- [Explain Trade](/explain-trade): KI-Erklärung für jede Trade-Entscheidung.
+- [Status](/status): Systemstatus und Datenquellen.
+- [Welcome](/welcome): Kurz-Einführung für neue Nutzer.

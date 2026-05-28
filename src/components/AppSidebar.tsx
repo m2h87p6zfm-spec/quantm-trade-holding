@@ -258,12 +258,12 @@ function AuthSection({ collapsed }: { collapsed: boolean }) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip={t("side.signIn")}>
-              <Link to="/login"><LogIn className="h-4 w-4" /></Link>
+              <Link to="/login" aria-label={t("side.signIn")}><LogIn className="h-4 w-4" aria-hidden="true" /><span className="sr-only">{t("side.signIn")}</span></Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip={t("side.upgrade")}>
-              <Link to="/preise"><CreditCard className="h-4 w-4 text-gold" /></Link>
+              <Link to="/preise" aria-label={t("side.upgrade")}><CreditCard className="h-4 w-4 text-gold" aria-hidden="true" /><span className="sr-only">{t("side.upgrade")}</span></Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
