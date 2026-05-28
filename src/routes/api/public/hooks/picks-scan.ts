@@ -7,27 +7,10 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
-// Cron endpoints under /api/public/* may also authenticate via the standard
-// Supabase anon `apikey` header (canonical pg_cron pattern). The anon key
-// is fully public (embedded in every client bundle), so checking it doesn't
-// add real security — it just filters out unrelated bots. We accept any of
-// the common env-var names Supabase exposes.
-const PROJECT_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bXB6cGRmaGFyaW9oZGthbWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTExNDcsImV4cCI6MjA5NDk2NzE0N30.5_o977dQodLw5kK6DxnlV6UmUthOcz8osKOr0KJtHyE";
-
-function isAnonApiKey(request: Request): boolean {
-  const got =
-    request.headers.get("apikey") ??
-    (request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "");
-  if (!got) return false;
-  const candidates = [
-    process.env.SUPABASE_PUBLISHABLE_KEY,
-    process.env.SUPABASE_ANON_KEY,
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-    PROJECT_ANON_KEY,
-  ].filter(Boolean) as string[];
-  return candidates.some((k) => k === got);
-}
+// Cron endpoint — requires `x-cron-secret` header matching CRON_SECRET.
+// The public Supabase anon key is NOT accepted: it is embedded in every
+// client bundle, so accepting it would let any visitor trigger thousands of
+// upstream API calls (Yahoo/Twelve Data) on demand.
 
 // ============================================================
 // Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
@@ -226,12 +209,9 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        // Accept either x-cron-secret OR Supabase anon apikey header
-        // (canonical pg_cron pattern).
-        if (!isAnonApiKey(request)) {
-          const authErr = requireCronSecret(request);
-          if (authErr) return authErr;
-        }
+        const authErr = requireCronSecret(request);
+        if (authErr) return authErr;
+
 
         // Default: scannt nur die echten Cap-Buckets. "combined" wird danach
         // serverseitig aus den drei Cache-Einträgen synthetisiert — das spart
