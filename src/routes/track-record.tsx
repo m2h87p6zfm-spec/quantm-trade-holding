@@ -271,30 +271,32 @@ function FilterBar(props: {
   result: (typeof RESULTS)[number]; setResult: (v: (typeof RESULTS)[number]) => void;
 }) {
   return (
-    <Card className="bg-white/[0.03] border-border/60 p-4 space-y-3">
-      <FilterRow label="Zeitraum">
-        {PERIODS.map((p) => <Chip key={p.id} active={props.period === p.id} onClick={() => props.setPeriod(p.id)}>{p.label}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Urteil">
-        {VERDICTS.map((v) => <Chip key={v} active={props.verdict === v} onClick={() => props.setVerdict(v)}>{v}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Sektor">
-        {SECTORS.map((s) => <Chip key={s} active={props.sector === s} onClick={() => props.setSector(s)}>{s}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Finanzart">
-        {ASSET_TYPES.map((a) => <Chip key={a} active={props.assetType === a} onClick={() => props.setAssetType(a)}>{a}</Chip>)}
-      </FilterRow>
-      <FilterRow label="Ergebnis">
-        {RESULTS.map((r) => <Chip key={r} active={props.result === r} onClick={() => props.setResult(r)}>{r}</Chip>)}
-      </FilterRow>
+    <Card className="bg-white/[0.03] border-border/60 p-2.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <FilterRow label="Zeitraum">
+          {PERIODS.map((p) => <Chip key={p.id} active={props.period === p.id} onClick={() => props.setPeriod(p.id)}>{p.label}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Urteil">
+          {VERDICTS.map((v) => <Chip key={v} active={props.verdict === v} onClick={() => props.setVerdict(v)}>{v}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Finanzart">
+          {ASSET_TYPES.map((a) => <Chip key={a} active={props.assetType === a} onClick={() => props.setAssetType(a)}>{a}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Ergebnis">
+          {RESULTS.map((r) => <Chip key={r} active={props.result === r} onClick={() => props.setResult(r)}>{r}</Chip>)}
+        </FilterRow>
+        <FilterRow label="Sektor">
+          {SECTORS.map((s) => <Chip key={s} active={props.sector === s} onClick={() => props.setSector(s)}>{s}</Chip>)}
+        </FilterRow>
+      </div>
     </Card>
   );
 }
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 flex-wrap">
-      <span className="text-xs uppercase tracking-widest text-muted-foreground w-24 pt-1.5 shrink-0">{label}</span>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground shrink-0">{label}</span>
+      <div className="flex flex-wrap gap-1">{children}</div>
     </div>
   );
 }
@@ -302,7 +304,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs border transition ${
+      className={`px-2.5 py-0.5 rounded-full text-[11px] border transition ${
         active ? "bg-cyan-500 text-black border-cyan-400 font-semibold" : "border-border/60 text-muted-foreground hover:text-foreground hover:border-white/20"
       }`}
     >
