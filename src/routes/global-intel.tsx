@@ -2353,7 +2353,7 @@ const FEED_IMPACT_INFO: Record<FeedItem["impact"], { label: string; desc: string
 function IntelFeed() {
   const [openFeed, setOpenFeed] = useState<FeedItem | null>(null);
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-[oklch(0.11_0.016_260)]">
+    <div className="overflow-hidden rounded-2xl border border-border bg-card backdrop-blur">
       <div className="flex items-center justify-between border-b border-white/[0.12] px-4 py-2.5">
         <div className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           <Radio className="h-3 w-3 text-emerald-400" />
