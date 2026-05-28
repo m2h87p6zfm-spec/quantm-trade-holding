@@ -4,7 +4,7 @@
 // Credit-Sparende Drosselung:
 //   - Tab im Hintergrund → Stream/Polling pausiert
 //   - 402 vom Server → Polling-Modus + tier="free" zurückgemeldet
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Quote } from "@/lib/finnhub";
 import { getAccessTokenForUrl, authedFetch } from "@/lib/authed-fetch";
 
@@ -18,6 +18,7 @@ export function useLiveQuotes(symbols: string[], enabled = true): {
   connected: boolean;
   lastUpdate: number;
   tier: RealtimeTier;
+  refetch: () => Promise<void>;
 } {
   const [quotes, setQuotes] = useState<LiveQuotes>({});
   const [connected, setConnected] = useState(false);
