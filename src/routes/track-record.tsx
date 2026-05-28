@@ -67,7 +67,7 @@ function TrackRecordPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 rounded-full border-4 border-cyan-500/30 border-t-cyan-400 animate-spin" />
+          <div className="h-16 w-16 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
           <p className="text-sm text-muted-foreground tracking-widest uppercase">Quantm lädt Track Record-Daten…</p>
         </div>
       </div>
@@ -122,7 +122,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
           <button
             onClick={() => setTab("record")}
             className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
-              tab === "record" ? "bg-cyan-500 text-black" : "text-muted-foreground hover:text-foreground"
+              tab === "record" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <BarChart3 className="h-3.5 w-3.5" /> Track Record
@@ -187,7 +187,7 @@ function PublicHeader() {
         <nav className="flex items-center gap-2 md:gap-3 text-sm">
           <Link to="/analyse" className="text-muted-foreground hover:text-foreground transition">Analyse</Link>
           <Link to="/preise" className="text-muted-foreground hover:text-foreground transition">Preise</Link>
-          <Button asChild size="sm" className="bg-cyan-500 hover:bg-cyan-400 text-black">
+          <Button asChild size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground">
             <Link to="/login">Anmelden</Link>
           </Button>
         </nav>
@@ -208,18 +208,23 @@ function PublicFooter() {
 
 function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; total: number; accuracy: number; avgBuyReturn: number | null }) {
   return (
-    <section className="relative overflow-hidden border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-5 md:py-6 relative">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] uppercase tracking-[0.2em] text-emerald-400">Live Track Record</span>
+    <section className="max-w-7xl mx-auto px-4 md:px-6 pt-5 md:pt-6">
+      <header className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-background to-violet-accent/10 p-5 md:p-7">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-10 -bottom-16 h-48 w-48 rounded-full bg-violet-accent/15 blur-3xl" />
+        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="min-w-0 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              Live Track Record
             </div>
-            <h1 className="text-lg md:text-2xl font-bold tracking-tight leading-snug">
-              Quantm hat <span className="text-cyan-400 tabular-nums">{formatNumber(correct)}</span> von{" "}
-              <span className="text-cyan-400 tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
+            <h1 className="mt-3 font-display text-xl md:text-2xl font-bold tracking-tight leading-snug">
+              Quantm hat <span className="text-primary tabular-nums">{formatNumber(correct)}</span> von{" "}
+              <span className="text-primary tabular-nums">{formatNumber(total)}</span> Analysen korrekt vorhergesagt.
             </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Vollständig nachvollziehbare Treffer-Statistik der Quantm Composite Engine.
+            </p>
           </div>
           <div className="grid grid-cols-3 gap-2 lg:gap-3 lg:shrink-0">
             <KpiCard label="Genauigkeit" value={`${formatNumber(accuracy, 1)} %`} accent="cyan">
@@ -233,13 +238,14 @@ function Hero({ correct, total, accuracy, avgBuyReturn }: { correct: number; tot
             />
           </div>
         </div>
-      </div>
+      </header>
     </section>
   );
 }
 
+
 function KpiCard({ label, value, accent, children }: { label: string; value: string; accent: "cyan" | "emerald" | "red"; children?: React.ReactNode }) {
-  const color = accent === "cyan" ? "text-cyan-400" : accent === "emerald" ? "text-emerald-400" : "text-red-400";
+  const color = accent === "cyan" ? "text-primary" : accent === "emerald" ? "text-emerald-400" : "text-red-400";
   return (
     <Card className="bg-white/[0.03] border-border/60 px-3 py-2 lg:min-w-[120px]">
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</p>
@@ -256,7 +262,7 @@ function AccuracyDonut({ value }: { value: number }) {
   return (
     <svg viewBox="0 0 80 80" className="w-8 h-8 mt-1 -rotate-90">
       <circle cx="40" cy="40" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="8" fill="none" />
-      <circle cx="40" cy="40" r={r} stroke="currentColor" className="text-cyan-400" strokeWidth="8" fill="none" strokeDasharray={`${dash} ${c}`} strokeLinecap="round" />
+      <circle cx="40" cy="40" r={r} stroke="currentColor" className="text-primary" strokeWidth="8" fill="none" strokeDasharray={`${dash} ${c}`} strokeLinecap="round" />
     </svg>
   );
 }
@@ -305,7 +311,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
     <button
       onClick={onClick}
       className={`px-2.5 py-0.5 rounded-full text-[11px] border transition ${
-        active ? "bg-cyan-500 text-black border-cyan-400 font-semibold" : "border-border/60 text-muted-foreground hover:text-foreground hover:border-white/20"
+        active ? "bg-primary text-primary-foreground border-primary font-semibold" : "border-border/60 text-muted-foreground hover:text-foreground hover:border-white/20"
       }`}
     >
       {children}
@@ -476,7 +482,7 @@ function BenchmarkTable({ buyAnalyses, benchmarks }: { buyAnalyses: Analysis[]; 
           </thead>
           <tbody className="divide-y divide-white/5">
             {rows.map((r) => (
-              <tr key={r.label} className={r.hl ? "bg-cyan-500/5" : ""}>
+              <tr key={r.label} className={r.hl ? "bg-primary/5" : ""}>
                 <td className="px-4 py-3 font-medium">{r.label}</td>
                 <td className={`px-4 py-3 text-right tabular-nums ${returnColor(r.r90)}`}>{r.r90 != null ? formatPercent(r.r90, 2) : "—"}</td>
                 <td className={`px-4 py-3 text-right tabular-nums ${returnColor(r.r1y)}`}>{r.r1y != null ? formatPercent(r.r1y, 2) : "—"}</td>
@@ -765,7 +771,7 @@ function CTA() {
       <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Du siehst was Quantm kann.</h2>
       <p className="text-muted-foreground mt-2">Jetzt selbst analysieren.</p>
       <div className="flex justify-center gap-3 mt-6">
-        <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-400 text-black"><Link to="/login">Kostenlos starten</Link></Button>
+        <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground"><Link to="/login">Kostenlos starten</Link></Button>
         <Button asChild size="lg" variant="outline"><Link to="/analyse">Quantm Demo ansehen</Link></Button>
       </div>
     </section>
