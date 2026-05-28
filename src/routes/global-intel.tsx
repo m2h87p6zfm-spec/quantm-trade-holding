@@ -13,7 +13,6 @@ import { feature } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
 import {
   COUNTRIES,
-  COUNTRIES_BY_NAME,
   COUNTRY_COORDS,
   COUNTRY_EXTRAS,
   EVENTS,
@@ -26,7 +25,8 @@ import {
   ROUTE_COLOR,
   TENSIONS,
   TRADE_FLOWS,
-  getCountry,
+  useCountryMap,
+  useGlobalHeadline,
   type CountryIntel,
   type GlobalEvent,
   type FeedItem,
@@ -129,6 +129,7 @@ function GlobalIntelPage() {
   const [error, setError] = useState<string | null>(null);
   const [utc, setUtc] = useState<string>("");
   const [layers, setLayers] = useState<LayerToggles>({ trade: true, tensions: true, events: true, heatmap: "none" });
+  const countryMap = useCountryMap();
 
   useEffect(() => {
     const tick = () => {
@@ -255,7 +256,7 @@ function GlobalIntelPage() {
               <LayerControls layers={layers} setLayers={setLayers} />
 
               {hovered && (() => {
-                const hc = COUNTRIES_BY_NAME.get(hovered);
+                const hc = countryMap.get(hovered);
                 return (
                   <div className="pointer-events-none absolute bottom-16 left-4 z-10 max-w-[280px] rounded-lg border border-white/[0.14] bg-black/75 p-2.5 backdrop-blur-md">
                     <div className="flex items-center gap-1.5">
@@ -915,6 +916,7 @@ function ContextAccordion({
 
 function StrategicBriefing() {
   const snap = useMemo(deriveSnapshot, []);
+  const headline = useGlobalHeadline();
   const s = GLOBAL_SUMMARY;
 
   // Direction inference for the 4 driver cards.
@@ -1021,7 +1023,7 @@ function StrategicBriefing() {
         </div>
         <div className="rounded-lg border border-white/[0.06] bg-white/[0.01] px-4">
           <ContextAccordion icon={Eye} title="Why markets are reacting this way" defaultOpen>
-            <p>{s.headline}</p>
+            <p>{headline}</p>
             <p className="mt-2 text-foreground/65">
               The combination of a firm dollar, sticky inflation pressure and decelerating
               global growth is driving capital toward US assets and away from the rest of the
@@ -1371,6 +1373,7 @@ function WorldMap({
 }) {
   const [viewBox, setViewBox] = useState<[number, number, number, number]>([0, 0, MAP_W, MAP_H]);
   const animRef = useRef<number | null>(null);
+  const countryMap = useCountryMap();
 
   useEffect(() => {
     if (!world) return;
@@ -1494,7 +1497,7 @@ function WorldMap({
       <g>
         {world.features.map((f, i) => {
           const name = f.properties?.name ?? "";
-          const intel = COUNTRIES_BY_NAME.get(name);
+          const intel = countryMap.get(name);
           const isSelected = selected?.name === name;
           const isHovered = hovered === name;
           const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
@@ -2080,6 +2083,7 @@ function EventArticleLink({ event }: { event: GlobalEvent }) {
 function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => void }) {
   const color = EVENT_COLOR[event.type];
   const chain = EVENT_CHAINS[event.id];
+  const countryMap = useCountryMap();
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-[oklch(0.12_0.018_260)] backdrop-blur">
       <div
@@ -2138,7 +2142,7 @@ function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => voi
             </div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {chain.who.map((name) => {
-                const c = COUNTRIES_BY_NAME.get(name);
+                const c = countryMap.get(name);
                 return (
                   <span
                     key={name}

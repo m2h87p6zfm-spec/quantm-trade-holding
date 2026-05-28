@@ -1,5 +1,5 @@
 import type { CountryIntel } from "./types";
-import { COUNTRY_EN_OVERRIDES } from "../global-intel-data.en";
+import { COUNTRY_EN_OVERRIDES } from "./dict.en";
 import type { Lang } from "../i18n";
 
 export const COUNTRIES: CountryIntel[] = [
