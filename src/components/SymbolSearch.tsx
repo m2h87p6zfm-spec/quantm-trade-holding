@@ -176,9 +176,25 @@ export function SymbolSearch({
     setOpen(false);
   }
 
-  const menuLeft = menuRect
-    ? Math.max(12, Math.min(menuRect.left, window.innerWidth - menuRect.width - 12))
-    : 0;
+  const vv = typeof window !== "undefined" ? window.visualViewport : null;
+  const vpWidth = vv?.width ?? (typeof window !== "undefined" ? window.innerWidth : 0);
+  const vpHeight = vv?.height ?? (typeof window !== "undefined" ? window.innerHeight : 0);
+  const vpTop = vv?.offsetTop ?? 0;
+  const isMobile = vpWidth < 640;
+  // Safe-area insets (iOS notch / home indicator)
+  const safeTop = 8;
+  const safeBottom = 8;
+
+  const menuWidth = isMobile
+    ? vpWidth - 16
+    : menuRect
+      ? Math.min(menuRect.width, vpWidth - 24)
+      : 0;
+  const menuLeft = isMobile
+    ? 8
+    : menuRect
+      ? Math.max(12, Math.min(menuRect.left, vpWidth - menuWidth - 12))
+      : 0;
 
   return (
     <div ref={boxRef} className="relative w-full">
