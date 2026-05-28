@@ -226,10 +226,10 @@ export function usePortfolio() {
 }
 
 export function pnl(pos: Position, price: number) {
-  if (
-    pos.brokerCurrentValue &&
-    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
-  ) {
+  const hasLivePrice = Number.isFinite(price) && price > 0;
+  const hasPositionMath = Number.isFinite(pos.qty) && pos.qty > 0 && Number.isFinite(pos.entry) && pos.entry > 0;
+
+  if (!hasLivePrice && pos.brokerCurrentValue && (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)) {
     const value = pos.brokerCurrentValue;
     const basis =
       pos.brokerInvested ??
@@ -240,7 +240,16 @@ export function pnl(pos: Position, price: number) {
     const pct = pos.brokerPnlPct ?? (basis > 0 ? (abs / basis) * 100 : 0);
     return { abs, pct, value };
   }
-  if (pos.qty === 1 && pos.entry > 500 && price > 0 && pos.entry / price > 5) {
+
+  if (!hasPositionMath) {
+    const value = pos.brokerCurrentValue ?? 0;
+    const basis = pos.brokerInvested ?? value;
+    const abs = pos.brokerPnlAbs ?? value - basis;
+    const pct = pos.brokerPnlPct ?? (basis > 0 ? (abs / basis) * 100 : 0);
+    return { abs, pct, value };
+  }
+
+  if (pos.qty === 1 && pos.entry > 500 && hasLivePrice && pos.entry / price > 5) {
     return { abs: 0, pct: 0, value: pos.entry };
   }
   const diff = pos.side === "LONG" ? price - pos.entry : pos.entry - price;
@@ -250,16 +259,14 @@ export function pnl(pos: Position, price: number) {
 }
 
 export function costBasis(pos: Position) {
-  if (
-    pos.brokerCurrentValue &&
-    (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)
-  ) {
-    return (
-      pos.brokerInvested ??
-      (pos.brokerPnlAbs !== undefined
-        ? pos.brokerCurrentValue - pos.brokerPnlAbs
-        : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100))
-    );
+  if (pos.brokerInvested !== undefined && pos.brokerInvested > 0) return pos.brokerInvested;
+  if (Number.isFinite(pos.qty) && pos.qty > 0 && Number.isFinite(pos.entry) && pos.entry > 0) {
+    return pos.entry * pos.qty;
+  }
+  if (pos.brokerCurrentValue && (pos.brokerPnlAbs !== undefined || pos.brokerPnlPct !== undefined)) {
+    return pos.brokerPnlAbs !== undefined
+      ? pos.brokerCurrentValue - pos.brokerPnlAbs
+      : pos.brokerCurrentValue / (1 + (pos.brokerPnlPct ?? 0) / 100);
   }
   return pos.entry * pos.qty;
 }
