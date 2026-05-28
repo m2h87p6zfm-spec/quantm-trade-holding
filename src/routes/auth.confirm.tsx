@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LegalLinks } from "@/components/LegalLinks";
+import { ApexLogo } from "@/components/ApexLogo";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth/confirm")({
   head: () => ({
