@@ -40,6 +40,8 @@ export function SymbolSearch({
   const [open, setOpen] = useState(false);
   const [staged, setStaged] = useState<string[]>([]);
   const [menuRect, setMenuRect] = useState<DOMRect | null>(null);
+  const [placement, setPlacement] = useState<"below" | "above">("below");
+  const [inputVisible, setInputVisible] = useState(true);
   const boxRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
