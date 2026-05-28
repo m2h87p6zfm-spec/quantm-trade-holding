@@ -64,15 +64,41 @@ export function SymbolSearch({
     return () => clearTimeout(t);
   }, [q]);
 
-  // Close on outside click
+  // Close on real outside interaction (pointer + touch + focus). Robust against
+  // scrollbar clicks, synthetic blur from portal children, and overlay siblings.
   useEffect(() => {
-    function onDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (!boxRef.current?.contains(target) && !menuRef.current?.contains(target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, []);
+    if (!open) return;
+
+    const isInside = (node: EventTarget | null): boolean => {
+      if (!(node instanceof Node)) return false;
+      return !!(boxRef.current?.contains(node) || menuRef.current?.contains(node));
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      // Ignore clicks on the scrollbar (target === documentElement/body with no real element).
+      if (e.target === document.documentElement || e.target === document.body) return;
+      if (!isInside(e.target)) setOpen(false);
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      // If focus moved to something outside both the input and the menu, close.
+      if (!isInside(e.target)) setOpen(false);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
 
   useEffect(() => {
     if (!open || !q.trim()) return;
