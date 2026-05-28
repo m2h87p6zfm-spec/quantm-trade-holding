@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { enforceRememberMePolicy } from "@/lib/remember-me";
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -66,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .insert({ user_id: uid, user_agent: ua, provider, event: "SIGNED_IN" });
     };
 
-    void withTimeout(supabase.auth.getSession(), 8000)
+    void enforceRememberMePolicy()
+      .then(() => withTimeout(supabase.auth.getSession(), 8000))
       .then(({ data }) => {
         if (!mounted || decisiveAuthEventSeen) return;
         acceptSession(data.session ?? null);

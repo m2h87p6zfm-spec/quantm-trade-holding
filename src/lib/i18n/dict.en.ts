@@ -446,6 +446,7 @@ export const EN: Dict = {
   "login.password": "Password",
   "login.passwordMin": "Password (min. 8 characters)",
   "login.forgot": "Forgot?",
+  "login.rememberMe": "Keep me signed in",
   "login.signin": "Sign in",
   "login.signup": "Create account",
   "login.welcomeBack": "Welcome back",

@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useT } from "@/lib/i18n";
+import { getRememberMe, setRememberMe } from "@/lib/remember-me";
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -47,6 +49,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [remember, setRemember] = useState<boolean>(() => getRememberMe());
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/", replace: true });
@@ -54,6 +57,7 @@ function LoginPage() {
 
   const signIn = async () => {
     setBusy(true);
+    setRememberMe(remember);
     const normalizedEmail = email.trim();
     try {
       const { data, error } = await withTimeout(
@@ -91,6 +95,7 @@ function LoginPage() {
 
   const signUp = async () => {
     setBusy(true);
+    setRememberMe(remember);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -138,6 +143,7 @@ function LoginPage() {
 
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
+    setRememberMe(remember);
     try {
       const topWindow = window.top;
       if (topWindow && window.self !== topWindow) {
@@ -302,6 +308,14 @@ function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none pt-1">
+                <Checkbox
+                  checked={remember}
+                  onCheckedChange={(v) => setRemember(v === true)}
+                  id="remember"
+                />
+                <span>{t("login.rememberMe")}</span>
+              </label>
               <Button
                 onClick={signIn}
                 disabled={busy || !email || !password}
