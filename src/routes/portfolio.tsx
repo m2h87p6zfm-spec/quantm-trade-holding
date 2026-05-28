@@ -63,7 +63,7 @@ function PositionRow({
 }) {
   const t = useT();
   const q = useQuote(pos.symbol, 30_000);
-  const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
+  const price = q.data?.c ?? row?.last ?? pos.brokerCurrentPrice;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
@@ -157,7 +157,7 @@ function PositionCard({
 }) {
   const t = useT();
   const q = useQuote(pos.symbol, 30_000);
-  const price = pos.brokerCurrentPrice ?? q.data?.c ?? row?.last;
+  const price = q.data?.c ?? row?.last ?? pos.brokerCurrentPrice;
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
