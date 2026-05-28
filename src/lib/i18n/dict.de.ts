@@ -462,6 +462,7 @@ export const DE: Dict = {
   "login.password": "Passwort",
   "login.passwordMin": "Passwort (mind. {n} Zeichen)",
   "login.forgot": "Passwort vergessen?",
+  "login.rememberMe": "Angemeldet bleiben",
   "login.signin": "Anmelden",
   "login.signup": "Account erstellen",
   "login.welcomeBack": "Willkommen zurück",
