@@ -41,7 +41,7 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const t = useT();
-  const { user, loading, refreshSession } = useAuth();
+  const { user, loading, acceptSession, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +77,8 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        await refreshSession().catch(() => null);
+        acceptSession(data.session);
+        void refreshSession().catch(() => null);
         navigate({ to: "/", replace: true });
       }
     } catch (e) {
@@ -138,6 +139,17 @@ function LoginPage() {
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
+      const topWindow = window.top;
+      if (topWindow && window.self !== topWindow) {
+        const params = new URLSearchParams({
+          provider,
+          redirect_uri: `${window.location.origin}/auth/confirm`,
+          state: crypto.randomUUID(),
+        });
+        if (provider === "google") params.set("prompt", "select_account");
+        topWindow.location.href = `${window.location.origin}/~oauth/initiate?${params.toString()}`;
+        return;
+      }
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: `${window.location.origin}/auth/confirm`,
         extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
