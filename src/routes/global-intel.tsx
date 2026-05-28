@@ -1498,7 +1498,7 @@ function WorldMap({
       <g>
         {world.features.map((f, i) => {
           const name = f.properties?.name ?? "";
-          const intel = COUNTRIES_BY_NAME.get(name);
+          const intel = countryMap.get(name);
           const isSelected = selected?.name === name;
           const isHovered = hovered === name;
           const chain = selectedEvent ? EVENT_CHAINS[selectedEvent.id] : null;
