@@ -647,19 +647,6 @@ function ThresholdPicker({
   );
 }
 
-      <Section title="Aktive Alerts" count={active.length} icon={<Activity className="h-3.5 w-3.5" />}>
-        <CardGrid rows={active} onRemove={remove} onTrigger={markTriggered} empty="Noch keine aktiven Alerts — leg deinen ersten oben an." />
-      </Section>
-
-      {history.length > 0 && (
-        <Section title="Verlauf" count={history.length} icon={<History className="h-3.5 w-3.5" />}>
-          <CardGrid rows={history} onRemove={remove} onTrigger={markTriggered} empty="" />
-        </Section>
-      )}
-    </div>
-  );
-}
-
 function StatCard({ icon, label, value, tint, progress }: { icon: React.ReactNode; label: string; value: React.ReactNode; tint: "primary" | "emerald" | "gold" | "rose"; progress?: number }) {
   const tintMap = {
     primary: { text: "text-primary", bar: "bg-gradient-to-r from-primary to-cyan-accent" },
