@@ -3,7 +3,6 @@ import { COUNTRY_EN_OVERRIDES } from "../global-intel-data.en";
 import type { Lang } from "../i18n";
 
 export const COUNTRIES: CountryIntel[] = [
-export const COUNTRIES: CountryIntel[] = [
   {
     name: "United States of America",
     iso2: "US",
@@ -1880,7 +1879,6 @@ export const COUNTRIES: CountryIntel[] = [
   { name: "Macao", iso2: "MO", flag: "🇲🇴", risk: "medium", summary: "Casino-Stadt — Konzessions-Reform belastet Margen.", pivotalEvent: { title: "Neue Casino-Lizenzen", year: "2023", why: "Strengere Auflagen für Operatoren." }, geopolitics: { governmentStability: "Strong", politicalRisk: "Medium", tensions: "China-Politik.", policyDirection: "Restrictive" }, economy: { inflation: "stable", rates: "high", gdp: "growing", fxVsUsd: "stable" }, impact: { equities: "Wynn, MGM, Sands.", forex: "MOP HKD-Peg.", commodities: "Tourismus.", sentiment: "China-Konsum-Proxy." }, positives: ["Casino-Recovery"], negatives: ["Politik-Risiko"], newsKeywords: ["Macau gaming"] },
   { name: "Puerto Rico", iso2: "PR", flag: "🇵🇷", risk: "medium", summary: "US-Territorium — Pharma-Hub, post-Maria-Wiederaufbau.", pivotalEvent: { title: "PROMESA-Restrukturierung", year: "2022", why: "Schulden-Workout abgeschlossen." }, geopolitics: { governmentStability: "Strong", politicalRisk: "Low", tensions: "Kein direktes.", policyDirection: "Pro-growth" }, economy: { inflation: "stable", rates: "high", gdp: "growing", fxVsUsd: "stable" }, impact: { equities: "Pharma (Lilly, Amgen).", forex: "USD.", commodities: "Pharma.", sentiment: "US-Erweiterung." }, positives: ["Steuerstatus"], negatives: ["Demografie"], newsKeywords: ["Puerto Rico pharma"] },
   { name: "New Caledonia", iso2: "NC", flag: "🇳🇨", risk: "high", summary: "Nickel-Krise + Pro-Unabhängigkeitsunruhen 2024.", pivotalEvent: { title: "Wahlreform-Unruhen", year: "2024", why: "Frankreich-Loyalisten gegen Kanak-Bewegung." }, geopolitics: { governmentStability: "Weak", politicalRisk: "High", tensions: "Paris-Nouméa.", policyDirection: "Unstable" }, economy: { inflation: "stable", rates: "easing", gdp: "recession-risk", fxVsUsd: "stable" }, impact: { equities: "Eramet, Glencore.", forex: "CFP Franc EUR-Peg.", commodities: "Nickel.", sentiment: "Batterie-Lieferkette." }, positives: ["Nickel"], negatives: ["Unruhen"], newsKeywords: ["New Caledonia nickel"] },
-];
 ];
 
 export const COUNTRIES_BY_NAME = new Map<string, CountryIntel>(COUNTRIES.map((c) => [c.name, c]));

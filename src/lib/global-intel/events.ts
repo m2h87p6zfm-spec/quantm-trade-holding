@@ -1,7 +1,6 @@
 import type { GlobalEvent } from "./types";
 
 export const EVENTS: GlobalEvent[] = [
-export const EVENTS: GlobalEvent[] = [
   {
     id: "ukr-war", type: "negative", category: "Conflict", title: "Ukraine–Russia conflict",
     location: "Eastern Europe", coords: [31.2, 49], date: "Ongoing",
@@ -114,5 +113,4 @@ export const EVENTS: GlobalEvent[] = [
     newsQuery: "memory chips HBM Samsung SK Hynix AI demand",
     impact: { equities: "KOSPI, semis" },
   },
-];
 ];

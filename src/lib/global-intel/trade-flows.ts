@@ -1,7 +1,6 @@
 import type { TradeFlow } from "./types";
 
 export const TRADE_FLOWS: TradeFlow[] = [
-export const TRADE_FLOWS: TradeFlow[] = [
   { id: "us-cn-pacific", kind: "trade", label: "Trans-Pacific trade", from: [-118.2, 33.7], to: [121.5, 31.2], status: "tense", note: "Tariff & tech-export controls weigh on flows." },
   { id: "hormuz-asia", kind: "energy", label: "Gulf → Asia crude", from: [56.3, 26.6], to: [103.8, 1.3], status: "tense", note: "Strait of Hormuz risk premium on Brent." },
   { id: "redsea-suez", kind: "supply", label: "Red Sea / Suez", from: [43.3, 12.6], to: [32.5, 30.0], status: "disrupted", note: "Container traffic rerouted around the Cape." },
@@ -22,5 +21,4 @@ export const TRADE_FLOWS: TradeFlow[] = [
   { id: "au-jp-lng", kind: "energy", label: "Australia → Japan LNG", from: [115.9, -20.3], to: [139.7, 35.7], status: "stable", note: "Largest single-source LNG flow to Asia." },
   { id: "no-eu-gas", kind: "energy", label: "Norway → EU gas", from: [5.3, 60.4], to: [6.8, 51.2], status: "stable", note: "Largest pipeline supplier to Europe today." },
   { id: "ca-us-oil", kind: "energy", label: "Canada → US crude", from: [-114.0, 51.0], to: [-95.4, 29.7], status: "stable", note: "Heavy crude into Gulf Coast refineries." },
-];
 ];

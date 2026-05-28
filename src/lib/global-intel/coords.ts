@@ -1,5 +1,4 @@
 export const COUNTRY_COORDS: Record<string, [number, number]> = {
-export const COUNTRY_COORDS: Record<string, [number, number]> = {
   "United States of America": [-98, 39],
   China: [104, 35],
   Germany: [10.4, 51.2],
@@ -153,4 +152,3 @@ export const COUNTRY_COORDS: Record<string, [number, number]> = {
 };
 
 /* ───────── Global Events (clickable dots) ───────── */
-};
