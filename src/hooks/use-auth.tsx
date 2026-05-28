@@ -2,6 +2,22 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error("AUTH_TIMEOUT")), ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+}
+
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
@@ -16,6 +32,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    let authEventSeen = false;
     const loggedUsers = new Set<string>();
     const logLogin = (s: Session | null) => {
       const uid = s?.user?.id;
@@ -30,17 +48,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .insert({ user_id: uid, user_agent: ua, provider, event: "SIGNED_IN" });
     };
 
+    void withTimeout(supabase.auth.getSession(), 8000)
+      .then(({ data }) => {
+        if (!mounted || authEventSeen) return;
+        setSession(data.session);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!mounted || authEventSeen) return;
+        setSession(null);
+        setLoading(false);
+      });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, s) => {
+      if (!mounted) return;
+      authEventSeen = true;
       setSession(s);
       setLoading(false);
       if (evt === "SIGNED_IN") logLogin(s);
       if (evt === "SIGNED_OUT") loggedUsers.clear();
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value: AuthContextValue = {
