@@ -392,7 +392,7 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
   }
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
+    <section className="relative z-20 overflow-visible rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur-xl md:p-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-50"
@@ -409,7 +409,7 @@ function AlertCreator({ atLimit, max, existingSymbols, onCreate }: CreatorProps)
       </div>
 
       {!symbol ? (
-        <div className="relative space-y-3">
+        <div className="relative z-50 space-y-3">
           <p className="text-xs text-muted-foreground">
             Wähle eine Aktie — wir zeigen dir den aktuellen Kurs und du legst die Schwelle visuell fest.
           </p>
