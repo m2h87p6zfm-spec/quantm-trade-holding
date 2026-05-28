@@ -27,7 +27,7 @@ function ApexLoadingScreen() {
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[apexshimmer_2.6s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/15 to-transparent [mask-image:radial-gradient(circle,black_55%,transparent_75%)]" />
         </div>
         <div
-          className="h-px bg-gradient-to-r from-transparent via-zinc-300/50 to-transparent"
+          className="h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent"
           style={{
             width: "clamp(7rem, 28vw, 18rem)",
             marginTop: "clamp(0.875rem, 2.5vh + 0.5vw, 2.5rem)",
