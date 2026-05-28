@@ -209,12 +209,9 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        // Accept either x-cron-secret OR Supabase anon apikey header
-        // (canonical pg_cron pattern).
-        if (!isAnonApiKey(request)) {
-          const authErr = requireCronSecret(request);
-          if (authErr) return authErr;
-        }
+        const authErr = requireCronSecret(request);
+        if (authErr) return authErr;
+
 
         // Default: scannt nur die echten Cap-Buckets. "combined" wird danach
         // serverseitig aus den drei Cache-Einträgen synthetisiert — das spart
