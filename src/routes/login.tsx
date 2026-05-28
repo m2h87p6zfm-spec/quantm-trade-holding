@@ -38,14 +38,18 @@ function LoginPage() {
 
   const signIn = async () => {
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const normalizedEmail = email.trim();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     setBusy(false);
     if (error) {
       if (error.message.toLowerCase().includes("confirm") || error.message.toLowerCase().includes("not confirmed")) {
-        setPendingEmail(email);
+        setPendingEmail(normalizedEmail);
         return toast.error("Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach (auch Spam-Ordner).", { duration: 8000 });
       }
       return toast.error(error.message);
+    }
+    if (data.session) {
+      navigate({ to: "/konto" });
     }
   };
 
