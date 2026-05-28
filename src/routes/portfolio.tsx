@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Microscope } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Microscope, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { usePortfolio, pnl, costBasis, type Position } from "@/lib/portfolio";
 import { useQuote } from "@/lib/useMarketData";
 import { findProduct } from "@/lib/products";
