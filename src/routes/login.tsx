@@ -308,6 +308,14 @@ function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none pt-1">
+                <Checkbox
+                  checked={remember}
+                  onCheckedChange={(v) => setRemember(v === true)}
+                  id="remember"
+                />
+                <span>{t("login.rememberMe")}</span>
+              </label>
               <Button
                 onClick={signIn}
                 disabled={busy || !email || !password}
