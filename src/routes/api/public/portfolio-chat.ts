@@ -209,7 +209,9 @@ export const Route = createFileRoute("/api/public/portfolio-chat")({
             });
           }
           const body = (await request.json()) as { messages?: Msg[]; positions?: Pos[] };
-          const messages = Array.isArray(body.messages) ? body.messages.slice(-30) : [];
+          const messages = (Array.isArray(body.messages) ? body.messages.slice(-30) : []).map(
+            (m) => (m && m.role === "system" ? { ...m, role: "user" as const } : m),
+          );
           const positions = Array.isArray(body.positions) ? body.positions : [];
           if (messages.length === 0) {
             return new Response(JSON.stringify({ error: "Keine Nachrichten." }), {
