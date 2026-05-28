@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles, TrendingUp, TrendingDown, Target, Radio } from "lucide-react";
+import { Bell, BellRing, Plus, Trash2, Zap, Activity, History, Lock, Sparkles, TrendingUp, TrendingDown, Target, Radio, X, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import { useAlerts, evaluate, type AlertRule } from "@/lib/alerts";
 import { useQuote, useAnalysis } from "@/lib/useMarketData";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
-import { ProductsDatalist } from "@/components/ProductsDatalist";
+import { SymbolSearch } from "@/components/SymbolSearch";
 import { useAlertsLimit } from "@/lib/featureGate";
 import { Link } from "@tanstack/react-router";
 import { useT } from "@/lib/i18n";
