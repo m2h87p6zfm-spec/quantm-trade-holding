@@ -947,6 +947,33 @@ export type Database = {
         }
         Relationships: []
       }
+      login_events: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          provider: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event?: string
+          id?: string
+          provider?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          provider?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       market_cache: {
         Row: {
           cache_key: string
