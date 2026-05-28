@@ -2084,6 +2084,7 @@ function EventArticleLink({ event }: { event: GlobalEvent }) {
 function EventPanel({ event, onClose }: { event: GlobalEvent; onClose: () => void }) {
   const color = EVENT_COLOR[event.type];
   const chain = EVENT_CHAINS[event.id];
+  const countryMap = useCountryMap();
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.14] bg-[oklch(0.12_0.018_260)] backdrop-blur">
       <div
