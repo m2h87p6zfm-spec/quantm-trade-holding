@@ -143,7 +143,7 @@ function StockRow({
       <div className="w-14 shrink-0 text-right font-mono text-[10px] tabular-nums text-zinc-500">
         {formatVolume(row.volume)}
       </div>
-      <div className="w-16 shrink-0 text-right">
+      <div className="w-20 shrink-0 text-right">
         <div className="font-mono text-[11px] tabular-nums text-zinc-200">
           {formatCurrencyFromUsd(row.last, currency)}
         </div>
