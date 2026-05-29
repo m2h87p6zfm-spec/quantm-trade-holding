@@ -206,6 +206,29 @@ export function SymbolSearch({
     setQ("");
   }
 
+  async function addBestMatchFromQuery(
+    e: { preventDefault: () => void; stopPropagation: () => void },
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    const term = q.trim();
+    if (!term) return;
+
+    const cached = hits[0]?.symbol;
+    if (cached) {
+      stage(cached);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await searchSymbols(term);
+      stage(res[0]?.symbol ?? term);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function stageFromInteraction(
     sym: string,
     e: { preventDefault: () => void; stopPropagation: () => void },
@@ -281,16 +304,11 @@ export function SymbolSearch({
         {compact && q.trim() && (
           <button
             type="button"
-            onPointerDown={(e) => {
+            onMouseDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              stage(hits[0]?.symbol ?? q);
             }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              stage(hits[0]?.symbol ?? q);
-            }}
+            onClick={addBestMatchFromQuery}
             className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-semibold hover:bg-primary/90 shrink-0"
             aria-label="Hinzufügen"
           >
