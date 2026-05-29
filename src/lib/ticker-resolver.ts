@@ -125,19 +125,25 @@ export function resolveTicker(query: string): string | null {
     return null;
   }
 
-  // 2) Firmenname-Token-Match. Längere Tokens haben Vorrang
-  //    ("rheinmetall"=11 schlägt "meta"=4 deutlich).
-  const candidates: Array<{ symbol: string; score: number }> = [];
+  // 2) Firmenname-Token-Match. Score = Summe der Längen ALLER getroffenen
+  //    Tokens — so schlägt "United Health" (united=6 + health=6 = 12) das
+  //    schwächere CVS-Match (nur "health"=6). Bei Gleichstand gewinnt das
+  //    Produkt mit der höheren Treffer-Anzahl.
+  const candidates: Array<{ symbol: string; score: number; hits: number }> = [];
   for (const p of PRODUCTS) {
     const tokens = nameTokens(p.name);
-    let best = 0;
+    let score = 0;
+    let hits = 0;
     for (const t of tokens) {
-      if (wordHit(lower, t) && t.length > best) best = t.length;
+      if (wordHit(lower, t)) {
+        score += t.length;
+        hits += 1;
+      }
     }
-    if (best > 0) candidates.push({ symbol: p.symbol, score: best });
+    if (score > 0) candidates.push({ symbol: p.symbol, score, hits });
   }
   if (candidates.length > 0) {
-    candidates.sort((a, b) => b.score - a.score);
+    candidates.sort((a, b) => b.score - a.score || b.hits - a.hits);
     return candidates[0].symbol;
   }
 
