@@ -239,8 +239,11 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
+        const startedAt = Date.now();
+        const SLOW_SCAN_MS = 3 * 60 * 1000; // 3 Minuten
         const authErr = await requirePicksScanAuth(request);
         if (authErr) return authErr;
+
 
 
         // Default: scannt nur die echten Cap-Buckets. "combined" wird danach
