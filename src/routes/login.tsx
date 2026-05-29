@@ -83,6 +83,10 @@ function toAuthMessage(message: string, mode: "signin" | "signup") {
   return `${mode === "signin" ? "Anmeldung" : "Registrierung"} fehlgeschlagen: ${message}`;
 }
 
+function getAuthRedirectTo(path = "/auth/confirm") {
+  return `${window.location.origin}${path}`;
+}
+
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
@@ -159,7 +163,7 @@ function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: getAuthRedirectTo() },
       });
       if (error) {
         toast.error(toAuthMessage(error.message, "signup"));
@@ -188,7 +192,11 @@ function LoginPage() {
     if (!pendingEmail) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: pendingEmail,
+        options: { emailRedirectTo: getAuthRedirectTo() },
+      });
       if (error) {
         toast.error(error.message);
         return;

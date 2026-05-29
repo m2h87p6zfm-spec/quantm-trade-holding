@@ -27,13 +27,33 @@ function ResetPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function prepareRecoverySession() {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        window.history.replaceState(null, "", "/passwort-zuruecksetzen");
+        if (!cancelled) setReady(true);
+      }
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evt, session) => {
       if (evt === "PASSWORD_RECOVERY" || session) setReady(true);
     });
+    void prepareRecoverySession();
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const submit = async () => {
