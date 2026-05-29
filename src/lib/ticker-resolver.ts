@@ -71,7 +71,11 @@ function escapeRe(s: string): string {
 }
 
 function nameTokens(name: string): string[] {
-  return name
+  // Split CamelCase too ("UnitedHealth" → "United Health"), so the multi-word
+  // user query "United Health Group" hits BOTH tokens instead of matching CVS
+  // (which only shares "health").
+  const decamel = name.replace(/([a-zäöüß])([A-Z])/g, "$1 $2");
+  return decamel
     .toLowerCase()
     .replace(/\([^)]*\)/g, " ")
     .split(/[^a-zäöüß0-9]+/)
