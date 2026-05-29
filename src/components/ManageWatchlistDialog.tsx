@@ -35,9 +35,20 @@ export function ManageWatchlistDialog({ open, onOpenChange }: { open: boolean; o
     addSymbols(syms);
   }
 
+  function keepSymbolSearchOpen(e: Event) {
+    const target = e.target;
+    if (target instanceof Element && target.closest("[data-symbol-search-menu]")) {
+      e.preventDefault();
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl">
+      <DialogContent
+        className="max-w-xl"
+        onInteractOutside={keepSymbolSearchOpen}
+        onPointerDownOutside={keepSymbolSearchOpen}
+      >
         <DialogHeader>
           <DialogTitle>{t("watchlist.manage.title")}</DialogTitle>
           <DialogDescription>
@@ -46,7 +57,7 @@ export function ManageWatchlistDialog({ open, onOpenChange }: { open: boolean; o
         </DialogHeader>
 
         <div className="space-y-3">
-          <SymbolSearch existing={items} onAdd={handleAdd} placeholder={t("watchlist.manage.placeholder")} />
+          <SymbolSearch compact existing={items} onAdd={handleAdd} placeholder={t("watchlist.manage.placeholder")} />
 
           <div className="rounded-lg border border-border bg-card/40 max-h-[55vh] overflow-auto">
             {items.length === 0 ? (
