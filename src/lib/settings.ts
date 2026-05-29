@@ -259,6 +259,7 @@ export function useSettings() {
         ),
       };
       write(next);
+      pushToCloud(next);
       return next;
     });
   }, []);

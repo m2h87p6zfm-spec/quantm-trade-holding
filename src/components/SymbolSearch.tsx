@@ -44,6 +44,7 @@ export function SymbolSearch({
   const [inputVisible, setInputVisible] = useState(true);
   const boxRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const lastStageRef = useRef<{ symbol: string; at: number } | null>(null);
   const menuId = useId();
   const exists = new Set(existing.map((s) => s.toUpperCase()));
 
@@ -96,11 +97,11 @@ export function SymbolSearch({
       if (e.key === "Escape") setOpen(false);
     };
 
-    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("focusin", onFocusIn);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("focusin", onFocusIn);
       document.removeEventListener("keydown", onKey);
     };
@@ -182,6 +183,9 @@ export function SymbolSearch({
 
   function stage(sym: string) {
     const SYM = sym.toUpperCase();
+    const now = Date.now();
+    if (lastStageRef.current?.symbol === SYM && now - lastStageRef.current.at < 500) return;
+    lastStageRef.current = { symbol: SYM, at: now };
     if (exists.has(SYM)) return;
     if (reachedLimit(1)) {
       promptUpgrade({
@@ -200,6 +204,27 @@ export function SymbolSearch({
     }
     setStaged((cur) => (cur.includes(SYM) ? cur : [...cur, SYM]));
     setQ("");
+  }
+
+  function stageFromInteraction(
+    sym: string,
+    e: { preventDefault: () => void; stopPropagation: () => void },
+  ) {
+    e.preventDefault();
+    e.stopPropagation();
+    stage(sym);
+  }
+
+  function stageFromMenuCapture(
+    e: { target: EventTarget | null; preventDefault: () => void; stopPropagation: () => void },
+  ) {
+    if (linkOnSelect) return;
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    const option = target.closest<HTMLElement>("[data-symbol-search-symbol]");
+    const sym = option?.dataset.symbolSearchSymbol;
+    if (!sym || option?.getAttribute("aria-disabled") === "true") return;
+    stageFromInteraction(sym, e);
   }
 
   function commit() {
@@ -306,8 +331,11 @@ export function SymbolSearch({
             // reach Radix Dialog's outside listener and close the dialog before
             // the result is staged. Only stop pointer propagation here; letting
             // the click event reach child buttons is required for their onClick.
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onPointerUpCapture={(e) => e.stopPropagation()}
+            onPointerDownCapture={stageFromMenuCapture}
+            onMouseDownCapture={stageFromMenuCapture}
+            onTouchStartCapture={stageFromMenuCapture}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
             className="fixed overflow-auto overscroll-contain rounded-xl border border-border bg-popover shadow-2xl ring-1 ring-primary/20"
             style={{
               isolation: "isolate",
@@ -335,7 +363,14 @@ export function SymbolSearch({
             ) : hits.length === 0 ? (
               <div className="px-3 py-6 text-center text-xs text-muted-foreground">
                 Keine Treffer.{" "}
-                <button onClick={() => stage(q)} className="text-primary hover:underline">
+                <button
+                  data-symbol-search-symbol={q.trim().toUpperCase()}
+                  onPointerDown={(e) => stageFromInteraction(q, e)}
+                  onMouseDown={(e) => stageFromInteraction(q, e)}
+                  onTouchStart={(e) => stageFromInteraction(q, e)}
+                  onClick={(e) => stageFromInteraction(q, e)}
+                  className="text-primary hover:underline"
+                >
                   "{q.toUpperCase()}" trotzdem hinzufügen
                 </button>
               </div>
@@ -374,7 +409,20 @@ export function SymbolSearch({
                     </>
                   );
                   return (
-                    <li key={h.symbol}>
+                    <li
+                      key={h.symbol}
+                      data-symbol-search-symbol={h.symbol}
+                      aria-disabled={already ? "true" : undefined}
+                      onPointerDown={(e) => {
+                        if (!linkOnSelect && !already) stageFromInteraction(h.symbol, e);
+                      }}
+                      onMouseDown={(e) => {
+                        if (!linkOnSelect && !already) stageFromInteraction(h.symbol, e);
+                      }}
+                      onTouchStart={(e) => {
+                        if (!linkOnSelect && !already) stageFromInteraction(h.symbol, e);
+                      }}
+                    >
                       {linkOnSelect ? (
                         <Link
                           to="/produkte/$symbol"
@@ -388,7 +436,10 @@ export function SymbolSearch({
                         <button
                           type="button"
                           disabled={already}
-                          onClick={() => stage(h.symbol)}
+                          onPointerDown={(e) => stageFromInteraction(h.symbol, e)}
+                          onMouseDown={(e) => stageFromInteraction(h.symbol, e)}
+                          onTouchStart={(e) => stageFromInteraction(h.symbol, e)}
+                          onClick={(e) => stageFromInteraction(h.symbol, e)}
                           className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-accent/40 transition-colors disabled:opacity-60 disabled:cursor-default"
                         >
                           {inner}
