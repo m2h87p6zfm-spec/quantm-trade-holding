@@ -28,11 +28,13 @@ function ForgotPage() {
 
   const submit = async () => {
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const normalizedEmail = email.trim();
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: `${window.location.origin}/passwort-zuruecksetzen`,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
+    setEmail(normalizedEmail);
     setSent(true);
   };
 
