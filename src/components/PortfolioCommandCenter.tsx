@@ -32,8 +32,9 @@ type Msg = { role: "user" | "assistant"; content: string };
 type AddAction = {
   type: "ADD";
   symbol: string;
-  qty: number;
+  qty?: number;
   entry: number;
+  invested?: number;
   side?: "LONG" | "SHORT";
   date?: string;
 };
