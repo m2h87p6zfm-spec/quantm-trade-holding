@@ -7,9 +7,9 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators, buildDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
 
-// Cron endpoint — accepts either the private `x-cron-secret` header or the
-// managed scheduled-job `apikey` header. The latter is needed because pg_cron
-// jobs cannot read Lovable runtime secrets directly.
+// Cron endpoint — accepts only a private `x-cron-secret` header. The scheduled
+// job reads that token from a locked service-only table so rotations do not
+// break background scans when runtime secrets change.
 
 // ============================================================
 // Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
@@ -28,12 +28,24 @@ const CORS = {
 } as const;
 const JSON_HEADERS = { "Content-Type": "application/json", ...CORS } as const;
 
-function requirePicksScanAuth(request: Request): Response | null {
-  // Only the private x-cron-secret header is accepted. The Supabase
-  // publishable/anon key MUST NOT be a valid alternative — it ships in
-  // every client bundle and would let any visitor trigger this expensive
-  // scan job.
-  return requireCronSecret(request);
+async function requirePicksScanAuth(request: Request): Promise<Response | null> {
+  // Only private x-cron-secret values are accepted. The public publishable key
+  // MUST NOT be a valid alternative — it ships in every client bundle and would
+  // let any visitor trigger this expensive scan job.
+  const envAuth = requireCronSecret(request);
+  if (!envAuth) return null;
+
+  const got = request.headers.get("x-cron-secret") ?? "";
+  if (!got) return envAuth;
+
+  const { data } = await supabaseAdmin
+    .from("internal_cron_tokens")
+    .select("token")
+    .eq("name", "picks_scan_cron")
+    .maybeSingle();
+
+  if (data?.token && got === data.token) return null;
+  return envAuth;
 }
 
 type Scope = { universe: "top" | "extended" | "all" | "combined"; sector: string; region: string };
@@ -216,7 +228,7 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
       OPTIONS: async () =>
         new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        const authErr = requirePicksScanAuth(request);
+        const authErr = await requirePicksScanAuth(request);
         if (authErr) return authErr;
 
 
