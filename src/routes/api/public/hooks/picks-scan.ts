@@ -408,17 +408,47 @@ export const Route = createFileRoute("/api/public/hooks/picks-scan")({
               }
             }
           }
+          const durationMs = Date.now() - startedAt;
+          if (durationMs > SLOW_SCAN_MS) {
+            try {
+              await supabaseAdmin.from("cron_alerts").insert({
+                job_name: "picks-scan",
+                alert_type: "slow_scan",
+                severity: "warning",
+                duration_ms: durationMs,
+                message: `Picks-Scan dauerte ${Math.round(durationMs / 1000)}s (Grenze ${Math.round(SLOW_SCAN_MS / 1000)}s)`,
+                details: { scopes_count: out.length, recorded_trackrecord: recorded },
+                dedupe_key: `slow:${new Date(startedAt).toISOString().slice(0, 16)}`,
+              } as never);
+            } catch (alertErr) {
+              console.error("cron_alerts insert (slow_scan) failed", alertErr);
+            }
+          }
           return new Response(
-            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: recorded, ts: new Date().toISOString() }),
+            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: recorded, duration_ms: durationMs, ts: new Date().toISOString() }),
             { status: 200, headers: JSON_HEADERS },
           );
         } catch (e) {
           console.error("track-record persist failed", e);
+          const durationMs = Date.now() - startedAt;
+          try {
+            await supabaseAdmin.from("cron_alerts").insert({
+              job_name: "picks-scan",
+              alert_type: "http_error",
+              severity: "error",
+              status_code: 500,
+              duration_ms: durationMs,
+              message: "Picks-Scan: track-record persist failed",
+              details: { error: String((e as Error)?.message ?? e) },
+              dedupe_key: `internal:${new Date(startedAt).toISOString().slice(0, 16)}`,
+            } as never);
+          } catch { /* ignore */ }
           return new Response(
-            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: 0, ts: new Date().toISOString() }),
+            JSON.stringify({ ok: true, scans: out, recorded_trackrecord: 0, duration_ms: durationMs, ts: new Date().toISOString() }),
             { status: 200, headers: JSON_HEADERS },
           );
         }
+
       },
     },
   },
