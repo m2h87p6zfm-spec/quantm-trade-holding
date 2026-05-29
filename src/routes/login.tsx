@@ -121,14 +121,9 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        const verified = await waitForSessionReady(data.session);
-        if (!verified?.access_token) {
-          toast.error(
-            "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
-          );
-          return;
-        }
-        acceptSession(verified);
+        // signInWithPassword hat die Session bereits persistiert. Kein
+        // redundantes setSession/refreshSession – das schlägt auf Safari fehl.
+        acceptSession(data.session);
         navigate({ to: "/", replace: true });
       }
     } catch (e) {
