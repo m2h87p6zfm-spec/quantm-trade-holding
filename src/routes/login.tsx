@@ -15,6 +15,7 @@ import { Loader2 } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useT } from "@/lib/i18n";
 import { getRememberMe, setRememberMe } from "@/lib/remember-me";
+import { clearEphemeralStorageForAuth } from "@/lib/safari-storage-guard";
 
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -49,10 +50,17 @@ async function waitForOAuthSession(): Promise<Session | null> {
 
 function toAuthMessage(message: string, mode: "signin" | "signup") {
   const lower = message.toLowerCase();
+  if (lower.includes("quota") || lower.includes("storage")) {
+    return "Safari blockiert gerade den lokalen Sitzungsspeicher. Ich habe App-Caches geleert – bitte tippe erneut auf Anmelden.";
+  }
   if (lower.includes("invalid login credentials")) {
     return "E-Mail oder Passwort ist falsch. Falls du dich gerade registriert hast, bestätige zuerst deine E-Mail-Adresse.";
   }
-  if (lower.includes("email not confirmed") || lower.includes("not confirmed") || lower.includes("confirm")) {
+  if (
+    lower.includes("email not confirmed") ||
+    lower.includes("not confirmed") ||
+    lower.includes("confirm")
+  ) {
     return "Bitte bestätige zuerst deine E-Mail-Adresse. Schau auch im Spam-Ordner nach.";
   }
   if (lower.includes("user already registered") || lower.includes("already registered")) {
@@ -61,7 +69,12 @@ function toAuthMessage(message: string, mode: "signin" | "signup") {
   if (lower.includes("signup is disabled")) {
     return "Registrierung ist aktuell deaktiviert. Ich habe sie gerade wieder aktiviert – bitte versuche es erneut.";
   }
-  if (lower.includes("timeout") || lower.includes("dauert zu lange") || lower.includes("load failed") || lower.includes("failed to fetch")) {
+  if (
+    lower.includes("timeout") ||
+    lower.includes("dauert zu lange") ||
+    lower.includes("load failed") ||
+    lower.includes("failed to fetch")
+  ) {
     return `${mode === "signin" ? "Anmeldung" : "Registrierung"} konnte wegen eines Netzwerk-/Preview-Problems nicht abgeschlossen werden. Bitte versuche es erneut oder teste kurz die veröffentlichte Seite.`;
   }
   return `${mode === "signin" ? "Anmeldung" : "Registrierung"} fehlgeschlagen: ${message}`;
@@ -98,6 +111,7 @@ function LoginPage() {
   const signIn = async () => {
     setBusy(true);
     setRememberMe(remember);
+    clearEphemeralStorageForAuth();
     const normalizedEmail = email.trim();
     try {
       const { data, error } = await withTimeout(
@@ -137,6 +151,7 @@ function LoginPage() {
   const signUp = async () => {
     setBusy(true);
     setRememberMe(remember);
+    clearEphemeralStorageForAuth();
     try {
       const normalizedEmail = email.trim();
       const { data, error } = await supabase.auth.signUp({
@@ -191,6 +206,7 @@ function LoginPage() {
   const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     setRememberMe(remember);
+    clearEphemeralStorageForAuth();
     try {
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
