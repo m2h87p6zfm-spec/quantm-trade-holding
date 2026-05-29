@@ -149,8 +149,7 @@ function LoginPage() {
         return;
       }
       if (data.session) {
-        const verified = await waitForSessionReady(data.session);
-        if (verified?.access_token) acceptSession(verified);
+        acceptSession(data.session);
         navigate({ to: "/", replace: true });
       } else {
         setPendingEmail(normalizedEmail);
