@@ -56,7 +56,11 @@ function toAuthMessage(message: string, mode: "signin" | "signup") {
   if (lower.includes("invalid login credentials")) {
     return "E-Mail oder Passwort ist falsch. Falls du dich gerade registriert hast, bestätige zuerst deine E-Mail-Adresse.";
   }
-  if (lower.includes("email not confirmed") || lower.includes("not confirmed") || lower.includes("confirm")) {
+  if (
+    lower.includes("email not confirmed") ||
+    lower.includes("not confirmed") ||
+    lower.includes("confirm")
+  ) {
     return "Bitte bestätige zuerst deine E-Mail-Adresse. Schau auch im Spam-Ordner nach.";
   }
   if (lower.includes("user already registered") || lower.includes("already registered")) {
@@ -65,7 +69,12 @@ function toAuthMessage(message: string, mode: "signin" | "signup") {
   if (lower.includes("signup is disabled")) {
     return "Registrierung ist aktuell deaktiviert. Ich habe sie gerade wieder aktiviert – bitte versuche es erneut.";
   }
-  if (lower.includes("timeout") || lower.includes("dauert zu lange") || lower.includes("load failed") || lower.includes("failed to fetch")) {
+  if (
+    lower.includes("timeout") ||
+    lower.includes("dauert zu lange") ||
+    lower.includes("load failed") ||
+    lower.includes("failed to fetch")
+  ) {
     return `${mode === "signin" ? "Anmeldung" : "Registrierung"} konnte wegen eines Netzwerk-/Preview-Problems nicht abgeschlossen werden. Bitte versuche es erneut oder teste kurz die veröffentlichte Seite.`;
   }
   return `${mode === "signin" ? "Anmeldung" : "Registrierung"} fehlgeschlagen: ${message}`;
