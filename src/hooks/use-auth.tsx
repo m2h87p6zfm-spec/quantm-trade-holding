@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { enforceRememberMePolicy } from "@/lib/remember-me";
+import { clearEphemeralStorageForAuth } from "@/lib/safari-storage-guard";
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const acceptSession = useCallback((nextSession: Session | null) => {
+    if (nextSession?.access_token) clearEphemeralStorageForAuth();
     setSession(nextSession);
     setLoading(false);
   }, []);
