@@ -29,14 +29,11 @@ const CORS = {
 const JSON_HEADERS = { "Content-Type": "application/json", ...CORS } as const;
 
 function requirePicksScanAuth(request: Request): Response | null {
-  const cronSecretAuth = requireCronSecret(request);
-  if (!cronSecretAuth) return null;
-
-  const expectedApiKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-  const providedApiKey = request.headers.get("apikey") ?? "";
-  if (expectedApiKey && providedApiKey === expectedApiKey) return null;
-
-  return cronSecretAuth;
+  // Only the private x-cron-secret header is accepted. The Supabase
+  // publishable/anon key MUST NOT be a valid alternative — it ships in
+  // every client bundle and would let any visitor trigger this expensive
+  // scan job.
+  return requireCronSecret(request);
 }
 
 type Scope = { universe: "top" | "extended" | "all" | "combined"; sector: string; region: string };
