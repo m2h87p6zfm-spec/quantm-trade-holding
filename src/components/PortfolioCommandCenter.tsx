@@ -519,17 +519,23 @@ function AiPanel() {
       for (const a of actions) {
         if (a.type === "ADD") {
           const sym = a.symbol.toUpperCase();
-          if (!a.qty || !a.entry || a.qty <= 0 || a.entry <= 0) {
-            toast.error(`${sym}: ungültige Menge oder Preis`);
+          const entry = Number(a.entry);
+          // Allow KI to specify EITHER qty OR invested (€) — we compute the other.
+          let qty = Number(a.qty);
+          if ((!qty || qty <= 0) && a.invested && entry > 0) {
+            qty = Number(a.invested) / entry;
+          }
+          if (!entry || entry <= 0 || !qty || qty <= 0) {
+            toast.error(`${sym}: ungültiger Kaufpreis oder Stückzahl/Betrag`);
             continue;
           }
           add({
             symbol: sym,
-            qty: a.qty,
-            entry: a.entry,
+            qty,
+            entry,
             side: a.side === "SHORT" ? "SHORT" : "LONG",
           });
-          toast.success(`${sym} hinzugefügt: ${a.qty} × € ${a.entry.toFixed(2)}`);
+          toast.success(`${sym} hinzugefügt: ${qty.toFixed(4)} × € ${entry.toFixed(2)}`);
         } else if (a.type === "REMOVE") {
           const sym = a.symbol.toUpperCase();
           const target = positionsRef.current.find((p) => p.symbol.toUpperCase() === sym);
