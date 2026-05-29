@@ -278,6 +278,25 @@ export function SymbolSearch({
           className="flex-1 bg-transparent text-base placeholder:text-muted-foreground/60 focus:outline-none min-w-0"
         />
         {loading && <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />}
+        {compact && q.trim() && (
+          <button
+            type="button"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              stage(hits[0]?.symbol ?? q);
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              stage(hits[0]?.symbol ?? q);
+            }}
+            className="inline-flex items-center gap-1 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-semibold hover:bg-primary/90 shrink-0"
+            aria-label="Hinzufügen"
+          >
+            <Plus className="h-3.5 w-3.5" /> Hinzufügen
+          </button>
+        )}
         {!compact && staged.length > 0 && (
           <button
             onClick={commit}
