@@ -67,6 +67,7 @@ import { Route as ApiPublicCronEvaluateRouteImport } from './routes/api/public/c
 import { Route as ApiPublicCandlesRouteImport } from './routes/api/public/candles'
 import { Route as ApiPublicAgentFeedbackRouteImport } from './routes/api/public/agent-feedback'
 import { Route as ApiPublicAgentChatRouteImport } from './routes/api/public/agent-chat'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksTrackOutcomesRouteImport } from './routes/api/public/hooks/track-outcomes'
 import { Route as ApiPublicHooksRefreshPortfoliosRouteImport } from './routes/api/public/hooks/refresh-portfolios'
@@ -366,6 +367,12 @@ const ApiPublicAgentChatRoute = ApiPublicAgentChatRouteImport.update({
   path: '/api/public/agent-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -474,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -541,6 +549,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -609,6 +618,7 @@ export interface FileRoutesById {
   '/api/public/hooks/refresh-portfolios': typeof ApiPublicHooksRefreshPortfoliosRoute
   '/api/public/hooks/track-outcomes': typeof ApiPublicHooksTrackOutcomesRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -678,6 +688,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -745,6 +756,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -812,6 +824,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/refresh-portfolios'
     | '/api/public/hooks/track-outcomes'
     | '/api/public/payments/webhook'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -880,6 +893,7 @@ export interface RootRouteChildren {
   ApiPublicHooksRefreshPortfoliosRoute: typeof ApiPublicHooksRefreshPortfoliosRoute
   ApiPublicHooksTrackOutcomesRoute: typeof ApiPublicHooksTrackOutcomesRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1290,6 +1304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgentChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -1408,6 +1429,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksRefreshPortfoliosRoute: ApiPublicHooksRefreshPortfoliosRoute,
   ApiPublicHooksTrackOutcomesRoute: ApiPublicHooksTrackOutcomesRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
