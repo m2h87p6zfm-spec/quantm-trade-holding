@@ -29,8 +29,14 @@ function removeMatchingStorageEntries(storage: Storage, aggressive = false) {
   );
 
   for (const key of keys) {
-    const isEphemeral = EPHEMERAL_KEYS.has(key) || EPHEMERAL_PREFIXES.some((prefix) => key.startsWith(prefix));
-    const keepAggressive = key.startsWith("sb-") || key === "qt_remember" || key === "ta_settings" || key === "apex.portfolio.v1" || key === "apex.alerts.v1";
+    const isEphemeral =
+      EPHEMERAL_KEYS.has(key) || EPHEMERAL_PREFIXES.some((prefix) => key.startsWith(prefix));
+    const keepAggressive =
+      key.startsWith("sb-") ||
+      key === "qt_remember" ||
+      key === "ta_settings" ||
+      key === "apex.portfolio.v1" ||
+      key === "apex.alerts.v1";
     if (isEphemeral || (aggressive && !keepAggressive)) {
       try {
         storage.removeItem(key);
