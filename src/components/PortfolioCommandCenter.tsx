@@ -32,8 +32,9 @@ type Msg = { role: "user" | "assistant"; content: string };
 type AddAction = {
   type: "ADD";
   symbol: string;
-  qty: number;
+  qty?: number;
   entry: number;
+  invested?: number;
   side?: "LONG" | "SHORT";
   date?: string;
 };
@@ -176,8 +177,10 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
   const { add } = usePortfolio();
   const { guard } = usePortfolioLimit(0);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
-  const [qty, setQty] = useState<number>(1);
   const [entry, setEntry] = useState<number>(0);
+  const [invested, setInvested] = useState<number>(0);
+  const [mode, setMode] = useState<"invested" | "qty">("invested");
+  const [qtyInput, setQtyInput] = useState<number>(0);
   const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
 
   const selectedProduct = selectedSymbol ? findProduct(selectedSymbol) : null;
@@ -192,11 +195,28 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSymbol, livePrice]);
 
+  // Derived values
+  const derivedQty = mode === "invested" && entry > 0 ? invested / entry : qtyInput;
+  const derivedInvested = mode === "qty" ? qtyInput * entry : invested;
+  const currentValue = livePrice && derivedQty > 0 ? derivedQty * livePrice : 0;
+  const pnlAbs = currentValue && derivedInvested ? currentValue - derivedInvested : 0;
+  const pnlPct = derivedInvested > 0 ? (pnlAbs / derivedInvested) * 100 : 0;
+
   function onPickSymbol(symbols: string[]) {
     const sym = symbols[0];
     if (!sym) return;
     setSelectedSymbol(sym.toUpperCase());
-    setEntry(0); // will be auto-filled by live quote effect
+    setEntry(0);
+    setInvested(0);
+    setQtyInput(0);
+  }
+
+  function reset() {
+    setSelectedSymbol(null);
+    setEntry(0);
+    setInvested(0);
+    setQtyInput(0);
+    setSide("LONG");
   }
 
   function onAdd(e: React.FormEvent) {
@@ -206,21 +226,25 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
       return;
     }
     const finalEntry = entry > 0 ? entry : (livePrice ?? 0);
-    if (qty <= 0 || finalEntry <= 0) {
-      toast.error("Bitte Menge und Einstandskurs angeben.");
+    const finalQty = mode === "invested"
+      ? (finalEntry > 0 ? invested / finalEntry : 0)
+      : qtyInput;
+    if (finalQty <= 0 || finalEntry <= 0) {
+      toast.error(mode === "invested"
+        ? "Bitte Kaufpreis und investierten Betrag angeben."
+        : "Bitte Stückzahl und Kaufpreis angeben.");
       return;
     }
     if (!guard()) return;
-    add({ symbol: selectedSymbol, qty, entry: finalEntry, side });
+    add({ symbol: selectedSymbol, qty: finalQty, entry: finalEntry, side });
     toast.success(
-      `${side} ${qty} × ${selectedSymbol} @ ${finalEntry.toFixed(2)} hinzugefügt`,
+      `${side} ${finalQty.toFixed(4)} × ${selectedSymbol} @ € ${finalEntry.toFixed(2)} hinzugefügt`,
     );
-    // Reset for the next add
-    setSelectedSymbol(null);
-    setEntry(0);
-    setQty(1);
-    setSide("LONG");
+    reset();
   }
+
+  const fmt = (n: number) =>
+    n.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="p-5 space-y-4">
@@ -250,7 +274,7 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
       {selectedSymbol && (
         <form
           onSubmit={onAdd}
-          className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300"
+          className="rounded-xl border border-primary/30 bg-primary/[0.04] p-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -265,18 +289,16 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
                   </span>
                 )}
               </div>
-              {livePrice && (
-                <div className="mt-0.5 text-[11px] text-muted-foreground">
-                  Live-Kurs: <span className="font-mono text-foreground">€ {livePrice.toFixed(2)}</span>
-                </div>
-              )}
+              <div className="mt-0.5 text-[11px] text-muted-foreground">
+                Aktueller Kurs:{" "}
+                <span className="font-mono text-foreground">
+                  {livePrice ? `€ ${fmt(livePrice)}` : "lädt…"}
+                </span>
+              </div>
             </div>
             <button
               type="button"
-              onClick={() => {
-                setSelectedSymbol(null);
-                setEntry(0);
-              }}
+              onClick={reset}
               className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
               aria-label="Abbrechen"
             >
@@ -284,31 +306,43 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
             </button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-[90px,140px,110px,auto]">
-            <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                Menge
-              </label>
-              <input
-                type="number"
-                min={0}
-                step="any"
-                value={qty}
-                onChange={(e) => setQty(parseFloat(e.target.value) || 0)}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
-              />
-            </div>
+          {/* Mode toggle */}
+          <div className="inline-flex rounded-md border border-input overflow-hidden text-[11px]">
+            <button
+              type="button"
+              onClick={() => setMode("invested")}
+              className={`px-3 py-1.5 font-semibold transition-colors ${
+                mode === "invested"
+                  ? "bg-primary/15 text-primary"
+                  : "bg-background text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Investierter Betrag
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("qty")}
+              className={`px-3 py-1.5 font-semibold transition-colors ${
+                mode === "qty"
+                  ? "bg-primary/15 text-primary"
+                  : "bg-background text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Stückzahl
+            </button>
+          </div>
 
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="flex items-center justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-                <span>Einstand</span>
+                <span>Kaufpreis pro Stück (€)</span>
                 {livePrice && (
                   <button
                     type="button"
                     onClick={() => setEntry(livePrice)}
                     className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold normal-case text-primary hover:bg-primary/20"
                   >
-                    live € {livePrice.toFixed(2)}
+                    aktuell € {fmt(livePrice)}
                   </button>
                 )}
               </label>
@@ -318,22 +352,88 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
                 step="any"
                 value={entry || ""}
                 onChange={(e) => setEntry(parseFloat(e.target.value) || 0)}
-                placeholder={livePrice ? livePrice.toFixed(2) : "0.00"}
+                placeholder={livePrice ? fmt(livePrice) : "0,00"}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
               />
             </div>
 
+            {mode === "invested" ? (
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Insgesamt investiert (€)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={invested || ""}
+                  onChange={(e) => setInvested(parseFloat(e.target.value) || 0)}
+                  placeholder="z. B. 1000"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Stückzahl
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={qtyInput || ""}
+                  onChange={(e) => setQtyInput(parseFloat(e.target.value) || 0)}
+                  placeholder="z. B. 10"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm tabular-nums focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Live preview */}
+          {entry > 0 && (derivedQty > 0 || derivedInvested > 0) && (
+            <div className="grid gap-2 rounded-lg border border-border/60 bg-background/40 p-3 text-[11px] sm:grid-cols-4">
+              <div>
+                <div className="text-muted-foreground">Stückzahl</div>
+                <div className="font-mono text-sm tabular-nums">{derivedQty.toFixed(4)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Investiert</div>
+                <div className="font-mono text-sm tabular-nums">€ {fmt(derivedInvested)}</div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Aktueller Wert</div>
+                <div className="font-mono text-sm tabular-nums">
+                  {livePrice ? `€ ${fmt(currentValue)}` : "—"}
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">G/V</div>
+                <div
+                  className={`font-mono text-sm tabular-nums ${
+                    pnlAbs >= 0 ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {livePrice
+                    ? `${pnlAbs >= 0 ? "+" : ""}€ ${fmt(pnlAbs)} (${pnlPct >= 0 ? "+" : ""}${pnlPct.toFixed(2)} %)`
+                    : "—"}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-end justify-between gap-3">
             <div>
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 Richtung
               </label>
-              <div className="grid grid-cols-2 overflow-hidden rounded-md border border-input">
+              <div className="mt-1 grid grid-cols-2 overflow-hidden rounded-md border border-input">
                 {(["LONG", "SHORT"] as const).map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setSide(s)}
-                    className={`px-2 py-2 text-xs font-semibold transition-colors ${
+                    className={`px-3 py-2 text-xs font-semibold transition-colors ${
                       side === s
                         ? s === "LONG"
                           ? "bg-emerald-500/20 text-emerald-400"
@@ -350,7 +450,7 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
             <button
               type="submit"
               disabled={atLimit}
-              className="inline-flex items-center justify-center gap-1.5 self-end rounded-md bg-gradient-to-r from-primary to-violet-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md bg-gradient-to-r from-primary to-violet-accent px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-primary/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
             >
               <Plus className="h-4 w-4" /> Zum Portfolio
             </button>
@@ -360,7 +460,7 @@ function ManualPanel({ atLimit, tier }: { atLimit: boolean; tier: string }) {
 
       {!selectedSymbol && (
         <p className="text-[11px] text-muted-foreground">
-          Tipp: Such einfach den Namen oder den Ticker deiner Aktie. Wir holen den Live-Kurs automatisch.
+          Tipp: Such einfach den Namen oder Ticker. Wir holen den Live-Kurs automatisch — du gibst nur Kaufpreis und investierten Betrag ein, Stückzahl und G/V berechnen wir.
         </p>
       )}
     </div>
@@ -419,17 +519,23 @@ function AiPanel() {
       for (const a of actions) {
         if (a.type === "ADD") {
           const sym = a.symbol.toUpperCase();
-          if (!a.qty || !a.entry || a.qty <= 0 || a.entry <= 0) {
-            toast.error(`${sym}: ungültige Menge oder Preis`);
+          const entry = Number(a.entry);
+          // Allow KI to specify EITHER qty OR invested (€) — we compute the other.
+          let qty = Number(a.qty);
+          if ((!qty || qty <= 0) && a.invested && entry > 0) {
+            qty = Number(a.invested) / entry;
+          }
+          if (!entry || entry <= 0 || !qty || qty <= 0) {
+            toast.error(`${sym}: ungültiger Kaufpreis oder Stückzahl/Betrag`);
             continue;
           }
           add({
             symbol: sym,
-            qty: a.qty,
-            entry: a.entry,
+            qty,
+            entry,
             side: a.side === "SHORT" ? "SHORT" : "LONG",
           });
-          toast.success(`${sym} hinzugefügt: ${a.qty} × € ${a.entry.toFixed(2)}`);
+          toast.success(`${sym} hinzugefügt: ${qty.toFixed(4)} × € ${entry.toFixed(2)}`);
         } else if (a.type === "REMOVE") {
           const sym = a.symbol.toUpperCase();
           const target = positionsRef.current.find((p) => p.symbol.toUpperCase() === sym);

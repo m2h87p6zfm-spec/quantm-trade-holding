@@ -30,6 +30,24 @@ const ALIASES: Record<string, string> = {
   apple: "AAPL", tesla: "TSLA", nvidia: "NVDA", microsoft: "MSFT", amazon: "AMZN",
   meta: "META", facebook: "META", google: "GOOGL", alphabet: "GOOGL", netflix: "NFLX",
   palantir: "PLTR", vertiv: "VRT", berkshire: "BRK.B", buffett: "BRK.B",
+  // US Healthcare / Finance / Industrials — common multi-word names
+  "united health": "UNH", "united healthcare": "UNH", unitedhealth: "UNH",
+  "unitedhealth group": "UNH", "united health group": "UNH",
+  "johnson & johnson": "JNJ", "johnson and johnson": "JNJ", "j&j": "JNJ",
+  "eli lilly": "LLY", lilly: "LLY",
+  "procter & gamble": "PG", "procter and gamble": "PG",
+  "jpmorgan": "JPM", "jp morgan": "JPM", "jpmorgan chase": "JPM",
+  "bank of america": "BAC", "goldman sachs": "GS", "morgan stanley": "MS",
+  "wells fargo": "WFC", visa: "V", mastercard: "MA",
+  "exxon mobil": "XOM", exxon: "XOM", chevron: "CVX",
+  walmart: "WMT", costco: "COST", "home depot": "HD", "the home depot": "HD",
+  coca: "KO", "coca cola": "KO", "coca-cola": "KO", pepsi: "PEP", pepsico: "PEP",
+  mcdonalds: "MCD", "mcdonald's": "MCD",
+  boeing: "BA", caterpillar: "CAT", "general electric": "GE", "ge aerospace": "GE",
+  "amd": "AMD", intel: "INTC", broadcom: "AVGO", qualcomm: "QCOM",
+  oracle: "ORCL", salesforce: "CRM", adobe: "ADBE", ibm: "IBM",
+  uber: "UBER", airbnb: "ABNB", "spotify": "SPOT", paypal: "PYPL",
+  disney: "DIS", "walt disney": "DIS",
   // DE / EU Blue Chips
   rheinmetall: "RHM.DE", allianz: "ALV.DE", siemens: "SIE.DE", "deutsche bank": "DBK.DE",
   commerzbank: "CBK.DE", volkswagen: "VOW3.DE", bmw: "BMW.DE", mercedes: "MBG.DE",
@@ -53,7 +71,11 @@ function escapeRe(s: string): string {
 }
 
 function nameTokens(name: string): string[] {
-  return name
+  // Split CamelCase too ("UnitedHealth" → "United Health"), so the multi-word
+  // user query "United Health Group" hits BOTH tokens instead of matching CVS
+  // (which only shares "health").
+  const decamel = name.replace(/([a-zäöüß])([A-Z])/g, "$1 $2");
+  return decamel
     .toLowerCase()
     .replace(/\([^)]*\)/g, " ")
     .split(/[^a-zäöüß0-9]+/)
@@ -103,19 +125,25 @@ export function resolveTicker(query: string): string | null {
     return null;
   }
 
-  // 2) Firmenname-Token-Match. Längere Tokens haben Vorrang
-  //    ("rheinmetall"=11 schlägt "meta"=4 deutlich).
-  const candidates: Array<{ symbol: string; score: number }> = [];
+  // 2) Firmenname-Token-Match. Score = Summe der Längen ALLER getroffenen
+  //    Tokens — so schlägt "United Health" (united=6 + health=6 = 12) das
+  //    schwächere CVS-Match (nur "health"=6). Bei Gleichstand gewinnt das
+  //    Produkt mit der höheren Treffer-Anzahl.
+  const candidates: Array<{ symbol: string; score: number; hits: number }> = [];
   for (const p of PRODUCTS) {
     const tokens = nameTokens(p.name);
-    let best = 0;
+    let score = 0;
+    let hits = 0;
     for (const t of tokens) {
-      if (wordHit(lower, t) && t.length > best) best = t.length;
+      if (wordHit(lower, t)) {
+        score += t.length;
+        hits += 1;
+      }
     }
-    if (best > 0) candidates.push({ symbol: p.symbol, score: best });
+    if (score > 0) candidates.push({ symbol: p.symbol, score, hits });
   }
   if (candidates.length > 0) {
-    candidates.sort((a, b) => b.score - a.score);
+    candidates.sort((a, b) => b.score - a.score || b.hits - a.hits);
     return candidates[0].symbol;
   }
 
