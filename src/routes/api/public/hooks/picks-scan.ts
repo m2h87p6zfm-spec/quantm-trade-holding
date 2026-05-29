@@ -12,7 +12,7 @@ import { detectRegime } from "@/lib/ai-learning";
 // break background scans when runtime secrets change.
 
 // ============================================================
-// Stündlicher Cron: Quantm Picks im Hintergrund berechnen.
+// Halbstündlicher Cron: Quantm Picks im Hintergrund berechnen.
 // Iteriert über das gewählte Universum (Top 80 / Erweitert 250),
 // holt 1-Tages-Kerzen via Twelve Data (Shared-Cache!), berechnet
 // die Composite-Engine-Faktoren und persistiert die Top-15 BUY-
@@ -38,7 +38,18 @@ async function requirePicksScanAuth(request: Request): Promise<Response | null> 
   const got = request.headers.get("x-cron-secret") ?? "";
   if (!got) return envAuth;
 
-  const { data } = await supabaseAdmin
+  type CronTokenRow = { token: string };
+  const tokenClient = supabaseAdmin as unknown as {
+    from: (table: "internal_cron_tokens") => {
+      select: (columns: "token") => {
+        eq: (column: "name", value: "picks_scan_cron") => {
+          maybeSingle: () => Promise<{ data: CronTokenRow | null }>;
+        };
+      };
+    };
+  };
+
+  const { data } = await tokenClient
     .from("internal_cron_tokens")
     .select("token")
     .eq("name", "picks_scan_cron")
