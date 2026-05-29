@@ -947,6 +947,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cron_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          dedupe_key: string | null
+          details: Json | null
+          duration_ms: number | null
+          id: string
+          job_name: string
+          message: string
+          severity: string
+          status_code: number | null
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          dedupe_key?: string | null
+          details?: Json | null
+          duration_ms?: number | null
+          id?: string
+          job_name: string
+          message: string
+          severity?: string
+          status_code?: number | null
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          dedupe_key?: string | null
+          details?: Json | null
+          duration_ms?: number | null
+          id?: string
+          job_name?: string
+          message?: string
+          severity?: string
+          status_code?: number | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1771,6 +1810,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      monitor_picks_scan_health: { Args: never; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
