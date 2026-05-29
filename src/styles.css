@@ -384,6 +384,19 @@
     radial-gradient(ellipse 65% 42% at 50% 105%, color-mix(in oklab, var(--accent) 6%, transparent) 0%, transparent 70%),
     radial-gradient(ellipse 90% 60% at 50% 50%, transparent 40%, color-mix(in oklab, black 22%, transparent) 100%);
 }
+.light .bg-mesh {
+  background-image:
+    radial-gradient(ellipse 55% 40% at 10% -5%, color-mix(in oklab, var(--primary) 6%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 38% at 92% 5%, color-mix(in oklab, var(--gold) 5%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 42% at 50% 105%, color-mix(in oklab, var(--accent) 4%, transparent) 0%, transparent 70%);
+}
+.light .heat-cell:hover { box-shadow: 0 8px 28px -8px color-mix(in oklab, var(--foreground) 18%, transparent); }
+.light .heat-cell::after { background: radial-gradient(circle at 30% 20%, color-mix(in oklab, var(--foreground) 4%, transparent), transparent 60%); }
+.light .surface {
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 80%, transparent),
+    0 1px 2px color-mix(in oklab, var(--foreground) 8%, transparent);
+}
 
 .bg-grid {
   background-image:
