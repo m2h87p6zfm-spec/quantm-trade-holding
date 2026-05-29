@@ -32,34 +32,18 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   });
 }
 
-async function waitForSessionReady(initialSession?: Session | null): Promise<Session | null> {
-  if (initialSession?.access_token && initialSession.refresh_token) {
-    await supabase.auth.setSession({
-      access_token: initialSession.access_token,
-      refresh_token: initialSession.refresh_token,
-    });
-  }
-
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const { data: sessionData } = await withTimeout(
+async function waitForOAuthSession(): Promise<Session | null> {
+  // Nur für OAuth-Rückkehr: warte, bis die Session vom Provider eingetroffen ist.
+  // Safari-kompatibel: kein redundantes setSession/refreshSession.
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const { data } = await withTimeout(
       supabase.auth.getSession(),
       5000,
       "Sitzungsprüfung dauert zu lange",
     );
-    if (sessionData.session?.access_token) {
-      const { data: userData, error } = await withTimeout(
-        supabase.auth.getUser(),
-        5000,
-        "Benutzerprüfung dauert zu lange",
-      );
-      if (!error && userData.user) return sessionData.session;
-    }
-
-    const refreshed = await supabase.auth.refreshSession().catch(() => null);
-    if (refreshed?.data.session?.access_token) return refreshed.data.session;
-    await new Promise((resolve) => window.setTimeout(resolve, 150 * (attempt + 1)));
+    if (data.session?.access_token) return data.session;
+    await new Promise((resolve) => window.setTimeout(resolve, 200 * (attempt + 1)));
   }
-
   return null;
 }
 
