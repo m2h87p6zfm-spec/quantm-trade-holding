@@ -201,7 +201,7 @@ function LoginPage() {
         toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
         return;
       }
-      const verified = await waitForSessionReady();
+      const verified = await waitForOAuthSession();
       if (!verified?.access_token) {
         toast.error(
           "Anmeldung erfolgreich, aber die Sitzung konnte nicht gespeichert werden. Bitte lade die Seite neu.",
