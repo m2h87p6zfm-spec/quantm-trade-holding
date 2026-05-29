@@ -48,6 +48,7 @@ import { ApexLogo } from "@/components/ApexLogo";
 import { MarketRegimePill } from "@/components/MarketRegimePill";
 import { useAutoTheme } from "@/hooks/use-auto-theme";
 import { AutoTranslate } from "@/components/AutoTranslate";
+import { installSafariStorageGuard } from "@/lib/safari-storage-guard";
 
 import appCss from "../styles.css?url";
 
@@ -173,6 +174,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  installSafariStorageGuard();
   // Canonical host redirect: www.quantmtrade.com → quantmtrade.com.
   // Without this, the Supabase session stored in localStorage on one
   // host is invisible on the other, forcing users to log in again.
