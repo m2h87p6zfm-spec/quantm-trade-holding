@@ -3,12 +3,38 @@ import ReactMarkdown from "react-markdown";
 import { ChevronDown } from "lucide-react";
 import { IndicatorCard } from "./IndicatorCard";
 
+const SECTION_ALIASES: Record<string, string> = {
+  // canonical → canonical
+  verdict: "verdict",
+  "tl;dr": "tldr",
+  tldr: "tldr",
+  indikatoren: "indikatoren",
+  indicators: "indikatoren",
+  // tolerated alternates the model sometimes invents
+  kennwerte: "indikatoren",
+  kennzahlen: "indikatoren",
+  setup: "setup",
+  risiken: "risiken",
+  risks: "risiken",
+  contra: "risiken",
+  cons: "risiken",
+  pro: "pro",
+  pros: "pro",
+  details: "details",
+  fazit: "details",
+  zusammenfassung: "details",
+  begründung: "details",
+  begruendung: "details",
+};
+
+
 type Tag = "bull" | "bear" | "neutral";
 type Indicator = { name: string; value: string; interpretation: string; tag: Tag };
 
 export type ParsedReport = {
   verdict: { ticker?: string; name?: string; price?: string; change?: string; cluster?: string; confidence?: string } | null;
   tldr: string[];
+  pros: string[];
   indicators: Indicator[];
   setup: string[] | null;
   risks: string[];
@@ -18,13 +44,17 @@ export type ParsedReport = {
 
 function splitSections(md: string): Record<string, string> {
   const out: Record<string, string> = {};
-  const re = /^##\s+([A-Za-zÄÖÜäöüß/.()\s]+?)\s*$/gm;
+  const re = /^##\s+([A-Za-zÄÖÜäöüß/.()&\s]+?)\s*$/gm;
   const matches = [...md.matchAll(re)];
   for (let i = 0; i < matches.length; i++) {
     const m = matches[i];
     const start = (m.index ?? 0) + m[0].length;
     const end = i + 1 < matches.length ? matches[i + 1].index! : md.length;
-    out[m[1].trim().toLowerCase()] = md.slice(start, end).trim();
+    const raw = m[1].trim().toLowerCase();
+    const key = SECTION_ALIASES[raw] ?? raw;
+    const body = md.slice(start, end).trim();
+    // Append if duplicate (e.g. multiple "Risks"/"Contra" blocks).
+    out[key] = out[key] ? `${out[key]}\n${body}` : body;
   }
   return out;
 }
@@ -85,23 +115,27 @@ export function parseReport(md: string): ParsedReport {
   const firstHead = md.indexOf("## ");
   const trailing = firstHead === -1 ? md : md.slice(0, firstHead).trim();
   if (firstHead === -1) {
-    return { verdict: null, tldr: [], indicators: [], setup: null, risks: [], details: "", trailing };
+    return { verdict: null, tldr: [], pros: [], indicators: [], setup: null, risks: [], details: "", trailing };
   }
   const sections = splitSections(md);
   const verdictLine = (sections["verdict"] ?? "").split("\n").map((l) => l.trim()).filter(Boolean)[0] ?? "";
   return {
     verdict: parseVerdict(verdictLine),
-    tldr: parseBullets(sections["tl;dr"] ?? sections["tldr"] ?? ""),
-    indicators: parseIndicators(sections["indikatoren"] ?? sections["indicators"] ?? ""),
+    tldr: parseBullets(sections["tldr"] ?? ""),
+    pros: parseBullets(sections["pro"] ?? ""),
+    indicators: parseIndicators(sections["indikatoren"] ?? ""),
     setup: parseSetup(sections["setup"] ?? ""),
-    risks: parseBullets(sections["risiken"] ?? sections["risks"] ?? ""),
+    risks: parseBullets(sections["risiken"] ?? ""),
     details: sections["details"] ?? "",
     trailing,
   };
 }
 
 export function isStructuredReport(md: string): boolean {
-  return /^##\s+Verdict\s*$/m.test(md);
+  // Accept the canonical "Verdict" header OR any of the tolerated alternates
+  // (Kennwerte/Pro/Contra/Fazit) — if the model deviates, we still render
+  // the structured layout instead of falling back to a flat markdown wall.
+  return /^##\s+(Verdict|Kennwerte|Kennzahlen|Pro|Contra|Fazit|TL;DR)\s*$/im.test(md);
 }
 
 function clusterStyle(cluster?: string): { text: string; bg: string; ring: string } {
@@ -115,9 +149,51 @@ function clusterStyle(cluster?: string): { text: string; bg: string; ring: strin
   return { text: "text-muted-foreground", bg: "bg-muted/40", ring: "ring-border" };
 }
 
+function CollapseSection({
+  title,
+  children,
+  tone = "muted",
+  defaultOpen = false,
+  count,
+}: {
+  title: string;
+  children: React.ReactNode;
+  tone?: "muted" | "primary" | "bear";
+  defaultOpen?: boolean;
+  count?: number;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const toneRing =
+    tone === "primary" ? "border-primary/30 bg-primary/5"
+    : tone === "bear" ? "border-bear/25 bg-bear/5"
+    : "border-border bg-background/40";
+  const toneLabel =
+    tone === "primary" ? "text-primary"
+    : tone === "bear" ? "text-bear"
+    : "text-muted-foreground";
+  return (
+    <div className={`rounded-lg border ${toneRing}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+        aria-expanded={open}
+      >
+        <span className={`text-[10px] font-semibold uppercase tracking-wider ${toneLabel}`}>
+          {title}
+          {typeof count === "number" && (
+            <span className="ml-1.5 text-muted-foreground/80 normal-case tracking-normal">· {count}</span>
+          )}
+        </span>
+        <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && <div className="px-3 pb-3">{children}</div>}
+    </div>
+  );
+}
+
 export function AnalysisReport({ markdown }: { markdown: string }) {
   const r = parseReport(markdown);
-  const [showDetails, setShowDetails] = useState(false);
   const cs = clusterStyle(r.verdict?.cluster);
 
   const changeUp = (r.verdict?.change ?? "").includes("▲") || (r.verdict?.change ?? "").includes("+");
@@ -127,9 +203,19 @@ export function AnalysisReport({ markdown }: { markdown: string }) {
     ? "text-bull"
     : "text-muted-foreground";
 
+  // Desktop opens heavy sections by default; mobile (sm:) keeps them collapsed
+  // so users see Verdict + TL;DR first and can drill in.
+  // We use matchMedia at render time — fine because SSR doesn't render this
+  // (chat is client-only after auth).
+  const isMobile =
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(max-width: 639px)").matches
+      : false;
+  const defaultOpen = !isMobile;
+
   return (
-    <div className="space-y-3">
-      {/* Verdict header */}
+    <div className="space-y-2.5">
+      {/* Verdict header — always visible */}
       {r.verdict && (
         <div className={`rounded-lg ${cs.bg} ring-1 ${cs.ring} px-3 py-3`}>
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
@@ -163,7 +249,7 @@ export function AnalysisReport({ markdown }: { markdown: string }) {
         </div>
       )}
 
-      {/* TL;DR */}
+      {/* TL;DR — always visible, the one thing the user MUST read */}
       {r.tldr.length > 0 && (
         <div className="rounded-lg border border-border bg-background/40 px-3 py-2.5">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
@@ -180,26 +266,9 @@ export function AnalysisReport({ markdown }: { markdown: string }) {
         </div>
       )}
 
-      {/* Indicators grid */}
-      {r.indicators.length > 0 && (
-        <div>
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 px-0.5">
-            Indikatoren
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {r.indicators.map((ind) => (
-              <IndicatorCard key={ind.name} {...ind} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Setup */}
+      {/* Setup — short and trade-relevant, open by default everywhere */}
       {r.setup && r.setup.length > 0 && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-primary mb-1.5">
-            Setup
-          </div>
+        <CollapseSection title="Setup" tone="primary" defaultOpen>
           {r.setup.length === 1 && !r.setup[0].toLowerCase().startsWith("entry") ? (
             <div className="text-sm text-foreground/80">{r.setup[0]}</div>
           ) : (
@@ -216,42 +285,55 @@ export function AnalysisReport({ markdown }: { markdown: string }) {
               })}
             </div>
           )}
-        </div>
+        </CollapseSection>
       )}
 
-      {/* Risks */}
-      {r.risks.length > 0 && (
-        <div className="rounded-lg border border-border bg-background/40 px-3 py-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-            Risiken
+      {/* Indicators — collapsed on mobile */}
+      {r.indicators.length > 0 && (
+        <CollapseSection title="Indikatoren" defaultOpen={defaultOpen} count={r.indicators.length}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {r.indicators.map((ind) => (
+              <IndicatorCard key={ind.name} {...ind} />
+            ))}
           </div>
+        </CollapseSection>
+      )}
+
+      {/* Pro — only when the model gave a Pro section */}
+      {r.pros.length > 0 && (
+        <CollapseSection title="Pro" defaultOpen={defaultOpen} count={r.pros.length}>
           <ul className="space-y-1 text-sm">
-            {r.risks.map((b, i) => (
-              <li key={i} className="flex gap-2 text-foreground/80">
-                <span className="text-bear/70 mt-1 shrink-0">▴</span>
+            {r.pros.map((b, i) => (
+              <li key={i} className="flex gap-2 text-foreground/85">
+                <span className="text-bull mt-1 shrink-0">▾</span>
                 <span className="min-w-0">{b}</span>
               </li>
             ))}
           </ul>
-        </div>
+        </CollapseSection>
       )}
 
-      {/* Details collapsible */}
+      {/* Risks — collapsed on mobile */}
+      {r.risks.length > 0 && (
+        <CollapseSection title="Risiken" tone="bear" defaultOpen={defaultOpen} count={r.risks.length}>
+          <ul className="space-y-1 text-sm">
+            {r.risks.map((b, i) => (
+              <li key={i} className="flex gap-2 text-foreground/85">
+                <span className="text-bear/80 mt-1 shrink-0">▴</span>
+                <span className="min-w-0">{b}</span>
+              </li>
+            ))}
+          </ul>
+        </CollapseSection>
+      )}
+
+      {/* Details — always collapsed initially */}
       {r.details && (
-        <div className="rounded-lg border border-border bg-background/30">
-          <button
-            onClick={() => setShowDetails((v) => !v)}
-            className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span>Volle Begründung</span>
-            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showDetails ? "rotate-180" : ""}`} />
-          </button>
-          {showDetails && (
-            <div className="px-3 pb-3 prose prose-sm dark:prose-invert max-w-none text-foreground/85 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-              <ReactMarkdown>{r.details}</ReactMarkdown>
-            </div>
-          )}
-        </div>
+        <CollapseSection title="Volle Begründung">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/85 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            <ReactMarkdown>{r.details}</ReactMarkdown>
+          </div>
+        </CollapseSection>
       )}
 
       {/* Trailing / streaming-in text before sections appear */}

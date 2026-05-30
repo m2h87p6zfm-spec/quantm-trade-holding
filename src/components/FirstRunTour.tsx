@@ -7,7 +7,11 @@ import { useAuth } from "@/hooks/use-auth";
 // localStorage acts as a fast cache so we don't re-show the tour during the
 // brief window before the DB row loads. Source of truth is the
 // `user_trading_profile.tour_completed` column.
-const STORAGE_KEY = "quantm_first_run_tour_v2";
+// IMPORTANT: scope the cache key per user — otherwise a second account
+// signing in on the same browser inherits the previous user's "seen" flag
+// and never sees the tour.
+const STORAGE_PREFIX = "quantm_first_run_tour_v3:";
+const storageKey = (userId: string) => `${STORAGE_PREFIX}${userId}`;
 
 type Step = {
   /** data-tour value on the target element in the sidebar / page. */
@@ -63,12 +67,12 @@ const STEPS: Step[] = [
   },
 ];
 
-function localSeen(): boolean {
+function localSeen(userId: string): boolean {
   if (typeof window === "undefined") return true;
-  try { return localStorage.getItem(STORAGE_KEY) === "1"; } catch { return true; }
+  try { return localStorage.getItem(storageKey(userId)) === "1"; } catch { return true; }
 }
-function markLocalSeen() {
-  try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* noop */ }
+function markLocalSeen(userId: string) {
+  try { localStorage.setItem(storageKey(userId), "1"); } catch { /* noop */ }
 }
 
 type Rect = { top: number; left: number; width: number; height: number };
@@ -90,7 +94,7 @@ export function FirstRunTour() {
     let cancelled = false;
     if (!user) return;
     // Fast path: if local cache says seen, don't even query.
-    if (localSeen()) return;
+    if (localSeen(user.id)) return;
 
     (async () => {
       const { data, error } = await supabase
@@ -105,7 +109,7 @@ export function FirstRunTour() {
         return;
       }
       if (data?.tour_completed) {
-        markLocalSeen();
+        markLocalSeen(user.id);
         return;
       }
       // Harte Sicherheitsbedingung: Tour erst, wenn Onboarding wirklich
@@ -151,7 +155,7 @@ export function FirstRunTour() {
   if (!open) return null;
 
   const persistSeen = async () => {
-    markLocalSeen();
+    markLocalSeen(user?.id ?? "anon");
     if (!user) return;
     // Upsert so the row is created if onboarding hadn't already inserted it.
     await supabase
