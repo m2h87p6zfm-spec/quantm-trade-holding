@@ -7,7 +7,11 @@ import { useAuth } from "@/hooks/use-auth";
 // localStorage acts as a fast cache so we don't re-show the tour during the
 // brief window before the DB row loads. Source of truth is the
 // `user_trading_profile.tour_completed` column.
-const STORAGE_KEY = "quantm_first_run_tour_v2";
+// IMPORTANT: scope the cache key per user — otherwise a second account
+// signing in on the same browser inherits the previous user's "seen" flag
+// and never sees the tour.
+const STORAGE_PREFIX = "quantm_first_run_tour_v3:";
+const storageKey = (userId: string) => `${STORAGE_PREFIX}${userId}`;
 
 type Step = {
   /** data-tour value on the target element in the sidebar / page. */
