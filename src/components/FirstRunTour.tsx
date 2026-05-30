@@ -95,19 +95,30 @@ export function FirstRunTour() {
     (async () => {
       const { data, error } = await supabase
         .from("user_trading_profile")
-        .select("tour_completed")
+        .select("tour_completed, onboarding_completed, age_range, trading_goal, risk_level")
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
       if (error) {
-        // Network/RLS issue — fall back to local cache (already false here).
-        setOpen(true);
+        // Network/RLS hiccup — do NOT auto-open the tour, sonst könnte sie
+        // vor dem Onboarding erscheinen. Lieber stillschweigend nichts tun.
         return;
       }
       if (data?.tour_completed) {
         markLocalSeen();
         return;
       }
+      // Harte Sicherheitsbedingung: Tour erst, wenn Onboarding wirklich
+      // abgeschlossen UND die drei Kernantworten (Alter, Anlagehorizont,
+      // Risiko) gespeichert sind. Verhindert, dass die Pfeile ins Leere
+      // zeigen, falls AuthGate aus irgendeinem Grund den Tour-Render
+      // freigibt, obwohl das Onboarding nicht final committed wurde.
+      const ready =
+        data?.onboarding_completed === true &&
+        Boolean(data?.age_range) &&
+        Boolean(data?.trading_goal) &&
+        Boolean(data?.risk_level);
+      if (!ready) return;
       // Slight delay so sidebar is mounted before we measure targets.
       window.setTimeout(() => { if (!cancelled) setOpen(true); }, 400);
     })();
