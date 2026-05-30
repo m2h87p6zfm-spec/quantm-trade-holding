@@ -100,9 +100,11 @@ function Cockpit() {
 
 
         {/* Hero */}
-        <header className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-background to-violet-accent/10 p-5 md:p-7">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
-          <div className="pointer-events-none absolute -left-10 -bottom-16 h-48 w-48 rounded-full bg-violet-accent/15 blur-3xl" />
+        <header className="relative rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/10 via-background to-violet-accent/10 p-5 md:p-7">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-primary/15 blur-3xl" />
+            <div className="absolute -left-10 -bottom-16 h-48 w-48 rounded-full bg-violet-accent/15 blur-3xl" />
+          </div>
           <div className="relative flex flex-wrap items-end justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
