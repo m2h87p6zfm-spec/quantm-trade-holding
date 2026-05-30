@@ -135,7 +135,9 @@ export function MobileBottomNav() {
                   <it.icon
                     className={`h-5 w-5 md:h-6 md:w-6 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--bull)_55%,transparent)]" : ""}`}
                   />
-                  <span className="truncate leading-none">{t(it.key)}</span>
+                  <span className="block w-full max-w-full truncate text-center leading-none">
+                    {SHORT_LABELS_DE[it.to] ?? t(it.key)}
+                  </span>
                 </Link>
               </li>
             );
