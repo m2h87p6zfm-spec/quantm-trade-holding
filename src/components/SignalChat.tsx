@@ -8,6 +8,9 @@ import { findProduct } from "@/lib/products";
 import { computeAll } from "@/lib/indicators";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
+import { AnalysisReport, isStructuredReport, parseReport } from "@/components/signal/AnalysisReport";
+import { QuickFollowups } from "@/components/signal/QuickFollowups";
+
 
 type Msg = { role: "user" | "assistant"; content: string };
 
