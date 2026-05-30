@@ -32,6 +32,16 @@ type PrimaryItem = {
 
 type MoreItem = { to: string; icon: typeof Bell; key: string };
 
+// Kurze Labels speziell für die Mobile-Bottom-Bar — die regulären i18n-Labels
+// ("Beobachtungsliste", "Aktien-Analyse") sind zu lang für 5 Spalten auf 390 px
+// und liefen sichtbar in die Nachbarzelle.
+const SHORT_LABELS_DE: Record<string, string> = {
+  "/": "Watchlist",
+  "/analyse": "Analyse",
+  "/picks": "Picks",
+  "/portfolio": "Depot",
+};
+
 const primary: PrimaryItem[] = [
   { to: "/", icon: ListOrdered, key: "nav.watchlist", exact: true },
   { to: "/analyse", icon: Sigma, key: "nav.analyse" },
