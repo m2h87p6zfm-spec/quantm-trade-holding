@@ -66,7 +66,9 @@ export function WatchlistSwitcher() {
   return (
     <div className="relative">
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
+
         className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors"
         style={{ borderColor: active?.color ? `${active.color}66` : undefined }}
       >
