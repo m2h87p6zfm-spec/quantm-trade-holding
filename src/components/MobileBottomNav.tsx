@@ -32,6 +32,16 @@ type PrimaryItem = {
 
 type MoreItem = { to: string; icon: typeof Bell; key: string };
 
+// Kurze Labels speziell für die Mobile-Bottom-Bar — die regulären i18n-Labels
+// ("Beobachtungsliste", "Aktien-Analyse") sind zu lang für 5 Spalten auf 390 px
+// und liefen sichtbar in die Nachbarzelle.
+const SHORT_LABELS_DE: Record<string, string> = {
+  "/": "Watchlist",
+  "/analyse": "Analyse",
+  "/picks": "Picks",
+  "/portfolio": "Depot",
+};
+
 const primary: PrimaryItem[] = [
   { to: "/", icon: ListOrdered, key: "nav.watchlist", exact: true },
   { to: "/analyse", icon: Sigma, key: "nav.analyse" },
@@ -115,17 +125,19 @@ export function MobileBottomNav() {
           {primary.map((it) => {
             const active = isActive(it);
             return (
-              <li key={it.to} data-tour={tourKeys[it.to]}>
+              <li key={it.to} data-tour={tourKeys[it.to]} className="min-w-0 overflow-hidden">
                 <Link
                   to={it.to}
-                  className={`flex min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
+                  className={`flex min-w-0 w-full min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition overflow-hidden ${
                     active ? "text-bull" : "text-muted-foreground"
                   }`}
                 >
                   <it.icon
                     className={`h-5 w-5 md:h-6 md:w-6 ${active ? "drop-shadow-[0_0_6px_color-mix(in_oklab,var(--bull)_55%,transparent)]" : ""}`}
                   />
-                  <span className="truncate leading-none">{t(it.key)}</span>
+                  <span className="block w-full max-w-full truncate text-center leading-none">
+                    {SHORT_LABELS_DE[it.to] ?? t(it.key)}
+                  </span>
                 </Link>
               </li>
             );
