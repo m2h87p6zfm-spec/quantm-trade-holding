@@ -5,7 +5,7 @@ import {
   BookOpen,
   Calendar,
   CreditCard,
-  Flame,
+  // Flame removed — standalone /heatmap retired
   Globe2,
   Info,
   LineChart,

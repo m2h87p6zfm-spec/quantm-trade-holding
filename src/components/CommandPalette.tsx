@@ -17,7 +17,7 @@ const ROUTES = [
   { labelKey: "nav.news", to: "/news", icon: Newspaper },
   { labelKey: "nav.calendar", to: "/kalender", icon: Calendar },
   { labelKey: "side.markets", to: "/maerkte", icon: Activity },
-  { labelKey: "nav.heatmap", to: "/heatmap", icon: Flame },
+  { labelKey: "nav.marktRadar", to: "/markt-radar", icon: Flame },
   { labelKey: "watchlist.title", to: "/", icon: Sparkles },
   { labelKey: "nav.catalog", to: "/produkte", icon: LineChart },
   { labelKey: "nav.settings", to: "/einstellungen", icon: Settings },

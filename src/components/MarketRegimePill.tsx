@@ -188,7 +188,7 @@ export function MarketRegimePill() {
           <Link to="/sectors" onClick={() => setOpen(false)} className="flex-1 rounded-md bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 text-xs font-medium text-center transition">
             Sektoren ansehen
           </Link>
-          <Link to="/heatmap" onClick={() => setOpen(false)} className="flex-1 rounded-md bg-muted/30 hover:bg-muted/50 px-3 py-1.5 text-xs font-medium text-center transition">
+          <Link to="/markt-radar" search={{ tab: "heatmap" }} onClick={() => setOpen(false)} className="flex-1 rounded-md bg-muted/30 hover:bg-muted/50 px-3 py-1.5 text-xs font-medium text-center transition">
             Heatmap
           </Link>
         </div>
