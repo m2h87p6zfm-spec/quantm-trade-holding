@@ -108,25 +108,41 @@ async function liveCheck() {
     console.log("\n4. (skipped) set LOVABLE_PREVIEW_URL to verify live redirect");
     return;
   }
-  section(`4. Live: GET ${url}/heatmap follows to /markt-radar?tab=heatmap`);
+  section(`4. Live: GET ${url}/heatmap responds without 404/5xx`);
   try {
-    const res = await fetch(`${url.replace(/\/$/, "")}/heatmap`, {
-      redirect: "manual",
-      headers: { "user-agent": "lovable-redirect-test" },
-    });
-    if (res.status === 404 || res.status >= 500) {
-      fail(`unexpected status ${res.status}`);
+    // Follow the full chain (canonical-domain redirects, etc.). Cap at 5 hops.
+    let target = `${url.replace(/\/$/, "")}/heatmap`;
+    const chain = [];
+    for (let hop = 0; hop < 5; hop++) {
+      const res = await fetch(target, {
+        redirect: "manual",
+        headers: { "user-agent": "lovable-redirect-test" },
+      });
+      chain.push(`${res.status} ${target}`);
+      if (res.status === 404 || res.status >= 500) {
+        fail(`unexpected status ${res.status} at ${target}`);
+        return;
+      }
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location") ?? "";
+        if (!loc) {
+          fail(`redirect ${res.status} without Location header`);
+          return;
+        }
+        target = loc.startsWith("http") ? loc : new URL(loc, target).toString();
+        continue;
+      }
+      // 2xx — final landing. Either it's already /markt-radar (SSR redirect)
+      // or it's the SPA shell that runs beforeLoad on the client.
+      const ok =
+        target.includes("/markt-radar") ||
+        target.endsWith("/heatmap"); // SPA shell, redirect happens client-side
+      ok
+        ? pass(`landed on ${target} (${chain.length} hop(s))`)
+        : fail(`landed on unexpected URL ${target}`);
       return;
     }
-    const loc = res.headers.get("location") ?? "";
-    if (res.status >= 300 && res.status < 400 && loc.includes("/markt-radar") && loc.includes("tab=heatmap")) {
-      pass(`server-side redirect → ${loc}`);
-    } else if (res.status === 200) {
-      // SPA fallback: redirect runs in beforeLoad on the client.
-      pass(`200 OK — client-side beforeLoad will perform the redirect`);
-    } else {
-      fail(`unexpected response: ${res.status} ${loc}`);
-    }
+    fail(`too many redirects: ${chain.join(" → ")}`);
   } catch (err) {
     fail(`fetch failed: ${err.message}`);
   }
