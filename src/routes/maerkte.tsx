@@ -127,7 +127,7 @@ function MaerktePage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Sektoren</h2>
-          <Link to="/heatmap" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-gold">
+          <Link to="/markt-radar" search={{ tab: "heatmap" }} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-gold">
             <Flame className="h-3 w-3" /> Heatmap ansehen
           </Link>
         </div>

@@ -55,7 +55,7 @@ export function QuickPanel() {
           break;
         case "h":
           e.preventDefault();
-          navigate({ to: "/heatmap" });
+          navigate({ to: "/markt-radar", search: { tab: "heatmap" } });
           break;
         case "c":
           e.preventDefault();
@@ -76,7 +76,7 @@ export function QuickPanel() {
   }, [current, navigate, settings.watchlist, toggleWatch]);
 
   // Show only on data-heavy routes
-  const showOn = ["/produkte", "/", "/portfolio", "/news", "/heatmap"];
+  const showOn = ["/produkte", "/", "/portfolio", "/news", "/markt-radar"];
   const visible = showOn.some((p) => (p === "/" ? pathname === "/" : pathname.startsWith(p)));
   if (!visible) return null;
 

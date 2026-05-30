@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "@/lib/finnhub";
 import { PRODUCTS, type Product } from "@/lib/products";
@@ -6,7 +6,13 @@ import { Flame, TrendingUp, TrendingDown, Activity, Zap, LayoutGrid, Boxes } fro
 import { useMemo, useState } from "react";
 import { useT } from "@/lib/i18n";
 
-export const Route = createFileRoute("/heatmap")({ component: HeatmapPage });
+// Standalone /heatmap was retired — the Heatmap now lives inside Markt-Radar.
+// Keep the route as a permanent redirect so old links/bookmarks keep working.
+export const Route = createFileRoute("/heatmap")({
+  beforeLoad: () => {
+    throw redirect({ to: "/markt-radar", search: { tab: "heatmap" } });
+  },
+});
 
 const HEATMAP_SYMBOLS = [
   "AAPL","MSFT","NVDA","GOOGL","META","AMZN","TSLA","AMD","INTC","ORCL","CRM","NFLX",

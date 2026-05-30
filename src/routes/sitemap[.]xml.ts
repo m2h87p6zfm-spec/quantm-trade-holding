@@ -22,7 +22,7 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/screener", changefreq: "daily", priority: "0.9" },
           { path: "/preise", changefreq: "weekly", priority: "0.9" },
           { path: "/produkte", changefreq: "daily", priority: "0.8" },
-          { path: "/heatmap", changefreq: "hourly", priority: "0.7" },
+          { path: "/markt-radar", changefreq: "hourly", priority: "0.7" },
           { path: "/maerkte", changefreq: "hourly", priority: "0.7" },
           { path: "/news", changefreq: "hourly", priority: "0.7" },
           { path: "/global-intel", changefreq: "daily", priority: "0.6" },

@@ -5,7 +5,7 @@ import {
   BookOpen,
   Calendar,
   CreditCard,
-  Flame,
+  
   Globe2,
   Info,
   LineChart,
@@ -71,7 +71,6 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
     labelKey: "side.markets",
     items: [
       { to: "/markt-radar", icon: Radar, key: "nav.marktRadar" },
-      { to: "/heatmap", icon: Flame, key: "nav.heatmap" },
       { to: "/news", icon: Newspaper, key: "nav.news" },
       { to: "/global-intel", icon: Globe2, key: "nav.global" },
       { to: "/kalender", icon: Calendar, key: "nav.calendar" },
