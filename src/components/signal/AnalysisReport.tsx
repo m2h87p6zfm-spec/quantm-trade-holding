@@ -3,12 +3,38 @@ import ReactMarkdown from "react-markdown";
 import { ChevronDown } from "lucide-react";
 import { IndicatorCard } from "./IndicatorCard";
 
+const SECTION_ALIASES: Record<string, string> = {
+  // canonical → canonical
+  verdict: "verdict",
+  "tl;dr": "tldr",
+  tldr: "tldr",
+  indikatoren: "indikatoren",
+  indicators: "indikatoren",
+  // tolerated alternates the model sometimes invents
+  kennwerte: "indikatoren",
+  kennzahlen: "indikatoren",
+  setup: "setup",
+  risiken: "risiken",
+  risks: "risiken",
+  contra: "risiken",
+  cons: "risiken",
+  pro: "pro",
+  pros: "pro",
+  details: "details",
+  fazit: "details",
+  zusammenfassung: "details",
+  begründung: "details",
+  begruendung: "details",
+};
+
+
 type Tag = "bull" | "bear" | "neutral";
 type Indicator = { name: string; value: string; interpretation: string; tag: Tag };
 
 export type ParsedReport = {
   verdict: { ticker?: string; name?: string; price?: string; change?: string; cluster?: string; confidence?: string } | null;
   tldr: string[];
+  pros: string[];
   indicators: Indicator[];
   setup: string[] | null;
   risks: string[];
@@ -18,13 +44,17 @@ export type ParsedReport = {
 
 function splitSections(md: string): Record<string, string> {
   const out: Record<string, string> = {};
-  const re = /^##\s+([A-Za-zÄÖÜäöüß/.()\s]+?)\s*$/gm;
+  const re = /^##\s+([A-Za-zÄÖÜäöüß/.()&\s]+?)\s*$/gm;
   const matches = [...md.matchAll(re)];
   for (let i = 0; i < matches.length; i++) {
     const m = matches[i];
     const start = (m.index ?? 0) + m[0].length;
     const end = i + 1 < matches.length ? matches[i + 1].index! : md.length;
-    out[m[1].trim().toLowerCase()] = md.slice(start, end).trim();
+    const raw = m[1].trim().toLowerCase();
+    const key = SECTION_ALIASES[raw] ?? raw;
+    const body = md.slice(start, end).trim();
+    // Append if duplicate (e.g. multiple "Risks"/"Contra" blocks).
+    out[key] = out[key] ? `${out[key]}\n${body}` : body;
   }
   return out;
 }
