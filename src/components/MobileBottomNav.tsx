@@ -125,10 +125,10 @@ export function MobileBottomNav() {
           {primary.map((it) => {
             const active = isActive(it);
             return (
-              <li key={it.to} data-tour={tourKeys[it.to]}>
+              <li key={it.to} data-tour={tourKeys[it.to]} className="min-w-0 overflow-hidden">
                 <Link
                   to={it.to}
-                  className={`flex min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition ${
+                  className={`flex min-w-0 w-full min-h-[56px] md:min-h-[64px] flex-col items-center justify-center gap-0.5 md:gap-1 px-1 py-1.5 text-[10px] md:text-[12px] font-medium transition overflow-hidden ${
                     active ? "text-bull" : "text-muted-foreground"
                   }`}
                 >
