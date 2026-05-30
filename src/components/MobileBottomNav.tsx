@@ -92,8 +92,23 @@ export function MobileBottomNav() {
   return (
     <>
       <nav
-        className="lg:hidden fixed inset-x-0 bottom-0 z-[120] border-t border-border bg-card/95 backdrop-blur-xl"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="lg:hidden border-t border-border bg-card/95 backdrop-blur-xl"
+        style={{
+          position: "fixed",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 120,
+          paddingBottom: "env(safe-area-inset-bottom)",
+          // Promote to its own compositor layer — without this, iOS Safari
+          // visibly "drags" the fixed nav during URL-bar collapse, making it
+          // appear to drift upward while scrolling.
+          transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+          willChange: "transform",
+          WebkitBackfaceVisibility: "hidden",
+          backfaceVisibility: "hidden",
+        }}
         aria-label="Primary"
       >
         <ul className="mx-auto grid max-w-3xl grid-cols-5">
