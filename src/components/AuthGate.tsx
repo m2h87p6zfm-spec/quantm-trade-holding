@@ -249,10 +249,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <Navigate to="/" replace />;
   }
 
+  // Tour erst NACH abgeschlossenem Onboarding zeigen — sonst überlagern
+  // die Tour-Pfeile das Onboarding-Formular und zeigen ins Leere.
+  const showTour = profile?.onboarding_completed === true && pathname !== "/onboarding";
   return (
     <>
       {children}
-      <FirstRunTour />
+      {showTour ? <FirstRunTour /> : null}
     </>
   );
 }
