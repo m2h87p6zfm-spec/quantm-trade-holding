@@ -9,7 +9,9 @@ import { computeAll } from "@/lib/indicators";
 import { scoreIndicators } from "@/lib/analysis";
 import { useSettings } from "@/lib/settings";
 import { AnalysisReport, isStructuredReport, parseReport } from "@/components/signal/AnalysisReport";
+import { AnalysisSummary } from "@/components/signal/AnalysisSummary";
 import { QuickFollowups } from "@/components/signal/QuickFollowups";
+
 
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -181,8 +183,10 @@ export function SignalChat() {
           {loadingData ? "Lade Daten…" : `${rows.length}/${symbols.length} Werte live`}
         </div>
       </div>
+      <AnalysisSummary messages={messages} />
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+
         {messages.map((m, i) => {
           const structured = m.role === "assistant" && isStructuredReport(m.content);
           const ticker = structured ? parseReport(m.content).verdict?.ticker : undefined;
