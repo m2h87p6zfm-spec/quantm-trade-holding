@@ -17,6 +17,39 @@ export function WatchlistSwitcher() {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [customizing, setCustomizing] = useState<string | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [popStyle, setPopStyle] = useState<React.CSSProperties | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const btn = btnRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const margin = 12;
+      const width = Math.min(320, vw - margin * 2);
+      // Align right edge to button's right edge, but clamp inside viewport.
+      let left = r.right - width;
+      if (left < margin) left = margin;
+      if (left + width > vw - margin) left = vw - margin - width;
+      setPopStyle({
+        position: "fixed",
+        top: r.bottom + 8,
+        left,
+        width,
+        zIndex: 50,
+      });
+    }
+    reposition();
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+    return () => {
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
+    };
+  }, [open]);
+
 
   const lists = settings.watchlists;
   const active = lists.find((w) => w.id === settings.activeWatchlistId) ?? lists[0];
