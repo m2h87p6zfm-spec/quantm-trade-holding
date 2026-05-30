@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Plus, Trash2, Check, Edit2, Palette } from "lucide-react";
 import { useSettings, WATCHLIST_COLORS, WATCHLIST_EMOJIS } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
@@ -17,6 +17,39 @@ export function WatchlistSwitcher() {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [customizing, setCustomizing] = useState<string | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [popStyle, setPopStyle] = useState<React.CSSProperties | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    function reposition() {
+      const btn = btnRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const margin = 12;
+      const width = Math.min(320, vw - margin * 2);
+      // Align right edge to button's right edge, but clamp inside viewport.
+      let left = r.right - width;
+      if (left < margin) left = margin;
+      if (left + width > vw - margin) left = vw - margin - width;
+      setPopStyle({
+        position: "fixed",
+        top: r.bottom + 8,
+        left,
+        width,
+        zIndex: 50,
+      });
+    }
+    reposition();
+    window.addEventListener("resize", reposition);
+    window.addEventListener("scroll", reposition, true);
+    return () => {
+      window.removeEventListener("resize", reposition);
+      window.removeEventListener("scroll", reposition, true);
+    };
+  }, [open]);
+
 
   const lists = settings.watchlists;
   const active = lists.find((w) => w.id === settings.activeWatchlistId) ?? lists[0];
@@ -33,7 +66,9 @@ export function WatchlistSwitcher() {
   return (
     <div className="relative">
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
+
         className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40 transition-colors"
         style={{ borderColor: active?.color ? `${active.color}66` : undefined }}
       >
@@ -46,8 +81,9 @@ export function WatchlistSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setCustomizing(null); }} />
-          <div className="absolute right-0 z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-w-[20rem] rounded-lg border border-border bg-popover shadow-xl">
-            <ul className="py-1 max-h-80 overflow-auto">
+          <div style={popStyle ?? { visibility: "hidden", position: "fixed" }} className="rounded-lg border border-border bg-popover shadow-xl">
+            <ul className="py-1 max-h-[60vh] overflow-auto">
+
 
               {lists.map((w) => {
                 const isActive = w.id === settings.activeWatchlistId;
