@@ -166,7 +166,7 @@ export function SignalChat() {
   const loadingData = candleQs.some((q) => q.isLoading);
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col h-[640px]">
+    <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col h-[min(82vh,820px)]">
       <div className="border-b border-border px-5 py-3 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
           <Activity className="h-4 w-4 text-primary" />
@@ -183,31 +183,50 @@ export function SignalChat() {
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        {messages.map((m, i) => (
-          <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-            <div
-              className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full ${
-                m.role === "user" ? "bg-muted text-muted-foreground" : "bg-primary/15 text-primary"
-              }`}
-            >
-              {m.role === "user" ? <UserIcon className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+        {messages.map((m, i) => {
+          const structured = m.role === "assistant" && isStructuredReport(m.content);
+          const ticker = structured ? parseReport(m.content).verdict?.ticker : undefined;
+          const isLast = i === messages.length - 1;
+          return (
+            <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div
+                className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full ${
+                  m.role === "user" ? "bg-muted text-muted-foreground" : "bg-primary/15 text-primary"
+                }`}
+              >
+                {m.role === "user" ? <UserIcon className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+              </div>
+              <div
+                className={`rounded-lg text-sm min-w-0 ${
+                  m.role === "user"
+                    ? "max-w-[88%] bg-primary text-primary-foreground px-3 py-2"
+                    : structured
+                    ? "flex-1 bg-transparent p-0"
+                    : "max-w-[88%] bg-muted/50 text-foreground px-3 py-2"
+                }`}
+              >
+                {m.content ? (
+                  structured ? (
+                    <>
+                      <AnalysisReport markdown={m.content} />
+                      {isLast && !loading && (
+                        <QuickFollowups ticker={ticker} onAction={(p) => send(p)} />
+                      )}
+                    </>
+                  ) : (
+                    <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background/50 [&_pre]:text-xs [&_code]:text-xs">
+                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    </div>
+                  )
+                ) : loading && isLast ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
+              </div>
             </div>
-            <div
-              className={`max-w-[88%] rounded-lg px-3 py-2 text-sm ${
-                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted/50 text-foreground"
-              }`}
-            >
-              {m.content ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_pre]:bg-background/50 [&_pre]:text-xs [&_code]:text-xs">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
-                </div>
-              ) : loading && i === messages.length - 1 ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : null}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
 
       <div className="border-t border-border p-3 space-y-2">
         <div className="flex flex-wrap gap-1.5">
