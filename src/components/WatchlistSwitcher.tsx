@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown, Plus, Trash2, Check, Edit2, Palette } from "lucide-react";
 import { useSettings, WATCHLIST_COLORS, WATCHLIST_EMOJIS } from "@/lib/settings";
 import { useT } from "@/lib/i18n";
