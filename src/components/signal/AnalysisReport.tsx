@@ -115,23 +115,27 @@ export function parseReport(md: string): ParsedReport {
   const firstHead = md.indexOf("## ");
   const trailing = firstHead === -1 ? md : md.slice(0, firstHead).trim();
   if (firstHead === -1) {
-    return { verdict: null, tldr: [], indicators: [], setup: null, risks: [], details: "", trailing };
+    return { verdict: null, tldr: [], pros: [], indicators: [], setup: null, risks: [], details: "", trailing };
   }
   const sections = splitSections(md);
   const verdictLine = (sections["verdict"] ?? "").split("\n").map((l) => l.trim()).filter(Boolean)[0] ?? "";
   return {
     verdict: parseVerdict(verdictLine),
-    tldr: parseBullets(sections["tl;dr"] ?? sections["tldr"] ?? ""),
-    indicators: parseIndicators(sections["indikatoren"] ?? sections["indicators"] ?? ""),
+    tldr: parseBullets(sections["tldr"] ?? ""),
+    pros: parseBullets(sections["pro"] ?? ""),
+    indicators: parseIndicators(sections["indikatoren"] ?? ""),
     setup: parseSetup(sections["setup"] ?? ""),
-    risks: parseBullets(sections["risiken"] ?? sections["risks"] ?? ""),
+    risks: parseBullets(sections["risiken"] ?? ""),
     details: sections["details"] ?? "",
     trailing,
   };
 }
 
 export function isStructuredReport(md: string): boolean {
-  return /^##\s+Verdict\s*$/m.test(md);
+  // Accept the canonical "Verdict" header OR any of the tolerated alternates
+  // (Kennwerte/Pro/Contra/Fazit) — if the model deviates, we still render
+  // the structured layout instead of falling back to a flat markdown wall.
+  return /^##\s+(Verdict|Kennwerte|Kennzahlen|Pro|Contra|Fazit|TL;DR)\s*$/im.test(md);
 }
 
 function clusterStyle(cluster?: string): { text: string; bg: string; ring: string } {
