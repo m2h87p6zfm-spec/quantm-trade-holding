@@ -81,7 +81,7 @@ export function WatchlistSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => { setOpen(false); setCustomizing(null); }} />
-          <div className="absolute right-0 left-auto z-50 mt-2 w-[min(20rem,calc(100vw-1.5rem))] max-w-[20rem] max-sm:fixed max-sm:left-3 max-sm:right-3 max-sm:top-auto max-sm:mt-2 max-sm:w-auto rounded-lg border border-border bg-popover shadow-xl">
+          <div style={popStyle ?? { visibility: "hidden", position: "fixed" }} className="rounded-lg border border-border bg-popover shadow-xl">
             <ul className="py-1 max-h-[60vh] overflow-auto">
 
 
