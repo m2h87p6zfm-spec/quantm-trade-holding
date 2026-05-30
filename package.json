@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "i18n:check": "node scripts/i18n-check.mjs"
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "test:redirects": "node scripts/test-heatmap-redirect.mjs"
   },
   "dependencies": {
     "@block65/webcrypto-web-push": "^1.0.2",
