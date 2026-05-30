@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { fetchCandles } from "@/lib/finnhub";
 import { PRODUCTS, type Product } from "@/lib/products";
