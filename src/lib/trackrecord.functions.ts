@@ -101,8 +101,7 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
 
   const analyses = (rows ?? []).map((r) => {
     const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
-    let outcome = null as ReturnType<typeof buildOutcome>;
-    if (o) outcome = buildOutcome(o);
+    const outcome: ReturnType<typeof buildOutcome> | null = o ? buildOutcome(o) : null;
     return {
       id: r.id as string,
       ticker: r.ticker as string,
