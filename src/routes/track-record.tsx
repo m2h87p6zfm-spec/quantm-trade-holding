@@ -25,7 +25,7 @@ export const Route = createFileRoute("/track-record")({
       {
         name: "description",
         content:
-          "Vollständig transparenter Track Record: Alle abgeschlossenen Quantm-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 30/60/90 Tagen — live aus der Datenbank berechnet.",
+          "Vollständig transparenter Track Record: Alle abgeschlossenen Quantm-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 7/30/60/90 Tagen — live aus der Datenbank berechnet.",
       },
       { property: "og:title", content: "Quantm Track Record" },
       { property: "og:description", content: "Echte Trefferquote aller Quantm-Analysen — transparent und live." },
@@ -111,7 +111,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
   const accuracy = completed.length ? (correct / completed.length) * 100 : 0;
 
   const buyAnalyses = completed.filter((a) => a.verdict === "KAUF");
-  const avgBuyReturn90 = avg(buyAnalyses.map((a) => a.outcome?.return_90d ?? a.outcome?.return_30d).filter((x): x is number => x != null));
+  const avgBuyReturn90 = avg(buyAnalyses.map((a) => a.outcome?.return_90d ?? a.outcome?.display_return).filter((x): x is number => x != null));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -552,7 +552,7 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
                 <Th onClick={() => toggleSort("analyzed_at")}>Datum</Th>
                 <Th onClick={() => toggleSort("verdict")}>Urteil</Th>
                 <Th className="text-right">Kurs</Th>
-                <Th className="text-right">30d / 60d / 90d</Th>
+                <Th className="text-right">7d / 30d / 60d / 90d</Th>
                 <Th onClick={() => toggleSort("return_30d")} className="text-right">Rendite</Th>
                 <Th className="text-center">Ergebnis</Th>
                 <Th onClick={() => toggleSort("confidence_score")} className="text-right">Confidence</Th>
@@ -570,10 +570,12 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
                   <td className="px-4 py-3"><Badge variant="outline" className={verdictColor(a.verdict)}>{a.verdict}</Badge></td>
                   <td className="px-4 py-3 text-right tabular-nums">{formatCurrencyFromUsd(a.price_at_analysis, settings.currency)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-xs">
-                    <span className="text-muted-foreground">{fmtOpt(a.outcome?.price_after_30d, settings.currency)} / {fmtOpt(a.outcome?.price_after_60d, settings.currency)} / {fmtOpt(a.outcome?.price_after_90d, settings.currency)}</span>
+                    <span className="text-muted-foreground">{fmtOpt(a.outcome?.price_after_7d, settings.currency)} / {fmtOpt(a.outcome?.price_after_30d, settings.currency)} / {fmtOpt(a.outcome?.price_after_60d, settings.currency)} / {fmtOpt(a.outcome?.price_after_90d, settings.currency)}</span>
                   </td>
-                  <td className={`px-4 py-3 text-right tabular-nums font-medium ${returnColor(a.outcome?.return_30d ?? null)}`}>
-                    {a.outcome?.return_30d != null ? formatPercent(a.outcome.return_30d, 2) : "—"}
+                  <td className={`px-4 py-3 text-right tabular-nums font-medium ${returnColor(a.outcome?.display_return ?? null)}`}>
+                    {a.outcome?.display_return != null
+                      ? <>{formatPercent(a.outcome.display_return, 2)}{a.outcome.display_horizon_days === 7 && <span className="ml-1 text-[10px] text-muted-foreground">(7T vorl.)</span>}</>
+                      : "—"}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {a.outcome?.is_correct == null ? <span className="text-muted-foreground text-xs">offen</span> : a.outcome.is_correct ? "✅" : "❌"}
@@ -597,9 +599,9 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
                 <Badge variant="outline" className={verdictColor(a.verdict)}>{a.verdict}</Badge>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Rendite 30d</span>
-                <span className={`tabular-nums font-medium ${returnColor(a.outcome?.return_30d ?? null)}`}>
-                  {a.outcome?.return_30d != null ? formatPercent(a.outcome.return_30d, 2) : "—"}
+                <span className="text-muted-foreground">Rendite {a.outcome?.display_horizon_days ?? 30}d</span>
+                <span className={`tabular-nums font-medium ${returnColor(a.outcome?.display_return ?? null)}`}>
+                  {a.outcome?.display_return != null ? formatPercent(a.outcome.display_return, 2) : "—"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -683,8 +685,8 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
 
 function BestWorst({ analyses }: { analyses: Analysis[] }) {
   const scored = analyses
-    .filter((a) => a.outcome?.return_30d != null)
-    .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.return_30d as number) : (a.outcome!.return_30d as number) }));
+    .filter((a) => a.outcome?.display_return != null)
+    .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.display_return as number) : (a.outcome!.display_return as number) }));
   const best = [...scored].sort((x, y) => y.score - x.score).slice(0, 5);
   const worst = [...scored].sort((x, y) => x.score - y.score).slice(0, 5);
 
@@ -747,7 +749,7 @@ function Methodology() {
           <AccordionItem value="korrekt">
             <AccordionTrigger className="px-4">Wann gilt eine Vorhersage als korrekt?</AccordionTrigger>
             <AccordionContent className="px-4 text-sm text-muted-foreground">
-              Nach 30 Tagen: KAUF gilt als korrekt bei positiver Rendite, VERKAUFEN bei negativer Rendite, HALTEN wenn die Rendite zwischen −5 % und +5 % liegt.
+              Erste vorläufige Auswertung bereits nach <strong>7 Tagen</strong>; nach 30 Tagen wird sie mit dem stabileren Wert überschrieben. KAUF gilt als korrekt bei positiver Rendite, VERKAUFEN bei negativer Rendite, HALTEN wenn die Rendite zwischen −5 % und +5 % liegt.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="update">
@@ -786,7 +788,7 @@ function sortVal(a: Analysis, k: SortKey): string | number | null {
   if (k === "analyzed_at") return new Date(a.analyzed_at).getTime();
   if (k === "ticker") return a.ticker;
   if (k === "verdict") return a.verdict;
-  if (k === "return_30d") return a.outcome?.return_30d ?? null;
+  if (k === "return_30d") return a.outcome?.display_return ?? null;
   if (k === "confidence_score") return a.confidence_score;
   return null;
 }
