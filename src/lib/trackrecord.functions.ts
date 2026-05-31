@@ -2,6 +2,40 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type RawOutcome = {
+  price_after_7d?: number | null;
+  price_after_30d?: number | null;
+  price_after_60d?: number | null;
+  price_after_90d?: number | null;
+  return_7d?: number | null;
+  return_30d?: number | null;
+  return_60d?: number | null;
+  return_90d?: number | null;
+  is_correct?: boolean | null;
+};
+
+function buildOutcome(o: RawOutcome) {
+  const num = (v: number | null | undefined) => (v != null ? Number(v) : null);
+  const return_30d = num(o.return_30d);
+  const return_7d = num(o.return_7d);
+  const display_return = return_30d ?? return_7d;
+  const display_horizon_days = return_30d != null ? 30 : return_7d != null ? 7 : null;
+  return {
+    price_after_7d: num(o.price_after_7d),
+    price_after_30d: num(o.price_after_30d),
+    price_after_60d: num(o.price_after_60d),
+    price_after_90d: num(o.price_after_90d),
+    return_7d,
+    return_30d,
+    return_60d: num(o.return_60d),
+    return_90d: num(o.return_90d),
+    is_correct: o.is_correct ?? null,
+    display_return,
+    display_horizon_days,
+  };
+}
+
+
 const recordSchema = z.object({
   ticker: z.string().min(1).max(20),
   name: z.string().min(1).max(200),
