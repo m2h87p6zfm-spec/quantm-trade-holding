@@ -56,20 +56,20 @@ export async function fetchClosePriceAt(symbol: string, isoDate: string): Promis
   return Number(closes[bestIdx]);
 }
 
-function determineCorrect(verdict: string, return30d: number): boolean {
-  if (verdict === "KAUF") return return30d > 0;
-  if (verdict === "VERKAUFEN") return return30d < 0;
-  return Math.abs(return30d) < 5; // HALTEN
+function determineCorrect(verdict: string, ret: number): boolean {
+  if (verdict === "KAUF") return ret > 0;
+  if (verdict === "VERKAUFEN") return ret < 0;
+  return Math.abs(ret) < 5; // HALTEN
 }
 
 /** Aktualisiert alle fälligen Outcomes. Wird vom Cron-Hook aufgerufen. */
 export async function trackPendingOutcomes(): Promise<{ scanned: number; updated: number }> {
   const now = Date.now();
-  // Hole alle Analysen, deren ältestes fälliges Fenster noch nicht gesetzt ist.
+  // Auswertbar, sobald eine Analyse mindestens 7 Tage alt ist.
   const { data: analyses, error } = await supabaseAdmin
     .from("apex_analyses")
-    .select("id, ticker, analyzed_at, verdict, price_at_analysis, apex_outcomes(price_after_30d, price_after_60d, price_after_90d, return_30d, return_60d, return_90d, is_correct)")
-    .lte("analyzed_at", new Date(now - 30 * 86400_000).toISOString())
+    .select("id, ticker, analyzed_at, verdict, price_at_analysis, apex_outcomes(price_after_7d, price_after_30d, price_after_60d, price_after_90d, return_7d, return_30d, return_60d, return_90d, is_correct)")
+    .lte("analyzed_at", new Date(now - 7 * 86400_000).toISOString())
     .order("analyzed_at", { ascending: false })
     .limit(500);
   if (error) throw new Error(error.message);
@@ -82,23 +82,27 @@ export async function trackPendingOutcomes(): Promise<{ scanned: number; updated
     const ageDays = (now - new Date(a.analyzed_at as string).getTime()) / 86400_000;
     const patch: Record<string, number | boolean | null> = {};
 
-    const tryFetch = async (days: number, field: "30d" | "60d" | "90d") => {
+    const tryFetch = async (days: number, field: "7d" | "30d" | "60d" | "90d") => {
       if (ageDays < days) return;
-      if (out && out[`price_after_${field}` as keyof typeof out] != null) return;
+      if (out && (out as Record<string, unknown>)[`price_after_${field}`] != null) return;
       const isoTarget = new Date(new Date(a.analyzed_at as string).getTime() + days * 86400_000).toISOString();
       const price = await fetchClosePriceAt(a.ticker as string, isoTarget);
       if (price == null) return;
       patch[`price_after_${field}`] = price;
       patch[`return_${field}`] = ((price - base) / base) * 100;
     };
+    await tryFetch(7, "7d");
     await tryFetch(30, "30d");
     await tryFetch(60, "60d");
     await tryFetch(90, "90d");
 
-    // is_correct sobald 30d-Rendite verfügbar
+    // is_correct: bevorzugt 30d, sonst vorläufig aus 7d.
     const ret30 = (patch.return_30d as number | undefined) ?? (out?.return_30d as number | null | undefined);
-    if (ret30 != null && (out?.is_correct == null || patch.return_30d != null)) {
-      patch.is_correct = determineCorrect(a.verdict as string, Number(ret30));
+    const ret7 = (patch.return_7d as number | undefined) ?? (out?.return_7d as number | null | undefined);
+    const refReturn = ret30 ?? ret7;
+    const refUpdated = patch.return_30d != null || patch.return_7d != null;
+    if (refReturn != null && (out?.is_correct == null || refUpdated)) {
+      patch.is_correct = determineCorrect(a.verdict as string, Number(refReturn));
     }
 
     if (Object.keys(patch).length === 0) continue;
