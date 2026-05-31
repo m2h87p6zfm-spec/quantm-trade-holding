@@ -685,8 +685,8 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
 
 function BestWorst({ analyses }: { analyses: Analysis[] }) {
   const scored = analyses
-    .filter((a) => a.outcome?.return_30d != null)
-    .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.return_30d as number) : (a.outcome!.return_30d as number) }));
+    .filter((a) => a.outcome?.display_return != null)
+    .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.display_return as number) : (a.outcome!.display_return as number) }));
   const best = [...scored].sort((x, y) => y.score - x.score).slice(0, 5);
   const worst = [...scored].sort((x, y) => x.score - y.score).slice(0, 5);
 
