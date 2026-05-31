@@ -749,7 +749,7 @@ function Methodology() {
           <AccordionItem value="korrekt">
             <AccordionTrigger className="px-4">Wann gilt eine Vorhersage als korrekt?</AccordionTrigger>
             <AccordionContent className="px-4 text-sm text-muted-foreground">
-              Nach 30 Tagen: KAUF gilt als korrekt bei positiver Rendite, VERKAUFEN bei negativer Rendite, HALTEN wenn die Rendite zwischen −5 % und +5 % liegt.
+              Erste vorläufige Auswertung bereits nach <strong>7 Tagen</strong>; nach 30 Tagen wird sie mit dem stabileren Wert überschrieben. KAUF gilt als korrekt bei positiver Rendite, VERKAUFEN bei negativer Rendite, HALTEN wenn die Rendite zwischen −5 % und +5 % liegt.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="update">
