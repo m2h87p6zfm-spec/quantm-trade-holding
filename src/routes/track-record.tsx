@@ -788,7 +788,7 @@ function sortVal(a: Analysis, k: SortKey): string | number | null {
   if (k === "analyzed_at") return new Date(a.analyzed_at).getTime();
   if (k === "ticker") return a.ticker;
   if (k === "verdict") return a.verdict;
-  if (k === "return_30d") return a.outcome?.return_30d ?? null;
+  if (k === "return_30d") return a.outcome?.display_return ?? null;
   if (k === "confidence_score") return a.confidence_score;
   return null;
 }
