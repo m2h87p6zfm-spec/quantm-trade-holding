@@ -36,13 +36,19 @@ export type TrackRecordPayload = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     indicators: any;
     outcome: {
+      price_after_7d: number | null;
       price_after_30d: number | null;
       price_after_60d: number | null;
       price_after_90d: number | null;
+      return_7d: number | null;
       return_30d: number | null;
       return_60d: number | null;
       return_90d: number | null;
       is_correct: boolean | null;
+      /** Beste verfügbare Rendite (30d bevorzugt, sonst 7d). */
+      display_return: number | null;
+      /** Zugehöriger Horizont in Tagen (30 oder 7). */
+      display_horizon_days: number | null;
     } | null;
   }>;
   benchmarks: Record<string, { return90d: number | null; return1y: number | null }>;
@@ -54,13 +60,15 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
 
   const { data: rows, error } = await supabaseAdmin
     .from("apex_analyses")
-    .select("id, ticker, name, sector, asset_type, analyzed_at, verdict, confidence_score, price_at_analysis, indicators, apex_outcomes(price_after_30d, price_after_60d, price_after_90d, return_30d, return_60d, return_90d, is_correct)")
+    .select("id, ticker, name, sector, asset_type, analyzed_at, verdict, confidence_score, price_at_analysis, indicators, apex_outcomes(price_after_7d, price_after_30d, price_after_60d, price_after_90d, return_7d, return_30d, return_60d, return_90d, is_correct)")
     .order("analyzed_at", { ascending: false })
     .limit(1000);
   if (error) throw new Error(error.message);
 
   const analyses = (rows ?? []).map((r) => {
     const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
+    let outcome = null as ReturnType<typeof buildOutcome>;
+    if (o) outcome = buildOutcome(o);
     return {
       id: r.id as string,
       ticker: r.ticker as string,
@@ -72,17 +80,7 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
       confidence_score: Number(r.confidence_score),
       price_at_analysis: Number(r.price_at_analysis),
       indicators: (r.indicators as Record<string, unknown>) ?? {},
-      outcome: o
-        ? {
-            price_after_30d: o.price_after_30d != null ? Number(o.price_after_30d) : null,
-            price_after_60d: o.price_after_60d != null ? Number(o.price_after_60d) : null,
-            price_after_90d: o.price_after_90d != null ? Number(o.price_after_90d) : null,
-            return_30d: o.return_30d != null ? Number(o.return_30d) : null,
-            return_60d: o.return_60d != null ? Number(o.return_60d) : null,
-            return_90d: o.return_90d != null ? Number(o.return_90d) : null,
-            is_correct: o.is_correct ?? null,
-          }
-        : null,
+      outcome,
     };
   });
 
