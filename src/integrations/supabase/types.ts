@@ -639,9 +639,11 @@ export type Database = {
           is_correct: boolean | null
           price_after_30d: number | null
           price_after_60d: number | null
+          price_after_7d: number | null
           price_after_90d: number | null
           return_30d: number | null
           return_60d: number | null
+          return_7d: number | null
           return_90d: number | null
           updated_at: string
         }
@@ -651,9 +653,11 @@ export type Database = {
           is_correct?: boolean | null
           price_after_30d?: number | null
           price_after_60d?: number | null
+          price_after_7d?: number | null
           price_after_90d?: number | null
           return_30d?: number | null
           return_60d?: number | null
+          return_7d?: number | null
           return_90d?: number | null
           updated_at?: string
         }
@@ -663,9 +667,11 @@ export type Database = {
           is_correct?: boolean | null
           price_after_30d?: number | null
           price_after_60d?: number | null
+          price_after_7d?: number | null
           price_after_90d?: number | null
           return_30d?: number | null
           return_60d?: number | null
+          return_7d?: number | null
           return_90d?: number | null
           updated_at?: string
         }
