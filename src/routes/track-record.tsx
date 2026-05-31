@@ -25,7 +25,7 @@ export const Route = createFileRoute("/track-record")({
       {
         name: "description",
         content:
-          "Vollständig transparenter Track Record: Alle abgeschlossenen Quantm-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 30/60/90 Tagen — live aus der Datenbank berechnet.",
+          "Vollständig transparenter Track Record: Alle abgeschlossenen Quantm-Analysen, ihre Vorhersagen und tatsächlichen Renditen nach 7/30/60/90 Tagen — live aus der Datenbank berechnet.",
       },
       { property: "og:title", content: "Quantm Track Record" },
       { property: "og:description", content: "Echte Trefferquote aller Quantm-Analysen — transparent und live." },
