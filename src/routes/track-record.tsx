@@ -111,7 +111,7 @@ function TrackRecordContent({ data }: { data: TrackRecordPayload }) {
   const accuracy = completed.length ? (correct / completed.length) * 100 : 0;
 
   const buyAnalyses = completed.filter((a) => a.verdict === "KAUF");
-  const avgBuyReturn90 = avg(buyAnalyses.map((a) => a.outcome?.return_90d ?? a.outcome?.return_30d).filter((x): x is number => x != null));
+  const avgBuyReturn90 = avg(buyAnalyses.map((a) => a.outcome?.return_90d ?? a.outcome?.display_return).filter((x): x is number => x != null));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
