@@ -599,9 +599,9 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
                 <Badge variant="outline" className={verdictColor(a.verdict)}>{a.verdict}</Badge>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Rendite 30d</span>
-                <span className={`tabular-nums font-medium ${returnColor(a.outcome?.return_30d ?? null)}`}>
-                  {a.outcome?.return_30d != null ? formatPercent(a.outcome.return_30d, 2) : "—"}
+                <span className="text-muted-foreground">Rendite {a.outcome?.display_horizon_days ?? 30}d</span>
+                <span className={`tabular-nums font-medium ${returnColor(a.outcome?.display_return ?? null)}`}>
+                  {a.outcome?.display_return != null ? formatPercent(a.outcome.display_return, 2) : "—"}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
