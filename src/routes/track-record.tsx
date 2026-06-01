@@ -35,6 +35,7 @@ export const Route = createFileRoute("/track-record")({
 });
 
 const PERIODS = [
+  { id: "7d", label: "7 Tage", days: 7 },
   { id: "30d", label: "30 Tage", days: 30 },
   { id: "90d", label: "90 Tage", days: 90 },
   { id: "6m", label: "6 Monate", days: 182 },
