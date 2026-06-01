@@ -92,14 +92,21 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { fetchYahooChartCached } = await import("@/lib/yahoo-cache.server");
 
-  const { data: rows, error } = await supabaseAdmin
-    .from("apex_analyses")
-    .select("id, ticker, name, sector, asset_type, analyzed_at, verdict, confidence_score, price_at_analysis, indicators, apex_outcomes(price_after_7d, price_after_30d, price_after_60d, price_after_90d, return_7d, return_30d, return_60d, return_90d, is_correct)")
-    .order("analyzed_at", { ascending: false })
-    .limit(1000);
-  if (error) throw new Error(error.message);
+  const selectColumns = "id, ticker, name, sector, asset_type, analyzed_at, verdict, confidence_score, price_at_analysis, indicators, apex_outcomes(price_after_7d, price_after_30d, price_after_60d, price_after_90d, return_7d, return_30d, return_60d, return_90d, is_correct)";
+  const rows: any[] = [];
+  const pageSize = 1000;
+  for (let from = 0; from < 10000; from += pageSize) {
+    const { data: page, error } = await supabaseAdmin
+      .from("apex_analyses")
+      .select(selectColumns)
+      .order("analyzed_at", { ascending: false })
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(error.message);
+    rows.push(...(page ?? []));
+    if (!page || page.length < pageSize) break;
+  }
 
-  const analyses = (rows ?? []).map((r) => {
+  const analyses = rows.map((r) => {
     const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
     const outcome: ReturnType<typeof buildOutcome> | null = o ? buildOutcome(o) : null;
     return {
