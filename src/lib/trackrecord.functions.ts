@@ -106,7 +106,18 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
     if (!page || page.length < pageSize) break;
   }
 
-  const analyses = rows.map((r) => {
+  // Dedup: pro Ticker pro Kalendertag nur die jüngste Analyse behalten.
+  // Mehrfach-Analysen desselben Tages verzerren sonst die Erfolgsquote.
+  const seen = new Set<string>();
+  const dedupRows = rows.filter((r) => {
+    const day = String(r.analyzed_at).slice(0, 10); // YYYY-MM-DD
+    const key = `${r.ticker}|${day}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const analyses = dedupRows.map((r) => {
     const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
     const outcome: ReturnType<typeof buildOutcome> | null = o ? buildOutcome(o) : null;
     return {
