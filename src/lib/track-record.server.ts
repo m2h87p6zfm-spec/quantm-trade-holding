@@ -59,7 +59,7 @@ export async function fetchClosePriceAt(symbol: string, isoDate: string): Promis
 function determineCorrect(verdict: string, ret: number): boolean {
   if (verdict === "KAUF") return ret > 0;
   if (verdict === "VERKAUFEN") return ret < 0;
-  return Math.abs(ret) < 5; // HALTEN
+  return Math.abs(ret) < 2; // HALTEN: strenger ±2 % Korridor
 }
 
 /** Aktualisiert alle fälligen Outcomes. Wird vom Cron-Hook aufgerufen. */
