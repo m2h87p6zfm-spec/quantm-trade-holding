@@ -84,7 +84,14 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       customer: customerId,
       ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
       metadata: { userId, managed_payments: "true" },
-      ...(isRecurring && { subscription_data: { metadata: { userId } } }),
+      ...(isRecurring && {
+        subscription_data: {
+          metadata: { userId },
+          // 7-tägige kostenlose Probephase für Elite-Abos.
+          // Stripe bucht erst nach Ablauf ab; Kündigung jederzeit über Portal möglich.
+          ...(data.priceId.startsWith("apex_elite_") && { trial_period_days: 7 }),
+        },
+      }),
     } as Stripe.Checkout.SessionCreateParams);
 
     return session.client_secret;
