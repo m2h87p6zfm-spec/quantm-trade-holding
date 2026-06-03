@@ -645,7 +645,12 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
       m[s].count++;
       if (a.outcome?.is_correct) m[s].correct++;
     }
-    return Object.entries(m).map(([sector, v]) => ({ sector, count: v.count, accuracy: (v.correct / v.count) * 100 }));
+    // Sektoren mit zu kleiner Stichprobe (< 5) ausblenden — sonst zeigt
+    // ein einzelner Treffer/Miss 0% oder 100% und wirkt katastrophal.
+    return Object.entries(m)
+      .filter(([, v]) => v.count >= 5)
+      .map(([sector, v]) => ({ sector, count: v.count, accuracy: (v.correct / v.count) * 100 }))
+      .sort((a, b) => b.count - a.count);
   }, [analyses]);
 
   const maxCount = Math.max(1, ...stats.map((s) => s.count));
