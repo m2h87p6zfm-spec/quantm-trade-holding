@@ -212,6 +212,11 @@ function PricingPage() {
                       Endpreis inkl. 19 % MwSt. — keine versteckten Kosten.
                     </p>
                   )}
+                  {plan.id === "elite" && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-bull/40 bg-bull/10 px-2.5 py-1 text-[11px] font-semibold text-bull">
+                      <Sparkles className="h-3 w-3" /> 7 Tage gratis testen — danach {price?.toFixed(2).replace(".", ",")} €, jederzeit kündbar
+                    </div>
+                  )}
                 </div>
 
                 <Button
@@ -228,6 +233,8 @@ function PricingPage() {
                     t("pricing.cta.portalSwitch")
                   ) : plan.id === "free" ? (
                     t("pricing.cta.freeStart")
+                  ) : plan.id === "elite" ? (
+                    "7 Tage gratis starten"
                   ) : (
                     t("pricing.cta.choose", { plan: plan.name })
                   )}

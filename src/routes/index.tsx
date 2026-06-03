@@ -13,6 +13,8 @@ import { ManageWatchlistDialog } from "@/components/ManageWatchlistDialog";
 import { WatchlistSignalsPanel } from "@/components/WatchlistSignalsPanel";
 import { WatchlistAccordions, type CustomAccordionItem } from "@/components/WatchlistAccordions";
 import { useT } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { MarketingLanding } from "@/components/MarketingLanding";
 
 import { scoreIndicators, buildDecision, stabilizeDecision } from "@/lib/analysis";
 import { detectRegime } from "@/lib/ai-learning";
@@ -20,7 +22,15 @@ import { detectRegime } from "@/lib/ai-learning";
 
 
 
-export const Route = createFileRoute("/")({ component: Cockpit });
+export const Route = createFileRoute("/")({ component: IndexRoute });
+
+function IndexRoute() {
+  const { user, loading } = useAuth();
+  // Logged-out visitors see the marketing landing (clear value prop + 7-day Elite trial CTA).
+  if (loading) return <div className="min-h-screen bg-background" />;
+  if (!user) return <MarketingLanding />;
+  return <Cockpit />;
+}
 
 const DEFAULT_SET = ["AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "JPM", "XOM", "SPY", "QQQ"];
 
