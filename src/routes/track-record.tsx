@@ -513,6 +513,11 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
     const lc = q.trim().toLowerCase();
     const list = lc ? analyses.filter((a) => a.name.toLowerCase().includes(lc) || a.ticker.toLowerCase().includes(lc)) : analyses;
     const sorted = [...list].sort((a, b) => {
+      // Bewertete Analysen immer zuerst — sonst füllt sich Seite 1 mit
+      // "offenen" Tageseinträgen und die echte Track-Record verschwindet.
+      const aOpen = a.outcome?.is_correct == null;
+      const bOpen = b.outcome?.is_correct == null;
+      if (aOpen !== bOpen) return aOpen ? 1 : -1;
       const av = sortVal(a, sortKey);
       const bv = sortVal(b, sortKey);
       if (av == null && bv == null) return 0;
@@ -645,7 +650,12 @@ function SectorHeatmap({ analyses, onPick }: { analyses: Analysis[]; onPick: (se
       m[s].count++;
       if (a.outcome?.is_correct) m[s].correct++;
     }
-    return Object.entries(m).map(([sector, v]) => ({ sector, count: v.count, accuracy: (v.correct / v.count) * 100 }));
+    // Sektoren mit zu kleiner Stichprobe (< 5) ausblenden — sonst zeigt
+    // ein einzelner Treffer/Miss 0% oder 100% und wirkt katastrophal.
+    return Object.entries(m)
+      .filter(([, v]) => v.count >= 5)
+      .map(([sector, v]) => ({ sector, count: v.count, accuracy: (v.correct / v.count) * 100 }))
+      .sort((a, b) => b.count - a.count);
   }, [analyses]);
 
   const maxCount = Math.max(1, ...stats.map((s) => s.count));
@@ -688,8 +698,18 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
   const scored = analyses
     .filter((a) => a.outcome?.display_return != null)
     .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.display_return as number) : (a.outcome!.display_return as number) }));
-  const best = [...scored].sort((x, y) => y.score - x.score).slice(0, 5);
-  const worst = [...scored].sort((x, y) => x.score - y.score).slice(0, 5);
+  // Dedup per ticker — nur das jeweils extremste Ergebnis je Ticker behalten,
+  // damit dieselbe Aktie nicht 5x in der Bestenliste auftaucht.
+  const bestPerTicker = new Map<string, typeof scored[number]>();
+  const worstPerTicker = new Map<string, typeof scored[number]>();
+  for (const item of scored) {
+    const b = bestPerTicker.get(item.a.ticker);
+    if (!b || item.score > b.score) bestPerTicker.set(item.a.ticker, item);
+    const w = worstPerTicker.get(item.a.ticker);
+    if (!w || item.score < w.score) worstPerTicker.set(item.a.ticker, item);
+  }
+  const best = Array.from(bestPerTicker.values()).sort((x, y) => y.score - x.score).slice(0, 5);
+  const worst = Array.from(worstPerTicker.values()).sort((x, y) => x.score - y.score).slice(0, 5);
 
   return (
     <section className="grid md:grid-cols-2 gap-6">

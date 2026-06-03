@@ -106,16 +106,21 @@ export const getTrackRecord = createServerFn({ method: "GET" }).handler(async ()
     if (!page || page.length < pageSize) break;
   }
 
-  // Dedup: pro Ticker pro Kalendertag nur die jüngste Analyse behalten.
-  // Mehrfach-Analysen desselben Tages verzerren sonst die Erfolgsquote.
-  const seen = new Set<string>();
-  const dedupRows = rows.filter((r) => {
-    const day = String(r.analyzed_at).slice(0, 10); // YYYY-MM-DD
+  // Dedup: pro Ticker pro Kalendertag nur eine Analyse behalten.
+  // Bevorzugt Rows MIT Outcome (is_correct gesetzt), sonst die jüngste.
+  const bucket = new Map<string, any>();
+  for (const r of rows) {
+    const day = String(r.analyzed_at).slice(0, 10);
     const key = `${r.ticker}|${day}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+    const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
+    const hasOutcome = o && (o.is_correct != null || o.return_7d != null || o.return_30d != null);
+    const existing = bucket.get(key);
+    if (!existing) { bucket.set(key, r); continue; }
+    const eo = Array.isArray(existing.apex_outcomes) ? existing.apex_outcomes[0] : existing.apex_outcomes;
+    const existingHas = eo && (eo.is_correct != null || eo.return_7d != null || eo.return_30d != null);
+    if (hasOutcome && !existingHas) bucket.set(key, r);
+  }
+  const dedupRows = Array.from(bucket.values());
 
   const analyses = dedupRows.map((r) => {
     const o = Array.isArray(r.apex_outcomes) ? r.apex_outcomes[0] : r.apex_outcomes;
