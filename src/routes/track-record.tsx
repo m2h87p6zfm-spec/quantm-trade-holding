@@ -513,6 +513,11 @@ function AnalysisTable({ analyses }: { analyses: Analysis[] }) {
     const lc = q.trim().toLowerCase();
     const list = lc ? analyses.filter((a) => a.name.toLowerCase().includes(lc) || a.ticker.toLowerCase().includes(lc)) : analyses;
     const sorted = [...list].sort((a, b) => {
+      // Bewertete Analysen immer zuerst — sonst füllt sich Seite 1 mit
+      // "offenen" Tageseinträgen und die echte Track-Record verschwindet.
+      const aOpen = a.outcome?.is_correct == null;
+      const bOpen = b.outcome?.is_correct == null;
+      if (aOpen !== bOpen) return aOpen ? 1 : -1;
       const av = sortVal(a, sortKey);
       const bv = sortVal(b, sortKey);
       if (av == null && bv == null) return 0;
