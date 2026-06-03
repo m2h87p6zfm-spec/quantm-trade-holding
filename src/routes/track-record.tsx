@@ -688,8 +688,18 @@ function BestWorst({ analyses }: { analyses: Analysis[] }) {
   const scored = analyses
     .filter((a) => a.outcome?.display_return != null)
     .map((a) => ({ a, score: a.verdict === "VERKAUFEN" ? -(a.outcome!.display_return as number) : (a.outcome!.display_return as number) }));
-  const best = [...scored].sort((x, y) => y.score - x.score).slice(0, 5);
-  const worst = [...scored].sort((x, y) => x.score - y.score).slice(0, 5);
+  // Dedup per ticker — nur das jeweils extremste Ergebnis je Ticker behalten,
+  // damit dieselbe Aktie nicht 5x in der Bestenliste auftaucht.
+  const bestPerTicker = new Map<string, typeof scored[number]>();
+  const worstPerTicker = new Map<string, typeof scored[number]>();
+  for (const item of scored) {
+    const b = bestPerTicker.get(item.a.ticker);
+    if (!b || item.score > b.score) bestPerTicker.set(item.a.ticker, item);
+    const w = worstPerTicker.get(item.a.ticker);
+    if (!w || item.score < w.score) worstPerTicker.set(item.a.ticker, item);
+  }
+  const best = Array.from(bestPerTicker.values()).sort((x, y) => y.score - x.score).slice(0, 5);
+  const worst = Array.from(worstPerTicker.values()).sort((x, y) => x.score - y.score).slice(0, 5);
 
   return (
     <section className="grid md:grid-cols-2 gap-6">
