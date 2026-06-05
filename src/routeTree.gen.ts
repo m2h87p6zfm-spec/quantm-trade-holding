@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WieEsFunktioniertRouteImport } from './routes/wie-es-funktioniert'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WarRoomRouteImport } from './routes/war-room'
 import { Route as TrackRecordRouteImport } from './routes/track-record'
@@ -76,6 +77,11 @@ import { Route as ApiPublicHooksPicksScanRouteImport } from './routes/api/public
 import { Route as ApiPublicHooksEvaluateAlertsRouteImport } from './routes/api/public/hooks/evaluate-alerts'
 import { Route as ApiPublicHooksCausalOutcomesRouteImport } from './routes/api/public/hooks/causal-outcomes'
 
+const WieEsFunktioniertRoute = WieEsFunktioniertRouteImport.update({
+  id: '/wie-es-funktioniert',
+  path: '/wie-es-funktioniert',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -453,6 +459,7 @@ export interface FileRoutesByFullPath {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/wie-es-funktioniert': typeof WieEsFunktioniertRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
   '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
@@ -521,6 +528,7 @@ export interface FileRoutesByTo {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/wie-es-funktioniert': typeof WieEsFunktioniertRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
   '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
@@ -590,6 +598,7 @@ export interface FileRoutesById {
   '/track-record': typeof TrackRecordRoute
   '/war-room': typeof WarRoomRoute
   '/welcome': typeof WelcomeRoute
+  '/wie-es-funktioniert': typeof WieEsFunktioniertRoute
   '/admin/self-healing': typeof AdminSelfHealingRoute
   '/admin/tickers': typeof AdminTickersRoute
   '/auth/confirm': typeof AuthConfirmRoute
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/wie-es-funktioniert'
     | '/admin/self-healing'
     | '/admin/tickers'
     | '/auth/confirm'
@@ -728,6 +738,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/wie-es-funktioniert'
     | '/admin/self-healing'
     | '/admin/tickers'
     | '/auth/confirm'
@@ -796,6 +807,7 @@ export interface FileRouteTypes {
     | '/track-record'
     | '/war-room'
     | '/welcome'
+    | '/wie-es-funktioniert'
     | '/admin/self-healing'
     | '/admin/tickers'
     | '/auth/confirm'
@@ -865,6 +877,7 @@ export interface RootRouteChildren {
   TrackRecordRoute: typeof TrackRecordRoute
   WarRoomRoute: typeof WarRoomRoute
   WelcomeRoute: typeof WelcomeRoute
+  WieEsFunktioniertRoute: typeof WieEsFunktioniertRoute
   AdminSelfHealingRoute: typeof AdminSelfHealingRoute
   AdminTickersRoute: typeof AdminTickersRoute
   AuthConfirmRoute: typeof AuthConfirmRoute
@@ -898,6 +911,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wie-es-funktioniert': {
+      id: '/wie-es-funktioniert'
+      path: '/wie-es-funktioniert'
+      fullPath: '/wie-es-funktioniert'
+      preLoaderRoute: typeof WieEsFunktioniertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/welcome': {
       id: '/welcome'
       path: '/welcome'
@@ -1401,6 +1421,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackRecordRoute: TrackRecordRoute,
   WarRoomRoute: WarRoomRoute,
   WelcomeRoute: WelcomeRoute,
+  WieEsFunktioniertRoute: WieEsFunktioniertRoute,
   AdminSelfHealingRoute: AdminSelfHealingRoute,
   AdminTickersRoute: AdminTickersRoute,
   AuthConfirmRoute: AuthConfirmRoute,
@@ -1434,13 +1455,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
