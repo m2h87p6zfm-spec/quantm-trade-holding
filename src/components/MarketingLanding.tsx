@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles } from "lucide-react";
+import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 
 /**
