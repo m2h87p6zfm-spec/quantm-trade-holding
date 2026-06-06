@@ -335,23 +335,23 @@ function BenchmarkBlock({
       <div className="mt-6 h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in oklab, var(--border) 40%, transparent)" />
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
             <YAxis
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
               tickFormatter={(v) => `${v >= 0 ? "+" : ""}${Number(v).toFixed(0)} %`}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: 8,
                 fontSize: 12,
               }}
               formatter={(value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)} %`}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="quantm" name="Quantm Picks" stroke="oklch(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} connectNulls />
+            <Line type="monotone" dataKey="quantm" name="Quantm Picks" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3 }} connectNulls />
             <Line type="monotone" dataKey="sp500" name="S&P 500" stroke="oklch(0.65 0.01 260)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
             <Line type="monotone" dataKey="dax" name="DAX" stroke="oklch(0.65 0.13 240)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
           </ComposedChart>
