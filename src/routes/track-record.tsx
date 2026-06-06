@@ -119,7 +119,7 @@ function Content({ data }: { data: TrackRecordPayload }) {
         <TopMetrics analyses={evaluated} />
       )}
 
-      {showBenchmarks && <BenchmarkBlock benchmarks={data.benchmarks} />}
+      {showBenchmarks && <BenchmarkBlock benchmarks={data.benchmarks} analyses={evaluated} />}
 
       <PicksHistory analyses={data.analyses} />
 
