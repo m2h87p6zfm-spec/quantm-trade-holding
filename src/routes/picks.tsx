@@ -162,7 +162,16 @@ function PicksPage() {
         <section className="grid gap-3 sm:grid-cols-3">
           <FilterSelect label="Sektor" value={sector} options={SECTORS} onChange={(v) => setSector(v as Sector)} />
           <FilterSelect label="Signalstärke" value={strength} options={STRENGTHS} onChange={(v) => setStrength(v as Strength)} />
-          <FilterSelect label="Status" value={status} options={STATUSES} onChange={(v) => setStatus(v as Status)} />
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
+            <Link
+              to="/track-record"
+              className="mt-1 flex h-10 items-center justify-between rounded-md border border-border/60 bg-card/60 px-3 text-sm text-foreground/90 transition hover:border-primary/40"
+            >
+              <span>Abgeschlossene Picks → Track Record</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
         </section>
 
         {/* Picks */}
@@ -173,7 +182,7 @@ function PicksPage() {
             ))}
           </div>
         ) : picks.length === 0 ? (
-          <EmptyState status={status} />
+          <EmptyState />
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {picks.map((p) => (
