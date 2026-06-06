@@ -67,7 +67,6 @@ function PicksPage() {
   const { settings } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [strength, setStrength] = useState<Strength>("Alle");
-  const [status, setStatus] = useState<Status>("Offen");
   const [rawPicks, setRawPicks] = useState<CachedPick[] | null>(null);
   const [loaded, setLoaded] = useState(false);
 
