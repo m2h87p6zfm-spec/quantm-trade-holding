@@ -242,23 +242,38 @@ function FilterSelect({
   );
 }
 
-function EmptyState({ status }: { status: Status }) {
-  if (status === "Geschlossen") {
-    return (
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
-        <h3 className="text-lg font-semibold">Abgeschlossene Empfehlungen im Track Record</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Alle bereits ausgewerteten Empfehlungen — mit Einstieg, Ausstieg und Rendite — finden Sie im Track Record.
-        </p>
-        <Link
-          to="/track-record"
-          className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background/40 px-4 text-sm font-medium text-foreground transition hover:border-primary/40"
-        >
-          Zum Track Record <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    );
-  }
+function EmptyState() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
+      <h3 className="text-lg font-semibold">Gerade keine aktiven Empfehlungen</h3>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Unser Algorithmus wartet auf die richtige Gelegenheit. Das ist auch eine Strategie — keine Empfehlung zu geben, wenn die Datenlage nicht eindeutig ist.
+      </p>
+    </div>
+  );
+}
+
+function _Unused_GeschlossenEmptyState() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
+      <h3 className="text-lg font-semibold">Abgeschlossene Empfehlungen im Track Record</h3>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Alle bereits ausgewerteten Empfehlungen — mit Einstieg, Ausstieg und Rendite — finden Sie im Track Record.
+      </p>
+      <Link
+        to="/track-record"
+        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background/40 px-4 text-sm font-medium text-foreground transition hover:border-primary/40"
+      >
+        Zum Track Record <ArrowRight className="h-4 w-4" />
+      </Link>
+    </div>
+  );
+}
+
+function _unusedFn() {
+  return null;
+}
+function _delete_below_returns_originally_below() { return null; }
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
       <h3 className="text-lg font-semibold">Gerade keine aktiven Empfehlungen</h3>
