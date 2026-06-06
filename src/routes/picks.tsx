@@ -26,11 +26,9 @@ export const Route = createFileRoute("/picks")({
 
 const SECTORS = ["Alle", "Technologie", "Gesundheit", "Finanzen", "Konsum", "Energie", "Industrie", "Rohstoffe"] as const;
 const STRENGTHS = ["Alle", "Stark", "Mittel"] as const;
-const STATUSES = ["Offen", "Geschlossen"] as const;
 
 type Sector = (typeof SECTORS)[number];
 type Strength = (typeof STRENGTHS)[number];
-type Status = (typeof STATUSES)[number];
 
 type CachedPick = {
   symbol: string;
