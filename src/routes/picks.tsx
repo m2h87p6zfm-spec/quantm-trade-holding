@@ -26,11 +26,9 @@ export const Route = createFileRoute("/picks")({
 
 const SECTORS = ["Alle", "Technologie", "Gesundheit", "Finanzen", "Konsum", "Energie", "Industrie", "Rohstoffe"] as const;
 const STRENGTHS = ["Alle", "Stark", "Mittel"] as const;
-const STATUSES = ["Offen", "Geschlossen"] as const;
 
 type Sector = (typeof SECTORS)[number];
 type Strength = (typeof STRENGTHS)[number];
-type Status = (typeof STATUSES)[number];
 
 type CachedPick = {
   symbol: string;
@@ -69,7 +67,6 @@ function PicksPage() {
   const { settings } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [strength, setStrength] = useState<Strength>("Alle");
-  const [status, setStatus] = useState<Status>("Offen");
   const [rawPicks, setRawPicks] = useState<CachedPick[] | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -130,12 +127,8 @@ function PicksPage() {
         if (strength === "Mittel") return p.confidence >= 55 && p.confidence < 75;
         return true;
       })
-      // Status: aktuell zeigen wir alle Cache-Picks als "Offen". Status "Geschlossen"
-      // ist Teil des Track Records und wird hier nicht dargestellt — Filter bleibt
-      // sichtbar für Konsistenz, "Geschlossen" liefert leere Liste mit Hinweis.
-      .filter((p) => (status === "Offen" ? true : false))
       .sort((a, b) => b.confidence - a.confidence);
-  }, [rawPicks, sector, strength, status, settings.minConfidence]);
+  }, [rawPicks, sector, strength, settings.minConfidence]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -169,7 +162,16 @@ function PicksPage() {
         <section className="grid gap-3 sm:grid-cols-3">
           <FilterSelect label="Sektor" value={sector} options={SECTORS} onChange={(v) => setSector(v as Sector)} />
           <FilterSelect label="Signalstärke" value={strength} options={STRENGTHS} onChange={(v) => setStrength(v as Strength)} />
-          <FilterSelect label="Status" value={status} options={STATUSES} onChange={(v) => setStatus(v as Status)} />
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
+            <Link
+              to="/track-record"
+              className="mt-1 flex h-10 items-center justify-between rounded-md border border-border/60 bg-card/60 px-3 text-sm text-foreground/90 transition hover:border-primary/40"
+            >
+              <span>Abgeschlossene Picks → Track Record</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
         </section>
 
         {/* Picks */}
@@ -180,7 +182,7 @@ function PicksPage() {
             ))}
           </div>
         ) : picks.length === 0 ? (
-          <EmptyState status={status} />
+          <EmptyState />
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {picks.map((p) => (
@@ -240,23 +242,7 @@ function FilterSelect({
   );
 }
 
-function EmptyState({ status }: { status: Status }) {
-  if (status === "Geschlossen") {
-    return (
-      <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
-        <h3 className="text-lg font-semibold">Abgeschlossene Empfehlungen im Track Record</h3>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Alle bereits ausgewerteten Empfehlungen — mit Einstieg, Ausstieg und Rendite — finden Sie im Track Record.
-        </p>
-        <Link
-          to="/track-record"
-          className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-background/40 px-4 text-sm font-medium text-foreground transition hover:border-primary/40"
-        >
-          Zum Track Record <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-    );
-  }
+function EmptyState() {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
       <h3 className="text-lg font-semibold">Gerade keine aktiven Empfehlungen</h3>
