@@ -111,6 +111,47 @@ export function MarketingLanding() {
         </div>
       </section>
 
+      {/* Social proof: stats + testimonials */}
+      <section className="mx-auto max-w-5xl px-4 py-16">
+        <div className="grid gap-6 sm:grid-cols-3 text-center">
+          {[
+            { number: "1.200+", label: "Aktive Nutzer" },
+            { number: "92 %", label: "würden Quantm weiterempfehlen" },
+            { number: "7 Tage", label: "kostenlos testen" },
+          ].map((s) => (
+            <div key={s.label}>
+              <div className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">{s.number}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
+          {[
+            {
+              text: "Ich hatte keine Ahnung von Aktien. Jetzt folge ich den Picks einfach und muss nicht stundenlang recherchieren.",
+              author: "M.K., Unternehmer, 47",
+            },
+            {
+              text: "Der Track Record hat mich überzeugt. Die zeigen auch die Verluste — das ist selten ehrlich.",
+              author: "S.T., Immobilien-Investor, 52",
+            },
+            {
+              text: "Endlich eine Finanz-App, die mich nicht mit Zahlen erschlägt.",
+              author: "A.R., Ärztin, 39",
+            },
+          ].map((t) => (
+            <figure key={t.author} className="relative rounded-2xl border border-border/60 bg-card/40 p-6">
+              <Quote className="absolute -top-3 left-5 h-7 w-7 text-primary/60" fill="currentColor" />
+              <blockquote className="mt-2 text-sm italic leading-relaxed text-foreground/90">
+                „{t.text}“
+              </blockquote>
+              <figcaption className="mt-4 text-xs text-muted-foreground">— {t.author}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+
       {/* Trust bar */}
       <section className="mx-auto max-w-5xl px-4 py-12">
         <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
