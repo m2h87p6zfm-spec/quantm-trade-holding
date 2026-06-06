@@ -127,12 +127,8 @@ function PicksPage() {
         if (strength === "Mittel") return p.confidence >= 55 && p.confidence < 75;
         return true;
       })
-      // Status: aktuell zeigen wir alle Cache-Picks als "Offen". Status "Geschlossen"
-      // ist Teil des Track Records und wird hier nicht dargestellt — Filter bleibt
-      // sichtbar für Konsistenz, "Geschlossen" liefert leere Liste mit Hinweis.
-      .filter((p) => (status === "Offen" ? true : false))
       .sort((a, b) => b.confidence - a.confidence);
-  }, [rawPicks, sector, strength, status, settings.minConfidence]);
+  }, [rawPicks, sector, strength, settings.minConfidence]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
