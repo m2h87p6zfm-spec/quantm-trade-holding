@@ -51,6 +51,8 @@ export const Route = createFileRoute("/api/public/explain-concept")({
         try {
           const auth = await requireUserId(request);
           if (auth instanceof Response) return auth;
+          const creditReject = await consumeCreditOrReject(auth, "EXPLAIN");
+          if (creditReject) return creditReject;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) {
             return Response.json({ error: "AI gateway nicht konfiguriert." }, { status: 500 });
