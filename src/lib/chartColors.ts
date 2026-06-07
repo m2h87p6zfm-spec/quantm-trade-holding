@@ -51,6 +51,39 @@ function oklchToRgb(l: number, c: number, h: number, alpha = 1): Rgba {
   };
 }
 
+function labToRgb(l: number, a: number, b: number, alpha = 1): Rgba {
+  const fy = (l + 16) / 116;
+  const fx = fy + a / 500;
+  const fz = fy - b / 200;
+  const epsilon = 216 / 24389;
+  const kappa = 24389 / 27;
+  const pivot = (v: number) => {
+    const cube = v ** 3;
+    return cube > epsilon ? cube : (116 * v - 16) / kappa;
+  };
+
+  const xD50 = 0.96422 * pivot(fx);
+  const yD50 = pivot(fy);
+  const zD50 = 0.82521 * pivot(fz);
+
+  const x = 0.9555766 * xD50 - 0.0230393 * yD50 + 0.0631636 * zD50;
+  const y = -0.0282895 * xD50 + 1.0099416 * yD50 + 0.0210077 * zD50;
+  const z = 0.0122982 * xD50 - 0.020483 * yD50 + 1.3299098 * zD50;
+
+  const linearR = 3.2404542 * x - 1.5371385 * y - 0.4985314 * z;
+  const linearG = -0.969266 * x + 1.8760108 * y + 0.041556 * z;
+  const linearB = 0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
+  const gamma = (channel: number) =>
+    channel <= 0.0031308 ? 12.92 * channel : 1.055 * Math.pow(channel, 1 / 2.4) - 0.055;
+
+  return {
+    r: clamp255(gamma(linearR)),
+    g: clamp255(gamma(linearG)),
+    b: clamp255(gamma(linearB)),
+    a: clamp01(alpha),
+  };
+}
+
 function parseRgba(color: string): Rgba | null {
   const trimmed = color.trim().toLowerCase();
 
@@ -89,6 +122,17 @@ function parseRgba(color: string): Rgba | null {
     const h = Number.parseFloat(values[2]);
     const alpha = values[3] ? Number.parseFloat(values[3]) : 1;
     if ([l, c, h, alpha].every(Number.isFinite)) return oklchToRgb(l, c, h, alpha);
+  }
+
+  const lab = trimmed.match(/^lab\((.+)\)$/);
+  if (lab) {
+    const normalized = lab[1].replace(/\//g, " ");
+    const values = normalized.split(/\s+/).filter(Boolean);
+    const l = values[0]?.endsWith("%") ? Number.parseFloat(values[0]) : Number.parseFloat(values[0]);
+    const a = Number.parseFloat(values[1]);
+    const b = Number.parseFloat(values[2]);
+    const alpha = values[3] ? Number.parseFloat(values[3]) : 1;
+    if ([l, a, b, alpha].every(Number.isFinite)) return labToRgb(l, a, b, alpha);
   }
 
   return null;
