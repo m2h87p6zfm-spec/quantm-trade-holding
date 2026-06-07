@@ -139,9 +139,9 @@ function PicksPage() {
             <span className="text-sm font-semibold tracking-tight">Quantm Trade</span>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-3 text-sm">
-            <Link to="/track-record" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Track Record</Link>
+            <Link to="/track-record" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition">Track Record</Link>
             <Link to="/wie-es-funktioniert" className="hidden sm:inline-flex px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Wie es funktioniert</Link>
-            <Link to="/login" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Anmelden</Link>
+            <Link to="/login" className="inline-flex h-9 items-center rounded-lg bg-primary px-3 sm:px-4 text-xs sm:text-sm font-semibold text-primary-foreground transition hover:opacity-90">Anmelden</Link>
           </nav>
         </div>
       </header>

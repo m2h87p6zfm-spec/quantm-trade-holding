@@ -3,16 +3,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Search, ArrowRight, Download } from "lucide-react";
-import {
-  ComposedChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
 import { MiniSpark } from "@/components/MiniSpark";
@@ -206,13 +196,6 @@ function TopMetrics({ analyses }: { analyses: Analysis[] }) {
 
 /* -------------------- Benchmark chart (≥90d) -------------------- */
 
-const PERIODS = [
-  { key: "3M", label: "3M", days: 90 },
-  { key: "6M", label: "6M", days: 180 },
-  { key: "1J", label: "1J", days: 365 },
-  { key: "Gesamt", label: "Gesamt", days: Infinity },
-] as const;
-type PeriodKey = (typeof PERIODS)[number]["key"];
 
 function avgReturnAtHorizon(analyses: Analysis[], field: "return_7d" | "return_30d" | "return_60d" | "return_90d") {
   const vals = analyses.map((a) => a.outcome?.[field]).filter((v): v is number => v != null);
@@ -226,7 +209,7 @@ function BenchmarkBlock({
   benchmarks: TrackRecordPayload["benchmarks"];
   analyses: Analysis[];
 }) {
-  // Build Quantm cumulative returns at known horizons
+  // Quantm cumulative return: take the longest horizon available
   const quantmPoints = useMemo(() => {
     const horizons: Array<{ days: number; field: "return_7d" | "return_30d" | "return_60d" | "return_90d" }> = [
       { days: 7, field: "return_7d" },
@@ -242,125 +225,83 @@ function BenchmarkBlock({
     return pts;
   }, [analyses]);
 
+  const quantmReturn = quantmPoints[quantmPoints.length - 1]?.value ?? null;
+  const quantmSpark = quantmPoints.map((p) => p.value);
+
   const sp = benchmarks["S&P 500"];
   const dax = benchmarks["DAX"];
 
-  const maxQuantmDays = quantmPoints[quantmPoints.length - 1]?.days ?? 0;
-  const maxBenchDays = Math.max(
-    sp?.return90d != null ? 90 : 0,
-    sp?.return1y != null ? 365 : 0,
-    dax?.return90d != null ? 90 : 0,
-    dax?.return1y != null ? 365 : 0,
-  );
-  const maxAvailableDays = Math.max(maxQuantmDays, maxBenchDays);
-
-  const availablePeriods = PERIODS.filter((p) => p.days === Infinity || p.days <= maxAvailableDays + 30);
-  const [period, setPeriod] = useState<PeriodKey>(availablePeriods[0]?.key ?? "Gesamt");
-  const currentPeriod = PERIODS.find((p) => p.key === period) ?? PERIODS[0];
-  const cutoffDays = currentPeriod.days === Infinity ? maxAvailableDays : currentPeriod.days;
-
-  function buildBenchSeries(b?: { return90d: number | null; return1y: number | null }) {
-    if (!b) return [] as Array<{ days: number; value: number }>;
-    const pts: Array<{ days: number; value: number }> = [{ days: 0, value: 0 }];
-    if (b.return90d != null) pts.push({ days: 90, value: b.return90d });
-    if (b.return1y != null) pts.push({ days: 365, value: b.return1y });
-    return pts;
-  }
-  const spSeries = buildBenchSeries(sp);
-  const daxSeries = buildBenchSeries(dax);
-
-  // Merge into chart rows keyed by days
-  const allDays = Array.from(
-    new Set([
-      ...quantmPoints.map((p) => p.days),
-      ...spSeries.map((p) => p.days),
-      ...daxSeries.map((p) => p.days),
-    ]),
-  )
-    .filter((d) => d <= cutoffDays)
-    .sort((a, b) => a - b);
-
-  const today = Date.now();
-  const data = allDays.map((d) => {
-    const date = new Date(today - (maxAvailableDays - d) * 86_400_000);
-    return {
-      days: d,
-      date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "short" }),
-      quantm: quantmPoints.find((p) => p.days === d)?.value,
-      sp500: spSeries.find((p) => p.days === d)?.value,
-      dax: daxSeries.find((p) => p.days === d)?.value,
-    };
-  });
-
-  // Summary sentence
-  const lastQuantm = [...quantmPoints].filter((p) => p.days <= cutoffDays).pop()?.value ?? null;
-  const lastSp = [...spSeries].filter((p) => p.days <= cutoffDays).pop()?.value ?? null;
-  const diff = lastQuantm != null && lastSp != null ? lastQuantm - lastSp : null;
-  const periodLabel =
-    currentPeriod.key === "3M" ? "3 Monaten"
-      : currentPeriod.key === "6M" ? "6 Monaten"
-      : currentPeriod.key === "1J" ? "12 Monaten"
-      : "Gesamtzeit";
-  const summary =
-    diff == null
-      ? null
-      : `In den letzten ${periodLabel} hat Quantm Picks den S&P 500 um ${Math.abs(diff).toFixed(1)} % ${diff >= 0 ? "übertroffen" : "unterschritten"}.`;
+  const cards: Array<{ label: string; value: number | null; spark: number[]; highlight?: boolean }> = [
+    {
+      label: "Quantm Picks",
+      value: quantmReturn,
+      spark: quantmSpark,
+      highlight: true,
+    },
+    {
+      label: "S&P 500",
+      value: sp?.return90d ?? sp?.return1y ?? null,
+      spark: [0, sp?.return90d ?? 0, sp?.return1y ?? sp?.return90d ?? 0].filter((v, i, arr) => i === 0 || arr[i] !== arr[i - 1]),
+    },
+    {
+      label: "DAX",
+      value: dax?.return90d ?? dax?.return1y ?? null,
+      spark: [0, dax?.return90d ?? 0, dax?.return1y ?? dax?.return90d ?? 0].filter((v, i, arr) => i === 0 || arr[i] !== arr[i - 1]),
+    },
+  ];
 
   return (
-    <section className="rounded-2xl border border-border/60 bg-card/40 p-6 md:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight">So entwickeln sich unsere Empfehlungen im Marktvergleich</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Kumulierte Rendite (%) gegenüber den wichtigsten Indizes.
-          </p>
-        </div>
-        <div className="flex gap-1.5">
-          {availablePeriods.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                period === p.key
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-border/60 text-muted-foreground hover:text-foreground"
+    <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 md:p-8">
+      <div>
+        <h2 className="text-lg sm:text-xl font-bold tracking-tight">So entwickeln sich unsere Empfehlungen im Marktvergleich</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Kumulierte Rendite gegenüber den wichtigsten Indizes.
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {cards.map((c) => {
+          const positive = c.value != null && c.value >= 0;
+          const sparkColor = c.value == null ? "oklch(0.6 0.01 260)" : positive ? "var(--bull)" : "var(--bear)";
+          return (
+            <div
+              key={c.label}
+              className={`rounded-xl border p-4 ${
+                c.highlight
+                  ? "border-primary/40 bg-primary/5"
+                  : "border-border/60 bg-card/60"
               }`}
             >
-              {p.label}
-            </button>
-          ))}
-        </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="font-medium">{c.label}</span>
+                {c.highlight && (
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                    Wir
+                  </span>
+                )}
+              </div>
+              <div
+                className={`mt-2 font-mono text-2xl font-bold tabular-nums ${
+                  c.value == null
+                    ? "text-muted-foreground"
+                    : positive
+                      ? "text-bull"
+                      : "text-bear"
+                }`}
+              >
+                {c.value == null ? "—" : `${positive ? "+" : ""}${c.value.toFixed(1)} %`}
+              </div>
+              <div className="mt-3 h-10 w-full">
+                {c.spark.length >= 2 ? (
+                  <MiniSpark data={c.spark} color={sparkColor} strokeWidth={2} className="h-full w-full" />
+                ) : (
+                  <div className="h-full w-full rounded bg-muted/30" />
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
-
-      <div className="mt-6 h-72 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="color-mix(in oklab, var(--border) 40%, transparent)" />
-            <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
-            <YAxis
-              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-              tickFormatter={(v) => `${v >= 0 ? "+" : ""}${Number(v).toFixed(0)} %`}
-            />
-            <Tooltip
-              contentStyle={{
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                fontSize: 12,
-              }}
-              formatter={(value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)} %`}
-            />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="quantm" name="Quantm Picks" stroke="var(--primary)" strokeWidth={2.5} dot={{ r: 3 }} connectNulls />
-            <Line type="monotone" dataKey="sp500" name="S&P 500" stroke="oklch(0.65 0.01 260)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-            <Line type="monotone" dataKey="dax" name="DAX" stroke="oklch(0.65 0.13 240)" strokeWidth={2} dot={{ r: 3 }} connectNulls />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      {summary && (
-        <p className="mt-4 text-center text-sm text-foreground/80">{summary}</p>
-      )}
     </section>
   );
 }
@@ -440,14 +381,14 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
           <h2 className="text-xl font-bold tracking-tight">Alle Empfehlungen im Überblick</h2>
           <p className="mt-1 text-sm text-muted-foreground">Sortiert nach Datum, neueste zuerst.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Nach Unternehmen suchen…"
-              className="h-9 w-56 pl-9"
+              className="h-9 w-full sm:w-56 pl-9"
             />
           </div>
           <button
@@ -477,8 +418,8 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
         ))}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-border/60 bg-card/40">
-        <table className="w-full text-sm">
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-border/60 bg-card/40">
+        <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-background/40 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Unternehmen</th>
