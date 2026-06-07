@@ -196,13 +196,6 @@ function TopMetrics({ analyses }: { analyses: Analysis[] }) {
 
 /* -------------------- Benchmark chart (≥90d) -------------------- */
 
-const PERIODS = [
-  { key: "3M", label: "3M", days: 90 },
-  { key: "6M", label: "6M", days: 180 },
-  { key: "1J", label: "1J", days: 365 },
-  { key: "Gesamt", label: "Gesamt", days: Infinity },
-] as const;
-type PeriodKey = (typeof PERIODS)[number]["key"];
 
 function avgReturnAtHorizon(analyses: Analysis[], field: "return_7d" | "return_30d" | "return_60d" | "return_90d") {
   const vals = analyses.map((a) => a.outcome?.[field]).filter((v): v is number => v != null);
