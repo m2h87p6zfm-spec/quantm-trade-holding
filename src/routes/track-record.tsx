@@ -418,8 +418,8 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
         ))}
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-border/60 bg-card/40">
-        <table className="w-full text-sm">
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-border/60 bg-card/40">
+        <table className="w-full min-w-[520px] text-sm">
           <thead className="bg-background/40 text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Unternehmen</th>
