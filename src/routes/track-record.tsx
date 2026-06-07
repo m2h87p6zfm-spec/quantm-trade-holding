@@ -388,7 +388,7 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Nach Unternehmen suchen…"
-              className="h-9 w-56 pl-9"
+              className="h-9 w-full sm:w-56 pl-9"
             />
           </div>
           <button
