@@ -330,7 +330,11 @@ function exportCsv(analyses: Analysis[]) {
   };
   const rows = analyses.map((a) => {
     const exitPrice = a.outcome?.price_after_30d ?? a.outcome?.price_after_7d ?? null;
-    const status = a.outcome?.is_correct == null ? "Läuft" : a.outcome.is_correct ? "Treffer" : "Fehlschuss";
+    const ageDays = (Date.now() - new Date(a.analyzed_at).getTime()) / 86400000;
+    const has30d = a.outcome?.return_30d != null;
+    const status = !has30d || ageDays < 30
+      ? "Läuft"
+      : (a.outcome?.return_30d ?? 0) >= 0 ? "Treffer" : "Fehlschuss";
     return [
       a.ticker,
       a.name,
