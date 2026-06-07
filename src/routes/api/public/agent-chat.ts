@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createClient } from "@supabase/supabase-js";
 import { analyzeTicker, detectTicker } from "@/lib/quant-fetch.server";
 import { renderApexReport } from "@/lib/quant.server";
+import { consumeCreditOrReject } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 
@@ -497,6 +498,10 @@ export const Route = createFileRoute("/api/public/agent-chat")({
           if (!userId) {
             return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
           }
+          const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+          const creditLabel = (lastUserMsg?.content.match(/\b[A-Z]{2,5}\b/)?.[0] ?? "AGENT").slice(0, 32);
+          const creditReject = await consumeCreditOrReject(userId, creditLabel);
+          if (creditReject) return creditReject;
           const [addendum, profileAddendum, memoryAddendum, feedbackAddendum] = await Promise.all([
             buildAdaptiveAddendum(userId),
             buildTradingProfileAddendum(userId),

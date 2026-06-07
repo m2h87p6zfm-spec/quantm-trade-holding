@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { requireUserId } from "@/lib/api-auth.server";
+import { requireUserId, consumeCreditOrReject } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 type Pos = {
@@ -199,6 +199,8 @@ export const Route = createFileRoute("/api/public/portfolio-chat")({
         try {
           const auth = await requireUserId(request);
           if (auth instanceof Response) return auth;
+          const creditReject = await consumeCreditOrReject(auth, "PORTFOLIO");
+          if (creditReject) return creditReject;
           const apiKey = process.env.LOVABLE_API_KEY;
           if (!apiKey) {
             return new Response(JSON.stringify({ error: "AI gateway nicht konfiguriert." }), {
