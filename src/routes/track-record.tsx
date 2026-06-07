@@ -381,8 +381,8 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
           <h2 className="text-xl font-bold tracking-tight">Alle Empfehlungen im Überblick</h2>
           <p className="mt-1 text-sm text-muted-foreground">Sortiert nach Datum, neueste zuerst.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
