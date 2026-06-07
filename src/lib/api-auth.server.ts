@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { CREDIT_LIMITS, type CreditTier } from "./credits";
 
 const PRO_PRICES = new Set([
   "apex_pro_monthly",
@@ -8,6 +9,8 @@ const PRO_PRICES = new Set([
   "apex_elite_monthly",
   "apex_elite_yearly",
 ]);
+const ELITE_PRICES = new Set(["apex_elite_monthly", "apex_elite_yearly"]);
+const PRO_ONLY_PRICES = new Set(["apex_pro_monthly", "apex_pro_yearly"]);
 const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
 
 /**
