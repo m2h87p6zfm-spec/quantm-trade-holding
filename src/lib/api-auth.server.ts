@@ -140,3 +140,72 @@ export function requireCronSecret(request: Request): Response | null {
   }
   return null;
 }
+
+/**
+ * Resolves the subscription tier for a user. Mirrors `resolveTier` in
+ * credits.functions.ts but uses the admin client so it can run inside any
+ * server route handler.
+ */
+export async function resolveUserTier(userId: string): Promise<CreditTier> {
+  const { data } = await supabaseAdmin
+    .from("subscriptions")
+    .select("status, price_id, current_period_end")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  for (const s of (data ?? []) as Array<{
+    status: string;
+    price_id: string | null;
+    current_period_end: string | null;
+  }>) {
+    const active =
+      ACTIVE_STATUSES.has(s.status) ||
+      (s.status === "canceled" &&
+        !!s.current_period_end &&
+        new Date(s.current_period_end) > new Date());
+    if (!active || !s.price_id) continue;
+    if (ELITE_PRICES.has(s.price_id)) return "elite";
+    if (PRO_ONLY_PRICES.has(s.price_id)) return "pro";
+  }
+  return "free";
+}
+
+function monthStartIso(): string {
+  const d = new Date();
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1)).toISOString();
+}
+
+/**
+ * Enforces monthly AI-credit quota for a user server-side. Call inside any
+ * AI endpoint BEFORE invoking the model. On success consumes one credit and
+ * returns null. On quota exhaustion returns a 402 Response.
+ */
+export async function consumeCreditOrReject(
+  userId: string,
+  label: string,
+): Promise<Response | null> {
+  const tier = await resolveUserTier(userId);
+  const limit = CREDIT_LIMITS[tier];
+  const { count } = await supabaseAdmin
+    .from("analysis_credit_usage")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("used_at", monthStartIso());
+  const used = count ?? 0;
+  if (used >= limit) {
+    return new Response(
+      JSON.stringify({
+        error: "Monatslimit erreicht. Bitte Plan upgraden.",
+        code: "credit_limit_reached",
+        tier,
+        limit,
+        used,
+      }),
+      { status: 402, headers: JSON_HEADERS },
+    );
+  }
+  await supabaseAdmin
+    .from("analysis_credit_usage")
+    .insert({ user_id: userId, symbol: label.slice(0, 32).toUpperCase() });
+  return null;
+}
