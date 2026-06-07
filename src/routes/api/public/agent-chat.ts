@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { createClient } from "@supabase/supabase-js";
 import { analyzeTicker, detectTicker } from "@/lib/quant-fetch.server";
 import { renderApexReport } from "@/lib/quant.server";
+import { consumeCreditOrReject } from "@/lib/api-auth.server";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 
