@@ -443,10 +443,12 @@ function PicksHistory({ analyses }: { analyses: Analysis[] }) {
               const ret = a.outcome?.return_30d ?? a.outcome?.return_7d;
               const entry = a.price_at_analysis;
               const exitPrice = a.outcome?.price_after_30d ?? a.outcome?.price_after_7d;
+              const ageDays = (Date.now() - new Date(a.analyzed_at).getTime()) / 86400000;
+              const has30d = a.outcome?.return_30d != null;
               const status =
-                a.outcome?.is_correct == null
+                !has30d || ageDays < 30
                   ? { label: "Läuft", tone: "text-muted-foreground bg-muted/40" }
-                  : a.outcome.is_correct
+                  : (a.outcome?.return_30d ?? 0) >= 0
                     ? { label: "Treffer", tone: "text-bull bg-bull/10" }
                     : { label: "Fehlschuss", tone: "text-bear bg-bear/10" };
               const sparkData = buildSparkData(a);
