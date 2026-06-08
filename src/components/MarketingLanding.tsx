@@ -23,6 +23,14 @@ export function MarketingLanding() {
             <Link to="/picks" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Picks</Link>
             <Link to="/track-record" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Track Record</Link>
             <Link to="/wie-es-funktioniert" className="hidden sm:inline-flex px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Wie es funktioniert</Link>
+            <button
+              type="button"
+              onClick={() => update({ theme: settings.theme === "dark" ? "light" : "dark", themeOptIn: true } as any)}
+              aria-label="Theme umschalten"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+            >
+              {settings.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <Link
               to="/login"
               className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
