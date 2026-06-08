@@ -1,5 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, BarChart3, Brain, GitBranch, Scale, Sigma, Dices } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 export const Route = createFileRoute("/methodology")({
   head: () => ({
@@ -27,6 +31,16 @@ function Section({ icon: Icon, title, children }: { icon: typeof Sigma; title: s
       </div>
       <div className="text-sm text-muted-foreground leading-relaxed space-y-3 pl-12">{children}</div>
     </section>
+  );
+}
+
+function Formula({ children }: { children: string }) {
+  return (
+    <div className="rounded-md bg-background/50 px-3 py-2 overflow-x-auto text-sm">
+      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 }
 
