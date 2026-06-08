@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote } from "lucide-react";
+import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
+import { useSettings } from "@/lib/settings";
 
 /**
  * Beginner-first landing page for unauthenticated visitors.
  * Goal: build trust in <10 seconds, hide all jargon, one clear CTA.
  */
 export function MarketingLanding() {
+  const { settings, update } = useSettings();
   return (
     <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* Nav */}
