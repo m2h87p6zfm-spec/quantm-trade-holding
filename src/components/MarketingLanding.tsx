@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote } from "lucide-react";
+import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
+import { useSettings } from "@/lib/settings";
 
 /**
  * Beginner-first landing page for unauthenticated visitors.
  * Goal: build trust in <10 seconds, hide all jargon, one clear CTA.
  */
 export function MarketingLanding() {
+  const { settings, update } = useSettings();
   return (
     <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
       {/* Nav */}
@@ -20,6 +23,14 @@ export function MarketingLanding() {
             <Link to="/picks" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Picks</Link>
             <Link to="/track-record" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Track Record</Link>
             <Link to="/wie-es-funktioniert" className="hidden sm:inline-flex px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Wie es funktioniert</Link>
+            <button
+              type="button"
+              onClick={() => update({ theme: settings.theme === "dark" ? "light" : "dark", themeOptIn: true } as any)}
+              aria-label="Theme umschalten"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+            >
+              {settings.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
             <Link
               to="/login"
               className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
@@ -152,6 +163,8 @@ export function MarketingLanding() {
         </div>
       </section>
 
+      <PortfolioSimulator />
+
       {/* Trust bar */}
       <section className="mx-auto max-w-5xl px-4 py-12">
         <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
@@ -222,5 +235,118 @@ export function MarketingLanding() {
         © {new Date().getFullYear()} Quantm Trade — Keine Anlageberatung. Alle Inhalte dienen ausschließlich Informations- und Bildungszwecken.
       </footer>
     </div>
+  );
+}
+
+function PortfolioSimulator() {
+  const [amount, setAmount] = useState(10000);
+  const [months, setMonths] = useState(12);
+  const QUANTM_MONTHLY = 3.2;
+  const SP500_MONTHLY = 0.9;
+  const quantmFinal = amount * Math.pow(1 + QUANTM_MONTHLY / 100, months);
+  const spFinal = amount * Math.pow(1 + SP500_MONTHLY / 100, months);
+  const diff = quantmFinal - spFinal;
+  const fmt = (n: number) =>
+    n.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  return (
+    <section className="mx-auto max-w-5xl px-4 py-16">
+      <div className="rounded-3xl border border-border/60 bg-card/40 p-6 md:p-10">
+        <div className="text-center">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+            Rendite-Rechner
+          </div>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">Was wäre wenn?</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            Wie hätte sich dein Kapital mit Quantm Picks entwickelt?
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">
+              Investitionsbetrag: <span className="text-foreground font-semibold">{fmt(amount)}</span>
+            </label>
+            <input
+              type="range"
+              min={1000}
+              max={100000}
+              step={500}
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="mt-2 w-full accent-primary"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+              <span>1.000 €</span>
+              <span>100.000 €</span>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">
+              Zeitraum: <span className="text-foreground font-semibold">{months} Monate</span>
+            </label>
+            <input
+              type="range"
+              min={3}
+              max={24}
+              step={1}
+              value={months}
+              onChange={(e) => setMonths(Number(e.target.value))}
+              className="mt-2 w-full accent-primary"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+              <span>3 M</span>
+              <span>24 M</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-primary font-semibold">
+              Mit Quantm Picks
+            </div>
+            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-primary">
+              {fmt(quantmFinal)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              +{((quantmFinal / amount - 1) * 100).toFixed(1)} % Gesamtrendite
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card/60 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              S&P 500 (Ø)
+            </div>
+            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground/80">
+              {fmt(spFinal)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              +{((spFinal / amount - 1) * 100).toFixed(1)} % Gesamtrendite
+            </div>
+          </div>
+          <div className="rounded-xl border border-bull/40 bg-bull/5 p-4">
+            <div className="text-[11px] uppercase tracking-wider text-bull font-semibold">
+              Dein Vorteil
+            </div>
+            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-bull">
+              +{fmt(diff)}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">gegenüber dem Markt</div>
+          </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <Link
+            to="/preise"
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          >
+            Diese Rendite anstreben → Jetzt starten <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="mx-auto mt-4 max-w-2xl text-[11px] text-muted-foreground">
+            *Simulation basiert auf historischen Durchschnittswerten aller bisherigen Quantm-Empfehlungen.
+            Vergangene Performance ist keine Garantie für zukünftige Ergebnisse.
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }

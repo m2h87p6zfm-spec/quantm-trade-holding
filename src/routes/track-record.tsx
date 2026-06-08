@@ -1,7 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ComposedChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Search, ArrowRight, Download } from "lucide-react";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
@@ -24,6 +34,18 @@ export const Route = createFileRoute("/track-record")({
       },
       { property: "og:title", content: "Quantm Track Record" },
       { property: "og:description", content: "Alle unsere Empfehlungen — gute wie schlechte." },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      {
+        "script:ld+json": JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Dataset",
+          name: "Quantm Trade Pick Performance Record",
+          description:
+            "Real track record of all stock recommendations with 7, 30, 60, and 90-day outcome tracking.",
+          url: "https://quantmtrade.com/track-record",
+          creator: { "@type": "Organization", name: "Quantm Trade" },
+        }),
+      },
     ],
   }),
   component: TrackRecordPage,
@@ -202,6 +224,14 @@ function avgReturnAtHorizon(analyses: Analysis[], field: "return_7d" | "return_3
   return vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : null;
 }
 
+const PERIODS = [
+  { key: "3M", label: "3M", days: 90 },
+  { key: "6M", label: "6M", days: 180 },
+  { key: "1J", label: "1J", days: 365 },
+  { key: "Gesamt", label: "Gesamt", days: Infinity },
+] as const;
+type PeriodKey = (typeof PERIODS)[number]["key"];
+
 function BenchmarkBlock({
   benchmarks,
   analyses,
@@ -209,7 +239,11 @@ function BenchmarkBlock({
   benchmarks: TrackRecordPayload["benchmarks"];
   analyses: Analysis[];
 }) {
-  // Quantm cumulative return: take the longest horizon available
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const quantmPoints = useMemo(() => {
     const horizons: Array<{ days: number; field: "return_7d" | "return_30d" | "return_60d" | "return_90d" }> = [
       { days: 7, field: "return_7d" },
@@ -225,83 +259,165 @@ function BenchmarkBlock({
     return pts;
   }, [analyses]);
 
-  const quantmReturn = quantmPoints[quantmPoints.length - 1]?.value ?? null;
-  const quantmSpark = quantmPoints.map((p) => p.value);
-
   const sp = benchmarks["S&P 500"];
   const dax = benchmarks["DAX"];
 
-  const cards: Array<{ label: string; value: number | null; spark: number[]; highlight?: boolean }> = [
-    {
-      label: "Quantm Picks",
-      value: quantmReturn,
-      spark: quantmSpark,
-      highlight: true,
-    },
-    {
-      label: "S&P 500",
-      value: sp?.return90d ?? sp?.return1y ?? null,
-      spark: [0, sp?.return90d ?? 0, sp?.return1y ?? sp?.return90d ?? 0].filter((v, i, arr) => i === 0 || arr[i] !== arr[i - 1]),
-    },
-    {
-      label: "DAX",
-      value: dax?.return90d ?? dax?.return1y ?? null,
-      spark: [0, dax?.return90d ?? 0, dax?.return1y ?? dax?.return90d ?? 0].filter((v, i, arr) => i === 0 || arr[i] !== arr[i - 1]),
-    },
-  ];
+  const maxQuantmDays = quantmPoints[quantmPoints.length - 1]?.days ?? 0;
+  const maxBenchDays = Math.max(
+    sp?.return90d != null ? 90 : 0,
+    sp?.return1y != null ? 365 : 0,
+    dax?.return90d != null ? 90 : 0,
+    dax?.return1y != null ? 365 : 0,
+  );
+  const maxAvailableDays = Math.max(maxQuantmDays, maxBenchDays);
+  const availablePeriods = PERIODS.filter((p) => p.days === Infinity || p.days <= maxAvailableDays + 30);
+  const [period, setPeriod] = useState<PeriodKey>(availablePeriods[0]?.key ?? "Gesamt");
+  const currentPeriod = PERIODS.find((p) => p.key === period) ?? PERIODS[0];
+  const cutoffDays = currentPeriod.days === Infinity ? maxAvailableDays : currentPeriod.days;
+
+  function buildBenchSeries(b?: { return90d: number | null; return1y: number | null }) {
+    if (!b) return [] as Array<{ days: number; value: number }>;
+    const pts: Array<{ days: number; value: number }> = [{ days: 0, value: 0 }];
+    if (b.return90d != null) pts.push({ days: 90, value: b.return90d });
+    if (b.return1y != null) pts.push({ days: 365, value: b.return1y });
+    return pts;
+  }
+  const spSeries = buildBenchSeries(sp);
+  const daxSeries = buildBenchSeries(dax);
+
+  const allDays = Array.from(
+    new Set([
+      ...quantmPoints.map((p) => p.days),
+      ...spSeries.map((p) => p.days),
+      ...daxSeries.map((p) => p.days),
+    ]),
+  )
+    .filter((d) => d <= cutoffDays)
+    .sort((a, b) => a - b);
+
+  const today = Date.now();
+  const chartData = allDays.map((d) => {
+    const date = new Date(today - (maxAvailableDays - d) * 86_400_000);
+    return {
+      days: d,
+      date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "short" }),
+      quantm: quantmPoints.find((p) => p.days === d)?.value,
+      sp500: spSeries.find((p) => p.days === d)?.value,
+      dax: daxSeries.find((p) => p.days === d)?.value,
+    };
+  });
+
+  const lastQuantm = [...quantmPoints].filter((p) => p.days <= cutoffDays).pop()?.value ?? null;
+  const lastSp = [...spSeries].filter((p) => p.days <= cutoffDays).pop()?.value ?? null;
+  const diff = lastQuantm != null && lastSp != null ? lastQuantm - lastSp : null;
+  const periodLabel = currentPeriod.days === Infinity ? "seit Beginn" : `in den letzten ${currentPeriod.label}`;
+  const summary =
+    diff != null
+      ? `Quantm Picks hat den S&P 500 ${periodLabel} um ${diff >= 0 ? "+" : ""}${diff.toFixed(1)} % ${diff >= 0 ? "übertroffen" : "unterschritten"}.`
+      : null;
 
   return (
     <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6 md:p-8">
-      <div>
-        <h2 className="text-lg sm:text-xl font-bold tracking-tight">So entwickeln sich unsere Empfehlungen im Marktvergleich</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Kumulierte Rendite gegenüber den wichtigsten Indizes.
-        </p>
-      </div>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {cards.map((c) => {
-          const positive = c.value != null && c.value >= 0;
-          const sparkColor = c.value == null ? "oklch(0.6 0.01 260)" : positive ? "var(--bull)" : "var(--bear)";
-          return (
-            <div
-              key={c.label}
-              className={`rounded-xl border p-4 ${
-                c.highlight
-                  ? "border-primary/40 bg-primary/5"
-                  : "border-border/60 bg-card/60"
-              }`}
-            >
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="font-medium">{c.label}</span>
-                {c.highlight && (
-                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
-                    Wir
-                  </span>
-                )}
-              </div>
-              <div
-                className={`mt-2 font-mono text-2xl font-bold tabular-nums ${
-                  c.value == null
-                    ? "text-muted-foreground"
-                    : positive
-                      ? "text-bull"
-                      : "text-bear"
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">
+            So entwickeln sich unsere Empfehlungen im Marktvergleich
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kumulierte Rendite gegenüber den wichtigsten Indizes.
+          </p>
+        </div>
+        {availablePeriods.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            {availablePeriods.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setPeriod(p.key)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  period === p.key
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border/60 bg-card/40 text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {c.value == null ? "—" : `${positive ? "+" : ""}${c.value.toFixed(1)} %`}
-              </div>
-              <div className="mt-3 h-10 w-full">
-                {c.spark.length >= 2 ? (
-                  <MiniSpark data={c.spark} color={sparkColor} strokeWidth={2} className="h-full w-full" />
-                ) : (
-                  <div className="h-full w-full rounded bg-muted/30" />
-                )}
-              </div>
-            </div>
-          );
-        })}
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      <div className="mt-5 h-64 sm:h-72 w-full">
+        {!mounted ? (
+          <div className="h-full w-full animate-pulse rounded-lg bg-muted/30" />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={chartData} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tickFormatter={(v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(0)} %`}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                axisLine={false}
+                tickLine={false}
+                width={52}
+              />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  `${value >= 0 ? "+" : ""}${value.toFixed(2)} %`,
+                  name === "quantm" ? "Quantm Picks" : name === "sp500" ? "S&P 500" : "DAX",
+                ]}
+                contentStyle={{
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: "var(--muted-foreground)", marginBottom: 4 }}
+              />
+              <Legend
+                formatter={(v: string) =>
+                  v === "quantm" ? "Quantm Picks" : v === "sp500" ? "S&P 500" : "DAX"
+                }
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: 12 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="quantm"
+                stroke="var(--primary)"
+                strokeWidth={2.5}
+                dot={{ r: 3 }}
+                connectNulls
+              />
+              <Line
+                type="monotone"
+                dataKey="sp500"
+                stroke="var(--muted-foreground)"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                connectNulls
+              />
+              <Line
+                type="monotone"
+                dataKey="dax"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                connectNulls
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {summary && <p className="mt-4 text-sm text-muted-foreground">{summary}</p>}
     </section>
   );
 }
