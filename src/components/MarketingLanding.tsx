@@ -163,6 +163,8 @@ export function MarketingLanding() {
         </div>
       </section>
 
+      <PortfolioSimulator />
+
       {/* Trust bar */}
       <section className="mx-auto max-w-5xl px-4 py-12">
         <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
