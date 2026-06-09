@@ -44,7 +44,11 @@ export type FactorKey =
   | "liquidity"
   | "correlation"
   | "trend_strength"
-  | "forecast_edge";
+  | "forecast_edge"
+  | "obv_confirmation"
+  | "cmf_pressure"
+  | "nearness_52w"
+  | "weekly_bias";
 
 export type FactorScore = {
   key: FactorKey;
