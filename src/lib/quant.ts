@@ -422,6 +422,74 @@ export const relativeStrength = (asset: number[], bench: number[], lookback = 90
   return rb ? (1 + ra) / (1 + rb) : 1;
 };
 
+// ─── Module H — Volume Confirmation ──────────────────────────
+
+// H1 On-Balance Volume (OBV) normalized to its 20-day EMA → [-1, +1].
+export const obv = (closes: number[], volumes: number[]): number => {
+  if (closes.length < 2 || volumes.length < closes.length) return 0;
+  const obvSeries: number[] = [0];
+  for (let i = 1; i < closes.length; i++) {
+    const prev = obvSeries[i - 1];
+    if (closes[i] > closes[i - 1]) obvSeries.push(prev + volumes[i]);
+    else if (closes[i] < closes[i - 1]) obvSeries.push(prev - volumes[i]);
+    else obvSeries.push(prev);
+  }
+  const obvLast = obvSeries[obvSeries.length - 1];
+  const obvEma = last(ema(obvSeries, 20));
+  const range = obvSeries.slice(-40);
+  const rangeMin = Math.min(...range);
+  const rangeMax = Math.max(...range);
+  if (rangeMax === rangeMin) return 0;
+  return safe(clamp((obvLast - obvEma) / (Math.abs(rangeMax - rangeMin) / 2 + 1e-10), -1, 1));
+};
+
+// H2 Chaikin Money Flow (CMF, 20-period) — [-1, +1].
+export const cmf = (h: number[], l: number[], c: number[], v: number[], p = 20): number => {
+  if (c.length < p) return 0;
+  const slice = (arr: number[]) => arr.slice(-p);
+  const hh = slice(h), ll = slice(l), cc = slice(c), vv = slice(v);
+  let mfvSum = 0, volSum = 0;
+  for (let i = 0; i < p; i++) {
+    const range = hh[i] - ll[i];
+    if (range === 0 || vv[i] === 0) continue;
+    const mfm = ((cc[i] - ll[i]) - (hh[i] - cc[i])) / range;
+    mfvSum += mfm * vv[i];
+    volSum += vv[i];
+  }
+  return safe(clamp(volSum > 0 ? mfvSum / volSum : 0));
+};
+
+// H3 52-Week High Proximity (George & Hwang 2004) — [-1, +1].
+export const weekHigh52Proximity = (closes: number[]): number => {
+  const window = closes.slice(-252);
+  if (window.length < 20) return 0;
+  const high52 = Math.max(...window);
+  const low52 = Math.min(...window);
+  const price = last(closes);
+  if (high52 === low52) return 0;
+  const nearness = (price - low52) / (high52 - low52);
+  return safe(clamp(nearness * 2 - 1));
+};
+
+// H4 Multi-Timeframe Weekly Score — [-1, +1].
+export const weeklyBias = (closes: number[]): number => {
+  if (closes.length < 15) return 0;
+  const wkCloses: number[] = [];
+  for (let i = 4; i < closes.length; i += 5) wkCloses.push(closes[i]);
+  if (wkCloses.length < 4) return 0;
+  const wSma5 = last(sma(wkCloses, Math.min(5, wkCloses.length)));
+  const wSma10 = last(sma(wkCloses, Math.min(10, wkCloses.length)));
+  const wPrice = last(wkCloses);
+  let score = 0;
+  if (Number.isFinite(wSma5) && wPrice > wSma5) score += 0.4; else score -= 0.3;
+  if (Number.isFinite(wSma10) && Number.isFinite(wSma5) && wSma5 > wSma10) score += 0.4; else score -= 0.2;
+  const wRoc = wkCloses.length >= 5
+    ? (last(wkCloses) - wkCloses[wkCloses.length - 5]) / (wkCloses[wkCloses.length - 5] || 1)
+    : 0;
+  score += clamp(wRoc * 5, -0.2, 0.2);
+  return safe(clamp(score));
+};
+
 // ─── Master report ───────────────────────────────────────────
 export type ApexReport = {
   symbol: string;
