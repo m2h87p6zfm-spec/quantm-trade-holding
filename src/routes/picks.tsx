@@ -113,6 +113,10 @@ function PicksPage() {
           lastPrice: last || null,
           date: p.scannedAt ?? new Date().toISOString(),
           action,
+          mtfConfirmation: p.mtfConfirmation,
+          earningsInDays: typeof p.earningsInDays === "number" ? p.earningsInDays : undefined,
+          obvScore: typeof p.obvScore === "number" ? p.obvScore : undefined,
+          cmfScore: typeof p.cmfScore === "number" ? p.cmfScore : undefined,
           advanced: [
             { label: "RSI", value: p.rsi != null ? Number(p.rsi).toFixed(0) : "—", tooltip: "Misst, ob eine Aktie kurzfristig über- oder unterverkauft ist (0–100). Unter 30 = überverkauft, über 70 = überkauft." },
             { label: "Z-Faktor", value: p.zScore != null ? Number(p.zScore).toFixed(2) : "—", tooltip: "Wie weit der Kurs von seinem Durchschnitt entfernt ist — ein statistisches Maß für 'außergewöhnlich'." },
