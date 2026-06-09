@@ -15,6 +15,7 @@ export const stdev = (a: number[]) => {
 };
 const last = <T,>(a: T[]) => a[a.length - 1];
 const safe = (n: number, f = 0) => (Number.isFinite(n) ? n : f);
+const clamp = (n: number, a = -1, b = 1) => Math.max(a, Math.min(b, n));
 
 // ─── moving averages ───────────────────────────────────────────
 export const sma = (xs: number[], p: number): number[] => {
