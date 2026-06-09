@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { TrendingUp, Eye, Calendar, ArrowRight, HelpCircle } from "lucide-react";
+import { TrendingUp, Eye, Calendar, ArrowRight, HelpCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { InfoTooltip } from "./InfoTooltip";
 import { AdvancedCollapsible } from "./AdvancedCollapsible";
@@ -20,12 +20,36 @@ export type BeginnerPick = {
   action: "KAUFEN" | "BEOBACHTEN";
   /** Roh-Indikatoren für die Advanced-Sektion. */
   advanced?: Array<{ label: string; value: string; tooltip?: string }>;
+  /** Multi-timeframe confirmation (from ApexReport.modules.H). */
+  mtfConfirmation?: "confirmed" | "diverging" | "neutral";
+  /** Tage bis zum nächsten Earnings-Termin. */
+  earningsInDays?: number;
+  /** OBV-Score [-1..+1] für die Volumen-Bestätigung. */
+  obvScore?: number;
+  /** CMF-Score [-1..+1] für die Volumen-Bestätigung. */
+  cmfScore?: number;
 };
 
 function strengthBucket(c: number): { label: string; pct: number; color: string } {
   if (c >= 75) return { label: "Stark", pct: c, color: "bg-bull" };
   if (c >= 55) return { label: "Mittel", pct: c, color: "bg-primary" };
   return { label: "Schwach", pct: c, color: "bg-muted-foreground" };
+}
+
+function ageInDays(iso: string): number {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return 0;
+  return Math.max(0, Math.floor((Date.now() - t) / 86_400_000));
+}
+
+const signalAgeClass = (days: number) => days < 2 ? "text-bull" : days < 7 ? "text-amber-400" : "text-bear";
+const signalAgeDot = (days: number) => days < 2 ? "bg-bull" : days < 7 ? "bg-amber-400" : "bg-bear";
+
+function volDotClass(v: number | undefined): string {
+  if (v == null) return "bg-muted-foreground/40";
+  if (v > 0.1) return "bg-bull";
+  if (v < -0.1) return "bg-bear";
+  return "bg-muted-foreground/60";
 }
 
 export function PickCard({ pick }: { pick: BeginnerPick }) {
