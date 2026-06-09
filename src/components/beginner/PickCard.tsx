@@ -97,6 +97,41 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
         </div>
       </div>
 
+      {/* Volume Confirmation Mini-Bar */}
+      {(pick.obvScore != null || pick.cmfScore != null) && (
+        <div className="mt-3 flex items-center justify-between rounded-md border border-border/40 bg-background/30 px-2.5 py-1.5 text-[11px]">
+          <span className="flex items-center gap-1 text-muted-foreground">
+            Volumen-Bestätigung
+            <InfoTooltip text="Zeigt, ob das Handelsvolumen die Kursbewegung bestätigt. Grün = Käufer dominant, Rot = Verkäufer dominant." iconClassName="h-3 w-3" />
+          </span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${volDotClass(pick.obvScore)}`} /><span className="text-foreground/70">OBV</span></div>
+            <div className="flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${volDotClass(pick.cmfScore)}`} /><span className="text-foreground/70">CMF</span></div>
+          </div>
+        </div>
+      )}
+
+      {/* Multi-Timeframe Confirmation */}
+      {pick.mtfConfirmation === "confirmed" && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-bull/30 bg-bull/10 px-2.5 py-1 text-[11px] font-medium text-bull self-start">
+          <CheckCircle2 className="h-3 w-3" /> Wöchentlicher Trend bestätigt
+        </div>
+      )}
+      {pick.mtfConfirmation === "diverging" && (
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-medium text-amber-400 self-start">
+          <AlertTriangle className="h-3 w-3" /> Wöchentlicher Trend divergiert
+        </div>
+      )}
+
+      {/* Earnings Warning */}
+      {typeof pick.earningsInDays === "number" && pick.earningsInDays <= 14 && (
+        <div className="mt-2 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-[11px] text-amber-300">
+          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          <span>Earnings in {pick.earningsInDays} {pick.earningsInDays === 1 ? "Tag" : "Tagen"} — erhöhtes Kursrisiko. Positionsgröße reduzieren.</span>
+        </div>
+      )}
+
+
       {/* Kursziel + Datum */}
       <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
         <div>
