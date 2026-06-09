@@ -646,6 +646,13 @@ export const apexAnalyze = (symbol: string, candles: Candle[], benchClose?: numb
     G: {
       relStrength: relativeStrength(c, bench, 90),
     },
+    H: {
+      obv: obv(c, v),
+      cmf: cmf(h, l, c, v, 20),
+      nearness52w: weekHigh52Proximity(c),
+      weeklyBias: weeklyBias(c),
+      mtfConfirmation: "neutral",
+    },
   };
 
   const sc = scoreModules(modules, price);
@@ -660,6 +667,13 @@ export const apexAnalyze = (symbol: string, candles: Candle[], benchClose?: numb
   const bullish = sc.total >= 50;
   const verdict = mapVerdict(confidence, bullish);
 
+  // H4 multi-timeframe confirmation — daily vs weekly
+  const wBias = modules.H.weeklyBias;
+  const dailyBullish = sc.total > 50;
+  modules.H.mtfConfirmation =
+    Math.abs(wBias) < 0.15 ? "neutral"
+    : (wBias > 0) === dailyBullish ? "confirmed" : "diverging";
+
   return {
     symbol,
     price,
@@ -670,6 +684,16 @@ export const apexAnalyze = (symbol: string, candles: Candle[], benchClose?: numb
     confidence,
     verdict,
   };
+};
+
+/**
+ * Applies exponential confidence decay based on signal age.
+ * Half-life: 5 trading days. Floor at 20% of original confidence.
+ */
+export const decayConfidence = (confidence: number, ageInTradingDays: number): number => {
+  const HALF_LIFE = 5;
+  const decayFactor = Math.pow(0.5, ageInTradingDays / HALF_LIFE);
+  return Math.max(confidence * 0.20, confidence * decayFactor);
 };
 
 // Compact, model-friendly text rendering for prompt injection.
