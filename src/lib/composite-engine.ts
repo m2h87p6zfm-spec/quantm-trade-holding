@@ -266,6 +266,28 @@ export function computeFactorScores(
   f.push({ key: "forecast_edge", label: "Monte-Carlo Edge", score: forecast, weight: weights.forecast_edge,
     rationale: ext.mcMedian != null ? `MC-Median Δ ${(forecast * 10).toFixed(2)}%` : "Keine MC-Quelle" });
 
+  // H1 OBV Confirmation — volume backing price move
+  const obvScore = clamp(ext.obvScore ?? 0);
+  f.push({ key: "obv_confirmation", label: "OBV Confirmation", score: obvScore, weight: weights.obv_confirmation,
+    rationale: ext.obvScore != null ? `OBV-Bias ${(obvScore * 100).toFixed(0)}%` : "OBV: kein Volumen-Input" });
+
+  // H2 CMF — Accumulation/Distribution pressure
+  const cmfScore = clamp(ext.cmfScore ?? 0);
+  f.push({ key: "cmf_pressure", label: "CMF Pressure", score: cmfScore, weight: weights.cmf_pressure,
+    rationale: ext.cmfScore != null ? `CMF ${(cmfScore * 100).toFixed(0)}%` : "CMF: kein Volumen-Input" });
+
+  // H3 52-Week High Proximity — nearness factor
+  const nearness = clamp(ext.nearness52w ?? 0);
+  f.push({ key: "nearness_52w", label: "52-Week Nearness", score: nearness, weight: weights.nearness_52w,
+    rationale: ext.nearness52w != null ? `52W-Prox ${(nearness * 100 + 100).toFixed(0)}% vom 52W-High` : "52W: keine Kursdaten" });
+
+  // H4 Weekly Bias — multi-timeframe confirmation
+  const wBias = clamp(ext.weeklyBias ?? 0);
+  f.push({ key: "weekly_bias", label: "Weekly Timeframe", score: wBias, weight: weights.weekly_bias,
+    rationale: ext.weeklyBias != null
+      ? `Wochenkurs-Trend: ${wBias > 0.2 ? "bullish" : wBias < -0.2 ? "bearish" : "neutral"}`
+      : "Weekly: kein Input" });
+
   const score = f.reduce((s, x) => s + x.score * x.weight, 0);
   const bullishCount = f.filter((x) => x.score > 0.1).length;
   const bearishCount = f.filter((x) => x.score < -0.1).length;
