@@ -60,18 +60,7 @@ export default defineConfig({
   },
   vite: {
     plugins: [dependencyReloadPlugin()],
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            "vendor-charts": ["lightweight-charts", "recharts"],
-            "vendor-geo": ["d3-geo", "topojson-client"],
-            "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable"],
-            "vendor-katex": ["katex"],
-          },
-        },
-      },
-    },
   },
+
 });
 
