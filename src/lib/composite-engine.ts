@@ -147,6 +147,14 @@ export type ExternalInputs = {
    *  globalem Liquiditäts-/Sentiment-Tape.
    */
   riskOnOff?: number;
+  /** OBV normalized score (-1..+1), computed from volume data */
+  obvScore?: number;
+  /** CMF 20-period (-1..+1) */
+  cmfScore?: number;
+  /** 52-week high proximity (-1..+1) */
+  nearness52w?: number;
+  /** Weekly timeframe bias (-1..+1) */
+  weeklyBias?: number;
 };
 
 // ---------------------------------------------------------------------------
