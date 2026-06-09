@@ -46,6 +46,10 @@ type CachedPick = {
   decision?: string;
   regime?: string;
   scannedAt?: string;
+  mtfConfirmation?: "confirmed" | "diverging" | "neutral";
+  earningsInDays?: number;
+  obvScore?: number;
+  cmfScore?: number;
 };
 
 function buildReason(p: CachedPick): string {
