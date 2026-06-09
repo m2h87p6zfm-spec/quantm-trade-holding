@@ -150,6 +150,16 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
           <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">
             {new Date(pick.date).toLocaleDateString("de-DE")}
           </dd>
+          {(() => {
+            const days = ageInDays(pick.date);
+            const label = days < 2 ? "Frisches Signal" : days < 7 ? `Signal ${days} Tage alt` : `Signal ${days} Tage alt — Aktualität prüfen`;
+            return (
+              <div className={`mt-1 flex items-center gap-1.5 text-[10px] font-medium ${signalAgeClass(days)}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${signalAgeDot(days)}`} />
+                <span>{label}</span>
+              </div>
+            );
+          })()}
         </div>
       </dl>
 
