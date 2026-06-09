@@ -44,7 +44,11 @@ export type FactorKey =
   | "liquidity"
   | "correlation"
   | "trend_strength"
-  | "forecast_edge";
+  | "forecast_edge"
+  | "obv_confirmation"
+  | "cmf_pressure"
+  | "nearness_52w"
+  | "weekly_bias";
 
 export type FactorScore = {
   key: FactorKey;
@@ -73,28 +77,32 @@ const safe = (n: number, f = 0) => (Number.isFinite(n) ? n : f);
 //  in High-Vol-Phasen rücken Risiko-/Liquiditäts-Faktoren in den Vordergrund.
 
 const BASE_WEIGHTS: Record<FactorKey, number> = {
-  momentum_rsi:     0.08,
+  momentum_rsi:     0.06,
   trend_macd:       0.08,
   volatility_bb:    0.06,
   volume_profile:   0.05,
   mean_reversion:   0.07,
   broker_consensus: 0.08,
   sharpe_quality:   0.07,
-  momentum_roc:     0.06,
+  momentum_roc:     0.04,
   macro_regime:     0.08,
   geopolitical:     0.04,
   sentiment:        0.05,
   liquidity:        0.05,
   correlation:      0.05,
-  trend_strength:   0.10,
+  trend_strength:   0.08,
   forecast_edge:    0.08,
+  obv_confirmation: 0.06,
+  cmf_pressure:     0.05,
+  nearness_52w:     0.06,
+  weekly_bias:      0.07,
 };
 
 const REGIME_TILTS: Record<MarketRegime, Partial<Record<FactorKey, number>>> = {
-  bull:     { trend_macd: +0.04, trend_strength: +0.04, momentum_roc: +0.03, mean_reversion: -0.03, sentiment: -0.02 },
-  bear:     { mean_reversion: +0.04, sentiment: +0.03, volatility_bb: +0.03, trend_strength: -0.03, momentum_roc: -0.02 },
+  bull:     { trend_macd: +0.04, trend_strength: +0.04, momentum_roc: +0.03, mean_reversion: -0.03, sentiment: -0.02, weekly_bias: +0.03, nearness_52w: +0.02 },
+  bear:     { mean_reversion: +0.04, sentiment: +0.03, volatility_bb: +0.03, trend_strength: -0.03, momentum_roc: -0.02, cmf_pressure: +0.02, obv_confirmation: +0.02 },
   chop:     { mean_reversion: +0.05, volatility_bb: +0.03, trend_macd: -0.03, trend_strength: -0.03 },
-  high_vol: { liquidity: +0.04, volatility_bb: +0.05, sharpe_quality: +0.03, momentum_roc: -0.03, trend_macd: -0.03 },
+  high_vol: { liquidity: +0.04, volatility_bb: +0.05, sharpe_quality: +0.03, momentum_roc: -0.03, trend_macd: -0.03, cmf_pressure: +0.03 },
   low_vol:  { trend_macd: +0.03, sharpe_quality: +0.03, broker_consensus: +0.02, volatility_bb: -0.03 },
 };
 
@@ -139,6 +147,14 @@ export type ExternalInputs = {
    *  globalem Liquiditäts-/Sentiment-Tape.
    */
   riskOnOff?: number;
+  /** OBV normalized score (-1..+1), computed from volume data */
+  obvScore?: number;
+  /** CMF 20-period (-1..+1) */
+  cmfScore?: number;
+  /** 52-week high proximity (-1..+1) */
+  nearness52w?: number;
+  /** Weekly timeframe bias (-1..+1) */
+  weeklyBias?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -249,6 +265,28 @@ export function computeFactorScores(
   }
   f.push({ key: "forecast_edge", label: "Monte-Carlo Edge", score: forecast, weight: weights.forecast_edge,
     rationale: ext.mcMedian != null ? `MC-Median Δ ${(forecast * 10).toFixed(2)}%` : "Keine MC-Quelle" });
+
+  // H1 OBV Confirmation — volume backing price move
+  const obvScore = clamp(ext.obvScore ?? 0);
+  f.push({ key: "obv_confirmation", label: "OBV Confirmation", score: obvScore, weight: weights.obv_confirmation,
+    rationale: ext.obvScore != null ? `OBV-Bias ${(obvScore * 100).toFixed(0)}%` : "OBV: kein Volumen-Input" });
+
+  // H2 CMF — Accumulation/Distribution pressure
+  const cmfScore = clamp(ext.cmfScore ?? 0);
+  f.push({ key: "cmf_pressure", label: "CMF Pressure", score: cmfScore, weight: weights.cmf_pressure,
+    rationale: ext.cmfScore != null ? `CMF ${(cmfScore * 100).toFixed(0)}%` : "CMF: kein Volumen-Input" });
+
+  // H3 52-Week High Proximity — nearness factor
+  const nearness = clamp(ext.nearness52w ?? 0);
+  f.push({ key: "nearness_52w", label: "52-Week Nearness", score: nearness, weight: weights.nearness_52w,
+    rationale: ext.nearness52w != null ? `52W-Prox ${(nearness * 100 + 100).toFixed(0)}% vom 52W-High` : "52W: keine Kursdaten" });
+
+  // H4 Weekly Bias — multi-timeframe confirmation
+  const wBias = clamp(ext.weeklyBias ?? 0);
+  f.push({ key: "weekly_bias", label: "Weekly Timeframe", score: wBias, weight: weights.weekly_bias,
+    rationale: ext.weeklyBias != null
+      ? `Wochenkurs-Trend: ${wBias > 0.2 ? "bullish" : wBias < -0.2 ? "bearish" : "neutral"}`
+      : "Weekly: kein Input" });
 
   const score = f.reduce((s, x) => s + x.score * x.weight, 0);
   const bullishCount = f.filter((x) => x.score > 0.1).length;
