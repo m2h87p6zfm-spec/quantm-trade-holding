@@ -441,7 +441,8 @@ export type ApexReport = {
   verdict: string;
 };
 
-const clamp = (n: number, a: number, b: number) => Math.max(a, Math.min(b, n));
+
+
 
 // Score the seven module groups (5% Sentiment slot reserved for caller).
 const scoreModules = (m: ApexReport["modules"], price: number): { total: number; A: number; B: number; C: number; D: number; F: number; G: number } => {
