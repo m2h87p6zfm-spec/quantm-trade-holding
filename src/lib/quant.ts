@@ -503,6 +503,7 @@ export type ApexReport = {
     D: { regSlope: number; regR2: number; regForecast: number; mc30: ReturnType<typeof monteCarloGBM>; halfLife: number };
     F: { sharpe: number; sortino: number; calmar: number; maxDD: number; kellyFull: number; kellyHalf: number; treynor: number };
     G: { relStrength: number };
+    H: { obv: number; cmf: number; nearness52w: number; weeklyBias: number; mtfConfirmation: "confirmed" | "diverging" | "neutral" };
   };
   score: number;          // 0-100
   confidence: number;     // 0-100
