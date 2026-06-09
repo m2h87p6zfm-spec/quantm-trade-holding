@@ -77,26 +77,30 @@ const safe = (n: number, f = 0) => (Number.isFinite(n) ? n : f);
 //  in High-Vol-Phasen rücken Risiko-/Liquiditäts-Faktoren in den Vordergrund.
 
 const BASE_WEIGHTS: Record<FactorKey, number> = {
-  momentum_rsi:     0.08,
+  momentum_rsi:     0.06,
   trend_macd:       0.08,
   volatility_bb:    0.06,
   volume_profile:   0.05,
   mean_reversion:   0.07,
   broker_consensus: 0.08,
   sharpe_quality:   0.07,
-  momentum_roc:     0.06,
+  momentum_roc:     0.04,
   macro_regime:     0.08,
   geopolitical:     0.04,
   sentiment:        0.05,
   liquidity:        0.05,
   correlation:      0.05,
-  trend_strength:   0.10,
+  trend_strength:   0.08,
   forecast_edge:    0.08,
+  obv_confirmation: 0.06,
+  cmf_pressure:     0.05,
+  nearness_52w:     0.06,
+  weekly_bias:      0.07,
 };
 
 const REGIME_TILTS: Record<MarketRegime, Partial<Record<FactorKey, number>>> = {
-  bull:     { trend_macd: +0.04, trend_strength: +0.04, momentum_roc: +0.03, mean_reversion: -0.03, sentiment: -0.02 },
-  bear:     { mean_reversion: +0.04, sentiment: +0.03, volatility_bb: +0.03, trend_strength: -0.03, momentum_roc: -0.02 },
+  bull:     { trend_macd: +0.04, trend_strength: +0.04, momentum_roc: +0.03, mean_reversion: -0.03, sentiment: -0.02, weekly_bias: +0.03, nearness_52w: +0.02 },
+  bear:     { mean_reversion: +0.04, sentiment: +0.03, volatility_bb: +0.03, trend_strength: -0.03, momentum_roc: -0.02, cmf_pressure: +0.02, obv_confirmation: +0.02 },
   chop:     { mean_reversion: +0.05, volatility_bb: +0.03, trend_macd: -0.03, trend_strength: -0.03 },
   high_vol: { liquidity: +0.04, volatility_bb: +0.05, sharpe_quality: +0.03, momentum_roc: -0.03, trend_macd: -0.03 },
   low_vol:  { trend_macd: +0.03, sharpe_quality: +0.03, broker_consensus: +0.02, volatility_bb: -0.03 },
