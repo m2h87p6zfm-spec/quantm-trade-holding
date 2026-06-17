@@ -26,9 +26,24 @@ export const Route = createFileRoute("/picks")({
 
 const SECTORS = ["Alle", "Technologie", "Gesundheit", "Finanzen", "Konsum", "Energie", "Industrie", "Rohstoffe"] as const;
 const STRENGTHS = ["Alle", "Stark", "Mittel"] as const;
+const CAPS = ["Alle", "Large Cap", "Mid Cap", "Small Cap"] as const;
+const REGIONS = ["Alle", "US", "DE", "EU", "UK", "JP"] as const;
 
 type Sector = (typeof SECTORS)[number];
 type Strength = (typeof STRENGTHS)[number];
+type CapFilter = (typeof CAPS)[number];
+type RegionFilter = (typeof REGIONS)[number];
+
+const CAP_LABEL: Record<NonNullable<Product["cap"]>, string> = {
+  large: "Large Cap",
+  mid: "Mid Cap",
+  small: "Small Cap",
+};
+const CAP_DESCRIPTION: Record<NonNullable<Product["cap"]>, string> = {
+  large: "Etablierte Konzerne (>10 Mrd. USD) — geringere Schwankung, stabiler.",
+  mid: "Mittelgroße Unternehmen (2–10 Mrd. USD) — gute Balance aus Wachstum und Stabilität.",
+  small: "Kleinere Werte (<2 Mrd. USD) — höhere Chance, aber auch höheres Risiko.",
+};
 
 type CachedPick = {
   symbol: string;
@@ -52,7 +67,7 @@ type CachedPick = {
   cmfScore?: number;
 };
 
-function buildReason(p: CachedPick): string {
+function buildReason(p: CachedPick, capKey?: NonNullable<Product["cap"]> | null): string {
   const parts: string[] = [];
   if (typeof p.momentum === "number" && p.momentum > 0.02) parts.push("starkes Aufwärts-Momentum");
   if (typeof p.rsi === "number") {
@@ -62,6 +77,9 @@ function buildReason(p: CachedPick): string {
   if (typeof p.macdHist === "number" && p.macdHist > 0) parts.push("Trendwechsel nach oben");
   if (typeof p.upsidePct === "number" && p.upsidePct > 5) parts.push(`Kursziel ~${p.upsidePct.toFixed(0)} % höher`);
   if (p.regime === "bull") parts.push("Markt insgesamt freundlich");
+  if (capKey === "small") parts.push("Small Cap — höhere Chance, aber auch höheres Risiko");
+  else if (capKey === "mid") parts.push("solider Mid-Cap-Wert");
+  else if (capKey === "large") parts.push("etablierter Large Cap");
   if (parts.length === 0) parts.push("Algorithmus sieht eine günstige Konstellation");
   const capitalized = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
   return capitalized + (parts.length > 1 ? ", " + parts.slice(1).join(", ") : "") + ".";
@@ -71,6 +89,8 @@ function PicksPage() {
   const { settings } = useSettings();
   const [sector, setSector] = useState<Sector>("Alle");
   const [strength, setStrength] = useState<Strength>("Alle");
+  const [cap, setCap] = useState<CapFilter>("Alle");
+  const [region, setRegion] = useState<RegionFilter>("Alle");
   const [rawPicks, setRawPicks] = useState<CachedPick[] | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -90,24 +110,34 @@ function PicksPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const picks: BeginnerPick[] = useMemo(() => {
+  type Enriched = {
+    pick: BeginnerPick;
+    capKey: NonNullable<Product["cap"]> | null;
+    regionKey: Product["region"] | null;
+  };
+
+  const enriched: Enriched[] = useMemo(() => {
     const list = rawPicks ?? [];
     return list
-      .map((p): BeginnerPick | null => {
+      .map((p): Enriched | null => {
         const sym = String(p.symbol);
         const product = PRODUCT_BY_SYMBOL.get(sym);
         const name = product?.name ?? p.name ?? sym;
         const productSector = product?.sector ?? p.sector ?? null;
+        const capKey = product?.cap ?? null;
+        const regionKey = product?.region ?? p.region ?? null;
         const confidence = Math.max(0, Math.min(100, Number(p.confidence ?? 0)));
         const action: BeginnerPick["action"] = confidence >= settings.minConfidence ? "KAUFEN" : "BEOBACHTEN";
         const last = Number(p.last ?? 0);
         const upsidePct = Number(p.upsidePct ?? 0);
         const target = last && upsidePct ? last * (1 + upsidePct / 100) : null;
-        return {
+        const capSuffix = capKey ? ` · ${CAP_LABEL[capKey]}` : "";
+        const sectorLabel = productSector ? `${productSector}${capSuffix}` : capKey ? CAP_LABEL[capKey] : null;
+        const pick: BeginnerPick = {
           symbol: sym,
           name,
-          sector: productSector,
-          reason: buildReason(p),
+          sector: sectorLabel,
+          reason: buildReason(p, capKey),
           confidence,
           targetPrice: target,
           lastPrice: last || null,
@@ -118,6 +148,8 @@ function PicksPage() {
           obvScore: typeof p.obvScore === "number" ? p.obvScore : undefined,
           cmfScore: typeof p.cmfScore === "number" ? p.cmfScore : undefined,
           advanced: [
+            { label: "Marktkapitalisierung", value: capKey ? CAP_LABEL[capKey] : "—", tooltip: capKey ? CAP_DESCRIPTION[capKey] : "Größenklasse des Unternehmens." },
+            { label: "Region", value: regionKey ?? "—", tooltip: "Heimatbörse / Hauptnotierung." },
             { label: "RSI", value: p.rsi != null ? Number(p.rsi).toFixed(0) : "—", tooltip: "Misst, ob eine Aktie kurzfristig über- oder unterverkauft ist (0–100). Unter 30 = überverkauft, über 70 = überkauft." },
             { label: "Z-Faktor", value: p.zScore != null ? Number(p.zScore).toFixed(2) : "—", tooltip: "Wie weit der Kurs von seinem Durchschnitt entfernt ist — ein statistisches Maß für 'außergewöhnlich'." },
             { label: "MACD Hist.", value: p.macdHist != null ? Number(p.macdHist).toFixed(2) : "—", tooltip: "Zeigt Trendwechsel an. Positive Werte deuten auf Aufwärtsdynamik hin." },
@@ -126,17 +158,38 @@ function PicksPage() {
             { label: "Konfidenz (Rohwert)", value: `${Number(p.confidence ?? 0).toFixed(0)} %`, tooltip: "Wahrscheinlichkeit aus dem Algorithmus, dass die Empfehlung aufgeht." },
           ],
         };
+        return { pick, capKey, regionKey };
       })
-      .filter((p): p is BeginnerPick => p !== null)
-      .filter((p) => (sector === "Alle" ? true : p.sector === sector))
-      .filter((p) => {
+      .filter((e): e is Enriched => e !== null);
+  }, [rawPicks, settings.minConfidence]);
+
+  const filtered = useMemo(() => {
+    return enriched
+      .filter((e) => (sector === "Alle" ? true : e.pick.sector?.startsWith(sector)))
+      .filter((e) => {
         if (strength === "Alle") return true;
-        if (strength === "Stark") return p.confidence >= 75;
-        if (strength === "Mittel") return p.confidence >= 55 && p.confidence < 75;
+        if (strength === "Stark") return e.pick.confidence >= 75;
+        if (strength === "Mittel") return e.pick.confidence >= 55 && e.pick.confidence < 75;
         return true;
       })
-      .sort((a, b) => b.confidence - a.confidence);
-  }, [rawPicks, sector, strength, settings.minConfidence]);
+      .filter((e) => {
+        if (cap === "Alle") return true;
+        if (!e.capKey) return false;
+        return CAP_LABEL[e.capKey] === cap;
+      })
+      .filter((e) => (region === "Alle" ? true : e.regionKey === region))
+      .sort((a, b) => b.pick.confidence - a.pick.confidence);
+  }, [enriched, sector, strength, cap, region]);
+
+  const picks = filtered.map((e) => e.pick);
+
+  const stats = useMemo(() => {
+    const buys = picks.filter((p) => p.action === "KAUFEN").length;
+    const avg = picks.length ? Math.round(picks.reduce((s, p) => s + p.confidence, 0) / picks.length) : 0;
+    const capCounts = { large: 0, mid: 0, small: 0 } as Record<NonNullable<Product["cap"]>, number>;
+    for (const e of filtered) if (e.capKey) capCounts[e.capKey]++;
+    return { total: picks.length, buys, avg, capCounts };
+  }, [picks, filtered]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -166,21 +219,55 @@ function PicksPage() {
           </p>
         </section>
 
-        {/* Filters */}
+        {/* Cap-Klassen Erklärung */}
         <section className="grid gap-3 sm:grid-cols-3">
+          {(["large", "mid", "small"] as const).map((k) => {
+            const active = cap === CAP_LABEL[k];
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setCap(active ? "Alle" : (CAP_LABEL[k] as CapFilter))}
+                className={`text-left rounded-xl border p-4 transition ${
+                  active ? "border-primary/60 bg-primary/10" : "border-border/60 bg-card/40 hover:border-primary/40"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">{CAP_LABEL[k]}</span>
+                  <span className="text-xs text-muted-foreground">{stats.capCounts[k]} Treffer</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{CAP_DESCRIPTION[k]}</p>
+              </button>
+            );
+          })}
+        </section>
+
+        {/* Filters */}
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <FilterSelect label="Marktkapitalisierung" value={cap} options={CAPS} onChange={(v) => setCap(v as CapFilter)} />
+          <FilterSelect label="Region" value={region} options={REGIONS} onChange={(v) => setRegion(v as RegionFilter)} />
           <FilterSelect label="Sektor" value={sector} options={SECTORS} onChange={(v) => setSector(v as Sector)} />
           <FilterSelect label="Signalstärke" value={strength} options={STRENGTHS} onChange={(v) => setStrength(v as Strength)} />
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
+        </section>
+
+        {/* Stats */}
+        {loaded && picks.length > 0 && (
+          <section className="grid gap-3 sm:grid-cols-4">
+            <StatTile label="Empfehlungen" value={String(stats.total)} />
+            <StatTile label="Davon Kaufen" value={String(stats.buys)} />
+            <StatTile label="Ø Konfidenz" value={`${stats.avg} %`} />
             <Link
               to="/track-record"
-              className="mt-1 flex h-10 items-center justify-between rounded-md border border-border/60 bg-card/60 px-3 text-sm text-foreground/90 transition hover:border-primary/40"
+              className="rounded-xl border border-border/60 bg-card/40 p-4 transition hover:border-primary/40 flex items-center justify-between"
             >
-              <span>Abgeschlossene Picks → Track Record</span>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Abgeschlossene Picks</div>
+                <div className="mt-1 text-sm font-semibold">Track Record →</div>
+              </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Picks */}
         {!loaded ? (
@@ -246,6 +333,15 @@ function FilterSelect({
           ))}
         </SelectContent>
       </Select>
+    </div>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-bold tracking-tight">{value}</div>
     </div>
   );
 }
