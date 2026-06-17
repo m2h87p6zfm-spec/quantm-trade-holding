@@ -67,7 +67,7 @@ type CachedPick = {
   cmfScore?: number;
 };
 
-function buildReason(p: CachedPick): string {
+function buildReason(p: CachedPick, capKey?: NonNullable<Product["cap"]> | null): string {
   const parts: string[] = [];
   if (typeof p.momentum === "number" && p.momentum > 0.02) parts.push("starkes Aufwärts-Momentum");
   if (typeof p.rsi === "number") {
@@ -77,6 +77,9 @@ function buildReason(p: CachedPick): string {
   if (typeof p.macdHist === "number" && p.macdHist > 0) parts.push("Trendwechsel nach oben");
   if (typeof p.upsidePct === "number" && p.upsidePct > 5) parts.push(`Kursziel ~${p.upsidePct.toFixed(0)} % höher`);
   if (p.regime === "bull") parts.push("Markt insgesamt freundlich");
+  if (capKey === "small") parts.push("Small Cap — höhere Chance, aber auch höheres Risiko");
+  else if (capKey === "mid") parts.push("solider Mid-Cap-Wert");
+  else if (capKey === "large") parts.push("etablierter Large Cap");
   if (parts.length === 0) parts.push("Algorithmus sieht eine günstige Konstellation");
   const capitalized = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
   return capitalized + (parts.length > 1 ? ", " + parts.slice(1).join(", ") : "") + ".";
