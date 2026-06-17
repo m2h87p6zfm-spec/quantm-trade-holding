@@ -107,24 +107,34 @@ function PicksPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const picks: BeginnerPick[] = useMemo(() => {
+  type Enriched = {
+    pick: BeginnerPick;
+    capKey: NonNullable<Product["cap"]> | null;
+    regionKey: Product["region"] | null;
+  };
+
+  const enriched: Enriched[] = useMemo(() => {
     const list = rawPicks ?? [];
     return list
-      .map((p): BeginnerPick | null => {
+      .map((p): Enriched | null => {
         const sym = String(p.symbol);
         const product = PRODUCT_BY_SYMBOL.get(sym);
         const name = product?.name ?? p.name ?? sym;
         const productSector = product?.sector ?? p.sector ?? null;
+        const capKey = product?.cap ?? null;
+        const regionKey = product?.region ?? p.region ?? null;
         const confidence = Math.max(0, Math.min(100, Number(p.confidence ?? 0)));
         const action: BeginnerPick["action"] = confidence >= settings.minConfidence ? "KAUFEN" : "BEOBACHTEN";
         const last = Number(p.last ?? 0);
         const upsidePct = Number(p.upsidePct ?? 0);
         const target = last && upsidePct ? last * (1 + upsidePct / 100) : null;
-        return {
+        const capSuffix = capKey ? ` · ${CAP_LABEL[capKey]}` : "";
+        const sectorLabel = productSector ? `${productSector}${capSuffix}` : capKey ? CAP_LABEL[capKey] : null;
+        const pick: BeginnerPick = {
           symbol: sym,
           name,
-          sector: productSector,
-          reason: buildReason(p),
+          sector: sectorLabel,
+          reason: buildReason(p, capKey),
           confidence,
           targetPrice: target,
           lastPrice: last || null,
@@ -135,6 +145,8 @@ function PicksPage() {
           obvScore: typeof p.obvScore === "number" ? p.obvScore : undefined,
           cmfScore: typeof p.cmfScore === "number" ? p.cmfScore : undefined,
           advanced: [
+            { label: "Marktkapitalisierung", value: capKey ? CAP_LABEL[capKey] : "—", tooltip: capKey ? CAP_DESCRIPTION[capKey] : "Größenklasse des Unternehmens." },
+            { label: "Region", value: regionKey ?? "—", tooltip: "Heimatbörse / Hauptnotierung." },
             { label: "RSI", value: p.rsi != null ? Number(p.rsi).toFixed(0) : "—", tooltip: "Misst, ob eine Aktie kurzfristig über- oder unterverkauft ist (0–100). Unter 30 = überverkauft, über 70 = überkauft." },
             { label: "Z-Faktor", value: p.zScore != null ? Number(p.zScore).toFixed(2) : "—", tooltip: "Wie weit der Kurs von seinem Durchschnitt entfernt ist — ein statistisches Maß für 'außergewöhnlich'." },
             { label: "MACD Hist.", value: p.macdHist != null ? Number(p.macdHist).toFixed(2) : "—", tooltip: "Zeigt Trendwechsel an. Positive Werte deuten auf Aufwärtsdynamik hin." },
@@ -143,17 +155,38 @@ function PicksPage() {
             { label: "Konfidenz (Rohwert)", value: `${Number(p.confidence ?? 0).toFixed(0)} %`, tooltip: "Wahrscheinlichkeit aus dem Algorithmus, dass die Empfehlung aufgeht." },
           ],
         };
+        return { pick, capKey, regionKey };
       })
-      .filter((p): p is BeginnerPick => p !== null)
-      .filter((p) => (sector === "Alle" ? true : p.sector === sector))
-      .filter((p) => {
+      .filter((e): e is Enriched => e !== null);
+  }, [rawPicks, settings.minConfidence]);
+
+  const filtered = useMemo(() => {
+    return enriched
+      .filter((e) => (sector === "Alle" ? true : e.pick.sector?.startsWith(sector)))
+      .filter((e) => {
         if (strength === "Alle") return true;
-        if (strength === "Stark") return p.confidence >= 75;
-        if (strength === "Mittel") return p.confidence >= 55 && p.confidence < 75;
+        if (strength === "Stark") return e.pick.confidence >= 75;
+        if (strength === "Mittel") return e.pick.confidence >= 55 && e.pick.confidence < 75;
         return true;
       })
-      .sort((a, b) => b.confidence - a.confidence);
-  }, [rawPicks, sector, strength, settings.minConfidence]);
+      .filter((e) => {
+        if (cap === "Alle") return true;
+        if (!e.capKey) return false;
+        return CAP_LABEL[e.capKey] === cap;
+      })
+      .filter((e) => (region === "Alle" ? true : e.regionKey === region))
+      .sort((a, b) => b.pick.confidence - a.pick.confidence);
+  }, [enriched, sector, strength, cap, region]);
+
+  const picks = filtered.map((e) => e.pick);
+
+  const stats = useMemo(() => {
+    const buys = picks.filter((p) => p.action === "KAUFEN").length;
+    const avg = picks.length ? Math.round(picks.reduce((s, p) => s + p.confidence, 0) / picks.length) : 0;
+    const capCounts = { large: 0, mid: 0, small: 0 } as Record<NonNullable<Product["cap"]>, number>;
+    for (const e of filtered) if (e.capKey) capCounts[e.capKey]++;
+    return { total: picks.length, buys, avg, capCounts };
+  }, [picks, filtered]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
