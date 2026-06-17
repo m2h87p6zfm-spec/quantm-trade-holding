@@ -337,6 +337,15 @@ function FilterSelect({
   );
 }
 
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/40 p-4">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-bold tracking-tight">{value}</div>
+    </div>
+  );
+}
+
 function EmptyState() {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/40 p-8 text-center">
