@@ -35,8 +35,10 @@ export async function insertAnalysisAndOutcome(p: RecordPayload) {
 
 /** Ruft den Schlusskurs zu einem bestimmten Datum ab (nächster Handelstag). */
 export async function fetchClosePriceAt(symbol: string, isoDate: string): Promise<number | null> {
-  // 2-Wochen-Range, damit Wochenend-/Feiertags-Verschiebungen abgefangen werden.
-  const res = await fetchYahooChartCached(symbol, "1d", "1mo", 60 * 60 * 6);
+  // Range so wählen, dass das Zieldatum (bis zu 90+ Tage zurück) sicher enthalten ist.
+  const ageDays = Math.max(0, (Date.now() - new Date(isoDate).getTime()) / 86400_000);
+  const range = ageDays > 150 ? "1y" : ageDays > 50 ? "6mo" : ageDays > 20 ? "3mo" : "1mo";
+  const res = await fetchYahooChartCached(symbol, "1d", range, 60 * 60 * 6);
   const r = res.value?.chart?.result?.[0];
   if (!r) return null;
   const ts: number[] = r.timestamp || [];
