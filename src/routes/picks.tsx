@@ -219,21 +219,55 @@ function PicksPage() {
           </p>
         </section>
 
-        {/* Filters */}
+        {/* Cap-Klassen Erklärung */}
         <section className="grid gap-3 sm:grid-cols-3">
+          {(["large", "mid", "small"] as const).map((k) => {
+            const active = cap === CAP_LABEL[k];
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setCap(active ? "Alle" : (CAP_LABEL[k] as CapFilter))}
+                className={`text-left rounded-xl border p-4 transition ${
+                  active ? "border-primary/60 bg-primary/10" : "border-border/60 bg-card/40 hover:border-primary/40"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">{CAP_LABEL[k]}</span>
+                  <span className="text-xs text-muted-foreground">{stats.capCounts[k]} Treffer</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{CAP_DESCRIPTION[k]}</p>
+              </button>
+            );
+          })}
+        </section>
+
+        {/* Filters */}
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <FilterSelect label="Marktkapitalisierung" value={cap} options={CAPS} onChange={(v) => setCap(v as CapFilter)} />
+          <FilterSelect label="Region" value={region} options={REGIONS} onChange={(v) => setRegion(v as RegionFilter)} />
           <FilterSelect label="Sektor" value={sector} options={SECTORS} onChange={(v) => setSector(v as Sector)} />
           <FilterSelect label="Signalstärke" value={strength} options={STRENGTHS} onChange={(v) => setStrength(v as Strength)} />
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</label>
+        </section>
+
+        {/* Stats */}
+        {loaded && picks.length > 0 && (
+          <section className="grid gap-3 sm:grid-cols-4">
+            <StatTile label="Empfehlungen" value={String(stats.total)} />
+            <StatTile label="Davon Kaufen" value={String(stats.buys)} />
+            <StatTile label="Ø Konfidenz" value={`${stats.avg} %`} />
             <Link
               to="/track-record"
-              className="mt-1 flex h-10 items-center justify-between rounded-md border border-border/60 bg-card/60 px-3 text-sm text-foreground/90 transition hover:border-primary/40"
+              className="rounded-xl border border-border/60 bg-card/40 p-4 transition hover:border-primary/40 flex items-center justify-between"
             >
-              <span>Abgeschlossene Picks → Track Record</span>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Abgeschlossene Picks</div>
+                <div className="mt-1 text-sm font-semibold">Track Record →</div>
+              </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Picks */}
         {!loaded ? (
