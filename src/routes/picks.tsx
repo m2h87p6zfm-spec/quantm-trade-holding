@@ -26,9 +26,24 @@ export const Route = createFileRoute("/picks")({
 
 const SECTORS = ["Alle", "Technologie", "Gesundheit", "Finanzen", "Konsum", "Energie", "Industrie", "Rohstoffe"] as const;
 const STRENGTHS = ["Alle", "Stark", "Mittel"] as const;
+const CAPS = ["Alle", "Large Cap", "Mid Cap", "Small Cap"] as const;
+const REGIONS = ["Alle", "US", "DE", "EU", "UK", "JP"] as const;
 
 type Sector = (typeof SECTORS)[number];
 type Strength = (typeof STRENGTHS)[number];
+type CapFilter = (typeof CAPS)[number];
+type RegionFilter = (typeof REGIONS)[number];
+
+const CAP_LABEL: Record<NonNullable<Product["cap"]>, string> = {
+  large: "Large Cap",
+  mid: "Mid Cap",
+  small: "Small Cap",
+};
+const CAP_DESCRIPTION: Record<NonNullable<Product["cap"]>, string> = {
+  large: "Etablierte Konzerne (>10 Mrd. USD) — geringere Schwankung, stabiler.",
+  mid: "Mittelgroße Unternehmen (2–10 Mrd. USD) — gute Balance aus Wachstum und Stabilität.",
+  small: "Kleinere Werte (<2 Mrd. USD) — höhere Chance, aber auch höheres Risiko.",
+};
 
 type CachedPick = {
   symbol: string;
