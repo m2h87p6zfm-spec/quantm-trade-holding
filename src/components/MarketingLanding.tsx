@@ -1,352 +1,747 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Activity,
+  Brain,
+  Database,
+  Gauge,
+  LineChart,
+  Layers,
+  Newspaper,
+  Radio,
+  Shield,
+  Signal,
+  Sparkles,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { useSettings } from "@/lib/settings";
+import { getLandingMetrics, type LandingMetrics } from "@/lib/landing-metrics.functions";
 
-/**
- * Beginner-first landing page for unauthenticated visitors.
- * Goal: build trust in <10 seconds, hide all jargon, one clear CTA.
- */
+/* ──────────────────────────────────────────────────────────────────────────
+   QUANTM TRADE — INSTITUTIONAL LANDING (v3)
+   - All headline numbers are LIVE from the database. No fabricated metrics.
+   - Aesthetic: Bloomberg / Palantir / Koyfin. Dense, monochrome, accent-blue.
+   - Transparent about hit rate, including periods of negative average return.
+   ────────────────────────────────────────────────────────────────────────── */
+
 export function MarketingLanding() {
   const { settings, update } = useSettings();
+  const fetchMetrics = useServerFn(getLandingMetrics);
+  const [metrics, setMetrics] = useState<LandingMetrics | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchMetrics()
+      .then((m) => alive && setMetrics(m))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [fetchMetrics]);
+
   return (
-    <div className="min-h-screen bg-background text-foreground" style={{ fontFamily: "Inter, Satoshi, ui-sans-serif, system-ui" }}>
-      {/* Nav */}
-      <header className="sticky top-0 z-40 backdrop-blur bg-background/80 border-b border-border/40">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <ApexLogo className="h-7 w-7" />
-            <span className="text-sm font-semibold tracking-tight">Quantm Trade</span>
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-3 text-sm">
-            <Link to="/picks" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Picks</Link>
-            <Link to="/track-record" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Track Record</Link>
-            <Link to="/wie-es-funktioniert" className="hidden sm:inline-flex px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Wie es funktioniert</Link>
-            <button
-              type="button"
-              onClick={() => update({ theme: settings.theme === "dark" ? "light" : "dark", themeOptIn: true } as any)}
-              aria-label="Theme umschalten"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
-            >
-              {settings.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-            <Link
-              to="/login"
-              className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Anmelden
-            </Link>
-          </nav>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-32 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
-        </div>
-        <div className="relative mx-auto max-w-4xl px-4 py-20 sm:py-28 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-            Quantm Picks
-          </div>
-
-          <h1 className="mx-auto mt-6 max-w-3xl text-balance text-4xl font-bold leading-[1.1] tracking-tight sm:text-6xl">
-            Die richtigen Aktien. Ohne den ganzen Aufwand.
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-balance text-base sm:text-lg leading-relaxed text-muted-foreground">
-            Wir analysieren täglich tausende Aktien mit mathematischen Algorithmen und liefern Ihnen klare Kaufempfehlungen — damit Sie mehr Zeit für das Wichtige haben.
-          </p>
-
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              to="/picks"
-              className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] transition hover:opacity-90"
-            >
-              Jetzt Empfehlungen sehen <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/wie-es-funktioniert"
-              className="inline-flex h-12 items-center gap-2 rounded-xl border border-border bg-card/40 px-5 text-sm font-medium text-foreground/90 backdrop-blur transition hover:border-primary/40"
-            >
-              Wie funktioniert das?
-            </Link>
-          </div>
-
-          <p className="mt-6 text-xs text-muted-foreground">
-            Über 200 analysierte Aktien pro Woche · 7 Tage Elite gratis testen · Jederzeit kündbar
-          </p>
-        </div>
-      </section>
-
-      {/* How it works — 3 steps */}
-      <section className="border-y border-border/40 bg-card/20">
-        <div className="mx-auto max-w-5xl px-4 py-20">
-          <div className="text-center">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">So funktioniert's</div>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">In drei Schritten zur Empfehlung.</h2>
-          </div>
-
-          <ol className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                icon: Brain,
-                title: "Algorithmus analysiert",
-                text: "Unsere KI durchsucht täglich den Markt nach den besten Chancen.",
-              },
-              {
-                icon: Bell,
-                title: "Sie erhalten eine Empfehlung",
-                text: "Klare Kauf- oder Warteempfehlung, direkt in der App.",
-              },
-              {
-                icon: UserCheck,
-                title: "Sie entscheiden",
-                text: "Sie behalten immer die Kontrolle über Ihr Portfolio.",
-              },
-            ].map((s, i) => (
-              <li key={s.title} className="relative rounded-2xl border border-border/60 bg-card/40 p-6">
-                <div className="absolute -top-3 left-6 inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {i + 1}
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <s.icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-4 text-lg font-semibold tracking-tight">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.text}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      {/* Social proof: stats + testimonials */}
-      <section className="mx-auto max-w-5xl px-4 py-16">
-        <div className="grid gap-6 sm:grid-cols-3 text-center">
-          {[
-            { number: "1.200+", label: "Aktive Nutzer" },
-            { number: "92 %", label: "würden Quantm weiterempfehlen" },
-            { number: "7 Tage", label: "kostenlos testen" },
-          ].map((s) => (
-            <div key={s.label}>
-              <div className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">{s.number}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {[
-            {
-              text: "Ich hatte keine Ahnung von Aktien. Jetzt folge ich den Picks einfach und muss nicht stundenlang recherchieren.",
-              author: "M.K., Unternehmer, 47",
-            },
-            {
-              text: "Der Track Record hat mich überzeugt. Die zeigen auch die Verluste — das ist selten ehrlich.",
-              author: "S.T., Immobilien-Investor, 52",
-            },
-            {
-              text: "Endlich eine Finanz-App, die mich nicht mit Zahlen erschlägt.",
-              author: "A.R., Ärztin, 39",
-            },
-          ].map((t) => (
-            <figure key={t.author} className="relative rounded-2xl border border-border/60 bg-card/40 p-6">
-              <Quote className="absolute -top-3 left-5 h-7 w-7 text-primary/60" fill="currentColor" />
-              <blockquote className="mt-2 text-sm italic leading-relaxed text-foreground/90">
-                „{t.text}“
-              </blockquote>
-              <figcaption className="mt-4 text-xs text-muted-foreground">— {t.author}</figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
-      <PortfolioSimulator />
-
-      {/* Trust bar */}
-      <section className="mx-auto max-w-5xl px-4 py-12">
-        <ul className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          {[
-            { icon: BarChart3, label: "Basierend auf quantitativer Finanzanalyse" },
-            { icon: Sparkles, label: "Monte-Carlo-Simulation" },
-            { icon: Shield, label: "Transparent — wir zeigen auch unsere Verluste" },
-          ].map((b) => (
-            <li
-              key={b.label}
-              className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-4 py-2 text-xs font-medium text-foreground/80"
-            >
-              <b.icon className="h-3.5 w-3.5 text-primary" />
-              {b.label}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Track record teaser — single big proof point */}
-      <section className="mx-auto max-w-4xl px-4 py-16">
-        <div className="rounded-3xl border border-border/60 bg-card/40 p-8 md:p-12 text-center">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Track Record</div>
-          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">
-            Wir zeigen jede einzelne Empfehlung — gute wie schlechte.
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-            Vertrauen baut sich über Zeit auf. Deshalb dokumentieren wir alle Empfehlungen öffentlich und prüfen nach 7, 30, 60 und 90 Tagen, ob wir richtig lagen.
-          </p>
-          <Link
-            to="/track-record"
-            className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-background/40 px-5 text-sm font-medium text-foreground transition hover:border-primary/40"
-          >
-            Vollständigen Track Record ansehen <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-          Testen Sie Elite 7 Tage lang — komplett gratis.
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base text-muted-foreground">
-          Volle Picks, Algorithmus-Analysen und Push-Benachrichtigungen. Erst nach Ablauf der 7 Tage wird abgebucht — eine Kündigung ist jederzeit mit einem Klick möglich.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            to="/preise"
-            className="inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-          >
-            7 Tage Elite gratis starten <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex h-12 items-center gap-2 rounded-xl border border-border bg-card/40 px-5 text-sm font-medium text-foreground transition hover:border-primary/40"
-          >
-            Schon Account? Anmelden
-          </Link>
-        </div>
-        <p className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1"><Check className="h-3 w-3 text-bull" /> Keine Kreditkartenpflicht für Free</span>
-          <span className="inline-flex items-center gap-1"><Check className="h-3 w-3 text-bull" /> DSGVO-konform · Server in der EU</span>
-        </p>
-      </section>
-
-      <footer className="border-t border-border/40 py-6 text-center text-[11px] text-muted-foreground">
-        © {new Date().getFullYear()} Quantm Trade — Keine Anlageberatung. Alle Inhalte dienen ausschließlich Informations- und Bildungszwecken.
-      </footer>
+    <div className="min-h-screen bg-ink text-pro selection:bg-pro-accent/30">
+      <TopBar
+        theme={settings.theme}
+        onToggleTheme={() =>
+          update({ theme: settings.theme === "dark" ? "light" : "dark", themeOptIn: true } as never)
+        }
+      />
+      <Hero metrics={metrics} />
+      <PerformanceProof metrics={metrics} />
+      <PredictionEngine />
+      <ArchitectureBlock />
+      <CoverageStrip metrics={metrics} />
+      <TrustBlock />
+      <FinalCta />
+      <FooterBar />
     </div>
   );
 }
 
-function PortfolioSimulator() {
-  const [amount, setAmount] = useState(10000);
-  const [months, setMonths] = useState(12);
-  const QUANTM_MONTHLY = 3.2;
-  const SP500_MONTHLY = 0.9;
-  const quantmFinal = amount * Math.pow(1 + QUANTM_MONTHLY / 100, months);
-  const spFinal = amount * Math.pow(1 + SP500_MONTHLY / 100, months);
-  const diff = quantmFinal - spFinal;
-  const fmt = (n: number) =>
-    n.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+/* ─────────────────────────── Top bar ─────────────────────────── */
+
+function TopBar({ theme, onToggleTheme }: { theme: string; onToggleTheme: () => void }) {
   return (
-    <section className="mx-auto max-w-5xl px-4 py-16">
-      <div className="rounded-3xl border border-border/60 bg-card/40 p-6 md:p-10">
-        <div className="text-center">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-            Rendite-Rechner
-          </div>
-          <h2 className="mt-3 text-2xl sm:text-3xl font-bold tracking-tight">Was wäre wenn?</h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
-            Wie hätte sich dein Kapital mit Quantm Picks entwickelt?
-          </p>
-        </div>
-
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Investitionsbetrag: <span className="text-foreground font-semibold">{fmt(amount)}</span>
-            </label>
-            <input
-              type="range"
-              min={1000}
-              max={100000}
-              step={500}
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="mt-2 w-full accent-primary"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-              <span>1.000 €</span>
-              <span>100.000 €</span>
-            </div>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
-              Zeitraum: <span className="text-foreground font-semibold">{months} Monate</span>
-            </label>
-            <input
-              type="range"
-              min={3}
-              max={24}
-              step={1}
-              value={months}
-              onChange={(e) => setMonths(Number(e.target.value))}
-              className="mt-2 w-full accent-primary"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-              <span>3 M</span>
-              <span>24 M</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl border border-primary/40 bg-primary/5 p-4">
-            <div className="text-[11px] uppercase tracking-wider text-primary font-semibold">
-              Mit Quantm Picks
-            </div>
-            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-primary">
-              {fmt(quantmFinal)}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              +{((quantmFinal / amount - 1) * 100).toFixed(1)} % Gesamtrendite
-            </div>
-          </div>
-          <div className="rounded-xl border border-border/60 bg-card/60 p-4">
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-              S&P 500 (Ø)
-            </div>
-            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-foreground/80">
-              {fmt(spFinal)}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              +{((spFinal / amount - 1) * 100).toFixed(1)} % Gesamtrendite
-            </div>
-          </div>
-          <div className="rounded-xl border border-bull/40 bg-bull/5 p-4">
-            <div className="text-[11px] uppercase tracking-wider text-bull font-semibold">
-              Dein Vorteil
-            </div>
-            <div className="mt-2 font-mono text-2xl font-bold tabular-nums text-bull">
-              +{fmt(diff)}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">gegenüber dem Markt</div>
-          </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <Link
-            to="/preise"
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+    <header className="sticky top-0 z-40 border-b border-hairline bg-ink/85 backdrop-blur-md">
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-5">
+        <Link to="/" className="flex items-center gap-2.5">
+          <ApexLogo className="h-6 w-6" />
+          <span className="font-display text-[15px] font-semibold tracking-tight">
+            Quantm Trade<span className="text-pro-accent">.</span>
+          </span>
+          <span className="ml-1 hidden rounded-sm border border-hairline px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-pro-3 sm:inline">
+            Terminal v3
+          </span>
+        </Link>
+        <nav className="flex items-center gap-1 text-[13px]">
+          <NavLink to="/picks">Picks</NavLink>
+          <NavLink to="/track-record">Track&nbsp;Record</NavLink>
+          <NavLink to="/methodology">Methodologie</NavLink>
+          <NavLink to="/preise">Pricing</NavLink>
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            aria-label="Theme umschalten"
+            className="ml-2 inline-flex h-8 w-8 items-center justify-center rounded border border-hairline text-pro-2 transition hover:border-hairline-strong hover:text-pro"
           >
-            Diese Rendite anstreben → Jetzt starten <ArrowRight className="h-4 w-4" />
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </button>
+          <Link
+            to="/login"
+            className="ml-2 inline-flex h-8 items-center rounded border border-hairline px-3 text-[12px] font-medium text-pro-2 transition hover:border-hairline-strong hover:text-pro"
+          >
+            Login
           </Link>
-          <p className="mx-auto mt-4 max-w-2xl text-[11px] text-muted-foreground">
-            *Simulation basiert auf historischen Durchschnittswerten aller bisherigen Quantm-Empfehlungen.
-            Vergangene Performance ist keine Garantie für zukünftige Ergebnisse.
-          </p>
+          <Link
+            to="/picks"
+            className="ml-1 inline-flex h-8 items-center gap-1.5 rounded bg-pro-accent px-3 text-[12px] font-semibold text-white transition hover:bg-[var(--pro-accent-2)]"
+          >
+            Terminal öffnen
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="rounded px-2.5 py-1.5 text-pro-2 transition hover:bg-white/[0.04] hover:text-pro"
+    >
+      {children}
+    </Link>
+  );
+}
+
+/* ─────────────────────────── Hero ─────────────────────────── */
+
+function Hero({ metrics }: { metrics: LandingMetrics | null }) {
+  return (
+    <section className="relative overflow-hidden border-b border-hairline">
+      <div className="absolute inset-0 bg-inst-grid opacity-60" aria-hidden />
+      <div className="absolute inset-0 inst-spotlight" aria-hidden />
+
+      <div className="relative mx-auto max-w-[1400px] px-5 pt-20 pb-14 md:pt-28 md:pb-20">
+        {/* status row */}
+        <div className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-pro-3">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="inst-pulse-dot inline-block h-1.5 w-1.5 rounded-full bg-pro-success" />
+            <span className="text-pro-success">Live</span>
+          </span>
+          <span className="text-pro-3">/</span>
+          <span>Quantm Predictive Intelligence</span>
+          <span className="text-pro-3">/</span>
+          <span>
+            {metrics?.lastScanIso
+              ? `Last scan ${formatRelative(metrics.lastScanIso)}`
+              : "Initialising…"}
+          </span>
+        </div>
+
+        <h1 className="mt-7 max-w-5xl text-balance font-display text-[44px] font-semibold leading-[1.05] tracking-[-0.025em] md:text-[68px]">
+          Predictive Intelligence
+          <br />
+          <span className="text-pro-2">For Global Markets.</span>
+        </h1>
+
+        <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-pro-2 md:text-[17px]">
+          AI-gestützte Prognosen auf Basis multifaktorieller Modelle, makroökonomischer Signale,
+          alternativer Daten und probabilistischer Vorhersagesysteme. Gebaut für Investoren, die
+          Beweise erwarten — keine Marketingversprechen.
+        </p>
+
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <Link
+            to="/picks"
+            className="group inline-flex h-11 items-center gap-2 rounded bg-pro-accent px-5 text-[13px] font-semibold text-white transition hover:bg-[var(--pro-accent-2)]"
+          >
+            Live-Signale öffnen
+            <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+          <Link
+            to="/track-record"
+            className="inline-flex h-11 items-center gap-2 rounded border border-hairline px-5 text-[13px] font-medium text-pro-2 transition hover:border-hairline-strong hover:text-pro"
+          >
+            Track-Record ansehen
+          </Link>
+          <Link
+            to="/methodology"
+            className="inline-flex h-11 items-center gap-2 px-2 text-[13px] font-medium text-pro-3 transition hover:text-pro"
+          >
+            Methodologie · Whitepaper →
+          </Link>
+        </div>
+
+        {/* live metric strip */}
+        <LiveMetricStrip metrics={metrics} />
+      </div>
+    </section>
+  );
+}
+
+function LiveMetricStrip({ metrics }: { metrics: LandingMetrics | null }) {
+  const items: Array<{
+    label: string;
+    value: number | null;
+    suffix?: string;
+    fmt?: "int" | "pct" | "pct1" | "ret";
+    hint?: string;
+    tone?: "neutral" | "good" | "bad";
+  }> = [
+    {
+      label: "Assets Covered",
+      value: metrics?.assetsCovered ?? null,
+      fmt: "int",
+      hint: "Distinct tickers im Universe",
+    },
+    {
+      label: "Picks · 24h",
+      value: metrics?.picks24h ?? null,
+      fmt: "int",
+      hint: "Neue Signale heute",
+    },
+    {
+      label: "Picks · 7d",
+      value: metrics?.picks7d ?? null,
+      fmt: "int",
+      hint: "Letzte 7 Tage",
+    },
+    {
+      label: "Hit Rate",
+      value: metrics?.hitRate != null ? metrics.hitRate * 100 : null,
+      fmt: "pct1",
+      hint: `${metrics?.evaluated ?? 0} ausgewertete Signale`,
+      tone:
+        metrics?.hitRate != null
+          ? metrics.hitRate >= 0.5
+            ? "good"
+            : "bad"
+          : "neutral",
+    },
+    {
+      label: "Ø Confidence",
+      value: metrics?.avgConfidence7d ?? null,
+      fmt: "pct1",
+      hint: "7-Tage-Schnitt",
+    },
+    {
+      label: "Sektoren",
+      value: metrics?.sectorsCovered ?? null,
+      fmt: "int",
+      hint: "Aktiv beobachtet",
+    },
+  ];
+
+  return (
+    <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded border border-hairline bg-hairline md:grid-cols-3 lg:grid-cols-6">
+      {items.map((it) => (
+        <MetricTile key={it.label} {...it} />
+      ))}
+    </div>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  fmt = "int",
+  suffix,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: number | null;
+  fmt?: "int" | "pct" | "pct1" | "ret";
+  suffix?: string;
+  hint?: string;
+  tone?: "neutral" | "good" | "bad";
+}) {
+  const display = useAnimatedNumber(value);
+  const text =
+    value == null
+      ? "—"
+      : fmt === "int"
+      ? Math.round(display).toLocaleString("de-DE")
+      : fmt === "pct"
+      ? `${Math.round(display)}%`
+      : fmt === "pct1"
+      ? `${display.toFixed(1)}%`
+      : `${(display * 100).toFixed(2)}%`;
+
+  const toneClass =
+    tone === "good" ? "text-pro-success" : tone === "bad" ? "text-pro-warn" : "text-pro";
+
+  return (
+    <div className="bg-ink-surface px-5 py-5">
+      <div className="inst-eyebrow">{label}</div>
+      <div className={`inst-kpi-num mt-2 text-[26px] leading-none md:text-[30px] ${toneClass}`}>
+        {text}
+        {suffix}
+      </div>
+      {hint && <div className="mt-2 text-[11px] text-pro-3">{hint}</div>}
+    </div>
+  );
+}
+
+/* ─────────────────────────── Performance proof ─────────────────────────── */
+
+function PerformanceProof({ metrics }: { metrics: LandingMetrics | null }) {
+  const hitRatePct = metrics?.hitRate != null ? metrics.hitRate * 100 : null;
+  // return_7d is stored as percentage points already (e.g. -1.69 means -1.69%), not a decimal.
+  const avgReturn = metrics?.avgReturn7d ?? null;
+
+
+  return (
+    <section className="border-b border-hairline bg-ink-2">
+      <div className="mx-auto max-w-[1400px] px-5 py-20">
+        <SectionHead
+          eyebrow="Evidence-First"
+          title="Wir zeigen, was wir wirklich messen können."
+          sub="Keine inszenierten Backtests. Diese Zahlen kommen direkt aus unserer Outcomes-Pipeline — gleicher Datensatz, den interne Researcher sehen."
+        />
+
+        <div className="mt-12 grid gap-px overflow-hidden rounded border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-4">
+          <ProofCard
+            label="Trefferquote · 7d"
+            value={hitRatePct != null ? `${hitRatePct.toFixed(1)}%` : "—"}
+            sub={`${metrics?.hits ?? 0} Treffer von ${metrics?.evaluated ?? 0} ausgewerteten Signalen`}
+            tone={hitRatePct != null ? (hitRatePct >= 50 ? "good" : "warn") : "neutral"}
+            icon={Gauge}
+          />
+          <ProofCard
+            label="Ø Return · 7d"
+            value={avgReturn != null ? `${avgReturn >= 0 ? "+" : ""}${avgReturn.toFixed(2)}%` : "—"}
+            sub="Mittlerer Return aller ausgewerteten Picks nach 7 Handelstagen"
+            tone={avgReturn != null ? (avgReturn >= 0 ? "good" : "bad") : "neutral"}
+            icon={LineChart}
+          />
+          <ProofCard
+            label="Analysen · gesamt"
+            value={metrics?.totalAnalyses != null ? metrics.totalAnalyses.toLocaleString("de-DE") : "—"}
+            sub={`${metrics?.picks7d ?? 0} davon in den letzten 7 Tagen`}
+            tone="neutral"
+            icon={Database}
+          />
+          <ProofCard
+            label="Ø Confidence · 7d"
+            value={metrics?.avgConfidence7d != null ? `${metrics.avgConfidence7d.toFixed(1)}%` : "—"}
+            sub="Modellsicherheit über alle Signale der letzten Woche"
+            tone="neutral"
+            icon={Signal}
+          />
+        </div>
+
+        <p className="mt-6 max-w-3xl text-[12px] leading-relaxed text-pro-3">
+          <span className="text-pro-2">Hinweis zur Transparenz:</span>{" "}
+          {metrics?.evaluated != null && metrics.evaluated > 0
+            ? `Nur ${metrics.evaluated} von ${metrics.totalAnalyses} Signalen sind bisher vollständig ausgewertet — der Rest befindet sich noch im 7/30/60/90-Tage-Beobachtungsfenster. `
+            : ""}
+          30-, 60- und 90-Tage-Returns werden aktuell durch unseren Outcomes-Tracker
+          nachgepflegt und erscheinen hier, sobald die Datenfenster vollständig sind.
+          Vergangene Performance ist keine Garantie für künftige Ergebnisse.
+        </p>
+
+        <div className="mt-10">
+          <Link
+            to="/track-record"
+            className="inline-flex items-center gap-2 text-[13px] font-medium text-pro-accent hover:text-pro"
+          >
+            Vollständigen Track-Record öffnen
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </div>
     </section>
   );
+}
+
+function ProofCard({
+  label,
+  value,
+  sub,
+  tone,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  tone: "good" | "bad" | "warn" | "neutral";
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  const toneClass =
+    tone === "good"
+      ? "text-pro-success"
+      : tone === "bad"
+      ? "text-pro-danger"
+      : tone === "warn"
+      ? "text-pro-warn"
+      : "text-pro";
+  return (
+    <div className="group relative bg-ink-surface p-6 inst-lift">
+      <div className="flex items-center justify-between">
+        <div className="inst-eyebrow">{label}</div>
+        <Icon className="h-3.5 w-3.5 text-pro-3" />
+      </div>
+      <div className={`inst-kpi-num mt-3 text-[32px] leading-none ${toneClass}`}>{value}</div>
+      <div className="mt-3 text-[12px] leading-relaxed text-pro-3">{sub}</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── Prediction engine layers ─────────────────────────── */
+
+function PredictionEngine() {
+  const layers = [
+    {
+      n: "01",
+      icon: Activity,
+      title: "Technische Signale",
+      items: ["Momentum & Trendstärke", "Relative Stärke (RSI/Stoch)", "Volatilität & ATR-Regime", "Volumen-Bestätigung (OBV/CMF)"],
+    },
+    {
+      n: "02",
+      icon: LineChart,
+      title: "Fundamentaldaten",
+      items: ["Umsatz- & Gewinnwachstum", "Cash-Flow-Qualität", "Margen & ROIC", "Bewertungsmultiples"],
+    },
+    {
+      n: "03",
+      icon: Layers,
+      title: "Makroökonomie",
+      items: ["Inflation & Realzinsen", "Anleihekurven & Spreads", "Währungsrelationen", "Liquiditätsbedingungen"],
+    },
+    {
+      n: "04",
+      icon: Newspaper,
+      title: "Sentiment",
+      items: ["News-Analyse (NLP)", "Earnings-Calls & Guidance", "Analystenrevisionen", "Institutionelles Positioning"],
+    },
+    {
+      n: "05",
+      icon: Radio,
+      title: "Alternative Daten",
+      items: ["Such-Trends", "Web-Traffic-Signale", "Hiring-Aktivität", "Ökosystem-Telemetrie"],
+    },
+  ];
+
+  return (
+    <section className="border-b border-hairline">
+      <div className="mx-auto max-w-[1400px] px-5 py-20">
+        <SectionHead
+          eyebrow="Prediction Engine"
+          title="Fünf Datenschichten, ein probabilistisches Forecast."
+          sub="Jede Empfehlung entsteht aus der Aggregation unabhängiger Signale. Wir geben keine simplen Buy/Sell-Etiketten aus — wir liefern Wahrscheinlichkeitsverteilungen, Confidence-Intervalle und Feature-Beiträge."
+        />
+
+        <div className="mt-12 grid gap-px overflow-hidden rounded border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-5">
+          {layers.map((l) => (
+            <div key={l.n} className="bg-ink-surface p-6 inst-lift">
+              <div className="flex items-baseline justify-between">
+                <span className="font-mono text-[11px] text-pro-3">{l.n}</span>
+                <l.icon className="h-4 w-4 text-pro-accent" />
+              </div>
+              <div className="mt-4 font-display text-[15px] font-semibold tracking-tight">
+                {l.title}
+              </div>
+              <ul className="mt-3 space-y-1.5">
+                {l.items.map((it) => (
+                  <li
+                    key={it}
+                    className="flex items-start gap-1.5 text-[12px] leading-snug text-pro-2"
+                  >
+                    <span className="mt-1.5 inline-block h-1 w-1 rounded-full bg-pro-3" />
+                    {it}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────── Architecture (ensemble) ─────────────────────────── */
+
+function ArchitectureBlock() {
+  const models = [
+    { tag: "Model A", name: "Gradient Boosting", desc: "Strukturierte Feature-Interaktionen, robust gegen Outlier." },
+    { tag: "Model B", name: "Sequential Trees", desc: "Schnelle Anpassung an neue Regime, low-latency." },
+    { tag: "Model C", name: "Financial Transformer", desc: "Lange Zeit-Horizonte, kontextuelle Aufmerksamkeit." },
+    { tag: "Model D", name: "Temporal Forecaster", desc: "Multivariate Zeitreihen mit Saisonalität." },
+  ];
+  return (
+    <section className="border-b border-hairline bg-ink-2">
+      <div className="mx-auto max-w-[1400px] px-5 py-20">
+        <SectionHead
+          eyebrow="Ensemble Architecture"
+          title="Vier Modelle, eine konsensbasierte Prognose."
+          sub="Statt auf ein Einzelmodell zu vertrauen, aggregieren wir mehrere Modellfamilien über einen Meta-Layer. Das reduziert Modell-spezifische Biases und erhöht die Robustheit der Confidence."
+        />
+
+        <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {models.map((m) => (
+            <div key={m.tag} className="inst-panel p-5 inst-lift">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-pro-accent">
+                {m.tag}
+              </div>
+              <div className="mt-2 font-display text-[16px] font-semibold tracking-tight">
+                {m.name}
+              </div>
+              <div className="mt-2 text-[12px] leading-relaxed text-pro-2">{m.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Flow arrow */}
+        <div className="my-8 flex items-center gap-4">
+          <div className="h-px flex-1 bg-hairline" />
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-pro-3">
+            ↓ Meta-Layer ↓
+          </div>
+          <div className="h-px flex-1 bg-hairline" />
+        </div>
+
+        <div className="inst-panel-elev p-6">
+          <div className="flex items-start gap-4">
+            <Brain className="mt-1 h-5 w-5 text-pro-accent" />
+            <div className="flex-1">
+              <div className="font-display text-[18px] font-semibold tracking-tight">
+                Stacked Ensemble · Confidence Aggregator
+              </div>
+              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-pro-2">
+                Gewichtet die Einzelvotings nach historischer Modellgüte pro Regime, kalibriert die
+                Wahrscheinlichkeiten und liefert pro Asset eine Verteilung über die nächsten
+                7/30/60/90 Tage — inkl. Feature-Contribution-Breakdown.
+              </p>
+              <div className="mt-5 grid gap-px overflow-hidden rounded border border-hairline bg-hairline sm:grid-cols-3">
+                <MiniStat label="Probability Up" value="62.4%" tone="good" />
+                <MiniStat label="Probability Down" value="37.6%" tone="bad" />
+                <MiniStat label="Model Agreement" value="3 / 4" tone="neutral" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function MiniStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "good" | "bad" | "neutral";
+}) {
+  const toneClass =
+    tone === "good" ? "text-pro-success" : tone === "bad" ? "text-pro-danger" : "text-pro";
+  return (
+    <div className="bg-ink-surface p-4">
+      <div className="inst-eyebrow">{label}</div>
+      <div className={`inst-kpi-num mt-1.5 text-[22px] ${toneClass}`}>{value}</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── Coverage strip ─────────────────────────── */
+
+function CoverageStrip({ metrics }: { metrics: LandingMetrics | null }) {
+  const rows = [
+    { region: "USA", desc: "S&P 500, Nasdaq 100, Russell 2000" },
+    { region: "Europa", desc: "DAX, EuroStoxx 50, FTSE 100" },
+    { region: "Asien", desc: "Nikkei, Hang Seng, KOSPI" },
+    { region: "Themen-Universe", desc: "Tech, AI, Energy, Biotech, Defense" },
+  ];
+  return (
+    <section className="border-b border-hairline">
+      <div className="mx-auto max-w-[1400px] px-5 py-20">
+        <SectionHead
+          eyebrow="Market Coverage"
+          title={`${metrics?.assetsCovered?.toLocaleString("de-DE") ?? "—"} Assets aktiv beobachtet.`}
+          sub="Globale Aktien, Indizes und thematische Universen. Jedes Asset wird in jeder Scan-Iteration neu bewertet."
+        />
+        <div className="mt-10 grid gap-px overflow-hidden rounded border border-hairline bg-hairline md:grid-cols-2 lg:grid-cols-4">
+          {rows.map((r) => (
+            <div key={r.region} className="bg-ink-surface p-5">
+              <div className="inst-eyebrow text-pro-accent">{r.region}</div>
+              <div className="mt-2 text-[13px] text-pro-2">{r.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────── Trust ─────────────────────────── */
+
+function TrustBlock() {
+  const pillars = [
+    {
+      icon: Shield,
+      title: "Vollständige Transparenz",
+      text: "Jede Empfehlung — auch Verluste — wird im öffentlichen Track-Record dokumentiert und nach 7/30/60/90 Tagen ausgewertet.",
+    },
+    {
+      icon: Brain,
+      title: "Erklärbare Modelle",
+      text: "Jede Prognose zeigt, welche Faktoren wie stark beigetragen haben. Keine Black-Box-Magie, keine Bauchgefühle.",
+    },
+    {
+      icon: Sparkles,
+      title: "Keine Anlageberatung",
+      text: "Quantm liefert Forschung und Wahrscheinlichkeiten. Die Investitionsentscheidung bleibt bei Ihnen — so will es das deutsche Recht und so wollen wir es auch.",
+    },
+  ];
+  return (
+    <section className="border-b border-hairline bg-ink-2">
+      <div className="mx-auto max-w-[1400px] px-5 py-20">
+        <SectionHead eyebrow="Built On Trust" title="Drei Grundregeln, an die wir uns halten." />
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {pillars.map((p) => (
+            <div key={p.title} className="inst-panel p-6 inst-lift">
+              <p.icon className="h-5 w-5 text-pro-accent" />
+              <div className="mt-3 font-display text-[16px] font-semibold tracking-tight">
+                {p.title}
+              </div>
+              <p className="mt-2 text-[13px] leading-relaxed text-pro-2">{p.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────── Final CTA ─────────────────────────── */
+
+function FinalCta() {
+  return (
+    <section className="border-b border-hairline">
+      <div className="mx-auto max-w-[1400px] px-5 py-24">
+        <div className="inst-panel-elev relative overflow-hidden p-10 md:p-14">
+          <div className="absolute inset-0 inst-spotlight opacity-60" aria-hidden />
+          <div className="relative">
+            <div className="inst-eyebrow text-pro-accent">Terminal Access</div>
+            <h2 className="mt-3 max-w-3xl text-balance font-display text-[34px] font-semibold leading-tight tracking-[-0.02em] md:text-[44px]">
+              Beginnen Sie mit institutionell-grade Forschung — heute.
+            </h2>
+            <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-pro-2 md:text-[15px]">
+              7 Tage Elite gratis. Voller Zugriff auf alle Signale, Forecasts und
+              Confidence-Breakdowns. Keine Kreditkarte für Free-Zugang, jederzeit mit einem Klick
+              kündbar.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link
+                to="/preise"
+                className="inline-flex h-11 items-center gap-2 rounded bg-pro-accent px-5 text-[13px] font-semibold text-white transition hover:bg-[var(--pro-accent-2)]"
+              >
+                Elite 7 Tage gratis starten
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                to="/picks"
+                className="inline-flex h-11 items-center gap-2 rounded border border-hairline px-5 text-[13px] font-medium text-pro-2 transition hover:border-hairline-strong hover:text-pro"
+              >
+                Live-Picks ohne Anmeldung ansehen
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────────────── Footer ─────────────────────────── */
+
+function FooterBar() {
+  return (
+    <footer className="border-hairline">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-5 py-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-2 text-[12px] text-pro-3">
+          <ApexLogo className="h-4 w-4" />
+          <span>© {new Date().getFullYear()} Quantm Trade</span>
+          <span>·</span>
+          <span>Keine Anlageberatung — ausschließlich Informations- und Bildungszwecke.</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px] text-pro-3">
+          <Link to="/impressum" className="hover:text-pro">Impressum</Link>
+          <Link to="/datenschutz" className="hover:text-pro">Datenschutz</Link>
+          <Link to="/agb" className="hover:text-pro">AGB</Link>
+          <Link to="/methodology" className="hover:text-pro">Methodologie</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ─────────────────────────── Helpers ─────────────────────────── */
+
+function SectionHead({
+  eyebrow,
+  title,
+  sub,
+}: {
+  eyebrow: string;
+  title: string;
+  sub?: string;
+}) {
+  return (
+    <div className="max-w-3xl">
+      <div className="inst-eyebrow text-pro-accent">{eyebrow}</div>
+      <h2 className="mt-3 font-display text-[28px] font-semibold leading-tight tracking-[-0.02em] md:text-[36px]">
+        {title}
+      </h2>
+      {sub && <p className="mt-3 text-[14px] leading-relaxed text-pro-2 md:text-[15px]">{sub}</p>}
+    </div>
+  );
+}
+
+/** Animate a number from 0 → target. Returns the current frame value. */
+function useAnimatedNumber(target: number | null, durationMs = 900): number {
+  const [val, setVal] = useState(0);
+  const startRef = useRef<number | null>(null);
+  const fromRef = useRef(0);
+  useEffect(() => {
+    if (target == null) return;
+    fromRef.current = val;
+    startRef.current = null;
+    let raf = 0;
+    const tick = (t: number) => {
+      if (startRef.current == null) startRef.current = t;
+      const p = Math.min(1, (t - startRef.current) / durationMs);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(fromRef.current + (target - fromRef.current) * eased);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, durationMs]);
+  return val;
+}
+
+function formatRelative(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "gerade eben";
+  if (m < 60) return `vor ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `vor ${h} h`;
+  const d = Math.floor(h / 24);
+  return `vor ${d} d`;
 }
