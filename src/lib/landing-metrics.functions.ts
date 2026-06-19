@@ -70,18 +70,9 @@ export const getLandingMetrics = createServerFn({ method: "GET" }).handler(
       sectorRes,
       scanRes,
     ] = await Promise.all([
-      // distinct tickers — paginate up to 20k rows to dodge the 1000-row default.
-      supabaseAdmin
-        .from("apex_analyses")
-        .select("ticker")
-        .range(0, 19999)
-        .then((r) => {
-          const set = new Set<string>();
-          for (const row of (r.data ?? []) as Array<{ ticker: string | null }>) {
-            if (row.ticker) set.add(row.ticker);
-          }
-          return set.size;
-        }),
+      // distinct tickers — paginate (PostgREST caps each request at 1000).
+      distinctValues<string>(supabaseAdmin, "apex_analyses", "ticker").then((s) => s.size),
+
 
       supabaseAdmin
         .from("apex_analyses")
