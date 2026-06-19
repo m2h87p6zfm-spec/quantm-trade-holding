@@ -1,19 +1,49 @@
 import { createServerFn } from "@tanstack/react-start";
 
 export type LandingMetrics = {
-  assetsCovered: number;        // distinct tickers analyzed (lifetime)
-  picks24h: number;             // new analyses in last 24h
-  picks7d: number;              // new analyses in last 7d
-  totalAnalyses: number;        // lifetime analyses
-  evaluated: number;            // outcomes with a verdict
-  hits: number;                 // outcomes flagged correct
-  hitRate: number | null;       // hits / evaluated  (0..1)
-  avgReturn7d: number | null;   // mean of return_7d  (decimal, e.g. -0.0169)
-  avgConfidence7d: number | null; // mean confidence_score in last 7d (0..100)
-  sectorsCovered: number;       // distinct sectors
-  lastScanIso: string | null;   // most recent scan_history.scanned_at
-  generatedAt: string;          // server timestamp
+  assetsCovered: number;
+  picks24h: number;
+  picks7d: number;
+  totalAnalyses: number;
+  evaluated: number;
+  hits: number;
+  hitRate: number | null;
+  avgReturn7d: number | null;   // already in percentage points (e.g. -1.69)
+  avgConfidence7d: number | null;
+  sectorsCovered: number;
+  lastScanIso: string | null;
+  generatedAt: string;
 };
+
+/** Paginate through a table column, accumulating distinct non-null values. */
+async function distinctValues<T extends string>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client: any,
+  table: string,
+  column: string,
+): Promise<Set<T>> {
+  const PAGE = 1000;
+  const set = new Set<T>();
+  let from = 0;
+  // safety cap: 50k rows
+  for (let i = 0; i < 50; i++) {
+    const { data, error } = await client
+      .from(table)
+      .select(column)
+      .not(column, "is", null)
+      .range(from, from + PAGE - 1);
+    if (error) break;
+    const rows = (data ?? []) as Array<Record<string, T | null>>;
+    for (const r of rows) {
+      const v = r[column];
+      if (v) set.add(v);
+    }
+    if (rows.length < PAGE) break;
+    from += PAGE;
+  }
+  return set;
+}
+
 
 /**
  * Public landing metrics — aggregate-only, no PII.
