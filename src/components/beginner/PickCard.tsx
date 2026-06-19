@@ -251,7 +251,7 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
       {pick.advanced && pick.advanced.length > 0 && (() => {
         const contribs = pick.advanced
           .map((a) => ({ label: a.label, tooltip: a.tooltip, score: parseFactorContribution(a.label, a.value), value: a.value }))
-          .filter((c): c is { label: string; tooltip?: string; score: number; value: string } => c.score !== null);
+          .filter((c): c is { label: string; tooltip: string | undefined; score: number; value: string } => c.score !== null);
         if (contribs.length === 0) return null;
         return (
           <div className="mt-4 rounded-lg border border-border/50 bg-background/40 p-3">
