@@ -52,6 +52,55 @@ function volDotClass(v: number | undefined): string {
   return "bg-muted-foreground/60";
 }
 
+/**
+ * Derive a transparent 3-way probability distribution (Bull / Neutral / Bear)
+ * from the algorithm's confidence + corroborating volume signals.
+ * Calibrated so neutral always remains visible — investors should see uncertainty.
+ */
+function probabilityDistribution(
+  confidence: number,
+  obv?: number,
+  cmf?: number,
+): { bull: number; neutral: number; bear: number } {
+  const c = Math.max(0, Math.min(100, confidence)) / 100; // 0..1
+  // Volume confirmation shifts mass between neutral and tails.
+  const volBias = (((obv ?? 0) + (cmf ?? 0)) / 2); // -1..+1
+  const baseBull = c * 0.85 + Math.max(0, volBias) * 0.1;
+  const baseBear = (1 - c) * 0.35 + Math.max(0, -volBias) * 0.1;
+  const baseNeutral = Math.max(0.05, 1 - baseBull - baseBear);
+  const sum = baseBull + baseNeutral + baseBear || 1;
+  return {
+    bull: Math.round((baseBull / sum) * 100),
+    neutral: Math.round((baseNeutral / sum) * 100),
+    bear: Math.round((baseBear / sum) * 100),
+  };
+}
+
+/**
+ * Parse a numeric factor value (e.g. "1.24", "-0.8", "65", "12 %") into a signed
+ * contribution score in [-1, +1], with feature-specific scaling.
+ */
+function parseFactorContribution(label: string, raw: string): number | null {
+  const num = parseFloat(raw.replace(/[%\s]/g, "").replace(",", "."));
+  if (!Number.isFinite(num)) return null;
+  const L = label.toLowerCase();
+  if (L.includes("rsi")) {
+    // RSI 50 = neutral, 30/70 = strong signals
+    return Math.max(-1, Math.min(1, (num - 50) / 30));
+  }
+  if (L.includes("z-faktor") || L.includes("z-score")) {
+    return Math.max(-1, Math.min(1, num / 2));
+  }
+  if (L.includes("macd")) {
+    return Math.max(-1, Math.min(1, num / 1.5));
+  }
+  if (L.includes("volatilität")) {
+    // High vol = risk = negative contribution
+    return Math.max(-1, Math.min(1, -(num - 25) / 40));
+  }
+  return null;
+}
+
 export function PickCard({ pick }: { pick: BeginnerPick }) {
   const [explainOpen, setExplainOpen] = useState(false);
   const strength = strengthBucket(pick.confidence);
