@@ -40,14 +40,19 @@ export const getLandingMetrics = createServerFn({ method: "GET" }).handler(
       sectorRes,
       scanRes,
     ] = await Promise.all([
-      // distinct tickers — use head + count via RPC fallback: just fetch tickers
-      supabaseAdmin.from("apex_analyses").select("ticker", { head: false }).then((r) => {
-        const set = new Set<string>();
-        for (const row of (r.data ?? []) as Array<{ ticker: string | null }>) {
-          if (row.ticker) set.add(row.ticker);
-        }
-        return set.size;
-      }),
+      // distinct tickers — paginate up to 20k rows to dodge the 1000-row default.
+      supabaseAdmin
+        .from("apex_analyses")
+        .select("ticker")
+        .range(0, 19999)
+        .then((r) => {
+          const set = new Set<string>();
+          for (const row of (r.data ?? []) as Array<{ ticker: string | null }>) {
+            if (row.ticker) set.add(row.ticker);
+          }
+          return set.size;
+        }),
+
       supabaseAdmin
         .from("apex_analyses")
         .select("id", { count: "exact", head: true })
@@ -99,6 +104,7 @@ export const getLandingMetrics = createServerFn({ method: "GET" }).handler(
         .from("apex_analyses")
         .select("sector")
         .not("sector", "is", null)
+        .range(0, 19999)
         .then((r) => {
           const set = new Set<string>();
           for (const row of (r.data ?? []) as Array<{ sector: string | null }>) {
@@ -106,6 +112,7 @@ export const getLandingMetrics = createServerFn({ method: "GET" }).handler(
           }
           return set.size;
         }),
+
       supabaseAdmin
         .from("scan_history")
         .select("scanned_at")

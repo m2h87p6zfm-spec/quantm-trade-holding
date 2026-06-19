@@ -296,7 +296,9 @@ function MetricTile({
 
 function PerformanceProof({ metrics }: { metrics: LandingMetrics | null }) {
   const hitRatePct = metrics?.hitRate != null ? metrics.hitRate * 100 : null;
-  const avgReturn = metrics?.avgReturn7d != null ? metrics.avgReturn7d * 100 : null;
+  // return_7d is stored as percentage points already (e.g. -1.69 means -1.69%), not a decimal.
+  const avgReturn = metrics?.avgReturn7d ?? null;
+
 
   return (
     <section className="border-b border-hairline bg-ink-2">
