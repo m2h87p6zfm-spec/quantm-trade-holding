@@ -247,6 +247,47 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
         <HelpCircle className="h-3.5 w-3.5" /> Was bedeutet das?
       </button>
 
+      {/* Faktor-Beiträge — transparent feature contribution breakdown */}
+      {pick.advanced && pick.advanced.length > 0 && (() => {
+        const contribs = pick.advanced
+          .map((a) => ({ label: a.label, tooltip: a.tooltip, score: parseFactorContribution(a.label, a.value), value: a.value }))
+          .filter((c): c is { label: string; tooltip?: string; score: number; value: string } => c.score !== null);
+        if (contribs.length === 0) return null;
+        return (
+          <div className="mt-4 rounded-lg border border-border/50 bg-background/40 p-3">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-foreground/80">Faktor-Beiträge</span>
+                <InfoTooltip text="Wie stark jeder einzelne Indikator zur Empfehlung beiträgt. Rechts = bullisch, links = bärisch. Volle Transparenz, keine Black-Box." iconClassName="h-3 w-3" />
+              </div>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Beitrag</span>
+            </div>
+            <div className="space-y-1.5">
+              {contribs.map((c) => {
+                const pct = Math.abs(c.score) * 50; // half of bar = 50%
+                const positive = c.score >= 0;
+                return (
+                  <div key={c.label} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[11px]">
+                    <div className="flex items-center gap-1 text-foreground/80 truncate">
+                      <span className="truncate">{c.label}</span>
+                      {c.tooltip && <InfoTooltip text={c.tooltip} iconClassName="h-3 w-3" />}
+                    </div>
+                    <span className="font-mono tabular-nums text-foreground/70 text-right w-12">{c.value}</span>
+                    <div className="col-span-2 relative h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border/80" />
+                      <div
+                        className={`absolute top-0 h-full ${positive ? "bg-bull" : "bg-bear"}`}
+                        style={positive ? { left: "50%", width: `${pct}%` } : { right: "50%", width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Advanced section */}
       {pick.advanced && pick.advanced.length > 0 && (
         <div className="mt-4">
