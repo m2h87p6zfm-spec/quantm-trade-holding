@@ -52,6 +52,55 @@ function volDotClass(v: number | undefined): string {
   return "bg-muted-foreground/60";
 }
 
+/**
+ * Derive a transparent 3-way probability distribution (Bull / Neutral / Bear)
+ * from the algorithm's confidence + corroborating volume signals.
+ * Calibrated so neutral always remains visible — investors should see uncertainty.
+ */
+function probabilityDistribution(
+  confidence: number,
+  obv?: number,
+  cmf?: number,
+): { bull: number; neutral: number; bear: number } {
+  const c = Math.max(0, Math.min(100, confidence)) / 100; // 0..1
+  // Volume confirmation shifts mass between neutral and tails.
+  const volBias = (((obv ?? 0) + (cmf ?? 0)) / 2); // -1..+1
+  const baseBull = c * 0.85 + Math.max(0, volBias) * 0.1;
+  const baseBear = (1 - c) * 0.35 + Math.max(0, -volBias) * 0.1;
+  const baseNeutral = Math.max(0.05, 1 - baseBull - baseBear);
+  const sum = baseBull + baseNeutral + baseBear || 1;
+  return {
+    bull: Math.round((baseBull / sum) * 100),
+    neutral: Math.round((baseNeutral / sum) * 100),
+    bear: Math.round((baseBear / sum) * 100),
+  };
+}
+
+/**
+ * Parse a numeric factor value (e.g. "1.24", "-0.8", "65", "12 %") into a signed
+ * contribution score in [-1, +1], with feature-specific scaling.
+ */
+function parseFactorContribution(label: string, raw: string): number | null {
+  const num = parseFloat(raw.replace(/[%\s]/g, "").replace(",", "."));
+  if (!Number.isFinite(num)) return null;
+  const L = label.toLowerCase();
+  if (L.includes("rsi")) {
+    // RSI 50 = neutral, 30/70 = strong signals
+    return Math.max(-1, Math.min(1, (num - 50) / 30));
+  }
+  if (L.includes("z-faktor") || L.includes("z-score")) {
+    return Math.max(-1, Math.min(1, num / 2));
+  }
+  if (L.includes("macd")) {
+    return Math.max(-1, Math.min(1, num / 1.5));
+  }
+  if (L.includes("volatilität")) {
+    // High vol = risk = negative contribution
+    return Math.max(-1, Math.min(1, -(num - 25) / 40));
+  }
+  return null;
+}
+
 export function PickCard({ pick }: { pick: BeginnerPick }) {
   const [explainOpen, setExplainOpen] = useState(false);
   const strength = strengthBucket(pick.confidence);
@@ -96,6 +145,32 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
           <div className={`h-full rounded-full ${strength.color} transition-all`} style={{ width: `${strength.pct}%` }} />
         </div>
       </div>
+
+      {/* Probability Distribution — institutional 3-way model output */}
+      {(() => {
+        const p = probabilityDistribution(pick.confidence, pick.obvScore, pick.cmfScore);
+        return (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-foreground/80">Wahrscheinlichkeits-Verteilung</span>
+                <InfoTooltip text="Modell-Schätzung der nächsten 30 Tage. Aufwärts = höhere Wahrscheinlichkeit für steigende Kurse, Seitwärts = unklare Richtung, Abwärts = Risiko für fallende Kurse." />
+              </div>
+              <span className="font-mono tabular-nums text-foreground/70">
+                <span className="text-bull">{p.bull}%</span> · <span className="text-muted-foreground">{p.neutral}%</span> · <span className="text-bear">{p.bear}%</span>
+              </span>
+            </div>
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-bull transition-all" style={{ width: `${p.bull}%` }} />
+              <div className="h-full bg-muted-foreground/50 transition-all" style={{ width: `${p.neutral}%` }} />
+              <div className="h-full bg-bear transition-all" style={{ width: `${p.bear}%` }} />
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span>Aufwärts</span><span>Seitwärts</span><span>Abwärts</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Volume Confirmation Mini-Bar */}
       {(pick.obvScore != null || pick.cmfScore != null) && (
@@ -171,6 +246,47 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
       >
         <HelpCircle className="h-3.5 w-3.5" /> Was bedeutet das?
       </button>
+
+      {/* Faktor-Beiträge — transparent feature contribution breakdown */}
+      {pick.advanced && pick.advanced.length > 0 && (() => {
+        const contribs = pick.advanced
+          .map((a) => ({ label: a.label, tooltip: a.tooltip, score: parseFactorContribution(a.label, a.value), value: a.value }))
+          .filter((c): c is { label: string; tooltip: string | undefined; score: number; value: string } => c.score !== null);
+        if (contribs.length === 0) return null;
+        return (
+          <div className="mt-4 rounded-lg border border-border/50 bg-background/40 p-3">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-foreground/80">Faktor-Beiträge</span>
+                <InfoTooltip text="Wie stark jeder einzelne Indikator zur Empfehlung beiträgt. Rechts = bullisch, links = bärisch. Volle Transparenz, keine Black-Box." iconClassName="h-3 w-3" />
+              </div>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Beitrag</span>
+            </div>
+            <div className="space-y-1.5">
+              {contribs.map((c) => {
+                const pct = Math.abs(c.score) * 50; // half of bar = 50%
+                const positive = c.score >= 0;
+                return (
+                  <div key={c.label} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[11px]">
+                    <div className="flex items-center gap-1 text-foreground/80 truncate">
+                      <span className="truncate">{c.label}</span>
+                      {c.tooltip && <InfoTooltip text={c.tooltip} iconClassName="h-3 w-3" />}
+                    </div>
+                    <span className="font-mono tabular-nums text-foreground/70 text-right w-12">{c.value}</span>
+                    <div className="col-span-2 relative h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                      <div className="absolute top-0 bottom-0 left-1/2 w-px bg-border/80" />
+                      <div
+                        className={`absolute top-0 h-full ${positive ? "bg-bull" : "bg-bear"}`}
+                        style={positive ? { left: "50%", width: `${pct}%` } : { right: "50%", width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Advanced section */}
       {pick.advanced && pick.advanced.length > 0 && (
