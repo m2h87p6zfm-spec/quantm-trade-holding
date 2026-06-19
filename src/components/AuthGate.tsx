@@ -156,6 +156,7 @@ function ApexLoadingScreen() {
 
 /** Routes that must remain reachable without a session. */
 const PUBLIC_PATHS = new Set<string>([
+  "/",
   "/login",
   "/passwort-vergessen",
   "/passwort-zuruecksetzen",
@@ -164,7 +165,12 @@ const PUBLIC_PATHS = new Set<string>([
   "/impressum",
   "/agb",
   "/datenschutz",
+  "/methodology",
+  "/track-record",
+  "/wie-es-funktioniert",
+  "/preise",
 ]);
+
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
