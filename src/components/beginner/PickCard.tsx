@@ -146,6 +146,32 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
         </div>
       </div>
 
+      {/* Probability Distribution — institutional 3-way model output */}
+      {(() => {
+        const p = probabilityDistribution(pick.confidence, pick.obvScore, pick.cmfScore);
+        return (
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium text-foreground/80">Wahrscheinlichkeits-Verteilung</span>
+                <InfoTooltip text="Modell-Schätzung der nächsten 30 Tage. Aufwärts = höhere Wahrscheinlichkeit für steigende Kurse, Seitwärts = unklare Richtung, Abwärts = Risiko für fallende Kurse." />
+              </div>
+              <span className="font-mono tabular-nums text-foreground/70">
+                <span className="text-bull">{p.bull}%</span> · <span className="text-muted-foreground">{p.neutral}%</span> · <span className="text-bear">{p.bear}%</span>
+              </span>
+            </div>
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-bull transition-all" style={{ width: `${p.bull}%` }} />
+              <div className="h-full bg-muted-foreground/50 transition-all" style={{ width: `${p.neutral}%` }} />
+              <div className="h-full bg-bear transition-all" style={{ width: `${p.bear}%` }} />
+            </div>
+            <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span>Aufwärts</span><span>Seitwärts</span><span>Abwärts</span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Volume Confirmation Mini-Bar */}
       {(pick.obvScore != null || pick.cmfScore != null) && (
         <div className="mt-3 flex items-center justify-between rounded-md border border-border/40 bg-background/30 px-2.5 py-1.5 text-[11px]">
