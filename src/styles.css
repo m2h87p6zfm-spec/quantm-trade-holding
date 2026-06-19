@@ -531,3 +531,108 @@
 
 .divider-soft { border-color: color-mix(in oklab, var(--border) 55%, transparent); }
 .num { font-family: var(--font-mono); font-feature-settings: "tnum" 1, "zero" 1; font-variant-numeric: tabular-nums; }
+
+/* ═══════════════════════════════════════════════════════════════
+   INSTITUTIONAL THEME — v3 Bloomberg/Palantir-grade surfaces
+   Used by new landing, dashboard shell, prediction cards.
+   These are *additive* tokens — they don't override the existing
+   trading-floor theme so legacy pages keep working.
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --ink:         #050505;
+  --ink-2:       #0D0D0D;
+  --ink-surface: #111111;
+  --ink-elev:    #161616;
+  --hairline:    rgba(255,255,255,0.08);
+  --hairline-strong: rgba(255,255,255,0.14);
+  --pro-fg:      #FFFFFF;
+  --pro-fg-2:    #A1A1AA;
+  --pro-fg-3:    #71717A;
+  --pro-success: #00C46A;
+  --pro-danger:  #FF4D4F;
+  --pro-warn:    #F59E0B;
+  --pro-accent:  #3B82F6;
+  --pro-accent-2:#2563EB;
+}
+
+.bg-ink         { background-color: var(--ink); }
+.bg-ink-2       { background-color: var(--ink-2); }
+.bg-ink-surface { background-color: var(--ink-surface); }
+.bg-ink-elev    { background-color: var(--ink-elev); }
+.text-pro       { color: var(--pro-fg); }
+.text-pro-2     { color: var(--pro-fg-2); }
+.text-pro-3     { color: var(--pro-fg-3); }
+.text-pro-success { color: var(--pro-success); }
+.text-pro-danger  { color: var(--pro-danger); }
+.text-pro-warn    { color: var(--pro-warn); }
+.text-pro-accent  { color: var(--pro-accent); }
+.border-hairline  { border-color: var(--hairline); }
+.border-hairline-strong { border-color: var(--hairline-strong); }
+.bg-pro-success-soft { background-color: color-mix(in srgb, var(--pro-success) 12%, transparent); }
+.bg-pro-danger-soft  { background-color: color-mix(in srgb, var(--pro-danger) 12%, transparent); }
+.bg-pro-accent-soft  { background-color: color-mix(in srgb, var(--pro-accent) 14%, transparent); }
+
+/* Institutional surface — sharp, low-radius, hairline border */
+.inst-panel {
+  background: linear-gradient(180deg, var(--ink-surface) 0%, var(--ink-2) 100%);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+.inst-panel-elev {
+  background: var(--ink-elev);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 1px 0 rgba(255,255,255,0.04) inset;
+}
+
+/* Eyebrow label — institutional uppercase */
+.inst-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pro-fg-3);
+}
+
+/* Big numeric KPI display */
+.inst-kpi-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-feature-settings: "tnum" 1, "zero" 1, "ss01" 1;
+  letter-spacing: -0.025em;
+  color: var(--pro-fg);
+}
+
+/* Animated grid background used on hero */
+@keyframes inst-grid-drift {
+  0%   { background-position: 0 0, 0 0; }
+  100% { background-position: 36px 36px, 36px 36px; }
+}
+.bg-inst-grid {
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  animation: inst-grid-drift 18s linear infinite;
+}
+
+/* Subtle ticker pulse */
+@keyframes inst-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.9); }
+}
+.inst-pulse-dot { animation: inst-pulse-dot 1.6s ease-in-out infinite; }
+
+/* Hover-lift for cards */
+.inst-lift { transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; }
+.inst-lift:hover { transform: translateY(-1px); border-color: var(--hairline-strong); }
+
+/* Spotlight gradient for hero accents */
+.inst-spotlight {
+  background:
+    radial-gradient(ellipse 60% 55% at 50% 0%, rgba(59,130,246,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(0,196,106,0.05) 0%, transparent 70%);
+}
+
