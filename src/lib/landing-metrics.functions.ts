@@ -121,18 +121,8 @@ export const getLandingMetrics = createServerFn({ method: "GET" }).handler(
           const sum = rows.reduce((a, x) => a + (x.confidence_score ?? 0), 0);
           return sum / rows.length;
         }),
-      supabaseAdmin
-        .from("apex_analyses")
-        .select("sector")
-        .not("sector", "is", null)
-        .range(0, 19999)
-        .then((r) => {
-          const set = new Set<string>();
-          for (const row of (r.data ?? []) as Array<{ sector: string | null }>) {
-            if (row.sector) set.add(row.sector);
-          }
-          return set.size;
-        }),
+      distinctValues<string>(supabaseAdmin, "apex_analyses", "sector").then((s) => s.size),
+
 
       supabaseAdmin
         .from("scan_history")
