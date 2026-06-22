@@ -142,19 +142,20 @@ export function PickDetailDrawer({
         <div className="mt-6 space-y-6">
           {/* Performance summary */}
           <div className="grid grid-cols-3 gap-3">
-            <Metric label="Einstieg" value={fmtMoney(position.entryPrice)} sub={fmtDate(position.entryAt)} />
+            <Metric label="Einstieg" value={money(position.entryPrice)} sub={fmtDate(position.entryAt)} />
             <Metric
               label={position.status === "closed" ? "Ausstieg" : "Aktueller Kurs"}
-              value={fmtMoney(position.exitPrice ?? position.currentPrice)}
+              value={money(position.exitPrice ?? position.currentPrice)}
               sub={position.status === "closed" && position.exitAt ? fmtDate(position.exitAt) : "—"}
             />
             <Metric
               label="Rendite"
               value={`${ret >= 0 ? "+" : ""}${ret.toFixed(2)} %`}
-              sub={`${position.returnAbs >= 0 ? "+" : ""}${fmtMoney(position.returnAbs)} €`}
+              sub={`${position.returnAbs >= 0 ? "+" : ""}${fmtMoney(position.returnAbs)} ${ccy.symbol.trim()}`}
               valueClass={retColor}
             />
           </div>
+
 
           {/* Chart */}
           <section className="rounded-xl border border-border/60 bg-card/40 p-4">
