@@ -587,6 +587,7 @@ function PortfolioOverview({
                 {allocation.map((a) => {
                   const p = a.position;
                   const shares = PORTFOLIO_SLOT_NOTIONAL / p.entryPrice;
+                  const ccy = currencyForTicker(p.analysis.ticker);
                   return (
                     <tr
                       key={p.analysis.id}
@@ -595,13 +596,15 @@ function PortfolioOverview({
                     >
                       <td className="px-4 py-3">
                         <div className="font-medium">{p.analysis.name}</div>
-                        <div className="text-[11px] font-mono text-muted-foreground">{p.analysis.ticker}</div>
+                        <div className="text-[11px] font-mono text-muted-foreground">
+                          {p.analysis.ticker} · {ccy.code}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">
                         {shares.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">{p.entryPrice.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">{p.currentPrice.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPrice(p.entryPrice, p.analysis.ticker)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPrice(p.currentPrice, p.analysis.ticker)}</td>
                       <td className={`px-4 py-3 text-right font-mono tabular-nums font-semibold ${p.returnPct >= 0 ? "text-bull" : "text-bear"}`}>
                         {p.returnPct >= 0 ? "+" : ""}{p.returnPct.toFixed(2)} %
                         <div className="text-[10px] font-normal opacity-80">
