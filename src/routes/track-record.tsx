@@ -23,6 +23,25 @@ import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
 import { MetricCard } from "@/components/beginner/MetricCard";
+
+function KpiTile({
+  value,
+  label,
+  tone = "neutral",
+}: {
+  value: string;
+  label: string;
+  tone?: "positive" | "negative" | "neutral";
+}) {
+  const cls =
+    tone === "positive" ? "text-bull" : tone === "negative" ? "text-bear" : "text-foreground";
+  return (
+    <div className="rounded-xl border border-border/60 bg-card/60 p-4">
+      <div className={`font-mono text-lg font-semibold tabular-nums ${cls}`}>{value}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
 import { TrustPillars } from "@/components/beginner/TrustPillars";
 import { ThresholdGate } from "@/components/beginner/ThresholdGate";
 import { AdvancedCollapsible } from "@/components/beginner/AdvancedCollapsible";
