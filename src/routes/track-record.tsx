@@ -22,7 +22,7 @@ import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.funct
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
-import { MetricCard } from "@/components/beginner/MetricCard";
+
 
 function KpiTile({
   value,
