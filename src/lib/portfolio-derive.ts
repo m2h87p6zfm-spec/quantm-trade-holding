@@ -287,6 +287,7 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     { min: 10, max: Infinity, label: "> +10 %", tone: "win" as const, count: 0 },
   ];
   for (const p of positions) {
+    if (!p.hasMeasurement) continue; // skip "no-data" picks so 0 % doesn't pile up in 0..5 bin
     const r = p.returnPct;
     const bin = bins.find((b) => r >= b.min && r < b.max);
     if (bin) bin.count++;
