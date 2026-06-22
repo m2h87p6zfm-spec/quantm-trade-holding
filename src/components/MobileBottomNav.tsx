@@ -37,21 +37,21 @@ type MoreItem = { to: string; icon: typeof Bell; key: string };
 // und liefen sichtbar in die Nachbarzelle.
 const SHORT_LABELS_DE: Record<string, string> = {
   "/": "Watchlist",
-  "/analyse": "Analyse",
+  "/track-record": "Track Record",
   "/picks": "Picks",
   "/portfolio": "Depot",
 };
 
 const primary: PrimaryItem[] = [
   { to: "/", icon: ListOrdered, key: "nav.watchlist", exact: true },
-  { to: "/analyse", icon: Sigma, key: "nav.analyse" },
+  { to: "/track-record", icon: ShieldCheck, key: "nav.trackRecord" },
   { to: "/picks", icon: Sparkles, key: "nav.picks" },
   { to: "/portfolio", icon: Wallet, key: "nav.portfolio" },
 ];
 
 const tourKeys: Record<string, string> = {
   "/": "watchlist",
-  "/analyse": "analyse",
+  "/track-record": "trackRecord",
   "/picks": "picks",
   "/portfolio": "portfolio",
 };
@@ -62,9 +62,9 @@ const moreSections: { labelKey: string; items: MoreItem[] }[] = [
   {
     labelKey: "side.quantCore",
     items: [
+      { to: "/analyse", icon: Sigma, key: "nav.analyse" },
       { to: "/explain-trade", icon: Microscope, key: "nav.explain" },
       { to: "/alerts", icon: Bell, key: "nav.alerts" },
-      { to: "/track-record", icon: ShieldCheck, key: "nav.trackRecord" },
     ],
   },
   {
