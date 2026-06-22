@@ -31,12 +31,8 @@ export function MarketingLanding() {
             >
               {settings.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Link
-              to="/login"
-              className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Anmelden
-            </Link>
+            <AuthNavButton />
+
           </nav>
         </div>
       </header>
