@@ -976,11 +976,11 @@ function PicksHistory({
             <tr>
               <th className="px-4 py-3 text-left font-medium">Unternehmen</th>
               <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Verlauf</th>
-              <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Buy</th>
-              <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Sell</th>
-              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Entry</th>
-              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Aktuell / Exit</th>
-              <th className="px-4 py-3 text-right font-medium">Rendite</th>
+              <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Gekauft am</th>
+              <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Verkauft am</th>
+              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Kaufpreis</th>
+              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Heutiger Kurs</th>
+              <th className="px-4 py-3 text-right font-medium">Gewinn / Verlust</th>
               <th className="px-4 py-3 text-right font-medium">Status</th>
               <th className="px-4 py-3 text-right font-medium"></th>
             </tr>
