@@ -498,18 +498,22 @@ function PortfolioOverview({
     })
     .sort((a, b) => b.value - a.value);
 
-  // Palette of CSS tokens for the donut
+  // Palette of clearly distinct hues for the donut — picked so neighbours
+  // never look similar in the dark theme. No reuse of --primary / --bull
+  // because they are too close to each other.
   const palette = [
-    "var(--primary)",
-    "var(--bull)",
-    "#3b82f6",
-    "#8b5cf6",
-    "#f59e0b",
-    "#06b6d4",
-    "#ec4899",
-    "#10b981",
-    "#f97316",
-    "#a855f7",
+    "#3b82f6", // blue
+    "#f97316", // orange
+    "#22c55e", // green
+    "#a855f7", // violet
+    "#eab308", // yellow
+    "#06b6d4", // cyan
+    "#ec4899", // pink
+    "#14b8a6", // teal
+    "#f43f5e", // rose
+    "#84cc16", // lime
+    "#8b5cf6", // purple
+    "#f59e0b", // amber
   ];
 
   const [mounted, setMounted] = useState(false);
