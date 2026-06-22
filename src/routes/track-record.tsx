@@ -269,7 +269,11 @@ function BeginnerExplainer() {
         <div className="flex-1">
           <h3 className="text-base font-semibold tracking-tight">So liest du diese Seite — in einfachen Worten</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Wir tun so, als hätten wir bei jeder Empfehlung 5.000 € in die Aktie gesteckt. Hier siehst du, was daraus geworden wäre — Gewinner und Verlierer, ohne Schönmalerei.
+            Wir tun so, als hätten wir bei jeder Empfehlung Geld in die Aktie gesteckt — aber
+            nicht überall gleich viel: nur Picks ab {PORTFOLIO_MIN_CONFIDENCE}/100 Konfidenz werden
+            überhaupt gekauft, und je sicherer sich die Engine ist, desto größer fällt die Position
+            aus (3.000 € / 5.000 € / 8.000 €). Hier siehst du, was daraus geworden wäre — Gewinner
+            und Verlierer, ohne Schönmalerei.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
             <div className="rounded-lg border border-border/40 bg-background/40 p-3">
