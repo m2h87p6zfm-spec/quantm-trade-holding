@@ -98,11 +98,13 @@ export function PickDetailDrawer({
   series.sort((a, b) => a.day - b.day);
 
   const ind = (a.indicators ?? {}) as Record<string, unknown>;
-  const target = typeof ind.target === "number" ? (ind.target as number) : null;
-  const stop = typeof ind.stop === "number" ? (ind.stop as number) : null;
+  const levels = priceLevelsFor(position);
   const regime = typeof ind.regime === "string" ? (ind.regime as string) : null;
   const rsi = typeof ind.rsi === "number" ? (ind.rsi as number) : null;
   const macdHist = typeof ind.macdHist === "number" ? (ind.macdHist as number) : null;
+
+  const ccy = currencyForTicker(a.ticker);
+  const money = (v: number) => formatPrice(v, a.ticker);
 
   const bullish: string[] = [];
   const bearish: string[] = [];
