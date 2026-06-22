@@ -189,7 +189,7 @@ export function MarketingLanding() {
             Wir zeigen jede einzelne Empfehlung — gute wie schlechte.
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-            Vertrauen baut sich über Zeit auf. Deshalb dokumentieren wir alle Empfehlungen öffentlich und prüfen nach 7, 30, 60 und 90 Tagen, ob wir richtig lagen.
+            Vertrauen baut sich über Zeit auf. Deshalb dokumentieren wir alle Empfehlungen öffentlich und prüfen nach 30, 60 und 90 Tagen, ob wir richtig lagen.
           </p>
           <Link
             to="/track-record"

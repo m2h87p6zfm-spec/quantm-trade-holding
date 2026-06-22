@@ -42,7 +42,7 @@ export const Route = createFileRoute("/track-record")({
           "@type": "Dataset",
           name: "Quantm Trade Pick Performance Record",
           description:
-            "Real track record of all stock recommendations with 7, 30, 60, and 90-day outcome tracking.",
+            "Real track record of all stock recommendations with 30, 60, and 90-day outcome tracking.",
           url: "https://quantmtrade.com/track-record",
           creator: { "@type": "Organization", name: "Quantm Trade" },
         }),
@@ -164,19 +164,12 @@ function EvaluationExplainer({
         So funktioniert die Auswertung
       </div>
       <h2 className="mt-2 text-xl font-bold tracking-tight">Wann werden Empfehlungen bewertet?</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-border/50 bg-background/60 p-4">
           <div className="text-xs font-semibold text-muted-foreground">Tag 0</div>
           <div className="mt-1 text-sm font-semibold">Empfehlung erscheint</div>
           <div className="mt-1 text-xs text-muted-foreground">
             Pick wird mit Datum, Kurs und Begründung öffentlich dokumentiert.
-          </div>
-        </div>
-        <div className="rounded-xl border border-border/50 bg-background/60 p-4">
-          <div className="text-xs font-semibold text-muted-foreground">+7 Tage</div>
-          <div className="mt-1 text-sm font-semibold">Erste Auswertung</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            Kurzfrist-Performance wird gemessen und in die Trefferquote aufgenommen.
           </div>
         </div>
         <div className="rounded-xl border border-border/50 bg-background/60 p-4">
@@ -198,7 +191,7 @@ function EvaluationExplainer({
         <p>
           <span className="font-semibold text-foreground">Aktueller Stand:</span>{" "}
           {totalPicks} Empfehlungen insgesamt, davon {evaluatedPicks} bereits ausgewertet ({pct}%).
-          Die übrigen befinden sich noch im laufenden 7- bis 90-Tage-Fenster.
+          Die übrigen befinden sich noch im laufenden 30- bis 90-Tage-Fenster.
         </p>
         <p className="mt-2">
           Neue Empfehlungen fließen <span className="font-semibold text-foreground">sofort</span> in
@@ -225,7 +218,7 @@ function PageHero({ daysOfData }: { daysOfData: number }) {
         Was unsere Empfehlungen wirklich gebracht haben.
       </h1>
       <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-        Jede Empfehlung wird automatisch nach 7, 30, 60 und 90 Tagen ausgewertet. Wir zeigen alles — auch die Trades, die nicht aufgegangen sind.
+        Jede Empfehlung wird automatisch nach 30, 60 und 90 Tagen ausgewertet. Wir zeigen alles — auch die Trades, die nicht aufgegangen sind.
       </p>
       <p className="mt-4 text-xs text-muted-foreground">
         Live-Daten · Bisher <span className="font-semibold text-foreground">{daysOfData}</span> Tage öffentlich dokumentiert
