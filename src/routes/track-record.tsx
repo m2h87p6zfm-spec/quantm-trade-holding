@@ -15,7 +15,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Search, ArrowRight, Download, ShieldCheck, Lock, HelpCircle } from "lucide-react";
+import { Search, ArrowRight, Download, ShieldCheck, Lock, HelpCircle, AlertTriangle, ScrollText } from "lucide-react";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
@@ -164,7 +164,11 @@ function Content({ data }: { data: TrackRecordPayload }) {
     <PageShell>
       <PageHero daysOfData={daysOfData} metrics={derived.metrics} />
 
+      <RiskDisclaimerBanner />
+
       <BeginnerExplainer />
+
+      <HonestNumbersCard />
 
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
