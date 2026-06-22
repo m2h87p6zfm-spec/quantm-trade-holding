@@ -22,9 +22,9 @@ export function AuthNavButton({ className }: { className?: string }) {
 
   if (user) {
     return (
-      <Link to="/dashboard" className={cls}>
+      <Link to="/konto" className={cls}>
         <LayoutDashboard className="mr-1.5 h-3.5 w-3.5" />
-        Dashboard
+        Mein Konto
       </Link>
     );
   }
