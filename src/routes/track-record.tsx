@@ -575,39 +575,54 @@ function PortfolioOverview({
         <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
           <h3 className="text-base font-bold tracking-tight">Allokation</h3>
           <p className="mt-1 text-xs text-muted-foreground">Anteil der offenen Positionen am investierten Kapital.</p>
-          <div className="mt-4 h-64">
-            {!mounted ? (
-              <div className="h-full w-full animate-pulse rounded-lg bg-muted/30" />
-            ) : allocation.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Keine offenen Positionen.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={allocation}
-                    dataKey="pct"
-                    nameKey="ticker"
-                    innerRadius="55%"
-                    outerRadius="90%"
-                    paddingAngle={2}
-                    stroke="var(--background)"
-                    strokeWidth={2}
-                  >
-                    {allocation.map((_, i) => (
-                      <Cell key={i} fill={palette[i % palette.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(v: number, _n, e) => [
-                      `${v.toFixed(1)} %`,
-                      (e?.payload as { ticker?: string })?.ticker ?? "",
-                    ]}
-                    contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          {!mounted ? (
+            <div className="mt-4 h-64 w-full animate-pulse rounded-lg bg-muted/30" />
+          ) : allocation.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">Keine offenen Positionen.</p>
+          ) : (
+            <>
+              <div className="mt-4 h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={allocation}
+                      dataKey="pct"
+                      nameKey="ticker"
+                      innerRadius="55%"
+                      outerRadius="90%"
+                      paddingAngle={2}
+                      stroke="var(--background)"
+                      strokeWidth={2}
+                    >
+                      {allocation.map((_, i) => (
+                        <Cell key={i} fill={palette[i % palette.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(v: number, _n, e) => [
+                        `${v.toFixed(1)} %`,
+                        (e?.payload as { ticker?: string })?.ticker ?? "",
+                      ]}
+                      contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Legend: ticker + % so users can match slice → company without hovering */}
+              <ul className="mt-4 grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto text-xs">
+                {allocation.map((a, i) => (
+                  <li key={a.position.analysis.id} className="flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ background: palette[i % palette.length] }}
+                    />
+                    <span className="flex-1 truncate text-foreground/90">{a.position.analysis.name}</span>
+                    <span className="font-mono tabular-nums text-muted-foreground">{a.pct.toFixed(1)} %</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
 
         <section className="rounded-2xl border border-border/60 bg-card/40 overflow-hidden">
