@@ -750,24 +750,16 @@ export const apexAnalyze = (symbol: string, candles: Candle[], benchClose?: numb
     },
   };
 
-  const sc = scoreModules(modules, price);
-  // Map score to confidence band per spec
-  let confidence: number;
-  if (sc.total >= 85) confidence = 80 + (sc.total - 85) * (15 / 15);
-  else if (sc.total >= 70) confidence = 70 + (sc.total - 70) * (9 / 15);
-  else if (sc.total >= 60) confidence = 60 + (sc.total - 60) * (9 / 10);
-  else if (sc.total >= 50) confidence = 50 + (sc.total - 50) * (9 / 10);
-  else confidence = Math.max(0, sc.total * 0.9);
+  // Strict statistical aggregation across ALL signals
+  const stat = computeStatConfidence(modules, price, c.length);
 
-  const bullish = sc.total >= 50;
-  const verdict = mapVerdict(confidence, bullish);
-
-  // H4 multi-timeframe confirmation — daily vs weekly
+  // H4 multi-timeframe confirmation — daily (mean signal) vs weekly bias
   const wBias = modules.H.weeklyBias;
-  const dailyBullish = sc.total > 50;
   modules.H.mtfConfirmation =
     Math.abs(wBias) < 0.15 ? "neutral"
-    : (wBias > 0) === dailyBullish ? "confirmed" : "diverging";
+    : (wBias > 0) === stat.bullish ? "confirmed" : "diverging";
+
+  const verdict = mapVerdict(stat.confidence, stat.bullish);
 
   return {
     symbol,
@@ -775,8 +767,8 @@ export const apexAnalyze = (symbol: string, candles: Candle[], benchClose?: numb
     changePct,
     asOf: new Date().toISOString(),
     modules,
-    score: sc.total,
-    confidence,
+    score: stat.score,
+    confidence: stat.confidence,
     verdict,
   };
 };
