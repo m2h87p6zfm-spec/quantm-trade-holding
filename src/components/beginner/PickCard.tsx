@@ -4,6 +4,7 @@ import { TrendingUp, Eye, Calendar, ArrowRight, HelpCircle, CheckCircle2, AlertT
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { InfoTooltip } from "./InfoTooltip";
 import { AdvancedCollapsible } from "./AdvancedCollapsible";
+import { formatPrice } from "@/lib/instrument-currency";
 
 export type BeginnerPick = {
   symbol: string;
