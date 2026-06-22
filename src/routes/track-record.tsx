@@ -17,7 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Search, ArrowRight, Download, ShieldCheck, Lock } from "lucide-react";
+import { Search, ArrowRight, Download, ShieldCheck, Lock, HelpCircle } from "lucide-react";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
@@ -165,12 +165,14 @@ function Content({ data }: { data: TrackRecordPayload }) {
     <PageShell>
       <PageHero daysOfData={daysOfData} metrics={derived.metrics} />
 
+      <BeginnerExplainer />
+
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-          <TabsTrigger value="picks">Empfehlungen</TabsTrigger>
-          <TabsTrigger value="audit">Audit-Log</TabsTrigger>
+          <TabsTrigger value="overview">Überblick</TabsTrigger>
+          <TabsTrigger value="portfolio">Aktuelle Käufe</TabsTrigger>
+          <TabsTrigger value="picks">Alle Empfehlungen</TabsTrigger>
+          <TabsTrigger value="audit">Aktivitäten</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8 mt-6">
@@ -254,6 +256,47 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "po
 
 function fmtMoney(v: number) {
   return v.toLocaleString("de-DE", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+}
+
+/* -------------------- Beginner-Erklärung -------------------- */
+
+function BeginnerExplainer() {
+  return (
+    <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <HelpCircle className="h-5 w-5" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-base font-semibold tracking-tight">So liest du diese Seite — in einfachen Worten</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Wir tun so, als hätten wir bei jeder Empfehlung 5.000 € in die Aktie gesteckt. Hier siehst du, was daraus geworden wäre — Gewinner und Verlierer, ohne Schönmalerei.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm">
+            <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+              <div className="font-semibold text-foreground">📅 Gekauft am</div>
+              <div className="mt-1 text-xs text-muted-foreground">Das Datum, an dem unser Algorithmus die Aktie empfohlen hat — gerechnet wird ab diesem Tag.</div>
+            </div>
+            <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+              <div className="font-semibold text-foreground">💶 Kaufpreis</div>
+              <div className="mt-1 text-xs text-muted-foreground">Der echte Börsenkurs an diesem Tag, in der Heimatwährung der Aktie (€, $, £ usw.).</div>
+            </div>
+            <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+              <div className="font-semibold text-foreground">📈 Rendite</div>
+              <div className="mt-1 text-xs text-muted-foreground">Wie viel Prozent die Aktie seitdem im Plus oder Minus liegt. Grün = Gewinn, Rot = Verlust.</div>
+            </div>
+            <div className="rounded-lg border border-border/40 bg-background/40 p-3">
+              <div className="font-semibold text-foreground">🏷️ Status</div>
+              <div className="mt-1 text-xs text-muted-foreground">„Läuft" = zu frisch zum Bewerten · „Treffer"/„Fehlschuss" = abgeschlossen mit Plus/Minus · „Offen" = noch im Depot.</div>
+            </div>
+          </div>
+          <p className="mt-4 text-[11px] text-muted-foreground">
+            Klick auf eine Empfehlung in der Tabelle, um Begründung, Chart und Kursziel im Detail zu sehen.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 /* -------------------- Transparency Dashboard -------------------- */
@@ -574,10 +617,10 @@ function PortfolioOverview({
                 <tr>
                   <th className="px-4 py-2 text-left font-medium">Aktie</th>
                   <th className="px-4 py-2 text-right font-medium">Anteile</th>
-                  <th className="px-4 py-2 text-right font-medium">Entry</th>
-                  <th className="px-4 py-2 text-right font-medium">Aktuell</th>
-                  <th className="px-4 py-2 text-right font-medium">P&L</th>
-                  <th className="px-4 py-2 text-right font-medium">Allok.</th>
+                  <th className="px-4 py-2 text-right font-medium">Kaufpreis</th>
+                  <th className="px-4 py-2 text-right font-medium">Heute</th>
+                  <th className="px-4 py-2 text-right font-medium">Gewinn / Verlust</th>
+                  <th className="px-4 py-2 text-right font-medium">Anteil im Depot</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -933,11 +976,11 @@ function PicksHistory({
             <tr>
               <th className="px-4 py-3 text-left font-medium">Unternehmen</th>
               <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Verlauf</th>
-              <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Buy</th>
-              <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Sell</th>
-              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Entry</th>
-              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Aktuell / Exit</th>
-              <th className="px-4 py-3 text-right font-medium">Rendite</th>
+              <th className="px-4 py-3 text-left font-medium hidden sm:table-cell">Gekauft am</th>
+              <th className="px-4 py-3 text-left font-medium hidden md:table-cell">Verkauft am</th>
+              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Kaufpreis</th>
+              <th className="px-4 py-3 text-right font-medium hidden md:table-cell">Heutiger Kurs</th>
+              <th className="px-4 py-3 text-right font-medium">Gewinn / Verlust</th>
               <th className="px-4 py-3 text-right font-medium">Status</th>
               <th className="px-4 py-3 text-right font-medium"></th>
             </tr>
