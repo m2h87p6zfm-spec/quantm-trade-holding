@@ -21,6 +21,8 @@ import { priceLevelsFor } from "@/lib/price-levels";
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
+export type ConvictionTier = "high" | "medium" | "base";
+
 export type DerivedPosition = {
   analysis: Analysis;
   status: "open" | "closed";
@@ -36,6 +38,12 @@ export type DerivedPosition = {
   /** True if we have at least one measured outcome price (or an exit) — used
    *  to exclude "no-data" picks from win/loss & best/worst statistics. */
   hasMeasurement: boolean;
+  /** Confidence-based position size in € invested at entry. */
+  notional: number;
+  /** Number of shares bought with `notional` at `entryPrice`. */
+  shares: number;
+  /** Tier derived from confidence_score (drives `notional`). */
+  tier: ConvictionTier;
 };
 
 function fmtDate(iso: string) {
