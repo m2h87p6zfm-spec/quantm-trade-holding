@@ -497,6 +497,31 @@ function PortfolioOverview({
       };
     })
     .sort((a, b) => b.value - a.value);
+  const allocationRows = (() => {
+    const visible = allocation.slice(0, 8).map((a) => ({
+      key: a.position.analysis.id,
+      name: a.name,
+      ticker: a.ticker,
+      pct: a.pct,
+      returnPct: a.returnPct,
+      count: 1,
+    }));
+    const rest = allocation.slice(8);
+    if (rest.length === 0) return visible;
+    const restValue = rest.reduce((sum, a) => sum + a.value, 0);
+    const restWeightedReturn = restValue > 0
+      ? rest.reduce((sum, a) => sum + a.returnPct * a.value, 0) / restValue
+      : 0;
+    visible.push({
+      key: "remaining-allocation",
+      name: `${rest.length} weitere Positionen`,
+      ticker: "Sonstige",
+      pct: rest.reduce((sum, a) => sum + a.pct, 0),
+      returnPct: restWeightedReturn,
+      count: rest.length,
+    });
+    return visible;
+  })();
 
   // Palette of clearly distinct hues for the donut — picked so neighbours
   // never look similar in the dark theme. No reuse of --primary / --bull
@@ -570,58 +595,57 @@ function PortfolioOverview({
         </p>
       </section>
 
-      {/* Allocation donut + Holdings table */}
+      {/* Allocation overview + Holdings table */}
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
-          <h3 className="text-base font-bold tracking-tight">Allokation</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Anteil der offenen Positionen am investierten Kapital.</p>
+          <h3 className="text-base font-bold tracking-tight">Allokation einfach erklärt</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Die größten Positionen zuerst. Kleine Positionen werden zusammengefasst, damit es lesbar bleibt.</p>
           {!mounted ? (
             <div className="mt-4 h-64 w-full animate-pulse rounded-lg bg-muted/30" />
           ) : allocation.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">Keine offenen Positionen.</p>
           ) : (
-            <>
-              <div className="mt-4 h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={allocation}
-                      dataKey="pct"
-                      nameKey="ticker"
-                      innerRadius="55%"
-                      outerRadius="90%"
-                      paddingAngle={2}
-                      stroke="var(--background)"
-                      strokeWidth={2}
-                    >
-                      {allocation.map((_, i) => (
-                        <Cell key={i} fill={palette[i % palette.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v: number, _n, e) => [
-                        `${v.toFixed(1)} %`,
-                        (e?.payload as { ticker?: string })?.ticker ?? "",
-                      ]}
-                      contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
+            <div className="mt-5 space-y-4">
+              <div className="overflow-hidden rounded-full border border-border/50 bg-background/70 p-1">
+                <div className="flex h-5 w-full overflow-hidden rounded-full bg-muted/30">
+                  {allocationRows.map((a, i) => (
+                    <div
+                      key={a.key}
+                      className="h-full min-w-[3px]"
+                      style={{ width: `${Math.max(a.pct, 1.5)}%`, background: palette[i % palette.length] }}
                     />
-                  </PieChart>
-                </ResponsiveContainer>
+                  ))}
+                </div>
               </div>
-              {/* Legend: ticker + % so users can match slice → company without hovering */}
-              <ul className="mt-4 grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto text-xs">
-                {allocation.map((a, i) => (
-                  <li key={a.position.analysis.id} className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{ background: palette[i % palette.length] }}
-                    />
-                    <span className="flex-1 truncate text-foreground/90">{a.position.analysis.name}</span>
-                    <span className="font-mono tabular-nums text-muted-foreground">{a.pct.toFixed(1)} %</span>
+              <ul className="space-y-2.5 text-xs">
+                {allocationRows.map((a, i) => (
+                  <li key={a.key} className="space-y-1.5 rounded-lg border border-border/40 bg-background/35 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: palette[i % palette.length] }} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">{a.name}</span>
+                        <span className="font-mono text-[10px] text-muted-foreground">{a.ticker}</span>
+                      </span>
+                      <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{a.pct.toFixed(1)} %</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-muted/50">
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${Math.max(a.pct, 2)}%`, background: palette[i % palette.length] }}
+                      />
+                    </div>
+                    <div className={`font-mono text-[10px] tabular-nums ${a.returnPct >= 0 ? "text-bull" : "text-bear"}`}>
+                      bisher {a.returnPct >= 0 ? "+" : ""}{a.returnPct.toFixed(2)} % {a.count > 1 ? "im Schnitt" : ""}
+                    </div>
                   </li>
                 ))}
               </ul>
-            </>
+              {allocation.length > allocationRows.length && (
+                <p className="text-[11px] text-muted-foreground">
+                  Für weniger Ruckeln zeigt die Grafik nur die größten Positionen einzeln; alle Details stehen rechts in der Tabelle.
+                </p>
+              )}
+            </div>
           )}
         </section>
 
