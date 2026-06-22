@@ -54,7 +54,8 @@ import {
 import {
   derivePortfolio,
   PORTFOLIO_STARTING_EQUITY,
-  PORTFOLIO_SLOT_NOTIONAL,
+  PORTFOLIO_MIN_CONFIDENCE,
+  TIER_LABEL,
   type DerivedTrackRecord,
   type PortfolioMetrics,
 } from "@/lib/portfolio-derive";
@@ -357,8 +358,9 @@ function EquityCurveCard({ derived }: { derived: DerivedTrackRecord }) {
         <div>
           <h3 className="text-lg font-bold tracking-tight">Equity-Kurve des Modellportfolios</h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Start: {fmtMoney(PORTFOLIO_STARTING_EQUITY)} € · Gleichgewichtetes Portfolio mit{" "}
-            {fmtMoney(PORTFOLIO_SLOT_NOTIONAL)} € pro Position
+            Start: {fmtMoney(PORTFOLIO_STARTING_EQUITY)} € · Konfidenz-gewichtet:
+            8.000 € bei hoher, 5.000 € bei mittlerer, 3.000 € bei Basis-Konfidenz.
+            Picks unter {PORTFOLIO_MIN_CONFIDENCE}/100 werden nicht investiert.
           </p>
         </div>
       </div>
@@ -481,10 +483,10 @@ function PortfolioOverview({
   const m = derived.metrics;
   const open = derived.positions.filter((p) => p.status === "open");
   // Allocation = current value of each open position / total open value
-  const openValue = open.reduce((s, p) => s + PORTFOLIO_SLOT_NOTIONAL + p.returnAbs, 0);
+  const openValue = open.reduce((s, p) => s + p.notional + p.returnAbs, 0);
   const allocation = open
     .map((p) => {
-      const value = PORTFOLIO_SLOT_NOTIONAL + p.returnAbs;
+      const value = p.notional + p.returnAbs;
       return {
         ticker: p.analysis.ticker,
         name: p.analysis.name,
@@ -547,7 +549,8 @@ function PortfolioOverview({
       <section>
         <h2 className="text-xl font-bold tracking-tight">Portfolio-Übersicht</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Modellportfolio mit gleichgewichteten {fmtMoney(PORTFOLIO_SLOT_NOTIONAL)} € pro Empfehlung.
+          Konfidenz-gewichtetes Modellportfolio: nur Picks ab {PORTFOLIO_MIN_CONFIDENCE}/100
+          Konfidenz werden gekauft, Größe richtet sich nach Konfidenz (3.000 / 5.000 / 8.000 €).
         </p>
         <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
           <KpiTile value={`${fmtMoney(m.totalEquity)} €`} label="Portfoliowert" />
@@ -670,8 +673,13 @@ function PortfolioOverview({
                 )}
                 {allocation.map((a) => {
                   const p = a.position;
-                  const shares = PORTFOLIO_SLOT_NOTIONAL / p.entryPrice;
+                  const shares = p.shares;
                   const ccy = currencyForTicker(p.analysis.ticker);
+                  const tierTone = p.tier === "high"
+                    ? "bg-bull/15 text-bull border-bull/30"
+                    : p.tier === "medium"
+                      ? "bg-primary/15 text-primary border-primary/30"
+                      : "bg-muted/40 text-muted-foreground border-border/60";
                   return (
                     <tr
                       key={p.analysis.id}
@@ -682,6 +690,9 @@ function PortfolioOverview({
                         <div className="font-medium">{p.analysis.name}</div>
                         <div className="text-[11px] font-mono text-muted-foreground">
                           {p.analysis.ticker} · {ccy.code}
+                        </div>
+                        <div className={`mt-1 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${tierTone}`}>
+                          {TIER_LABEL[p.tier]} · {fmtMoney(p.notional)} €
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">
