@@ -96,6 +96,11 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
     const ageDays = Math.max(0, Math.floor((now - entryTime) / 86_400_000));
     const has90d = a.outcome?.price_after_90d != null;
+    const hasAnyOutcomePrice =
+      a.outcome?.price_after_7d != null ||
+      a.outcome?.price_after_30d != null ||
+      a.outcome?.price_after_60d != null ||
+      a.outcome?.price_after_90d != null;
 
     let status: "open" | "closed" = "open";
     let exitAt: string | null = null;
@@ -120,6 +125,8 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       currentPrice = exitPrice;
     }
 
+    const hasMeasurement = status === "closed" || hasAnyOutcomePrice;
+
     const returnPct =
       entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
     const shares = SLOT_NOTIONAL / entryPrice;
@@ -137,6 +144,7 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       returnPct,
       returnAbs,
       holdingDays,
+      hasMeasurement,
     });
   }
 
@@ -154,8 +162,11 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   const totalReturnAbs = totalEquity - STARTING_EQUITY;
   const totalReturnPct = (totalReturnAbs / STARTING_EQUITY) * 100;
 
-  const best = [...closed, ...open].sort((a, b) => b.returnPct - a.returnPct)[0];
-  const worst = [...closed, ...open].sort((a, b) => a.returnPct - b.returnPct)[0];
+  // Best/worst trade: only count positions with a real measurement, otherwise
+  // brand-new open picks (returnPct = 0 fallback) would pollute the leaderboard.
+  const measured = positions.filter((p) => p.hasMeasurement);
+  const best = [...measured].sort((a, b) => b.returnPct - a.returnPct)[0];
+  const worst = [...measured].sort((a, b) => a.returnPct - b.returnPct)[0];
 
   const metrics: PortfolioMetrics = {
     totalEquity,
