@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthNavButton } from "@/components/AuthNavButton";
 import { PRODUCT_BY_SYMBOL, type Product } from "@/lib/products";
 import { useSettings } from "@/lib/settings";
 import { ApexLogo } from "@/components/ApexLogo";
