@@ -16,6 +16,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TrackRecordPayload } from "@/lib/trackrecord.functions";
+import { currencyForTicker, formatPrice } from "@/lib/instrument-currency";
+import { priceLevelsFor } from "@/lib/price-levels";
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
