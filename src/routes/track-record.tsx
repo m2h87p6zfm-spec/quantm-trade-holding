@@ -15,6 +15,7 @@ import {
 import { Search, ArrowRight, Download } from "lucide-react";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
+import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
 import { MetricCard } from "@/components/beginner/MetricCard";
 import { TrustPillars } from "@/components/beginner/TrustPillars";
