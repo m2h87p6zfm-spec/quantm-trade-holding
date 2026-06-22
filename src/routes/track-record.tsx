@@ -165,12 +165,14 @@ function Content({ data }: { data: TrackRecordPayload }) {
     <PageShell>
       <PageHero daysOfData={daysOfData} metrics={derived.metrics} />
 
+      <BeginnerExplainer />
+
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
-          <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
-          <TabsTrigger value="picks">Empfehlungen</TabsTrigger>
-          <TabsTrigger value="audit">Audit-Log</TabsTrigger>
+          <TabsTrigger value="overview">Überblick</TabsTrigger>
+          <TabsTrigger value="portfolio">Aktuelle Käufe</TabsTrigger>
+          <TabsTrigger value="picks">Alle Empfehlungen</TabsTrigger>
+          <TabsTrigger value="audit">Aktivitäten</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-8 mt-6">
