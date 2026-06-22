@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
+import { AuthNavButton } from "@/components/AuthNavButton";
 import { useSettings } from "@/lib/settings";
 
 /**
@@ -31,12 +32,8 @@ export function MarketingLanding() {
             >
               {settings.theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
-            <Link
-              to="/login"
-              className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-            >
-              Anmelden
-            </Link>
+            <AuthNavButton />
+
           </nav>
         </div>
       </header>
