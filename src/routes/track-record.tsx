@@ -146,6 +146,75 @@ function Content({ data }: { data: TrackRecordPayload }) {
   );
 }
 
+/* -------------------- Evaluation Explainer -------------------- */
+
+function EvaluationExplainer({
+  daysOfData,
+  totalPicks,
+  evaluatedPicks,
+}: {
+  daysOfData: number;
+  totalPicks: number;
+  evaluatedPicks: number;
+}) {
+  const pct = totalPicks ? Math.round((evaluatedPicks / totalPicks) * 100) : 0;
+  return (
+    <section className="rounded-2xl border border-border/60 bg-card/40 p-6 md:p-8">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+        So funktioniert die Auswertung
+      </div>
+      <h2 className="mt-2 text-xl font-bold tracking-tight">Wann werden Empfehlungen bewertet?</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-border/50 bg-background/60 p-4">
+          <div className="text-xs font-semibold text-muted-foreground">Tag 0</div>
+          <div className="mt-1 text-sm font-semibold">Empfehlung erscheint</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Pick wird mit Datum, Kurs und Begründung öffentlich dokumentiert.
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-background/60 p-4">
+          <div className="text-xs font-semibold text-muted-foreground">+7 Tage</div>
+          <div className="mt-1 text-sm font-semibold">Erste Auswertung</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Kurzfrist-Performance wird gemessen und in die Trefferquote aufgenommen.
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-background/60 p-4">
+          <div className="text-xs font-semibold text-muted-foreground">+30 / 60 / 90 Tage</div>
+          <div className="mt-1 text-sm font-semibold">Finale Bewertung</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Vollständige Rendite-Auswertung gegen Markt-Benchmark.
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/50 bg-background/60 p-4">
+          <div className="text-xs font-semibold text-muted-foreground">Täglich</div>
+          <div className="mt-1 text-sm font-semibold">Statistiken aktualisieren</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Trefferquote &amp; Ø Rendite werden automatisch neu berechnet, sobald neue Auswertungen vorliegen.
+          </div>
+        </div>
+      </div>
+      <div className="mt-5 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Aktueller Stand:</span>{" "}
+          {totalPicks} Empfehlungen insgesamt, davon {evaluatedPicks} bereits ausgewertet ({pct}%).
+          Die übrigen befinden sich noch im laufenden 7- bis 90-Tage-Fenster.
+        </p>
+        <p className="mt-2">
+          Neue Empfehlungen fließen <span className="font-semibold text-foreground">sofort</span> in
+          die Historie ein und werden ab dem nächsten Auswertungslauf in die Gesamtstatistik aufgenommen.
+          Historische Picks werden <span className="font-semibold text-foreground">nie</span> nachträglich verändert oder entfernt — auch Verluste bleiben sichtbar.
+        </p>
+        {daysOfData < 30 && (
+          <p className="mt-2 text-amber-500 dark:text-amber-400">
+            Hinweis: Vollständige Performance-Kennzahlen werden erst freigeschaltet, sobald mindestens 30 Tage öffentlich dokumentierter Daten vorliegen.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 /* -------------------- Hero -------------------- */
 
 function PageHero({ daysOfData }: { daysOfData: number }) {
