@@ -95,7 +95,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
           <nav className="flex items-center gap-1 sm:gap-3 text-sm">
             <Link to="/picks" className="px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Picks</Link>
             <Link to="/wie-es-funktioniert" className="hidden sm:inline-flex px-3 py-1.5 text-muted-foreground hover:text-foreground transition">Wie es funktioniert</Link>
-            <Link to="/login" className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Anmelden</Link>
+            <AuthNavButton />
           </nav>
         </div>
       </header>
