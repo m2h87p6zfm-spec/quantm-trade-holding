@@ -596,6 +596,46 @@ function PortfolioOverview({
         </p>
       </section>
 
+      {/* Strategy explainer: why & how we size positions */}
+      <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="rounded-lg bg-primary/15 p-2 text-primary">
+            <HelpCircle className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-bold tracking-tight">Wie & warum wir investieren</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Die Engine bewertet jede Aktie mit einem Konfidenz-Score von 0–100. Statt jeden Pick
+              gleich groß zu kaufen, richten wir die Positionsgröße nach dieser Konfidenz — und
+              Picks unter <strong className="text-foreground">{PORTFOLIO_MIN_CONFIDENCE}/100</strong> werden
+              gar nicht erst gekauft. So bleibt das Portfolio diszipliniert und die Trefferquote hoch.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-lg border border-bull/30 bg-bull/10 p-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-bull">Hohe Konfidenz</div>
+                <div className="mt-1 text-xs text-muted-foreground">Score ≥ 85</div>
+                <div className="mt-1 text-lg font-bold tabular-nums">8.000 €</div>
+              </div>
+              <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">Mittlere Konfidenz</div>
+                <div className="mt-1 text-xs text-muted-foreground">Score 75–84</div>
+                <div className="mt-1 text-lg font-bold tabular-nums">5.000 €</div>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Basis-Konfidenz</div>
+                <div className="mt-1 text-xs text-muted-foreground">Score 70–74</div>
+                <div className="mt-1 text-lg font-bold tabular-nums">3.000 €</div>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Startkapital: {fmtMoney(PORTFOLIO_STARTING_EQUITY)} €. Picks mit Score unter {PORTFOLIO_MIN_CONFIDENCE}
+              {" "}bleiben im Aktivitäten-Log dokumentiert, fließen aber nicht in Holdings, Rendite oder
+              Trefferquote ein — das Portfolio wurde rückwirkend bereinigt.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Allocation overview + Holdings table */}
       <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
         <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
