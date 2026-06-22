@@ -16,6 +16,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { TrackRecordPayload } from "@/lib/trackrecord.functions";
+import { currencyForTicker, formatPrice } from "@/lib/instrument-currency";
+import { priceLevelsFor } from "@/lib/price-levels";
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
@@ -31,6 +33,9 @@ export type DerivedPosition = {
   returnPct: number;
   returnAbs: number;
   holdingDays: number;
+  /** True if we have at least one measured outcome price (or an exit) — used
+   *  to exclude "no-data" picks from win/loss & best/worst statistics. */
+  hasMeasurement: boolean;
 };
 
 function fmtDate(iso: string) {
@@ -93,11 +98,13 @@ export function PickDetailDrawer({
   series.sort((a, b) => a.day - b.day);
 
   const ind = (a.indicators ?? {}) as Record<string, unknown>;
-  const target = typeof ind.target === "number" ? (ind.target as number) : null;
-  const stop = typeof ind.stop === "number" ? (ind.stop as number) : null;
+  const levels = priceLevelsFor(position);
   const regime = typeof ind.regime === "string" ? (ind.regime as string) : null;
   const rsi = typeof ind.rsi === "number" ? (ind.rsi as number) : null;
   const macdHist = typeof ind.macdHist === "number" ? (ind.macdHist as number) : null;
+
+  const ccy = currencyForTicker(a.ticker);
+  const money = (v: number) => formatPrice(v, a.ticker);
 
   const bullish: string[] = [];
   const bearish: string[] = [];
@@ -135,19 +142,20 @@ export function PickDetailDrawer({
         <div className="mt-6 space-y-6">
           {/* Performance summary */}
           <div className="grid grid-cols-3 gap-3">
-            <Metric label="Einstieg" value={fmtMoney(position.entryPrice)} sub={fmtDate(position.entryAt)} />
+            <Metric label="Einstieg" value={money(position.entryPrice)} sub={fmtDate(position.entryAt)} />
             <Metric
               label={position.status === "closed" ? "Ausstieg" : "Aktueller Kurs"}
-              value={fmtMoney(position.exitPrice ?? position.currentPrice)}
+              value={money(position.exitPrice ?? position.currentPrice)}
               sub={position.status === "closed" && position.exitAt ? fmtDate(position.exitAt) : "—"}
             />
             <Metric
               label="Rendite"
               value={`${ret >= 0 ? "+" : ""}${ret.toFixed(2)} %`}
-              sub={`${position.returnAbs >= 0 ? "+" : ""}${fmtMoney(position.returnAbs)} €`}
+              sub={`${position.returnAbs >= 0 ? "+" : ""}${fmtMoney(position.returnAbs)} ${ccy.symbol.trim()}`}
               valueClass={retColor}
             />
           </div>
+
 
           {/* Chart */}
           <section className="rounded-xl border border-border/60 bg-card/40 p-4">
@@ -174,9 +182,9 @@ export function PickDetailDrawer({
                     tickFormatter={(v: number) => v.toFixed(0)}
                   />
                   <Tooltip
-                    formatter={(value: number) => [fmtMoney(value), "Kurs"]}
-                    labelFormatter={(d: number) =>
-                      d === 0 ? "Buy-Signal" : `Tag +${d}`
+                    formatter={(value: number) => [money(value), "Kurs"]}
+                    labelFormatter={(d) =>
+                      Number(d) === 0 ? "Buy-Signal" : `Tag +${d}`
                     }
                     contentStyle={{
                       background: "var(--card)",
@@ -234,12 +242,13 @@ export function PickDetailDrawer({
               <p className="mt-1 text-sm text-foreground/90">
                 Composite-Engine Verdict <span className="font-semibold">KAUF</span> mit Konfidenz{" "}
                 {a.confidence_score.toFixed(0)}/100.
-                {target && stop ? (
-                  <>
-                    {" "}Kursziel <span className="font-mono">{fmtMoney(target)}</span>, Stop-Loss{" "}
-                    <span className="font-mono">{fmtMoney(stop)}</span>.
-                  </>
-                ) : null}
+                {" "}Kursziel <span className="font-mono">{money(levels.target)}</span>
+                {" "}({levels.targetPct >= 0 ? "+" : ""}{levels.targetPct.toFixed(1)} %),
+                {" "}Stop-Loss <span className="font-mono">{money(levels.stop)}</span>
+                {" "}({levels.stopPct >= 0 ? "+" : ""}{levels.stopPct.toFixed(1)} %).
+                {levels.source === "derived" && (
+                  <span className="text-muted-foreground"> Ziel/Stop modellbasiert aus Einstiegskurs &amp; Konfidenz abgeleitet.</span>
+                )}
               </p>
             </div>
             {position.status === "closed" && position.exitReason && (

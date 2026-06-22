@@ -22,6 +22,7 @@ import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.funct
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
+import { formatPrice, currencyForTicker } from "@/lib/instrument-currency";
 
 
 function KpiTile({
@@ -586,6 +587,7 @@ function PortfolioOverview({
                 {allocation.map((a) => {
                   const p = a.position;
                   const shares = PORTFOLIO_SLOT_NOTIONAL / p.entryPrice;
+                  const ccy = currencyForTicker(p.analysis.ticker);
                   return (
                     <tr
                       key={p.analysis.id}
@@ -594,13 +596,15 @@ function PortfolioOverview({
                     >
                       <td className="px-4 py-3">
                         <div className="font-medium">{p.analysis.name}</div>
-                        <div className="text-[11px] font-mono text-muted-foreground">{p.analysis.ticker}</div>
+                        <div className="text-[11px] font-mono text-muted-foreground">
+                          {p.analysis.ticker} · {ccy.code}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">
                         {shares.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">{p.entryPrice.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-mono tabular-nums">{p.currentPrice.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPrice(p.entryPrice, p.analysis.ticker)}</td>
+                      <td className="px-4 py-3 text-right font-mono tabular-nums">{formatPrice(p.currentPrice, p.analysis.ticker)}</td>
                       <td className={`px-4 py-3 text-right font-mono tabular-nums font-semibold ${p.returnPct >= 0 ? "text-bull" : "text-bear"}`}>
                         {p.returnPct >= 0 ? "+" : ""}{p.returnPct.toFixed(2)} %
                         <div className="text-[10px] font-normal opacity-80">
@@ -874,8 +878,8 @@ function PicksHistory({
         if (term && !p.analysis.name.toLowerCase().includes(term) && !p.analysis.ticker.toLowerCase().includes(term)) return false;
         if (filter === "Offen") return p.status === "open";
         if (filter === "Geschlossen") return p.status === "closed";
-        if (filter === "Gewinner") return p.returnPct > 0;
-        if (filter === "Verlierer") return p.returnPct < 0;
+        if (filter === "Gewinner") return p.hasMeasurement && p.returnPct > 0;
+        if (filter === "Verlierer") return p.hasMeasurement && p.returnPct < 0;
         return true;
       })
       .slice(0, 300);
@@ -952,12 +956,27 @@ function PicksHistory({
                 p.exitPrice ?? undefined,
               ].filter((v): v is number => v != null && Number.isFinite(v));
               const ret = p.returnPct;
-              const sparkColor = ret == null ? "oklch(0.6 0.01 260)" : ret >= 0 ? "var(--bull)" : "var(--bear)";
-              const status = p.status === "open"
-                ? { label: "Offen", tone: "text-primary bg-primary/10" }
-                : ret >= 0
-                  ? { label: "Treffer", tone: "text-bull bg-bull/10" }
-                  : { label: "Fehlschuss", tone: "text-bear bg-bear/10" };
+              const sparkColor = !p.hasMeasurement
+                ? "oklch(0.6 0.01 260)"
+                : ret >= 0 ? "var(--bull)" : "var(--bear)";
+              // Status logic:
+              //  - "Offen"   → position still open, no exit
+              //  - "Läuft"   → open, no measured outcome yet (so win/loss unknown)
+              //  - "Treffer" → closed AND positive return
+              //  - "Fehlschuss" → closed AND negative return
+              //  - "Neutral" → closed at exactly 0 %
+              let status: { label: string; tone: string };
+              if (p.status === "open" && !p.hasMeasurement) {
+                status = { label: "Läuft", tone: "text-muted-foreground bg-muted/40" };
+              } else if (p.status === "open") {
+                status = { label: "Offen", tone: "text-primary bg-primary/10" };
+              } else if (ret > 0) {
+                status = { label: "Treffer", tone: "text-bull bg-bull/10" };
+              } else if (ret < 0) {
+                status = { label: "Fehlschuss", tone: "text-bear bg-bear/10" };
+              } else {
+                status = { label: "Neutral", tone: "text-muted-foreground bg-muted/40" };
+              }
               return (
                 <tr
                   key={p.analysis.id}
@@ -984,13 +1003,13 @@ function PicksHistory({
                     {p.exitAt ? new Date(p.exitAt).toLocaleDateString("de-DE") : "—"}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-right font-mono tabular-nums">
-                    {p.entryPrice.toFixed(2)}
+                    {formatPrice(p.entryPrice, p.analysis.ticker)}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-right font-mono tabular-nums">
-                    {(p.exitPrice ?? p.currentPrice).toFixed(2)}
+                    {p.hasMeasurement ? formatPrice(p.exitPrice ?? p.currentPrice, p.analysis.ticker) : "—"}
                   </td>
-                  <td className={`px-4 py-3 text-right font-mono font-semibold tabular-nums ${ret >= 0 ? "text-bull" : "text-bear"}`}>
-                    {ret >= 0 ? "+" : ""}{ret.toFixed(2)} %
+                  <td className={`px-4 py-3 text-right font-mono font-semibold tabular-nums ${!p.hasMeasurement ? "text-muted-foreground" : ret >= 0 ? "text-bull" : "text-bear"}`}>
+                    {p.hasMeasurement ? `${ret >= 0 ? "+" : ""}${ret.toFixed(2)} %` : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${status.tone}`}>
