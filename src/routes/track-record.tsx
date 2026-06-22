@@ -208,12 +208,135 @@ function Content({ data }: { data: TrackRecordPayload }) {
         </TabsContent>
       </Tabs>
 
+      <LegalFooter />
+
       <PickDetailDrawer
         position={selectedPos}
         open={selectedPos !== null}
         onOpenChange={(v) => !v && setSelectedPos(null)}
       />
     </PageShell>
+  );
+}
+
+/* -------------------- Risk Disclaimer Banner (top) -------------------- */
+
+function RiskDisclaimerBanner() {
+  return (
+    <section
+      role="note"
+      aria-label="Risikohinweis"
+      className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5"
+    >
+      <div className="flex items-start gap-3">
+        <div className="rounded-lg bg-amber-500/20 p-2 text-amber-400 shrink-0">
+          <AlertTriangle className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 text-sm">
+          <div className="font-semibold text-foreground">
+            Wichtiger Risikohinweis — bitte vor dem Investieren lesen
+          </div>
+          <p className="mt-1 text-muted-foreground leading-relaxed">
+            Diese Seite zeigt die Ergebnisse eines <strong className="text-foreground">simulierten
+            Modellportfolios</strong>, keine echten Konto-Transaktionen.
+            Quantm Picks sind <strong className="text-foreground">keine Anlageberatung</strong> und
+            keine Aufforderung zum Kauf oder Verkauf von Wertpapieren — wir sind ein
+            Informationsdienst, kein Finanzdienstleister im Sinne des KWG.
+            {" "}<strong className="text-foreground">Vergangene Wertentwicklung garantiert keine
+            zukünftigen Ergebnisse.</strong> Aktien können bis zum
+            Totalverlust fallen. Triff Anlageentscheidungen nur auf Basis eigener Prüfung
+            und ziehe bei Bedarf eine:n unabhängige:n Berater:in hinzu.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- Honest Numbers Card -------------------- */
+
+function HonestNumbersCard() {
+  const items: Array<{ title: string; body: string }> = [
+    {
+      title: "Brutto-Renditen, ohne Kosten",
+      body:
+        "Alle Renditen sind vor Ordergebühren, Spreads, Slippage und Steuern (DE: 25 % Kapitalertragsteuer + Soli). " +
+        "Bei echter Umsetzung schmälern diese Kosten dein Ergebnis spürbar — rechne realistisch 1–2 Prozentpunkte pro Jahr ab.",
+    },
+    {
+      title: "Stichprobe ist klein",
+      body:
+        "Eine seriöse Bewertung einer Strategie braucht 2–3 Jahre Live-Daten und mehrere Marktphasen. " +
+        "Bis dahin: Zahlen mit Vorsicht interpretieren — kurze Glückssträhnen können wie Können aussehen.",
+    },
+    {
+      title: "Survivorship-Schutz",
+      body:
+        "Jede Empfehlung wird mit Zeitstempel und Einstiegspreis dauerhaft in der Datenbank gespeichert, " +
+        "bevor der Kursverlauf bekannt ist. Im Aktivitäten-Log kannst du das jederzeit prüfen. " +
+        "Wir können Verlierer nicht nachträglich verstecken.",
+    },
+    {
+      title: "Was wir versprechen — und was nicht",
+      body:
+        "Wir versprechen einen disziplinierten, regelbasierten Prozess und vollständige Transparenz. " +
+        "Wir versprechen NICHT, dass du Geld verdienst, wie viel, oder dass die Engine den Markt schlägt.",
+    },
+  ];
+
+  return (
+    <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
+      <div className="flex items-start gap-3">
+        <div className="rounded-lg bg-primary/15 p-2 text-primary shrink-0">
+          <ScrollText className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base font-bold tracking-tight">
+            Was diese Zahlen ehrlich bedeuten
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Bevor du Schlüsse aus dem Track Record ziehst — diese vier Punkte solltest du kennen.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {items.map((it) => (
+              <div
+                key={it.title}
+                className="rounded-lg border border-border/40 bg-background/40 p-3"
+              >
+                <div className="text-sm font-semibold text-foreground">{it.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                  {it.body}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------- Legal Footer (bottom of page) -------------------- */
+
+function LegalFooter() {
+  return (
+    <footer className="mt-8 rounded-2xl border border-border/50 bg-background/40 p-5 text-xs text-muted-foreground leading-relaxed">
+      <div className="font-semibold text-foreground/80 mb-2">Rechtliche Hinweise</div>
+      <p>
+        QuantmTrade stellt allgemeine, regelbasierte Informationen über Finanzinstrumente
+        bereit. Inhalte stellen <strong>keine Anlageberatung, keine Anlagevermittlung und
+        keine Empfehlung</strong> im Sinne des § 1 Abs. 1a KWG dar. Die dargestellten
+        Modellportfolio-Renditen sind <strong>simuliert</strong>, basieren auf historischen
+        bzw. zeitgestempelten Empfehlungen und enthalten <strong>keine Ordergebühren,
+        Spreads, Slippage oder Steuern</strong>. Wertpapiergeschäfte sind mit Risiken
+        verbunden, bis hin zum Totalverlust des eingesetzten Kapitals. Wechselkurs-,
+        Liquiditäts- und Emittentenrisiken können das Ergebnis zusätzlich beeinflussen.
+        Frühere Wertentwicklung ist kein verlässlicher Indikator für künftige Ergebnisse.
+        Bitte triff Anlageentscheidungen nur nach eigener Prüfung deiner finanziellen
+        Situation und Risikotragfähigkeit; im Zweifel konsultiere eine:n unabhängige:n,
+        qualifizierte:n Berater:in.
+      </p>
+    </footer>
   );
 }
 
