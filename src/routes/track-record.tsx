@@ -7,8 +7,6 @@ import {
   Line,
   Bar,
   BarChart,
-  PieChart,
-  Pie,
   Cell,
   XAxis,
   YAxis,
