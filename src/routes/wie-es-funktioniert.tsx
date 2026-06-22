@@ -42,7 +42,7 @@ const STEPS = [
   {
     icon: ShieldCheck,
     title: "Wir prüfen uns selbst",
-    text: "Nach 7, 30, 60 und 90 Tagen werten wir jede Empfehlung aus. Treffer und Fehlschüsse landen öffentlich im Track Record.",
+    text: "Nach 30, 60 und 90 Tagen werten wir jede Empfehlung aus. Treffer und Fehlschüsse landen öffentlich im Track Record.",
   },
 ];
 
