@@ -242,12 +242,13 @@ export function PickDetailDrawer({
               <p className="mt-1 text-sm text-foreground/90">
                 Composite-Engine Verdict <span className="font-semibold">KAUF</span> mit Konfidenz{" "}
                 {a.confidence_score.toFixed(0)}/100.
-                {target && stop ? (
-                  <>
-                    {" "}Kursziel <span className="font-mono">{fmtMoney(target)}</span>, Stop-Loss{" "}
-                    <span className="font-mono">{fmtMoney(stop)}</span>.
-                  </>
-                ) : null}
+                {" "}Kursziel <span className="font-mono">{money(levels.target)}</span>
+                {" "}({levels.targetPct >= 0 ? "+" : ""}{levels.targetPct.toFixed(1)} %),
+                {" "}Stop-Loss <span className="font-mono">{money(levels.stop)}</span>
+                {" "}({levels.stopPct >= 0 ? "+" : ""}{levels.stopPct.toFixed(1)} %).
+                {levels.source === "derived" && (
+                  <span className="text-muted-foreground"> Ziel/Stop modellbasiert aus Einstiegskurs &amp; Konfidenz abgeleitet.</span>
+                )}
               </p>
             </div>
             {position.status === "closed" && position.exitReason && (
