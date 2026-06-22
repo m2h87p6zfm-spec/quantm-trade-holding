@@ -22,6 +22,7 @@ import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.funct
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
+import { formatPrice, currencyForTicker } from "@/lib/instrument-currency";
 
 
 function KpiTile({
