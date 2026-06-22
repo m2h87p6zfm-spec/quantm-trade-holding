@@ -125,6 +125,9 @@ function Content({ data }: { data: TrackRecordPayload }) {
   return (
     <PageShell>
       <PageHero daysOfData={daysOfData} />
+      <EvaluationExplainer daysOfData={daysOfData} totalPicks={data.analyses.length} evaluatedPicks={evaluated.length} />
+
+
 
       {!showMetrics ? (
         <ThresholdGate daysOfData={daysOfData} threshold={30} />
