@@ -1,89 +1,123 @@
-# QuantmTrade Redesign — Beginner-first, Trust-focused
 
-Brand (Quantm Trade logo, dark theme primary, silver wordmark) stays. Only the **frontend presentation** changes. All backend logic, auth, data fetching, Stripe trial, cron outcomes — untouched.
+# QuantumTrack Record V2 — Transparency & Trust System
 
-## Scope
-4 pages get a ground-up presentation rewrite plus a slimmer nav. All copy in German, plain-language, mobile-first cards, tooltips on every technical term, advanced data in collapsibles.
+Heutiges Track-Record-Modell speichert nur den Einstiegspreis und prüft den Kurs nach 30/60/90 Tagen. Es gibt keine echten Verkaufssignale, keine Portfolio-Sicht, keinen Audit-Log und keine Charts pro Pick. Dieser Plan baut das in 4 Stufen aus.
 
 ---
 
-## 1. Global building blocks (new components)
+## Stufe 1 — Datenmodell (Migration)
 
-- `src/components/beginner/MetricCard.tsx` — big number → label → 1-line plain explanation → ℹ tooltip. Used everywhere we display a number.
-- `src/components/beginner/InfoTooltip.tsx` — wraps shadcn Tooltip, ℹ icon, 12-year-old-friendly copy.
-- `src/components/beginner/AdvancedCollapsible.tsx` — "Technische Details (für Fortgeschrittene)" Collapsible wrapper. Used to hide Sharpe/Drawdown/Vol/Greeks/Monte-Carlo CIs from default view.
-- `src/components/beginner/PickCard.tsx` — card layout for one pick (logo+name+ticker, plain-German reason, "Signalstärke" bar, KAUFEN/BEOBACHTEN badge, Kursziel, date, "Was bedeutet das?" modal, advanced collapsible).
-- `src/components/beginner/TrustPillars.tsx` — 3 columns: echte Daten · dokumentiert · zeigen auch Verluste.
-- `src/components/beginner/ThresholdGate.tsx` — minimum-days gate (renders progress bar + explanation when below 30/90/180-day thresholds).
+Neue Tabellen im `public` Schema (anon read, service_role write):
 
-## 2. Navigation
+```text
+apex_signals
+  id, analysis_id (FK apex_analyses), signal_type ('BUY'|'SELL'),
+  signal_at, price, reason (text), confidence, target_price, stop_loss,
+  horizon_days, risk_level ('low'|'medium'|'high'),
+  bullish_factors jsonb, bearish_factors jsonb
+  -- ein BUY pro Analyse, optional ein SELL
 
-- `src/components/AppSidebar.tsx` (or active nav component) trimmed for unauthenticated marketing context to exactly 4 items: **Picks · Track Record · Wie es funktioniert · Login/Account**.
-- Mobile: hamburger → full-screen overlay (already partly in `MobileBottomNav`; reuse and slim).
-- Internal product nav (dashboard, analyse, screener, etc.) stays for logged-in power users behind `/_authenticated`, but the marketing surface uses the 4-item shell.
+apex_positions  (virtuelles 1-Aktie-Portfolio = "Modellportfolio")
+  id, analysis_id, ticker, name, sector,
+  status ('open'|'closed'),
+  entry_at, entry_price,
+  exit_at, exit_price, exit_reason,
+  current_price, current_price_at,
+  return_abs, return_pct, holding_days,
+  weight_pct (Allokation im Modellportfolio)
 
-## 3. Page 1 — Landing (`/`, unauth)
+apex_equity_curve
+  date (pk), equity_value, cash, invested,
+  realized_pnl, unrealized_pnl, num_open, num_closed
 
-Replace `src/components/MarketingLanding.tsx`:
-- **Hero**: H1 "Die richtigen Aktien. Ohne den ganzen Aufwand." · sub-headline as briefed · primary CTA "Jetzt Empfehlungen sehen" → `/picks` · secondary link "Wie funktioniert das?" → `/wie-es-funktioniert`. No jargon, no numbers except "Über 200 analysierte Aktien pro Woche".
-- **3-Step "So funktioniert's"** with lucide icons (Brain · Bell · UserCheck).
-- **Trust bar** (text badges, no fake logos).
-- **Picks teaser**: 3 latest open picks via existing trackrecord function, blurred for unauth.
-- **Track-record teaser**: ONE big number (Trefferquote) gated by 30-day minimum.
-- Keep final CTA → 7-Tage-Trial.
+apex_audit_log
+  id, entity_table, entity_id, action ('insert'|'update'|'close'|'price_update'),
+  actor ('cron'|'service'|'admin'), before jsonb, after jsonb, created_at
+```
 
-## 4. Page 2 — Quantum Picks (`/picks`)
+Regeln:
+- `apex_analyses` bleibt unverändert (Source of Truth für die Empfehlung)
+- Update- und Delete-Policies bleiben `false` für anon/authenticated; alle Schreibwege laufen über service_role (cron / server functions)
+- Trigger `apex_*_audit` schreibt automatisch in `apex_audit_log` bei jedem UPDATE/DELETE → manipulationssicher
+- GRANTs: `SELECT TO anon, authenticated`, `ALL TO service_role`
 
-Rewrite `src/routes/picks.tsx` presentation:
-- Card grid (1 col mobile, 2 col md, 3 col xl) of `PickCard`.
-- Reason sentence derived from existing indicators — short German template ("Starkes Momentum, technisch überverkauft.") generated client-side from existing data.
-- Signalstärke = colored progress bar from confidence score, no raw %.
-- Action badge: confidence ≥ threshold → "KAUFEN" (bull green) else "BEOBACHTEN" (amber).
-- Filters slimmed to: Sektor · Signalstärke (Alle/Stark/Mittel) · Status (Offen/Geschlossen). Remove all advanced filters from default view.
-- "Was bedeutet das?" → shadcn Dialog with beginner explanation.
-- Advanced data per card inside collapsible.
-- Empty state copy as briefed.
+## Stufe 2 — Signal- & Portfolio-Engine
 
-## 5. Page 3 — Track Record (`/track-record`)
+`src/lib/track-record.server.ts` wird erweitert:
 
-Rewrite `src/routes/track-record.tsx` presentation; keep `src/lib/trackrecord.functions.ts` data shape.
-- Compute `daysOfData` from earliest evaluated outcome.
-- `<30 days`: ThresholdGate full-page (progress bar + copy).
-- `≥30 days`: 4 MetricCards — Trefferquote · Ø Rendite · Bester Trade · Ausgewertete Empfehlungen.
-- `≥90 days`: Benchmark chart (Quantm vs S&P 500 vs DAX) with 3M/6M/1Y/Gesamt filters showing only periods with data. Auto-summary sentence under chart. Reuse existing benchmark data if available; otherwise show "Benchmark-Vergleich in Vorbereitung" placeholder card to avoid faking numbers.
-- Picks history list: Company · Datum · Einstieg · Ausstieg · Rendite % · Status, with green/red return, sort newest first, filters Alle/Gewinner/Verlierer/Offen, search by name. Drop jargon columns.
-- TrustPillars section.
-- AdvancedCollapsible: Sharpe, Max Drawdown, Volatility, W/L Ratio, Avg holding period — each with InfoTooltip. Values computed from existing outcome data if present.
-- Remove the 7-day-only views from default (move into Advanced).
+1. **Buy-Signal-Erzeugung** — beim Picks-Scan, sobald `verdict='KAUF'` & `confidence ≥ Schwelle`: in `apex_signals` einen `BUY`-Eintrag schreiben und in `apex_positions` eine offene Position mit `entry_*` und Begründung anlegen.
+2. **Sell-Trigger** — täglicher Cron prüft jede offene Position:
+   - Kursziel erreicht → SELL (Grund: "Kursziel erreicht")
+   - Stop-Loss unterschritten → SELL (Grund: "Stop-Loss")
+   - 90 Tage erreicht → SELL (Grund: "Zeit-Exit")
+   - Neuer `VERKAUFEN`-Verdict für gleichen Ticker → SELL (Grund: "Verdict gewechselt")
+3. **Preis- & Kennzahlen-Refresh** — `current_price`, `return_pct`, `holding_days` für alle offenen Positionen werden täglich nachgezogen.
+4. **Equity Curve** — Tagessnapshot in `apex_equity_curve` (gleichgewichtetes Modellportfolio, Start 100 000 €).
+5. **Audit** — jede Mutation läuft über eine `recordChange()`-Helper, die in `apex_audit_log` schreibt.
 
-## 6. Page 4 — Wie es funktioniert (`/wie-es-funktioniert`, new route)
+Aufrufweg: `/api/public/hooks/picks-scan` (existiert) ruft am Ende `runPositionManagement()` auf. Neuer Hook `/api/public/hooks/track-record-refresh` für reines Kurs-Update (15 min Cron).
 
-New `src/routes/wie-es-funktioniert.tsx`:
-- 5 sections max, each ≤3 sentences, with metaphors ("Wie ein erfahrener Analyst, der nie schläft").
-- Visual algorithm flow (icons only, no formulas).
-- 6-question FAQ (Accordion).
-- CTA back to `/picks` and trial.
+## Stufe 3 — UI
 
-## 7. Cleanup / Hide
+`src/routes/track-record.tsx` wird in Tab-Layout umgebaut (4 Tabs):
 
-- In default views: hide Sharpe/Drawdown/Alpha/Beta/Volatility labels (only inside AdvancedCollapsible).
-- Remove "7-Tage-Performance" cards from default Track Record, Picks, Dashboard surface.
-- Ensure no number is shown without a German label + 1-line explanation.
+1. **Übersicht** — Transparency-Dashboard
+   - KPI-Grid: Total Trades, Wins, Losses, Win-Rate, Ø Rendite, Bester / Schlechtester Trade, Offen / Geschlossen
+   - Equity-Kurve (Recharts LineChart) seit Tag 0
+   - Win/Loss-Verteilung (Histogramm)
+   - Monatliche Performance (BarChart)
+   - Hinweis "Kein Trade kann manuell ausgeblendet werden" + Link zum Audit-Log
 
-## Technical notes
+2. **Portfolio**
+   - Metriken: Portfoliowert, Total-Return %/€, Win-Rate, # offen/geschlossen, Ø Gewinn, Ø Verlust, Ø Haltedauer
+   - Allokations-Donut (Recharts PieChart) über offene Positionen
+   - Holdings-Tabelle: Aktie · Anteile · Entry · Aktuell · Größe · P/L € & % · Allokation %
 
-- All copy lives directly in the new components (German); no i18n keys to add.
-- Tooltips via existing `@/components/ui/tooltip`, collapsibles via existing `@/components/ui/collapsible`, dialogs via `@/components/ui/dialog`, accordion via `@/components/ui/accordion`. No new deps.
-- Use existing design tokens (`bg-background`, `text-foreground`, `text-bull`, `text-bear`, `text-primary`). For the lighter "private-bank" feel inside cards, lean on `bg-card/40` + `border-border/60` already in styles.css — no new color tokens.
-- Route file `src/routes/wie-es-funktioniert.tsx` will register via TanStack file-based routing; `createFileRoute("/wie-es-funktioniert")`.
-- No backend or DB migrations. No changes to Stripe, cron, RLS, server functions.
+3. **Empfehlungen** (Ersetzt die heutige `PicksHistory`-Tabelle)
+   - Filter Offen/Geschlossen/Alle, Sektor, Cap, Suche
+   - Karte je Pick mit Ticker · Buy-Datum · Buy-Preis · Aktueller/Exit-Preis · Kursziel · Confidence · Return · Status-Badge · Risk-Level · Horizon
+   - Klick öffnet **Pick-Detail-Drawer** (siehe unten)
 
-## Out of scope (explicitly)
+4. **Audit-Log**
+   - Chronologische Liste aller Änderungen, lesbar formatiert ("Position TSLA geschlossen — Grund: Kursziel erreicht — 22.06.2026 14:32")
+   - Tab nur sichtbar für angemeldete Nutzer (öffentliche Verifikation über Read-only-API möglich)
 
-- Logged-in power-user dashboard internals (`/dashboard`, `/agent`, `/screener` etc.) — untouched except for nav trim on the marketing shell.
-- Pricing page — already has the trial wired; no redesign requested.
-- Backend logic, schema, auth.
+Neue Komponente `src/components/track-record/PickDetailDrawer.tsx`:
+- Preis-Chart (Recharts) mit grünem Buy-Marker und rotem Sell-Marker
+- Begründung Buy / Begründung Sell
+- Bullish Factors ✅ / Bearish Factors ⚠️ als Chip-Listen
+- Performance-Block (Return abs/pct, Haltedauer, vs. S&P 500)
+
+## Stufe 4 — Empfehlungsqualität (`src/lib/composite-engine.ts`)
+
+- Schwelle `MIN_CONFIDENCE_FOR_BUY` von 60 auf 70 anheben
+- Verlangt zusätzlich MTF-Confirmation = `confirmed` **und** OBV- oder CMF-Score > 0.1
+- Output pro Pick neu: `riskLevel`, `horizonDays`, `bullishFactors[]`, `bearishFactors[]`, `targetPrice`, `stopLoss`
+- Diese Felder werden vom Picks-Scan zusammen mit dem `BUY`-Signal in `apex_signals` persistiert und in den Pick-Karten auf Picks-Seite + Track-Record sichtbar gemacht.
 
 ---
 
-If you approve, I'll execute in this order: shared components → Landing → Picks → Track Record → Wie es funktioniert → nav trim → preview check.
+## Technische Details
+
+- Backend ausschließlich über `createServerFn` (`src/lib/trackrecord.functions.ts` wird erweitert um `getPortfolio`, `getEquityCurve`, `getPickDetail`, `getAuditLog`) und Cron-Hooks unter `src/routes/api/public/hooks/`.
+- Charts mit bereits installiertem `recharts`.
+- Tabs mit shadcn `Tabs`.
+- Mutations laufen ausschließlich über service_role im Cron — anon/authenticated haben nur `SELECT`.
+- Audit-Trigger ist `SECURITY DEFINER`, schreibt `before`/`after` jsonb-Snapshots → keine stille Manipulation möglich.
+- Equity-Start, Buy-Confidence-Schwelle, Stop-Loss-% in `src/lib/track-record-config.ts` zentral.
+
+## Reihenfolge der Umsetzung
+
+1. Migration (Tabellen + Trigger + GRANTs + Audit)
+2. Server-Engine (Signale, Positionen, Equity, Audit-Helper)
+3. Cron-Hook `track-record-refresh` + Integration in `picks-scan`
+4. Server-Funktionen für Portfolio / Equity / Detail / Audit
+5. UI-Refactor `track-record.tsx` + neuer `PickDetailDrawer`
+6. Composite-Engine Quality-Filter + neue Pick-Felder
+7. Backfill-Migration: für bestehende `apex_analyses` mit Verdict=KAUF rückwirkend `apex_signals(BUY)` und offene `apex_positions` anlegen, damit die Historie nicht leer wirkt
+
+## Außerhalb des Scope (separat ansprechen)
+
+- Echtes Nutzer-Portfolio (jeder User hat eigene Positionen) — heute & im Plan: ein gemeinsames Modellportfolio, das alle sehen. Wenn pro-User gewünscht, ist das ein eigener Aufsatz auf `user_portfolio_positions`.
+- Steuer-/Gebühren-Modell.
+- Backtest-Vergleich vor Tag 0 (Plan dokumentiert nur Live-Empfehlungen — Selbstauflage).
