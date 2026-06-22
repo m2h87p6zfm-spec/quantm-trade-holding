@@ -3,13 +3,29 @@
 // allocation) without any new DB writes. The apex_* tables are anon-read +
 // service-role-write (RLS-locked), which is the auditability guarantee.
 import type { TrackRecordPayload } from "@/lib/trackrecord.functions";
-import type { DerivedPosition } from "@/components/track-record/PickDetailDrawer";
+import type { DerivedPosition, ConvictionTier } from "@/components/track-record/PickDetailDrawer";
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
 const STARTING_EQUITY = 100_000;
-const SLOT_COUNT = 20; // equal-weight model portfolio with up to 20 simultaneous positions
-const SLOT_NOTIONAL = STARTING_EQUITY / SLOT_COUNT; // 5 000 € per position
+// Minimum confidence required for the model portfolio to actually buy a pick.
+// Picks below this threshold are tracked (audit log keeps everything) but NOT
+// invested in — that's how we lift the hit-rate of the deployed portfolio.
+const MIN_CONFIDENCE_TO_INVEST = 70;
+
+// Confidence-weighted position sizing. Higher conviction → bigger € slot.
+// Tiered (not linear) so users see a clear "small / medium / high" decision.
+function sizingFromConfidence(confidence: number): { notional: number; tier: ConvictionTier } {
+  if (confidence >= 85) return { notional: 8_000, tier: "high" };   // Hohe Konfidenz
+  if (confidence >= 75) return { notional: 5_000, tier: "medium" }; // Mittlere Konfidenz
+  return { notional: 3_000, tier: "base" };                          // Basis-Konfidenz (70–74)
+}
+
+export const TIER_LABEL: Record<ConvictionTier, string> = {
+  high: "Hohe Konfidenz",
+  medium: "Mittlere Konfidenz",
+  base: "Basis-Konfidenz",
+};
 
 export type PortfolioMetrics = {
   totalEquity: number;
@@ -84,6 +100,11 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
   for (const a of analyses) {
     if (a.verdict !== "KAUF") continue;
+    // High-conviction-only model: skip picks whose confidence is below the
+    // invest threshold. They still live in the analyses table (full audit
+    // trail) but the portfolio doesn't allocate capital to them.
+    if (a.confidence_score < MIN_CONFIDENCE_TO_INVEST) continue;
+
     const entryAt = a.analyzed_at;
     const entryTime = new Date(entryAt).getTime();
     const entryPrice = a.price_at_analysis;
@@ -127,9 +148,10 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
     const hasMeasurement = status === "closed" || hasAnyOutcomePrice;
 
+    const { notional, tier } = sizingFromConfidence(a.confidence_score);
+    const shares = entryPrice > 0 ? notional / entryPrice : 0;
     const returnPct =
       entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
-    const shares = SLOT_NOTIONAL / entryPrice;
     const returnAbs = shares * (currentPrice - entryPrice);
 
     positions.push({
@@ -145,6 +167,9 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       returnAbs,
       holdingDays,
       hasMeasurement,
+      notional,
+      shares,
+      tier,
     });
   }
 
@@ -305,4 +330,4 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 }
 
 export const PORTFOLIO_STARTING_EQUITY = STARTING_EQUITY;
-export const PORTFOLIO_SLOT_NOTIONAL = SLOT_NOTIONAL;
+export const PORTFOLIO_MIN_CONFIDENCE = MIN_CONFIDENCE_TO_INVEST;
