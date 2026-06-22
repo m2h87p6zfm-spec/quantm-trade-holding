@@ -513,48 +513,143 @@ export type ApexReport = {
 
 
 
-// Score the seven module groups (5% Sentiment slot reserved for caller).
-const scoreModules = (m: ApexReport["modules"], price: number): { total: number; A: number; B: number; C: number; D: number; F: number; G: number } => {
-  // A momentum 0-100
-  let a = 50;
-  if (m.A.rsi < 30) a += 15; else if (m.A.rsi > 70) a -= 15; else a += (50 - Math.abs(m.A.rsi - 50)) * 0.3;
-  a += m.A.hist > 0 ? 10 : -10;
-  a += clamp(m.A.roc, -10, 10);
-  a += m.A.adx > 25 ? 5 : 0;
-  a = clamp(a, 0, 100);
+// ─── Strict statistical confidence aggregator ────────────────
+// Builds a signed signal vector across ALL modules (A momentum, B trend,
+// C risk, D forecast, F quality, G relative strength, H volume/MTF),
+// then computes:
+//   • weighted mean direction  (= score)
+//   • weighted std deviation   (= disagreement)
+//   • % of informative signals aligned with the mean direction
+//   • a t-statistic |mean| / (std / √n_eff) → logistic-mapped to [0,1]
+// Confidence is the **geometric mean** of strength, agreement, t-confidence
+// and alignment — so a high score requires unanimous alignment AND
+// statistical significance. Lonely strong signals can't lift confidence
+// on their own; that's the discipline the user asked for.
+type SignedSignal = { name: string; v: number; w: number };
 
-  // B trend
-  let b = 50;
-  if (price > m.B.sma20) b += 10; else b -= 10;
-  if (Number.isFinite(m.B.sma50) && m.B.sma20 > m.B.sma50) b += 10; else b -= 5;
-  if (Number.isFinite(m.B.sma200) && price > m.B.sma200) b += 10;
-  if (price > m.B.vwap) b += 5;
-  if (price > m.B.ichimoku.senkouA && price > m.B.ichimoku.senkouB) b += 10;
-  b = clamp(b, 0, 100);
+const computeStatConfidence = (
+  m: ApexReport["modules"],
+  price: number,
+  dataLen: number,
+): { score: number; confidence: number; bullish: boolean; diagnostics: { meanSignal: number; std: number; alignment: number; tStat: number; nSignals: number } } => {
+  const sig: SignedSignal[] = [];
+  const push = (name: string, v: number, w = 1) => {
+    if (!Number.isFinite(v)) return;
+    sig.push({ name, v: clamp(v, -1, 1), w });
+  };
 
-  // C volatility/risk — lower vol = higher score
-  let c = 70 - m.C.histVol * 100;
-  if (m.C.bb.widthPct < 5) c += 5;
-  if (Math.abs(m.C.zScore) > 2) c -= 10;
-  c = clamp(c, 0, 100);
+  // — Module A: momentum (signed bullish/bearish) —
+  push("RSI",        (m.A.rsi - 50) / 25,                                1.0);
+  push("MACD_hist",  m.A.hist * 10,                                       1.0);
+  push("ROC",        m.A.roc / 8,                                         0.9);
+  push("CCI",        m.A.cci / 100,                                       0.6);
+  push("Williams%R", (m.A.williamsR + 50) / 30,                           0.6);
+  push("StochRSI",   ((m.A.stochRSI_K - 50) / 35),                        0.6);
+  // ADX is unsigned strength — only inform if regime is trending
+  if (Number.isFinite(m.A.adx) && m.A.adx > 25) {
+    const dir = Math.sign(m.A.hist || (m.A.rsi - 50));
+    push("ADX_dir", dir * Math.min(1, (m.A.adx - 25) / 25), 0.8);
+  }
 
-  // D forecast
-  let d = 50 + m.D.regSlope * 1000 * m.D.regR2;
-  if (m.D.mc30.p50 > price) d += 15; else d -= 10;
-  d = clamp(d, 0, 100);
+  // — Module B: trend —
+  push("PxVsSMA50",  (price - m.B.sma50)  / (m.B.sma50  || price) * 10,   1.0);
+  if (Number.isFinite(m.B.sma200)) {
+    push("PxVsSMA200", (price - m.B.sma200) / m.B.sma200 * 5,             1.0);
+  }
+  if (Number.isFinite(m.B.sma50)) {
+    push("MA_stack",   Math.sign(m.B.sma20 - m.B.sma50),                  0.8);
+  }
+  push("VWAP",       (price - m.B.vwap) / (price * 0.02),                 0.5);
+  const cloudMid = (m.B.ichimoku.senkouA + m.B.ichimoku.senkouB) / 2;
+  if (Number.isFinite(cloudMid)) {
+    push("Ichimoku", (price - cloudMid) / (price * 0.05),                 0.8);
+  }
 
-  // F portfolio quality
-  let f = 50 + m.F.sharpe * 15 + m.F.sortino * 5 + m.F.calmar * 5;
-  if (Math.abs(m.F.maxDD) > 0.4) f -= 15;
-  f = clamp(f, 0, 100);
+  // — Module D: forecast —
+  push("LinReg",     m.D.regSlope * 1000 * Math.max(0, Math.min(1, m.D.regR2)), 1.0);
+  push("MC_P50",     ((m.D.mc30.p50 - price) / price) * 5,                1.0);
 
-  // G relative
-  let g = 50 + (m.G.relStrength - 1) * 100;
-  g = clamp(g, 0, 100);
+  // — Module F: portfolio quality (signed) —
+  push("Sharpe",     m.F.sharpe / 2,                                      0.6);
+  push("Sortino",    m.F.sortino / 2,                                     0.4);
 
-  // weights 15/15/15/15/10/10 (Fundamentals 15% + Sentiment 5% reserved → distributed to A/B)
-  const total = a * 0.20 + b * 0.20 + c * 0.15 + d * 0.15 + f * 0.15 + g * 0.15;
-  return { total, A: a, B: b, C: c, D: d, F: f, G: g };
+  // — Module G: relative strength —
+  push("RelStrength", (m.G.relStrength - 1) * 5,                          0.8);
+
+  // — Module H: volume + multi-timeframe —
+  push("OBV",        m.H.obv,                                             0.7);
+  push("CMF",        m.H.cmf * 2,                                         0.7);
+  push("52w_pos",    m.H.nearness52w,                                     0.5);
+  push("Weekly",     m.H.weeklyBias,                                      1.0);
+
+  const totalW = sig.reduce((s, x) => s + x.w, 0) || 1;
+  const meanSignal = sig.reduce((s, x) => s + x.v * x.w, 0) / totalW;
+  const variance = sig.reduce((s, x) => s + x.w * (x.v - meanSignal) ** 2, 0) / totalW;
+  const std = Math.sqrt(variance);
+
+  // Directional alignment: weighted share of informative signals (|v|>0.1)
+  // that point in the same direction as the mean.
+  const dirSign = Math.sign(meanSignal) || 1;
+  const informative = sig.filter((x) => Math.abs(x.v) > 0.1);
+  const informativeW = informative.reduce((s, x) => s + x.w, 0) || 1;
+  const alignedW = informative
+    .filter((x) => Math.sign(x.v) === dirSign)
+    .reduce((s, x) => s + x.w, 0);
+  const alignment = alignedW / informativeW; // 0..1
+
+  // Effective sample size for the t-statistic
+  const sumW = totalW;
+  const sumW2 = sig.reduce((s, x) => s + x.w * x.w, 0) || 1;
+  const nEff = (sumW * sumW) / sumW2;
+  const tStat = std > 0 ? Math.abs(meanSignal) / (std / Math.sqrt(nEff)) : nEff * Math.abs(meanSignal);
+  // Logistic centered at t=2 (~95% one-sided) so weak setups don't crack 50%.
+  const tConf = 1 / (1 + Math.exp(-(tStat - 2)));
+
+  // Component scores in [0,1]
+  const strength  = Math.min(1, Math.abs(meanSignal) * 1.6); // |mean| ~0.62 → full
+  const agreement = Math.max(0, 1 - std);                    // low spread → high
+
+  // Geometric mean — strict: a single weak factor drags the whole score.
+  let conf01 = Math.pow(
+    Math.max(1e-6, strength) *
+    Math.max(1e-6, agreement) *
+    Math.max(1e-6, tConf) *
+    Math.max(1e-6, alignment),
+    1 / 4,
+  );
+
+  // ── Penalties (multiplicative) ────────────────────────────
+  // 1) Data quality — short history is less trustworthy
+  if (dataLen < 252) conf01 *= 0.85;
+  if (dataLen < 120) conf01 *= 0.75;
+  if (dataLen < 60)  conf01 *= 0.60;
+  // 2) Volatility regime — high σ widens the distribution of outcomes
+  if (m.C.garchAnnual > 60) conf01 *= 0.85;
+  if (m.C.garchAnnual > 90) conf01 *= 0.80;
+  // 3) Tail-risk — extreme 1-day VaR
+  if (m.C.var99 > 8)  conf01 *= 0.92;
+  if (m.C.var99 > 12) conf01 *= 0.88;
+  // 4) Daily vs Weekly disagreement
+  const dailyBull  = meanSignal > 0;
+  const weeklyBull = m.H.weeklyBias > 0;
+  if (Math.abs(m.H.weeklyBias) > 0.15 && dailyBull !== weeklyBull) conf01 *= 0.7;
+  // 5) Severe drawdown regime
+  if (Math.abs(m.F.maxDD) > 40) conf01 *= 0.9;
+  if (Math.abs(m.F.maxDD) > 60) conf01 *= 0.85;
+  // 6) Z-Score whipsaw — overextended in either direction
+  if (Math.abs(m.C.zScore) > 2.5) conf01 *= 0.9;
+
+  const confidence = clamp(conf01 * 100, 0, 100);
+  // Score keeps the legacy [0,100] directional interpretation so the
+  // verdict mapper still works untouched.
+  const score = clamp(50 + meanSignal * 50, 0, 100);
+
+  return {
+    score,
+    confidence,
+    bullish: meanSignal >= 0,
+    diagnostics: { meanSignal, std, alignment, tStat, nSignals: sig.length },
+  };
 };
 
 const mapVerdict = (conf: number, bullish: boolean) => {
