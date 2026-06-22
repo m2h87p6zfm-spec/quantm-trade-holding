@@ -31,6 +31,9 @@ export type DerivedPosition = {
   returnPct: number;
   returnAbs: number;
   holdingDays: number;
+  /** True if we have at least one measured outcome price (or an exit) — used
+   *  to exclude "no-data" picks from win/loss & best/worst statistics. */
+  hasMeasurement: boolean;
 };
 
 function fmtDate(iso: string) {
