@@ -133,15 +133,22 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
       )}
 
 
-      {/* Kursziel + Datum */}
+      {/* Aktueller Kurs + Kursziel + Datum */}
       <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
         <div>
           <dt className="flex items-center gap-1 text-muted-foreground">
+            Aktueller Kurs
+            <InfoTooltip text="Kurs der Aktie zum Zeitpunkt unserer Empfehlung. In der gehandelten Heimatwährung der Aktie." />
+          </dt>
+          <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">
+            {pick.lastPrice != null ? formatPrice(pick.lastPrice, pick.symbol) : "—"}
+          </dd>
+          <dt className="mt-2 flex items-center gap-1 text-muted-foreground">
             Kursziel
             <InfoTooltip text="Kurs, den wir auf Basis der Analyse für realistisch halten. Keine Garantie — nur eine Orientierung." />
           </dt>
           <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-            {pick.targetPrice != null ? `${pick.targetPrice.toFixed(2)} $` : "—"}
+            {pick.targetPrice != null ? formatPrice(pick.targetPrice, pick.symbol) : "—"}
           </dd>
         </div>
         <div>
@@ -149,7 +156,7 @@ export function PickCard({ pick }: { pick: BeginnerPick }) {
             <Calendar className="h-3 w-3" /> Empfohlen am
           </dt>
           <dd className="mt-0.5 font-mono text-sm font-semibold text-foreground">
-            {new Date(pick.date).toLocaleDateString("de-DE")}
+            {new Date(pick.date).toLocaleDateString("de-DE", { day: "2-digit", month: "short", year: "numeric" })}
           </dd>
           {(() => {
             const days = ageInDays(pick.date);
