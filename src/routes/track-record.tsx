@@ -878,8 +878,8 @@ function PicksHistory({
         if (term && !p.analysis.name.toLowerCase().includes(term) && !p.analysis.ticker.toLowerCase().includes(term)) return false;
         if (filter === "Offen") return p.status === "open";
         if (filter === "Geschlossen") return p.status === "closed";
-        if (filter === "Gewinner") return p.returnPct > 0;
-        if (filter === "Verlierer") return p.returnPct < 0;
+        if (filter === "Gewinner") return p.hasMeasurement && p.returnPct > 0;
+        if (filter === "Verlierer") return p.hasMeasurement && p.returnPct < 0;
         return true;
       })
       .slice(0, 300);
