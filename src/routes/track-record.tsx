@@ -269,26 +269,26 @@ function TransparencyDashboard({ derived }: { derived: DerivedTrackRecord }) {
         Jeder Trade — gewonnen oder verloren — bleibt sichtbar. Manuelles Ausblenden ist technisch nicht möglich.
       </p>
       <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-        <MetricCard value={String(m.numClosed + m.numOpen)} label="Trades gesamt" />
-        <MetricCard value={String(m.wins)} label="Gewinner" tone="positive" />
-        <MetricCard value={String(m.losses)} label="Verlierer" tone="negative" />
-        <MetricCard
+        <KpiTile value={String(m.numClosed + m.numOpen)} label="Trades gesamt" />
+        <KpiTile value={String(m.wins)} label="Gewinner" tone="positive" />
+        <KpiTile value={String(m.losses)} label="Verlierer" tone="negative" />
+        <KpiTile
           value={`${m.winRate.toFixed(0)} %`}
           label="Trefferquote"
           tone={m.winRate >= 55 ? "positive" : m.winRate >= 45 ? "neutral" : "negative"}
         />
-        <MetricCard
+        <KpiTile
           value={`${m.bestTradePct >= 0 ? "+" : ""}${m.bestTradePct.toFixed(1)} %`}
           label={`Bester Trade${m.bestTradeTicker ? ` (${m.bestTradeTicker})` : ""}`}
           tone="positive"
         />
-        <MetricCard
+        <KpiTile
           value={`${m.worstTradePct.toFixed(1)} %`}
           label={`Schlechtester Trade${m.worstTradeTicker ? ` (${m.worstTradeTicker})` : ""}`}
           tone="negative"
         />
-        <MetricCard value={String(m.numOpen)} label="Aktuell offen" />
-        <MetricCard value={String(m.numClosed)} label="Geschlossen" />
+        <KpiTile value={String(m.numOpen)} label="Aktuell offen" />
+        <KpiTile value={String(m.numClosed)} label="Geschlossen" />
       </div>
     </section>
   );
@@ -479,30 +479,30 @@ function PortfolioOverview({
           Modellportfolio mit gleichgewichteten {fmtMoney(PORTFOLIO_SLOT_NOTIONAL)} € pro Empfehlung.
         </p>
         <div className="mt-4 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          <MetricCard value={`${fmtMoney(m.totalEquity)} €`} label="Portfoliowert" />
-          <MetricCard
+          <KpiTile value={`${fmtMoney(m.totalEquity)} €`} label="Portfoliowert" />
+          <KpiTile
             value={`${m.totalReturnPct >= 0 ? "+" : ""}${m.totalReturnPct.toFixed(2)} %`}
             label="Gesamt-Rendite"
             tone={m.totalReturnPct >= 0 ? "positive" : "negative"}
           />
-          <MetricCard
+          <KpiTile
             value={`${m.totalReturnAbs >= 0 ? "+" : ""}${fmtMoney(m.totalReturnAbs)} €`}
             label="Gesamt-P&L"
             tone={m.totalReturnAbs >= 0 ? "positive" : "negative"}
           />
-          <MetricCard
+          <KpiTile
             value={`${m.winRate.toFixed(0)} %`}
             label="Trefferquote"
             tone={m.winRate >= 55 ? "positive" : m.winRate >= 45 ? "neutral" : "negative"}
           />
-          <MetricCard value={String(m.numOpen)} label="Offene Positionen" />
-          <MetricCard value={String(m.numClosed)} label="Geschlossene" />
-          <MetricCard
+          <KpiTile value={String(m.numOpen)} label="Offene Positionen" />
+          <KpiTile value={String(m.numClosed)} label="Geschlossene" />
+          <KpiTile
             value={`${m.avgGainPct >= 0 ? "+" : ""}${m.avgGainPct.toFixed(2)} %`}
             label="Ø Gewinn"
             tone="positive"
           />
-          <MetricCard
+          <KpiTile
             value={`${m.avgLossPct.toFixed(2)} %`}
             label="Ø Verlust"
             tone="negative"
