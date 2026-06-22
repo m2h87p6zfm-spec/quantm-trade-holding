@@ -617,10 +617,10 @@ function PortfolioOverview({
                 <tr>
                   <th className="px-4 py-2 text-left font-medium">Aktie</th>
                   <th className="px-4 py-2 text-right font-medium">Anteile</th>
-                  <th className="px-4 py-2 text-right font-medium">Entry</th>
-                  <th className="px-4 py-2 text-right font-medium">Aktuell</th>
-                  <th className="px-4 py-2 text-right font-medium">P&L</th>
-                  <th className="px-4 py-2 text-right font-medium">Allok.</th>
+                  <th className="px-4 py-2 text-right font-medium">Kaufpreis</th>
+                  <th className="px-4 py-2 text-right font-medium">Heute</th>
+                  <th className="px-4 py-2 text-right font-medium">Gewinn / Verlust</th>
+                  <th className="px-4 py-2 text-right font-medium">Anteil im Depot</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
