@@ -17,7 +17,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Search, ArrowRight, Download, ShieldCheck, Lock } from "lucide-react";
+import { Search, ArrowRight, Download, ShieldCheck, Lock, HelpCircle } from "lucide-react";
 import { getTrackRecord, type TrackRecordPayload } from "@/lib/trackrecord.functions";
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
