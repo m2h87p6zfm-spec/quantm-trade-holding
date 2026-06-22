@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
+import { AuthNavButton } from "@/components/AuthNavButton";
 import { useSettings } from "@/lib/settings";
 
 /**
