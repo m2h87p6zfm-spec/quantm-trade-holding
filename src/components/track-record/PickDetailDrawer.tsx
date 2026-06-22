@@ -182,9 +182,9 @@ export function PickDetailDrawer({
                     tickFormatter={(v: number) => v.toFixed(0)}
                   />
                   <Tooltip
-                    formatter={(value: number) => [fmtMoney(value), "Kurs"]}
-                    labelFormatter={(d: number) =>
-                      d === 0 ? "Buy-Signal" : `Tag +${d}`
+                    formatter={(value: number) => [money(value), "Kurs"]}
+                    labelFormatter={(d) =>
+                      Number(d) === 0 ? "Buy-Signal" : `Tag +${d}`
                     }
                     contentStyle={{
                       background: "var(--card)",
