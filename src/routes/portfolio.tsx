@@ -83,8 +83,9 @@ function PositionRow({
   onRemove: (id: string) => void;
 }) {
   const t = useT();
-  const q = useQuote(pos.symbol, 30_000);
+  const q = useQuote(pos.symbol, 12_000);
   const price = q.data?.c ?? row?.last ?? pos.brokerCurrentPrice;
+  const flash = usePriceFlash(price);
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
