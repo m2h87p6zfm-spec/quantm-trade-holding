@@ -438,9 +438,9 @@ function ScreenNewsSources({
   const valid = value.length > 0;
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80">News Feed</div>
+      <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80">News-Feed</div>
       <h2 className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-        Which sources should power your news feed?
+        Welche Quellen sollen deinen News-Feed speisen?
       </h2>
       <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
         Choose the agencies you trust. You can change this anytime in Settings.
