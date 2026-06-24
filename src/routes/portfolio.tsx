@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Microscope, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,25 @@ import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
 import { useLang, useT } from "@/lib/i18n";
+
+// Mini-Hook: gibt für ~600ms eine Richtung ("up" | "down") zurück, sobald sich
+// der übergebene Preis ändert. Damit kann eine Kurszelle wie bei Trade
+// Republic kurz grün/rot aufblitzen, ohne dass die Tabelle neu rendert.
+function usePriceFlash(price: number | undefined | null) {
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+  const prevRef = useRef<number | undefined | null>(price);
+  useEffect(() => {
+    const prev = prevRef.current;
+    if (price != null && prev != null && price !== prev) {
+      setFlash(price > prev ? "up" : "down");
+      const t = setTimeout(() => setFlash(null), 650);
+      prevRef.current = price;
+      return () => clearTimeout(t);
+    }
+    prevRef.current = price;
+  }, [price]);
+  return flash;
+}
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
