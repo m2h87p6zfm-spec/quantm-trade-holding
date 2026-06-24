@@ -65,6 +65,34 @@ export function scoreIndicators(ind: IndicatorSet, profile: RiskProfile = "ausge
   else if (ind.volatility < 0.2) r.push(`**Vola ${fmt(ind.volatility * 100, 1)}%**: ruhig, eher kleine Tagesbewegungen erwartbar.`);
 
   const threshold = profile === "konservativ" ? 25 : profile === "spekulativ" ? 12 : 18;
+
+  // ---- Confirmation Gate (Quant-Standard) -------------------------------
+  // Bisher konnte ein einzelner "Oversold"-Effekt (RSI≤25, Z≤-2, unteres
+  // Bollinger-Band) für sich allein über die LONG-Schwelle drücken — das ist
+  // der klassische "Dip-Reflex". Wir verlangen jetzt für ein LONG eine
+  // Bestätigung aus mindestens EINER Trend- oder Momentum-Familie:
+  //   • Golden Cross (SMA50>SMA200, Kurs > SMA50)
+  //   • MACD-Histogramm positiv UND MACD-Linie über Signal
+  //   • 10-Tage-Momentum > +0.5 %
+  // Analog für SHORT umgekehrt. Fehlt die Bestätigung, kappen wir den Score
+  // knapp unter die Schwelle → das Setup landet bewusst als NEUTRAL / WATCH.
+  const trendUp = !isNaN(ind.sma50) && !isNaN(ind.sma200) && ind.sma50 > ind.sma200 && ind.price > ind.sma50;
+  const trendDown = !isNaN(ind.sma50) && !isNaN(ind.sma200) && ind.sma50 < ind.sma200 && ind.price < ind.sma50;
+  const macdUp = ind.macd.histogram > 0 && ind.macd.macd > ind.macd.signal;
+  const macdDown = ind.macd.histogram < 0 && ind.macd.macd < ind.macd.signal;
+  const momUp = ind.momentum > 0.005;
+  const momDown = ind.momentum < -0.005;
+  const longConfirmed = trendUp || macdUp || momUp;
+  const shortConfirmed = trendDown || macdDown || momDown;
+
+  if (score >= threshold && !longConfirmed) {
+    score = threshold - 1;
+    r.push(`**Confirmation Gate:** Mean-Reversion-Signale (überverkauft / unteres Band) sind isoliert — weder Trend (SMA50/200), MACD noch Momentum bestätigen die Wende. Setup wird auf **NEUTRAL** zurückgestuft, bis mindestens eine Trend-/Momentum-Familie mitzieht.`);
+  } else if (score <= -threshold && !shortConfirmed) {
+    score = -(threshold - 1);
+    r.push(`**Confirmation Gate:** Überdehnungs-Signale (überkauft / oberes Band) sind isoliert — kein bestätigender Abwärtstrend, kein MACD-Cross, kein negatives Momentum. Setup bleibt **NEUTRAL**, bis die Trend-/Momentum-Seite folgt.`);
+  }
+
   let verdict: Verdict = "NEUTRAL";
   if (score >= threshold) verdict = "LONG";
   else if (score <= -threshold) verdict = "SHORT";
