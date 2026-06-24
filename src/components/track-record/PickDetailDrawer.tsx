@@ -44,6 +44,10 @@ export type DerivedPosition = {
   shares: number;
   /** Tier derived from confidence_score (drives `notional`). */
   tier: ConvictionTier;
+  /** 1 = erste Tranche, 2 = Nachkauf, 3 = dritter Aufbau. Pyramiding-Quant-Standard. */
+  trancheNum: number;
+  /** Wie viele Tranchen insgesamt für diesen Ticker offen waren als diese gekauft wurde. */
+  trancheTotal: number;
 };
 
 function fmtDate(iso: string) {
