@@ -13,12 +13,23 @@ const STARTING_EQUITY = 100_000;
 // invested in — that's how we lift the hit-rate of the deployed portfolio.
 const MIN_CONFIDENCE_TO_INVEST = 70;
 
-// Confidence-weighted position sizing. Higher conviction → bigger € slot.
-// Tiered (not linear) so users see a clear "small / medium / high" decision.
-function sizingFromConfidence(confidence: number): { notional: number; tier: ConvictionTier } {
-  if (confidence >= 85) return { notional: 8_000, tier: "high" };   // Hohe Konfidenz
-  if (confidence >= 75) return { notional: 5_000, tier: "medium" }; // Mittlere Konfidenz
-  return { notional: 3_000, tier: "base" };                          // Basis-Konfidenz (70–74)
+// Pyramiding / Position-Scaling (Quant-Standard):
+// Bei sehr hoher Konfidenz darf die Engine eine Aktie über mehrere Signaltage
+// in 2–3 Tranchen aufbauen, statt fix 5.000 € auf einmal. Jede weitere
+// Tranche braucht mindestens N Tage Abstand zur vorherigen UND eine
+// weiterhin starke Konfidenz.
+const TRANCHE_MIN_GAP_DAYS = 5;
+
+// Erste Tranche pro Konfidenz-Stufe und Anzahl maximaler Tranchen.
+function trancheRulesFor(confidence: number): {
+  notionalPerTranche: number;
+  maxTranches: number;
+  tier: ConvictionTier;
+} {
+  if (confidence >= 90) return { notionalPerTranche: 2_667, maxTranches: 3, tier: "high" };   // 3× ≈ 8.000 €
+  if (confidence >= 80) return { notionalPerTranche: 2_500, maxTranches: 2, tier: "high" };   // 2× = 5.000 €
+  if (confidence >= 75) return { notionalPerTranche: 5_000, maxTranches: 1, tier: "medium" }; // einmalig
+  return { notionalPerTranche: 3_000, maxTranches: 1, tier: "base" };                          // 70–74
 }
 
 export const TIER_LABEL: Record<ConvictionTier, string> = {
