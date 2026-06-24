@@ -109,19 +109,57 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   const positions: DerivedPosition[] = [];
   const now = Date.now();
 
-  for (const a of analyses) {
+  // Per-Ticker-Counter für Tranchen-Vergabe (Pyramiding).
+  // Wir laufen alle Analysen in chronologischer Reihenfolge durch und vergeben
+  // Tranche 1/2/3 nur, wenn (a) max-Tranchen der Konfidenz nicht überschritten,
+  // (b) mindestens TRANCHE_MIN_GAP_DAYS seit letzter Tranche vergangen sind und
+  // (c) Konfidenz weiter mindestens auf dem Tier der ersten Tranche liegt.
+  const trancheState = new Map<
+    string,
+    { lastEntryTime: number; tranches: number; firstTier: ConvictionTier }
+  >();
+
+  const chronological = [...analyses].sort(
+    (x, y) => new Date(x.analyzed_at).getTime() - new Date(y.analyzed_at).getTime(),
+  );
+
+  for (const a of chronological) {
     if (a.verdict !== "KAUF") continue;
-    // High-conviction-only model: skip picks whose confidence is below the
-    // invest threshold. They still live in the analyses table (full audit
-    // trail) but the portfolio doesn't allocate capital to them.
     if (a.confidence_score < MIN_CONFIDENCE_TO_INVEST) continue;
 
+    const entryTime = new Date(a.analyzed_at).getTime();
+    const rules = trancheRulesFor(a.confidence_score);
+
+    // Bestehende offene Tranchen für diesen Ticker? (alle KAUF-Analysen vor
+    // diesem Zeitpunkt, die noch nicht durch ein VERKAUFEN geschlossen wurden)
+    const tArr = byTicker.get(a.ticker) ?? [];
+    const lastSellBefore = tArr
+      .filter((x) => x.verdict === "VERKAUFEN" && new Date(x.analyzed_at).getTime() < entryTime)
+      .sort((x, y) => new Date(y.analyzed_at).getTime() - new Date(x.analyzed_at).getTime())[0];
+    const lastSellTime = lastSellBefore ? new Date(lastSellBefore.analyzed_at).getTime() : 0;
+
+    const st = trancheState.get(a.ticker);
+    // Wenn zwischenzeitlich ein VERKAUFEN lag, Tranchen-Counter resetten.
+    const effective = st && st.lastEntryTime > lastSellTime ? st : undefined;
+
+    let trancheNum = 1;
+    if (effective) {
+      const gapDays = (entryTime - effective.lastEntryTime) / 86_400_000;
+      if (effective.tranches >= rules.maxTranches) continue;        // Cap erreicht
+      if (gapDays < TRANCHE_MIN_GAP_DAYS) continue;                  // Zu schnell
+      trancheNum = effective.tranches + 1;
+    }
+
+    trancheState.set(a.ticker, {
+      lastEntryTime: entryTime,
+      tranches: trancheNum,
+      firstTier: effective?.firstTier ?? rules.tier,
+    });
+
     const entryAt = a.analyzed_at;
-    const entryTime = new Date(entryAt).getTime();
     const entryPrice = a.price_at_analysis;
 
-    // Look for a later VERKAUFEN on same ticker.
-    const tArr = byTicker.get(a.ticker) ?? [];
+    // VERKAUFEN nach diesem Eintritt schließt die Tranche.
     const sellAnalysis = tArr.find(
       (x) => x.verdict === "VERKAUFEN" && new Date(x.analyzed_at).getTime() > entryTime,
     );
@@ -159,7 +197,8 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
     const hasMeasurement = status === "closed" || hasAnyOutcomePrice;
 
-    const { notional, tier } = sizingFromConfidence(a.confidence_score);
+    const notional = rules.notionalPerTranche;
+    const tier = rules.tier;
     const shares = entryPrice > 0 ? notional / entryPrice : 0;
     const returnPct =
       entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
@@ -181,8 +220,11 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       notional,
       shares,
       tier,
+      trancheNum,
+      trancheTotal: rules.maxTranches,
     });
   }
+
 
   // Sort newest first for display
   positions.sort((a, b) => new Date(b.entryAt).getTime() - new Date(a.entryAt).getTime());
