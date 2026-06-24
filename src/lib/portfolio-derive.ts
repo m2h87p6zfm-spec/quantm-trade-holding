@@ -358,10 +358,10 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   // Win/loss histogram bins
   const bins = [
     { min: -Infinity, max: -10, label: "< −10 %", tone: "loss" as const, count: 0 },
-    { min: -10, max: -5, label: "−10 to −5 %", tone: "loss" as const, count: 0 },
-    { min: -5, max: 0, label: "−5 to 0 %", tone: "loss" as const, count: 0 },
-    { min: 0, max: 5, label: "0 to +5 %", tone: "win" as const, count: 0 },
-    { min: 5, max: 10, label: "+5 to +10 %", tone: "win" as const, count: 0 },
+    { min: -10, max: -5, label: "−10 bis −5 %", tone: "loss" as const, count: 0 },
+    { min: -5, max: 0, label: "−5 bis 0 %", tone: "loss" as const, count: 0 },
+    { min: 0, max: 5, label: "0 bis +5 %", tone: "win" as const, count: 0 },
+    { min: 5, max: 10, label: "+5 bis +10 %", tone: "win" as const, count: 0 },
     { min: 10, max: Infinity, label: "> +10 %", tone: "win" as const, count: 0 },
   ];
   for (const p of positions) {
