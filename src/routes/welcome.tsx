@@ -216,10 +216,10 @@ function WelcomePage() {
         {/* footer nav */}
         {step > 1 && step !== 11 && (
           <div className="mt-10 flex items-center justify-between text-xs text-muted-foreground">
-            <button onClick={back} className="hover:text-foreground transition-colors">Back</button>
+            <button onClick={back} className="hover:text-foreground transition-colors">Zurück</button>
             <div className="flex items-center gap-2">
               <Lock className="h-3 w-3" />
-              <span>End-to-end encrypted</span>
+              <span>Ende-zu-Ende verschlüsselt</span>
             </div>
           </div>
         )}
