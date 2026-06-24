@@ -30,7 +30,7 @@ export const Route = createFileRoute("/explain-trade")({
       <ExplainTradePage />
     </FeatureGate>
   ),
-  head: () => ({ meta: [{ title: "Explain My Trade — Quantm Trade" }] }),
+  head: () => ({ meta: [{ title: "Trade erklären — Quantm Trade" }] }),
 });
 
 type Source = { title: string; url: string; description: string; source: string };
@@ -145,7 +145,7 @@ function ExplainTradePage() {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Explain My Trade</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Trade erklären</h1>
             <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
               <Sparkles className="h-3 w-3" /> Live-News & KI
             </span>

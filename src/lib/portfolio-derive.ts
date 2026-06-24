@@ -13,12 +13,23 @@ const STARTING_EQUITY = 100_000;
 // invested in — that's how we lift the hit-rate of the deployed portfolio.
 const MIN_CONFIDENCE_TO_INVEST = 70;
 
-// Confidence-weighted position sizing. Higher conviction → bigger € slot.
-// Tiered (not linear) so users see a clear "small / medium / high" decision.
-function sizingFromConfidence(confidence: number): { notional: number; tier: ConvictionTier } {
-  if (confidence >= 85) return { notional: 8_000, tier: "high" };   // Hohe Konfidenz
-  if (confidence >= 75) return { notional: 5_000, tier: "medium" }; // Mittlere Konfidenz
-  return { notional: 3_000, tier: "base" };                          // Basis-Konfidenz (70–74)
+// Pyramiding / Position-Scaling (Quant-Standard):
+// Bei sehr hoher Konfidenz darf die Engine eine Aktie über mehrere Signaltage
+// in 2–3 Tranchen aufbauen, statt fix 5.000 € auf einmal. Jede weitere
+// Tranche braucht mindestens N Tage Abstand zur vorherigen UND eine
+// weiterhin starke Konfidenz.
+const TRANCHE_MIN_GAP_DAYS = 5;
+
+// Erste Tranche pro Konfidenz-Stufe und Anzahl maximaler Tranchen.
+function trancheRulesFor(confidence: number): {
+  notionalPerTranche: number;
+  maxTranches: number;
+  tier: ConvictionTier;
+} {
+  if (confidence >= 90) return { notionalPerTranche: 2_667, maxTranches: 3, tier: "high" };   // 3× ≈ 8.000 €
+  if (confidence >= 80) return { notionalPerTranche: 2_500, maxTranches: 2, tier: "high" };   // 2× = 5.000 €
+  if (confidence >= 75) return { notionalPerTranche: 5_000, maxTranches: 1, tier: "medium" }; // einmalig
+  return { notionalPerTranche: 3_000, maxTranches: 1, tier: "base" };                          // 70–74
 }
 
 export const TIER_LABEL: Record<ConvictionTier, string> = {
@@ -98,19 +109,57 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   const positions: DerivedPosition[] = [];
   const now = Date.now();
 
-  for (const a of analyses) {
+  // Per-Ticker-Counter für Tranchen-Vergabe (Pyramiding).
+  // Wir laufen alle Analysen in chronologischer Reihenfolge durch und vergeben
+  // Tranche 1/2/3 nur, wenn (a) max-Tranchen der Konfidenz nicht überschritten,
+  // (b) mindestens TRANCHE_MIN_GAP_DAYS seit letzter Tranche vergangen sind und
+  // (c) Konfidenz weiter mindestens auf dem Tier der ersten Tranche liegt.
+  const trancheState = new Map<
+    string,
+    { lastEntryTime: number; tranches: number; firstTier: ConvictionTier }
+  >();
+
+  const chronological = [...analyses].sort(
+    (x, y) => new Date(x.analyzed_at).getTime() - new Date(y.analyzed_at).getTime(),
+  );
+
+  for (const a of chronological) {
     if (a.verdict !== "KAUF") continue;
-    // High-conviction-only model: skip picks whose confidence is below the
-    // invest threshold. They still live in the analyses table (full audit
-    // trail) but the portfolio doesn't allocate capital to them.
     if (a.confidence_score < MIN_CONFIDENCE_TO_INVEST) continue;
 
+    const entryTime = new Date(a.analyzed_at).getTime();
+    const rules = trancheRulesFor(a.confidence_score);
+
+    // Bestehende offene Tranchen für diesen Ticker? (alle KAUF-Analysen vor
+    // diesem Zeitpunkt, die noch nicht durch ein VERKAUFEN geschlossen wurden)
+    const tArr = byTicker.get(a.ticker) ?? [];
+    const lastSellBefore = tArr
+      .filter((x) => x.verdict === "VERKAUFEN" && new Date(x.analyzed_at).getTime() < entryTime)
+      .sort((x, y) => new Date(y.analyzed_at).getTime() - new Date(x.analyzed_at).getTime())[0];
+    const lastSellTime = lastSellBefore ? new Date(lastSellBefore.analyzed_at).getTime() : 0;
+
+    const st = trancheState.get(a.ticker);
+    // Wenn zwischenzeitlich ein VERKAUFEN lag, Tranchen-Counter resetten.
+    const effective = st && st.lastEntryTime > lastSellTime ? st : undefined;
+
+    let trancheNum = 1;
+    if (effective) {
+      const gapDays = (entryTime - effective.lastEntryTime) / 86_400_000;
+      if (effective.tranches >= rules.maxTranches) continue;        // Cap erreicht
+      if (gapDays < TRANCHE_MIN_GAP_DAYS) continue;                  // Zu schnell
+      trancheNum = effective.tranches + 1;
+    }
+
+    trancheState.set(a.ticker, {
+      lastEntryTime: entryTime,
+      tranches: trancheNum,
+      firstTier: effective?.firstTier ?? rules.tier,
+    });
+
     const entryAt = a.analyzed_at;
-    const entryTime = new Date(entryAt).getTime();
     const entryPrice = a.price_at_analysis;
 
-    // Look for a later VERKAUFEN on same ticker.
-    const tArr = byTicker.get(a.ticker) ?? [];
+    // VERKAUFEN nach diesem Eintritt schließt die Tranche.
     const sellAnalysis = tArr.find(
       (x) => x.verdict === "VERKAUFEN" && new Date(x.analyzed_at).getTime() > entryTime,
     );
@@ -148,7 +197,8 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
     const hasMeasurement = status === "closed" || hasAnyOutcomePrice;
 
-    const { notional, tier } = sizingFromConfidence(a.confidence_score);
+    const notional = rules.notionalPerTranche;
+    const tier = rules.tier;
     const shares = entryPrice > 0 ? notional / entryPrice : 0;
     const returnPct =
       entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
@@ -170,8 +220,11 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       notional,
       shares,
       tier,
+      trancheNum,
+      trancheTotal: rules.maxTranches,
     });
   }
+
 
   // Sort newest first for display
   positions.sort((a, b) => new Date(b.entryAt).getTime() - new Date(a.entryAt).getTime());
@@ -305,10 +358,10 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   // Win/loss histogram bins
   const bins = [
     { min: -Infinity, max: -10, label: "< −10 %", tone: "loss" as const, count: 0 },
-    { min: -10, max: -5, label: "−10 to −5 %", tone: "loss" as const, count: 0 },
-    { min: -5, max: 0, label: "−5 to 0 %", tone: "loss" as const, count: 0 },
-    { min: 0, max: 5, label: "0 to +5 %", tone: "win" as const, count: 0 },
-    { min: 5, max: 10, label: "+5 to +10 %", tone: "win" as const, count: 0 },
+    { min: -10, max: -5, label: "−10 bis −5 %", tone: "loss" as const, count: 0 },
+    { min: -5, max: 0, label: "−5 bis 0 %", tone: "loss" as const, count: 0 },
+    { min: 0, max: 5, label: "0 bis +5 %", tone: "win" as const, count: 0 },
+    { min: 5, max: 10, label: "+5 bis +10 %", tone: "win" as const, count: 0 },
     { min: 10, max: Infinity, label: "> +10 %", tone: "win" as const, count: 0 },
   ];
   for (const p of positions) {

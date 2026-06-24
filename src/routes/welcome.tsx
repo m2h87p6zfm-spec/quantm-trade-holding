@@ -216,10 +216,10 @@ function WelcomePage() {
         {/* footer nav */}
         {step > 1 && step !== 11 && (
           <div className="mt-10 flex items-center justify-between text-xs text-muted-foreground">
-            <button onClick={back} className="hover:text-foreground transition-colors">Back</button>
+            <button onClick={back} className="hover:text-foreground transition-colors">Zurück</button>
             <div className="flex items-center gap-2">
               <Lock className="h-3 w-3" />
-              <span>End-to-end encrypted</span>
+              <span>Ende-zu-Ende verschlüsselt</span>
             </div>
           </div>
         )}
@@ -330,7 +330,7 @@ function ScreenEmail({ value, onChange, onContinue }: { value: string; onChange:
         </Button>
 
         <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <TrustChip icon={<Lock className="h-3 w-3" />} label="End-to-end encrypted" />
+          <TrustChip icon={<Lock className="h-3 w-3" />} label="Ende-zu-Ende verschlüsselt" />
           <TrustChip icon={<Cpu className="h-3 w-3" />} label="Private memory" />
           <TrustChip icon={<ShieldCheck className="h-3 w-3" />} label="Enterprise-grade" />
         </div>
@@ -438,9 +438,9 @@ function ScreenNewsSources({
   const valid = value.length > 0;
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80">News Feed</div>
+      <div className="text-[10px] uppercase tracking-[0.22em] text-primary/80">News-Feed</div>
       <h2 className="mt-3 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-        Which sources should power your news feed?
+        Welche Quellen sollen deinen News-Feed speisen?
       </h2>
       <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-muted-foreground">
         Choose the agencies you trust. You can change this anytime in Settings.

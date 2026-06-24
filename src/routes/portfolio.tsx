@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, TrendingUp, TrendingDown, Wallet, AlertTriangle, Check, Microscope, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,25 @@ import { PortfolioAnalytics } from "@/components/PortfolioAnalytics";
 import { PortfolioCommandCenter } from "@/components/PortfolioCommandCenter";
 import { usePortfolioLimit } from "@/lib/featureGate";
 import { useLang, useT } from "@/lib/i18n";
+
+// Mini-Hook: gibt für ~600ms eine Richtung ("up" | "down") zurück, sobald sich
+// der übergebene Preis ändert. Damit kann eine Kurszelle wie bei Trade
+// Republic kurz grün/rot aufblitzen, ohne dass die Tabelle neu rendert.
+function usePriceFlash(price: number | undefined | null) {
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+  const prevRef = useRef<number | undefined | null>(price);
+  useEffect(() => {
+    const prev = prevRef.current;
+    if (price != null && prev != null && price !== prev) {
+      setFlash(price > prev ? "up" : "down");
+      const t = setTimeout(() => setFlash(null), 650);
+      prevRef.current = price;
+      return () => clearTimeout(t);
+    }
+    prevRef.current = price;
+  }, [price]);
+  return flash;
+}
 
 export const Route = createFileRoute("/portfolio")({
   component: PortfolioPage,
@@ -64,8 +83,9 @@ function PositionRow({
   onRemove: (id: string) => void;
 }) {
   const t = useT();
-  const q = useQuote(pos.symbol, 30_000);
+  const q = useQuote(pos.symbol, 12_000);
   const price = q.data?.c ?? row?.last ?? pos.brokerCurrentPrice;
+  const flash = usePriceFlash(price);
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
@@ -99,7 +119,7 @@ function PositionRow({
       </td>
       <td className="px-3 py-3 text-right tabular-nums">{pos.qty}</td>
       <td className="px-3 py-3 text-right tabular-nums">{pos.entry.toFixed(2)}</td>
-      <td className="px-3 py-3 text-right tabular-nums">{price ? price.toFixed(2) : "…"}</td>
+      <td className={`px-3 py-3 text-right tabular-nums transition-colors duration-500 ${flash === "up" ? "bg-emerald-500/15 text-emerald-300" : flash === "down" ? "bg-rose-500/15 text-rose-300" : ""}`}>{price ? price.toFixed(2) : "…"}</td>
       <td className="px-3 py-3 text-right tabular-nums">{p ? p.value.toFixed(2) : "—"}</td>
       <td
         className={`px-3 py-3 text-right tabular-nums font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}
@@ -158,8 +178,9 @@ function PositionCard({
   onRemove: (id: string) => void;
 }) {
   const t = useT();
-  const q = useQuote(pos.symbol, 30_000);
+  const q = useQuote(pos.symbol, 12_000);
   const price = q.data?.c ?? row?.last ?? pos.brokerCurrentPrice;
+  const flash = usePriceFlash(price);
   const prod = findProduct(pos.symbol);
   const p = price ? pnl(pos, price) : null;
   const up = (p?.abs ?? 0) >= 0;
@@ -190,7 +211,7 @@ function PositionCard({
           <div className="text-xs text-muted-foreground truncate">{prod?.name ?? "—"}</div>
         </div>
         <div className="text-right shrink-0">
-          <div className="tabular-nums text-sm font-medium">{price ? price.toFixed(2) : "…"}</div>
+          <div className={`tabular-nums text-sm font-medium rounded px-1 transition-colors duration-500 ${flash === "up" ? "bg-emerald-500/15 text-emerald-300" : flash === "down" ? "bg-rose-500/15 text-rose-300" : ""}`}>{price ? price.toFixed(2) : "…"}</div>
           <div
             className={`tabular-nums text-xs font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}
           >

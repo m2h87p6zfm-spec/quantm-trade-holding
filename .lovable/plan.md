@@ -1,123 +1,54 @@
+## Was du willst (zusammengefasst)
 
-# QuantumTrack Record V2 — Transparency & Trust System
-
-Heutiges Track-Record-Modell speichert nur den Einstiegspreis und prüft den Kurs nach 30/60/90 Tagen. Es gibt keine echten Verkaufssignale, keine Portfolio-Sicht, keinen Audit-Log und keine Charts pro Pick. Dieser Plan baut das in 4 Stufen aus.
-
----
-
-## Stufe 1 — Datenmodell (Migration)
-
-Neue Tabellen im `public` Schema (anon read, service_role write):
-
-```text
-apex_signals
-  id, analysis_id (FK apex_analyses), signal_type ('BUY'|'SELL'),
-  signal_at, price, reason (text), confidence, target_price, stop_loss,
-  horizon_days, risk_level ('low'|'medium'|'high'),
-  bullish_factors jsonb, bearish_factors jsonb
-  -- ein BUY pro Analyse, optional ein SELL
-
-apex_positions  (virtuelles 1-Aktie-Portfolio = "Modellportfolio")
-  id, analysis_id, ticker, name, sector,
-  status ('open'|'closed'),
-  entry_at, entry_price,
-  exit_at, exit_price, exit_reason,
-  current_price, current_price_at,
-  return_abs, return_pct, holding_days,
-  weight_pct (Allokation im Modellportfolio)
-
-apex_equity_curve
-  date (pk), equity_value, cash, invested,
-  realized_pnl, unrealized_pnl, num_open, num_closed
-
-apex_audit_log
-  id, entity_table, entity_id, action ('insert'|'update'|'close'|'price_update'),
-  actor ('cron'|'service'|'admin'), before jsonb, after jsonb, created_at
-```
-
-Regeln:
-- `apex_analyses` bleibt unverändert (Source of Truth für die Empfehlung)
-- Update- und Delete-Policies bleiben `false` für anon/authenticated; alle Schreibwege laufen über service_role (cron / server functions)
-- Trigger `apex_*_audit` schreibt automatisch in `apex_audit_log` bei jedem UPDATE/DELETE → manipulationssicher
-- GRANTs: `SELECT TO anon, authenticated`, `ALL TO service_role`
-
-## Stufe 2 — Signal- & Portfolio-Engine
-
-`src/lib/track-record.server.ts` wird erweitert:
-
-1. **Buy-Signal-Erzeugung** — beim Picks-Scan, sobald `verdict='KAUF'` & `confidence ≥ Schwelle`: in `apex_signals` einen `BUY`-Eintrag schreiben und in `apex_positions` eine offene Position mit `entry_*` und Begründung anlegen.
-2. **Sell-Trigger** — täglicher Cron prüft jede offene Position:
-   - Kursziel erreicht → SELL (Grund: "Kursziel erreicht")
-   - Stop-Loss unterschritten → SELL (Grund: "Stop-Loss")
-   - 90 Tage erreicht → SELL (Grund: "Zeit-Exit")
-   - Neuer `VERKAUFEN`-Verdict für gleichen Ticker → SELL (Grund: "Verdict gewechselt")
-3. **Preis- & Kennzahlen-Refresh** — `current_price`, `return_pct`, `holding_days` für alle offenen Positionen werden täglich nachgezogen.
-4. **Equity Curve** — Tagessnapshot in `apex_equity_curve` (gleichgewichtetes Modellportfolio, Start 100 000 €).
-5. **Audit** — jede Mutation läuft über eine `recordChange()`-Helper, die in `apex_audit_log` schreibt.
-
-Aufrufweg: `/api/public/hooks/picks-scan` (existiert) ruft am Ende `runPositionManagement()` auf. Neuer Hook `/api/public/hooks/track-record-refresh` für reines Kurs-Update (15 min Cron).
-
-## Stufe 3 — UI
-
-`src/routes/track-record.tsx` wird in Tab-Layout umgebaut (4 Tabs):
-
-1. **Übersicht** — Transparency-Dashboard
-   - KPI-Grid: Total Trades, Wins, Losses, Win-Rate, Ø Rendite, Bester / Schlechtester Trade, Offen / Geschlossen
-   - Equity-Kurve (Recharts LineChart) seit Tag 0
-   - Win/Loss-Verteilung (Histogramm)
-   - Monatliche Performance (BarChart)
-   - Hinweis "Kein Trade kann manuell ausgeblendet werden" + Link zum Audit-Log
-
-2. **Portfolio**
-   - Metriken: Portfoliowert, Total-Return %/€, Win-Rate, # offen/geschlossen, Ø Gewinn, Ø Verlust, Ø Haltedauer
-   - Allokations-Donut (Recharts PieChart) über offene Positionen
-   - Holdings-Tabelle: Aktie · Anteile · Entry · Aktuell · Größe · P/L € & % · Allokation %
-
-3. **Empfehlungen** (Ersetzt die heutige `PicksHistory`-Tabelle)
-   - Filter Offen/Geschlossen/Alle, Sektor, Cap, Suche
-   - Karte je Pick mit Ticker · Buy-Datum · Buy-Preis · Aktueller/Exit-Preis · Kursziel · Confidence · Return · Status-Badge · Risk-Level · Horizon
-   - Klick öffnet **Pick-Detail-Drawer** (siehe unten)
-
-4. **Audit-Log**
-   - Chronologische Liste aller Änderungen, lesbar formatiert ("Position TSLA geschlossen — Grund: Kursziel erreicht — 22.06.2026 14:32")
-   - Tab nur sichtbar für angemeldete Nutzer (öffentliche Verifikation über Read-only-API möglich)
-
-Neue Komponente `src/components/track-record/PickDetailDrawer.tsx`:
-- Preis-Chart (Recharts) mit grünem Buy-Marker und rotem Sell-Marker
-- Begründung Buy / Begründung Sell
-- Bullish Factors ✅ / Bearish Factors ⚠️ als Chip-Listen
-- Performance-Block (Return abs/pct, Haltedauer, vs. S&P 500)
-
-## Stufe 4 — Empfehlungsqualität (`src/lib/composite-engine.ts`)
-
-- Schwelle `MIN_CONFIDENCE_FOR_BUY` von 60 auf 70 anheben
-- Verlangt zusätzlich MTF-Confirmation = `confirmed` **und** OBV- oder CMF-Score > 0.1
-- Output pro Pick neu: `riskLevel`, `horizonDays`, `bullishFactors[]`, `bearishFactors[]`, `targetPrice`, `stopLoss`
-- Diese Felder werden vom Picks-Scan zusammen mit dem `BUY`-Signal in `apex_signals` persistiert und in den Pick-Karten auf Picks-Seite + Track-Record sichtbar gemacht.
+1. **Sprache:** Überall konsistent Deutsch — keine englischen Resttexte mehr.
+2. **Live-Portfolio:** Kurse & Positionswerte tickern wie bei Trade Republic, nicht alle paar Minuten ein harter Refresh.
+3. **Echte Quant-Engine:** Bei sehr hoher Konfidenz darf die Engine eine Aktie mehrfach kaufen und eine Position über Zeit aufbauen (Position-Scaling / Pyramiding) — statt jedem Pick fix 5.000 €.
+4. **Bessere Pick-Auswahl:** Engine soll nicht reflexartig „stark gefallen = kaufen" empfehlen, sondern alle Indikatoren ehrlich durchrechnen (Trend, Momentum, Fundamentals, Volatility, Volume) bevor ein BUY rausgeht.
 
 ---
 
-## Technische Details
+## Wie ich das umsetze
 
-- Backend ausschließlich über `createServerFn` (`src/lib/trackrecord.functions.ts` wird erweitert um `getPortfolio`, `getEquityCurve`, `getPickDetail`, `getAuditLog`) und Cron-Hooks unter `src/routes/api/public/hooks/`.
-- Charts mit bereits installiertem `recharts`.
-- Tabs mit shadcn `Tabs`.
-- Mutations laufen ausschließlich über service_role im Cron — anon/authenticated haben nur `SELECT`.
-- Audit-Trigger ist `SECURITY DEFINER`, schreibt `before`/`after` jsonb-Snapshots → keine stille Manipulation möglich.
-- Equity-Start, Buy-Confidence-Schwelle, Stop-Loss-% in `src/lib/track-record-config.ts` zentral.
+### 1. Deutsch-Sprachaudit (alle Routen + Komponenten)
+- Mit `rg` durch `src/` nach typischen englischen Resten suchen: „Buy/Sell/Hold", „Today/Yesterday", „Loading", „Confidence", „Score", „Updated", „Watchlist actions", „Performance", „Holdings" usw. (sofern sie als UI-Text auftauchen und nicht als Schlüssel).
+- Treffer einer nach dem anderen in deutsche Pendants übersetzen, Fachbegriffe (RSI, MACD, Bollinger, Quant) bleiben.
+- Datums-/Zahlenformate auf `de-DE` prüfen (`toLocaleString('de-DE')`).
 
-## Reihenfolge der Umsetzung
+### 2. Live-Ticker fürs Portfolio
+- Im Portfolio-Hook (vermutlich `src/hooks/usePortfolio*` + `PortfolioCommandCenter`) einen leichten Poller einbauen: alle 10–15 s die aktuellen Kurse für die gehaltenen Symbole nachladen und Positionswerte/PnL clientseitig neu berechnen.
+- Visuelles Feedback: Kurszelle blinkt kurz grün/rot bei Änderung (wie TR).
+- Beim Tab-Wechsel (`document.visibilitychange`) Pausieren, damit wir keine API-Quota verbrennen.
 
-1. Migration (Tabellen + Trigger + GRANTs + Audit)
-2. Server-Engine (Signale, Positionen, Equity, Audit-Helper)
-3. Cron-Hook `track-record-refresh` + Integration in `picks-scan`
-4. Server-Funktionen für Portfolio / Equity / Detail / Audit
-5. UI-Refactor `track-record.tsx` + neuer `PickDetailDrawer`
-6. Composite-Engine Quality-Filter + neue Pick-Felder
-7. Backfill-Migration: für bestehende `apex_analyses` mit Verdict=KAUF rückwirkend `apex_signals(BUY)` und offene `apex_positions` anlegen, damit die Historie nicht leer wirkt
+### 3. Position-Scaling in der Quant-Engine
+- Konfidenz-Buckets bekommen Multi-Tranche-Logik:
+  - 70–79 % → 1 Tranche (3.000 €)
+  - 80–89 % → bis zu 2 Tranchen (insg. 5.000 €), zweite nur wenn Signal mind. 5 Tage stabil bleibt
+  - 90 %+ → bis zu 3 Tranchen (insg. 8.000 €), gestaffelt über mehrere Signaltage
+- Track-Record & Audit-Log zeigen jede Tranche einzeln mit Datum und Konfidenz zum Kaufzeitpunkt.
+- Neue Spalte „Tranchen / Ø-Einstand" im Portfolio.
 
-## Außerhalb des Scope (separat ansprechen)
+### 4. Strengere Pick-Logik (kein Dip-Reflex mehr)
+In `src/lib/quant.ts` / `composite-engine.ts`:
+- Ein BUY darf nur rausgehen wenn **mehrere** Indikator-Familien gleichzeitig grün sind:
+  - Trend (SMA50 > SMA200 oder klar drehend)
+  - Momentum (RSI 40–65, MACD-Histogram drehend positiv) — **nicht** RSI < 30 alleine
+  - Volume-Bestätigung (Volumen über 20-Tage-Schnitt)
+  - Volatility-Filter (ATR nicht extrem)
+  - Fundamentals-Check soweit verfügbar (Gewinnrevisionen, kein massiver Sektor-Downgrade)
+- „Aktie ist stark gefallen" alleine ergibt höchstens noch ein WATCH, kein BUY.
+- Konfidenz-Score nach den schon eingebauten strengen Statistik-Penalties (t-Stat, Alignment) — Picks mit Konfidenz < 70 werden in der UI als SKIP markiert.
 
-- Echtes Nutzer-Portfolio (jeder User hat eigene Positionen) — heute & im Plan: ein gemeinsames Modellportfolio, das alle sehen. Wenn pro-User gewünscht, ist das ein eigener Aufsatz auf `user_portfolio_positions`.
-- Steuer-/Gebühren-Modell.
-- Backtest-Vergleich vor Tag 0 (Plan dokumentiert nur Live-Empfehlungen — Selbstauflage).
+---
+
+## Reihenfolge der Auslieferung
+
+Ich baue das in zwei Pässen, damit du nach dem ersten Pass schon was Brauchbares siehst:
+
+**Pass A (jetzt):** Sprachaudit + Live-Ticker fürs Portfolio.
+**Pass B (direkt danach):** Position-Scaling + strengere Pick-Logik in der Engine, inkl. neuer Spalten im Track-Record.
+
+---
+
+## Eine Rückfrage bevor ich loslege
+
+Beim Position-Scaling: soll eine **bestehende** Position auch nachgekauft werden, wenn die Aktie inzwischen gestiegen ist und das Signal weiter stark bleibt (klassisches Pyramiding wie bei Trendfolgern), oder nur nachkaufen, wenn der Einstand günstiger wird (Averaging Down)? Pyramiding ist statistisch der Quant-Standard, Averaging Down fühlt sich für Privatanleger oft natürlicher an.

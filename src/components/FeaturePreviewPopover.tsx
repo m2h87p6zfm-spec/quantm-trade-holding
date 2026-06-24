@@ -118,7 +118,7 @@ const MockIndicators = () => (
 
 const MockNewsAI = () => (
   <Card>
-    <div className="text-[10px] font-bold mb-1.5">News-Sentiment (AI)</div>
+    <div className="text-[10px] font-bold mb-1.5">News-Sentiment (KI)</div>
     {[
       { h: "Fed dovish surprise", t: "bull" as const, s: "+0,72" },
       { h: "TSMC capex cut", t: "bear" as const, s: "−0,41" },
