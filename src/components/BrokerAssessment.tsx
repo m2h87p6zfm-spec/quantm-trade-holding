@@ -177,7 +177,7 @@ export function BrokerAssessment({ symbol, name, indicators, signal, currency = 
               </div>
             </div>
             <div className="leading-tight">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Confidence</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Konfidenz</div>
               <div className="font-mono text-base font-semibold">{signal.confidence.toFixed(0)}%</div>
             </div>
           </div>
