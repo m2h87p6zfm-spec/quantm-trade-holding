@@ -118,7 +118,7 @@ function PositionRow({
       </td>
       <td className="px-3 py-3 text-right tabular-nums">{pos.qty}</td>
       <td className="px-3 py-3 text-right tabular-nums">{pos.entry.toFixed(2)}</td>
-      <td className="px-3 py-3 text-right tabular-nums">{price ? price.toFixed(2) : "…"}</td>
+      <td className={`px-3 py-3 text-right tabular-nums transition-colors duration-500 ${flash === "up" ? "bg-emerald-500/15 text-emerald-300" : flash === "down" ? "bg-rose-500/15 text-rose-300" : ""}`}>{price ? price.toFixed(2) : "…"}</td>
       <td className="px-3 py-3 text-right tabular-nums">{p ? p.value.toFixed(2) : "—"}</td>
       <td
         className={`px-3 py-3 text-right tabular-nums font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}
