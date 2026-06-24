@@ -86,7 +86,7 @@ export function QuickPanel() {
         {open && (
           <div className="w-72 rounded-xl border border-border bg-card/95 p-3 shadow-2xl backdrop-blur-xl animate-fade-up">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Actions</span>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Schnellzugriff</span>
               <button onClick={() => setOpen(false)} className="rounded p-1 hover:bg-accent/40"><X className="h-3 w-3" /></button>
             </div>
             <div className="space-y-1.5">
