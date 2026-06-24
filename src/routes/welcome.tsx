@@ -330,7 +330,7 @@ function ScreenEmail({ value, onChange, onContinue }: { value: string; onChange:
         </Button>
 
         <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <TrustChip icon={<Lock className="h-3 w-3" />} label="End-to-end encrypted" />
+          <TrustChip icon={<Lock className="h-3 w-3" />} label="Ende-zu-Ende verschlüsselt" />
           <TrustChip icon={<Cpu className="h-3 w-3" />} label="Private memory" />
           <TrustChip icon={<ShieldCheck className="h-3 w-3" />} label="Enterprise-grade" />
         </div>
