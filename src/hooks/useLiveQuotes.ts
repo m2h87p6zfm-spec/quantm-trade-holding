@@ -11,7 +11,10 @@ import { getAccessTokenForUrl, authedFetch } from "@/lib/authed-fetch";
 export type LiveQuotes = Record<string, Quote>;
 export type RealtimeTier = "premium" | "free" | "unknown";
 
-const POLL_FREE_MS = 30_000;
+// 12 s Polling für Free-Tier — schnell genug, dass sich Kurse "tickern"
+// (wie bei Trade Republic), aber moderat genug, um die Finnhub-Quota
+// nicht zu sprengen. Beim Tab-Wechsel pausiert der Poller komplett.
+const POLL_FREE_MS = 12_000;
 
 export function useLiveQuotes(symbols: string[], enabled = true): {
   quotes: LiveQuotes;
