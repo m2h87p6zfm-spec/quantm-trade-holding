@@ -211,7 +211,7 @@ function PositionCard({
           <div className="text-xs text-muted-foreground truncate">{prod?.name ?? "—"}</div>
         </div>
         <div className="text-right shrink-0">
-          <div className="tabular-nums text-sm font-medium">{price ? price.toFixed(2) : "…"}</div>
+          <div className={`tabular-nums text-sm font-medium rounded px-1 transition-colors duration-500 ${flash === "up" ? "bg-emerald-500/15 text-emerald-300" : flash === "down" ? "bg-rose-500/15 text-rose-300" : ""}`}>{price ? price.toFixed(2) : "…"}</div>
           <div
             className={`tabular-nums text-xs font-semibold ${up ? "text-emerald-400" : "text-rose-400"}`}
           >
