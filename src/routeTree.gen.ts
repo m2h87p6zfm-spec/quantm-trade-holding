@@ -16,7 +16,6 @@ import { Route as TrackRecordRouteImport } from './routes/track-record'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignaleRouteImport } from './routes/signale'
-import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ScreenerRouteImport } from './routes/screener'
 import { Route as PreiseRouteImport } from './routes/preise'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
@@ -38,7 +37,6 @@ import { Route as GlobalIntelRouteImport } from './routes/global-intel'
 import { Route as ExplainTradeRouteImport } from './routes/explain-trade'
 import { Route as EinstellungenRouteImport } from './routes/einstellungen'
 import { Route as DatenschutzRouteImport } from './routes/datenschutz'
-import { Route as CorrelationsRouteImport } from './routes/correlations'
 import { Route as BacktestRouteImport } from './routes/backtest'
 import { Route as AnalyseRouteImport } from './routes/analyse'
 import { Route as AlertsRouteImport } from './routes/alerts'
@@ -110,11 +108,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SignaleRoute = SignaleRouteImport.update({
   id: '/signale',
   path: '/signale',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SectorsRoute = SectorsRouteImport.update({
-  id: '/sectors',
-  path: '/sectors',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ScreenerRoute = ScreenerRouteImport.update({
@@ -220,11 +213,6 @@ const EinstellungenRoute = EinstellungenRouteImport.update({
 const DatenschutzRoute = DatenschutzRouteImport.update({
   id: '/datenschutz',
   path: '/datenschutz',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CorrelationsRoute = CorrelationsRouteImport.update({
-  id: '/correlations',
-  path: '/correlations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BacktestRoute = BacktestRouteImport.update({
@@ -430,7 +418,6 @@ export interface FileRoutesByFullPath {
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
-  '/correlations': typeof CorrelationsRoute
   '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
@@ -452,7 +439,6 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/screener': typeof ScreenerRoute
-  '/sectors': typeof SectorsRoute
   '/signale': typeof SignaleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
@@ -499,7 +485,6 @@ export interface FileRoutesByTo {
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
-  '/correlations': typeof CorrelationsRoute
   '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
@@ -521,7 +506,6 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/screener': typeof ScreenerRoute
-  '/sectors': typeof SectorsRoute
   '/signale': typeof SignaleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
@@ -569,7 +553,6 @@ export interface FileRoutesById {
   '/alerts': typeof AlertsRoute
   '/analyse': typeof AnalyseRoute
   '/backtest': typeof BacktestRoute
-  '/correlations': typeof CorrelationsRoute
   '/datenschutz': typeof DatenschutzRoute
   '/einstellungen': typeof EinstellungenRoute
   '/explain-trade': typeof ExplainTradeRoute
@@ -591,7 +574,6 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/preise': typeof PreiseRoute
   '/screener': typeof ScreenerRoute
-  '/sectors': typeof SectorsRoute
   '/signale': typeof SignaleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
@@ -640,7 +622,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analyse'
     | '/backtest'
-    | '/correlations'
     | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
@@ -662,7 +643,6 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/screener'
-    | '/sectors'
     | '/signale'
     | '/sitemap.xml'
     | '/status'
@@ -709,7 +689,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analyse'
     | '/backtest'
-    | '/correlations'
     | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
@@ -731,7 +710,6 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/screener'
-    | '/sectors'
     | '/signale'
     | '/sitemap.xml'
     | '/status'
@@ -778,7 +756,6 @@ export interface FileRouteTypes {
     | '/alerts'
     | '/analyse'
     | '/backtest'
-    | '/correlations'
     | '/datenschutz'
     | '/einstellungen'
     | '/explain-trade'
@@ -800,7 +777,6 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/preise'
     | '/screener'
-    | '/sectors'
     | '/signale'
     | '/sitemap.xml'
     | '/status'
@@ -848,7 +824,6 @@ export interface RootRouteChildren {
   AlertsRoute: typeof AlertsRoute
   AnalyseRoute: typeof AnalyseRoute
   BacktestRoute: typeof BacktestRoute
-  CorrelationsRoute: typeof CorrelationsRoute
   DatenschutzRoute: typeof DatenschutzRoute
   EinstellungenRoute: typeof EinstellungenRoute
   ExplainTradeRoute: typeof ExplainTradeRoute
@@ -870,7 +845,6 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   PreiseRoute: typeof PreiseRoute
   ScreenerRoute: typeof ScreenerRoute
-  SectorsRoute: typeof SectorsRoute
   SignaleRoute: typeof SignaleRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
@@ -958,13 +932,6 @@ declare module '@tanstack/react-router' {
       path: '/signale'
       fullPath: '/signale'
       preLoaderRoute: typeof SignaleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sectors': {
-      id: '/sectors'
-      path: '/sectors'
-      fullPath: '/sectors'
-      preLoaderRoute: typeof SectorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/screener': {
@@ -1112,13 +1079,6 @@ declare module '@tanstack/react-router' {
       path: '/datenschutz'
       fullPath: '/datenschutz'
       preLoaderRoute: typeof DatenschutzRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/correlations': {
-      id: '/correlations'
-      path: '/correlations'
-      fullPath: '/correlations'
-      preLoaderRoute: typeof CorrelationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/backtest': {
@@ -1392,7 +1352,6 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsRoute: AlertsRoute,
   AnalyseRoute: AnalyseRoute,
   BacktestRoute: BacktestRoute,
-  CorrelationsRoute: CorrelationsRoute,
   DatenschutzRoute: DatenschutzRoute,
   EinstellungenRoute: EinstellungenRoute,
   ExplainTradeRoute: ExplainTradeRoute,
@@ -1414,7 +1373,6 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   PreiseRoute: PreiseRoute,
   ScreenerRoute: ScreenerRoute,
-  SectorsRoute: SectorsRoute,
   SignaleRoute: SignaleRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
