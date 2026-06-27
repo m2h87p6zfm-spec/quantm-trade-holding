@@ -327,6 +327,34 @@ function PortfolioPage() {
     }
   }
 
+  // Auto-Refresh: alle 30s im Hintergrund Kerzen-/Cockpit-Caches invalidieren,
+  // damit P&L, Signale und Analytics von selbst frisch bleiben (Trade Republic-Stil).
+  // Pausiert wenn der Tab im Hintergrund ist, um Quota zu sparen.
+  useEffect(() => {
+    if (allSymbols.length === 0) return;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const tick = () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      void refetchLive();
+      void queryClient.invalidateQueries({
+        predicate: (q) => {
+          const k = q.queryKey?.[0];
+          return k === "quote" || k === "quotes-batch" || k === "candles" || k === "cockpit" || k === "cockpit-row";
+        },
+        refetchType: "active",
+      });
+      setLastRefresh(Date.now());
+    };
+    timer = setInterval(tick, 30_000);
+    const onVis = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      if (timer) clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [allSymbols.length, refetchLive, queryClient]);
+
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-6">
       {/* Header */}
