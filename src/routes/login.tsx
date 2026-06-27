@@ -104,9 +104,30 @@ function LoginPage() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [remember, setRemember] = useState<boolean>(() => getRememberMe());
 
+  const popRedirect = (): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const v = sessionStorage.getItem("apex.postLoginRedirect");
+      sessionStorage.removeItem("apex.postLoginRedirect");
+      if (v && v.startsWith("/") && !v.startsWith("//")) return v;
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+  const goAfterLogin = () => {
+    const target = popRedirect();
+    if (target) {
+      window.location.replace(target);
+      return;
+    }
+    navigate({ to: "/", replace: true });
+  };
+
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/", replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) goAfterLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   const signIn = async () => {
     setBusy(true);
