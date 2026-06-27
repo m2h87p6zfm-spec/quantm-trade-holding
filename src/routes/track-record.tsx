@@ -21,6 +21,7 @@ import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
 import { formatPrice, currencyForTicker } from "@/lib/instrument-currency";
+import { useQuote } from "@/lib/useMarketData";
 
 
 function KpiTile({
