@@ -2,8 +2,8 @@ import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Radar, Flame, Compass, Network } from "lucide-react";
 import { HeatmapPage } from "./heatmap";
-import { SectorRotationPage } from "./sectors";
-import { CorrelationsPage } from "./correlations";
+import { SectorRotationPage } from "@/components/pages/SectorRotationPage";
+import { CorrelationsPage } from "@/components/pages/CorrelationsPage";
 
 type Tab = "heatmap" | "sectors" | "correlations";
 
