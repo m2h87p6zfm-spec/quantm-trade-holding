@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { fetchCandles } from "@/lib/finnhub";
@@ -6,8 +6,6 @@ import { TrendingUp, TrendingDown, Layers, Compass, Activity, Shield, Zap, Arrow
 import { ExplainAiButton } from "@/components/ExplainAiButton";
 import { PageExplainer } from "@/components/PageExplainer";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-export const Route = createFileRoute("/sectors")({ component: SectorRotationPage });
 
 // SPDR Sektor-ETFs + SPY-Benchmark
 const SECTORS: { symbol: string; name: string; type: "cyclical" | "defensive" | "rate" | "growth" }[] = [

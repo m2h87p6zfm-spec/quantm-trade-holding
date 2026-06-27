@@ -1,12 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { fetchCandles } from "@/lib/finnhub";
 import { useSettings } from "@/lib/settings";
 import { Network, AlertTriangle, Shuffle } from "lucide-react";
 import { ExplainAiButton } from "@/components/ExplainAiButton";
-
-export const Route = createFileRoute("/correlations")({ component: CorrelationsPage });
 
 type Window = 30 | 60 | 90;
 
