@@ -121,8 +121,9 @@ function LoginPage() {
       window.location.replace(target);
       return;
     }
-    goAfterLogin();
+    navigate({ to: "/" });
   };
+
 
   useEffect(() => {
     if (!loading && user) goAfterLogin();
