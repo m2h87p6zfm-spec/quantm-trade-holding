@@ -603,7 +603,70 @@ function MonthlyReturnsChart({ derived }: { derived: DerivedTrackRecord }) {
   );
 }
 
+/* -------------------- Live Holding Row (uses live quote) -------------------- */
+
+function LiveHoldingRow({
+  a,
+  onSelect,
+}: {
+  a: { position: DerivedPosition; pct: number };
+  onSelect: (p: DerivedPosition) => void;
+}) {
+  const p = a.position;
+  const isOpen = p.status === "open";
+  // Live quote only for open positions; closed ones keep the exit price.
+  const q = useQuote(p.analysis.ticker, isOpen ? 30_000 : 0);
+  const livePrice = isOpen && q.data?.c ? q.data.c : p.currentPrice;
+  const returnPct = p.entryPrice > 0 ? ((livePrice - p.entryPrice) / p.entryPrice) * 100 : 0;
+  const returnAbs = p.shares * (livePrice - p.entryPrice);
+  const ccy = currencyForTicker(p.analysis.ticker);
+  const tierTone =
+    p.tier === "high"
+      ? "bg-bull/15 text-bull border-bull/30"
+      : p.tier === "medium"
+        ? "bg-primary/15 text-primary border-primary/30"
+        : "bg-muted/40 text-muted-foreground border-border/60";
+
+  return (
+    <tr
+      onClick={() => onSelect(p)}
+      className="hover:bg-background/40 transition cursor-pointer"
+    >
+      <td className="px-4 py-3">
+        <div className="font-medium">{p.analysis.name}</div>
+        <div className="text-[11px] font-mono text-muted-foreground">
+          {p.analysis.ticker} · {ccy.code}
+        </div>
+        <div className={`mt-1 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${tierTone}`}>
+          {TIER_LABEL[p.tier]} · {fmtMoney(p.notional)} €
+        </div>
+      </td>
+      <td className="px-4 py-3 text-right font-mono tabular-nums text-muted-foreground">
+        {p.shares.toFixed(2)}
+      </td>
+      <td className="px-4 py-3 text-right font-mono tabular-nums">
+        {formatPrice(p.entryPrice, p.analysis.ticker)}
+      </td>
+      <td className="px-4 py-3 text-right font-mono tabular-nums">
+        {formatPrice(livePrice, p.analysis.ticker)}
+        {isOpen && q.data?.c ? (
+          <div className="text-[10px] font-normal text-muted-foreground">live</div>
+        ) : null}
+      </td>
+      <td className={`px-4 py-3 text-right font-mono tabular-nums font-semibold ${returnPct >= 0 ? "text-bull" : "text-bear"}`}>
+        {returnPct >= 0 ? "+" : ""}{returnPct.toFixed(2)} %
+        <div className="text-[10px] font-normal opacity-80">
+          {returnAbs >= 0 ? "+" : ""}{fmtMoney(returnAbs)} €&nbsp;
+          <span className="text-muted-foreground">seit Kauf</span>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-right font-mono tabular-nums">{a.pct.toFixed(1)} %</td>
+    </tr>
+  );
+}
+
 /* -------------------- Portfolio Overview -------------------- */
+
 
 function PortfolioOverview({
   derived,
