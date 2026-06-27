@@ -154,22 +154,36 @@ function ApexLoadingScreen() {
   );
 }
 
-/** Routes that must remain reachable without a session. */
-const PUBLIC_PATHS = new Set<string>([
-  "/login",
-  "/passwort-vergessen",
-  "/passwort-zuruecksetzen",
-  "/checkout/return",
-  "/auth/confirm",
-  "/impressum",
-  "/agb",
-  "/datenschutz",
-]);
+/**
+ * Routes that REQUIRE a signed-in session.
+ * Everything else stays publicly browsable so visitors can explore
+ * Quantm Picks, Track Record, Methodology, Preise, etc. before signing up.
+ * Exclusive / personal features (Portfolio, Alerts, Konto, Analyse-Agent …)
+ * remain gated and redirect to /login.
+ */
+const PROTECTED_PREFIXES: string[] = [
+  "/konto",
+  "/einstellungen",
+  "/handelsprofil",
+  "/portfolio",
+  "/alerts",
+  "/analyse",
+  "/agent",
+  "/explain-trade",
+  "/ai-learning",
+  "/war-room",
+  "/backtest",
+  "/admin",
+  "/onboarding",
+];
+
+function isProtected(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
 
 function isPublic(pathname: string): boolean {
-  if (PUBLIC_PATHS.has(pathname)) return true;
   if (pathname.startsWith("/api/")) return true;
-  return false;
+  return !isProtected(pathname);
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
