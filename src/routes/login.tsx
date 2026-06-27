@@ -121,7 +121,7 @@ function LoginPage() {
       window.location.replace(target);
       return;
     }
-    navigate({ to: "/", replace: true });
+    goAfterLogin();
   };
 
   useEffect(() => {
@@ -159,7 +159,7 @@ function LoginPage() {
         // signInWithPassword hat die Session bereits persistiert. Kein
         // redundantes setSession/refreshSession – das schlägt auf Safari fehl.
         acceptSession(data.session);
-        navigate({ to: "/", replace: true });
+        goAfterLogin();
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -186,7 +186,7 @@ function LoginPage() {
       }
       if (data.session) {
         acceptSession(data.session);
-        navigate({ to: "/", replace: true });
+        goAfterLogin();
       } else {
         setPendingEmail(normalizedEmail);
         toast.success(
@@ -246,7 +246,7 @@ function LoginPage() {
         return;
       }
       acceptSession(verified);
-      navigate({ to: "/", replace: true });
+      goAfterLogin();
     } catch {
       toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
     } finally {
