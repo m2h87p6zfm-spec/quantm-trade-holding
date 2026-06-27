@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { FirstRunTour } from "@/components/FirstRunTour";
 import { ApexLogo } from "@/components/ApexLogo";
+import { SoftPaywall } from "@/components/SoftPaywall";
 
 /**
  * Brand splash — silver Q + wordmark on a deep, vignetted canvas.
