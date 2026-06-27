@@ -104,9 +104,30 @@ function LoginPage() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [remember, setRemember] = useState<boolean>(() => getRememberMe());
 
+  const popRedirect = (): string | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const v = sessionStorage.getItem("apex.postLoginRedirect");
+      sessionStorage.removeItem("apex.postLoginRedirect");
+      if (v && v.startsWith("/") && !v.startsWith("//")) return v;
+    } catch {
+      /* ignore */
+    }
+    return null;
+  };
+  const goAfterLogin = () => {
+    const target = popRedirect();
+    if (target) {
+      window.location.replace(target);
+      return;
+    }
+    goAfterLogin();
+  };
+
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/", replace: true });
-  }, [user, loading, navigate]);
+    if (!loading && user) goAfterLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
 
   const signIn = async () => {
     setBusy(true);
@@ -138,7 +159,7 @@ function LoginPage() {
         // signInWithPassword hat die Session bereits persistiert. Kein
         // redundantes setSession/refreshSession – das schlägt auf Safari fehl.
         acceptSession(data.session);
-        navigate({ to: "/", replace: true });
+        goAfterLogin();
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -165,7 +186,7 @@ function LoginPage() {
       }
       if (data.session) {
         acceptSession(data.session);
-        navigate({ to: "/", replace: true });
+        goAfterLogin();
       } else {
         setPendingEmail(normalizedEmail);
         toast.success(
@@ -225,7 +246,7 @@ function LoginPage() {
         return;
       }
       acceptSession(verified);
-      navigate({ to: "/", replace: true });
+      goAfterLogin();
     } catch {
       toast.error(t(provider === "google" ? "login.googleErr" : "login.appleErr"));
     } finally {

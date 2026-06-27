@@ -195,7 +195,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   // Enforce a minimum splash duration so the brand mark is legible on first paint.
   const [minSplashElapsed, setMinSplashElapsed] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setMinSplashElapsed(true), 2000);
+    const t = setTimeout(() => setMinSplashElapsed(true), 600);
     return () => clearTimeout(t);
   }, []);
 
@@ -244,6 +244,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
+    // Merke die ursprünglich angeforderte URL, damit der Login danach
+    // dorthin zurückleitet statt immer auf "/".
+    if (typeof window !== "undefined") {
+      try {
+        const full = `${pathname}${window.location.search}${window.location.hash}`;
+        if (pathname !== "/login") sessionStorage.setItem("apex.postLoginRedirect", full);
+      } catch {
+        /* ignore */
+      }
+    }
     return <Navigate to="/login" replace />;
   }
 
