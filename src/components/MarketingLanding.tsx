@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Brain, Bell, UserCheck, Check, Shield, BarChart3, Sparkles, Quote, Sun, Moon } from "lucide-react";
 import { ApexLogo } from "@/components/ApexLogo";
 import { AuthNavButton } from "@/components/AuthNavButton";
+import { LiveTrustStrip } from "@/components/LiveTrustStrip";
 import { useSettings } from "@/lib/settings";
 
 /**
@@ -119,20 +120,14 @@ export function MarketingLanding() {
         </div>
       </section>
 
-      {/* Social proof: stats + testimonials */}
+      {/* Social proof: LIVE stats from the actual track record */}
       <section className="mx-auto max-w-5xl px-4 py-16">
-        <div className="grid gap-6 sm:grid-cols-3 text-center">
-          {[
-            { number: "1.200+", label: "Aktive Nutzer" },
-            { number: "92 %", label: "würden Quantm weiterempfehlen" },
-            { number: "7 Tage", label: "kostenlos testen" },
-          ].map((s) => (
-            <div key={s.label}>
-              <div className="text-3xl sm:text-4xl font-bold tracking-tight text-primary">{s.number}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{s.label}</div>
-            </div>
-          ))}
+        <div className="mb-6 text-center">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Echte Zahlen — keine Marketing-Versprechen</div>
+          <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">Diese Werte werden live aus unserer Datenbank gezogen.</h2>
         </div>
+        <LiveTrustStrip />
+
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {[

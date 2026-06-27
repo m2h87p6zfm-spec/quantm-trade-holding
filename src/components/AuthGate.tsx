@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTradingProfile } from "@/hooks/use-trading-profile";
 import { FirstRunTour } from "@/components/FirstRunTour";
 import { ApexLogo } from "@/components/ApexLogo";
+import { SoftPaywall } from "@/components/SoftPaywall";
 
 /**
  * Brand splash — silver Q + wordmark on a deep, vignetted canvas.
@@ -186,6 +187,53 @@ function isPublic(pathname: string): boolean {
   return !isProtected(pathname);
 }
 
+type PaywallCopy = {
+  title: string;
+  description: string;
+  bulletPoints?: string[];
+};
+
+function paywallCopyForPath(pathname: string): PaywallCopy {
+  if (pathname.startsWith("/portfolio")) {
+    return {
+      title: "Dein persönliches Portfolio",
+      description:
+        "Hier siehst du Live-P&L, Risk-Score und KI-Signale für deine Positionen — sobald du angemeldet bist. Alle öffentlichen Empfehlungen und der komplette Track Record bleiben frei zugänglich.",
+      bulletPoints: [
+        "Live-Kurse alle 12 Sekunden mit grün/rot Flash",
+        "Automatische Risk-Score-Berechnung",
+        "Konflikt-Warnungen wenn die Engine umschwenkt",
+      ],
+    };
+  }
+  if (pathname.startsWith("/alerts")) {
+    return {
+      title: "Preis- & Signal-Alarme",
+      description:
+        "Lass dich benachrichtigen, wenn ein Pick deine Wunsch-Schwelle erreicht oder die Engine die Empfehlung dreht.",
+      bulletPoints: ["Push-Benachrichtigung am Handy", "Frei wählbare Schwellen", "Sofort kündbar"],
+    };
+  }
+  if (pathname.startsWith("/analyse") || pathname.startsWith("/agent") || pathname.startsWith("/explain-trade")) {
+    return {
+      title: "Persönliche Analyse-Tools",
+      description:
+        "Die tiefen Analyse-Tools (KI-Agent, Trade-Erklärungen, Backtests) brauchen ein Konto, weil sie deine Watchlist und dein Risk-Profil berücksichtigen.",
+    };
+  }
+  if (pathname.startsWith("/konto") || pathname.startsWith("/einstellungen") || pathname.startsWith("/handelsprofil")) {
+    return {
+      title: "Konto-Einstellungen",
+      description: "Bitte melde dich an, um deine Kontodaten und Präferenzen zu sehen.",
+    };
+  }
+  return {
+    title: "Anmelden, um diesen Bereich zu nutzen",
+    description:
+      "Dieser Bereich ist persönlich. Du kannst alle Empfehlungen, den Track Record und die Methodik aber komplett ohne Account einsehen.",
+  };
+}
+
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useTradingProfile();
@@ -254,7 +302,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
         /* ignore */
       }
     }
-    return <Navigate to="/login" replace />;
+    // Soft-Paywall statt harter Redirect: Onboarding-Pfad bleibt eine
+    // echte Login-Weiterleitung (sonst zirkulär), alles andere bekommt
+    // einen einladenden CTA mit Kontext, was hier sichtbar wäre.
+    if (pathname === "/onboarding") {
+      return <Navigate to="/login" replace />;
+    }
+    return <SoftPaywall {...paywallCopyForPath(pathname)} />;
   }
 
   if (profileLoading) {
