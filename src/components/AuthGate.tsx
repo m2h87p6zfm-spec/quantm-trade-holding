@@ -255,7 +255,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
         /* ignore */
       }
     }
-    return <Navigate to="/login" replace />;
+    // Soft-Paywall statt harter Redirect: Onboarding-Pfad bleibt eine
+    // echte Login-Weiterleitung (sonst zirkulär), alles andere bekommt
+    // einen einladenden CTA mit Kontext, was hier sichtbar wäre.
+    if (pathname === "/onboarding") {
+      return <Navigate to="/login" replace />;
+    }
+    return <SoftPaywall {...paywallCopyForPath(pathname)} />;
   }
 
   if (profileLoading) {
