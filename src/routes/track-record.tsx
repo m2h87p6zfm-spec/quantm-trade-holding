@@ -55,6 +55,7 @@ import {
 } from "@/components/track-record/PickDetailDrawer";
 import {
   derivePortfolio,
+  applyLiveOverlay,
   PORTFOLIO_STARTING_EQUITY,
   PORTFOLIO_MIN_CONFIDENCE,
   TIER_LABEL,
