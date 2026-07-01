@@ -148,7 +148,23 @@ function PageShell({ children }: { children: React.ReactNode }) {
 }
 
 function Content({ data }: { data: TrackRecordPayload }) {
-  const derived = useMemo(() => derivePortfolio(data), [data]);
+  const baseDerived = useMemo(() => derivePortfolio(data), [data]);
+  const openTickers = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          baseDerived.positions.filter((p) => p.status === "open").map((p) => p.analysis.ticker),
+        ),
+      ),
+    [baseDerived.positions],
+  );
+  const { quotes } = useLiveQuotes(openTickers, openTickers.length > 0);
+  const derived = useMemo(() => {
+    if (openTickers.length === 0) return baseDerived;
+    const prices: Record<string, number | undefined> = {};
+    for (const t of openTickers) prices[t] = quotes[t]?.c;
+    return applyLiveOverlay(baseDerived, prices);
+  }, [baseDerived, quotes, openTickers]);
 
   const evaluated = data.analyses.filter((a) => a.outcome?.is_correct != null);
   const earliestEvaluated = evaluated
