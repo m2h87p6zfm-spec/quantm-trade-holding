@@ -22,6 +22,7 @@ import { AuthNavButton } from "@/components/AuthNavButton";
 import { MiniSpark } from "@/components/MiniSpark";
 import { formatPrice, currencyForTicker } from "@/lib/instrument-currency";
 import { useQuote } from "@/lib/useMarketData";
+import { useLiveQuotes } from "@/hooks/useLiveQuotes";
 
 
 function KpiTile({
