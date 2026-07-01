@@ -384,3 +384,61 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
 export const PORTFOLIO_STARTING_EQUITY = STARTING_EQUITY;
 export const PORTFOLIO_MIN_CONFIDENCE = MIN_CONFIDENCE_TO_INVEST;
+
+/**
+ * Overlay a set of live prices (ticker → last trade) onto the derived portfolio.
+ * Recomputes currentPrice/returnPct/returnAbs for OPEN positions and rolls the
+ * change up into unrealizedPnl / totalEquity / totalReturn* / best-worst so
+ * that the hero KPIs, allocation %, and per-row P&L all use the SAME numbers.
+ * Closed positions are untouched (exit price is the truth of record).
+ */
+export function applyLiveOverlay(
+  derived: DerivedTrackRecord,
+  livePrices: Record<string, number | undefined>,
+): DerivedTrackRecord {
+  let changed = false;
+  const positions = derived.positions.map((p) => {
+    if (p.status !== "open") return p;
+    const live = livePrices[p.analysis.ticker];
+    if (!live || !Number.isFinite(live) || live <= 0) return p;
+    if (Math.abs(live - p.currentPrice) < 1e-6) return p;
+    changed = true;
+    const returnPct = p.entryPrice > 0 ? ((live - p.entryPrice) / p.entryPrice) * 100 : 0;
+    const returnAbs = p.shares * (live - p.entryPrice);
+    return {
+      ...p,
+      currentPrice: live,
+      returnPct,
+      returnAbs,
+      hasMeasurement: true, // live price counts as a measurement for aggregates
+    };
+  });
+  if (!changed) return derived;
+
+  const closed = positions.filter((p) => p.status === "closed");
+  const open = positions.filter((p) => p.status === "open");
+  const realizedPnl = closed.reduce((s, p) => s + p.returnAbs, 0);
+  const unrealizedPnl = open.reduce((s, p) => s + p.returnAbs, 0);
+  const totalEquity = STARTING_EQUITY + realizedPnl + unrealizedPnl;
+  const totalReturnAbs = totalEquity - STARTING_EQUITY;
+  const totalReturnPct = (totalReturnAbs / STARTING_EQUITY) * 100;
+
+  const measured = positions.filter((p) => p.hasMeasurement);
+  const best = [...measured].sort((a, b) => b.returnPct - a.returnPct)[0];
+  const worst = [...measured].sort((a, b) => a.returnPct - b.returnPct)[0];
+
+  const metrics: PortfolioMetrics = {
+    ...derived.metrics,
+    realizedPnl,
+    unrealizedPnl,
+    totalEquity,
+    totalReturnAbs,
+    totalReturnPct,
+    bestTradePct: best?.returnPct ?? derived.metrics.bestTradePct,
+    worstTradePct: worst?.returnPct ?? derived.metrics.worstTradePct,
+    bestTradeTicker: best?.analysis.ticker ?? derived.metrics.bestTradeTicker,
+    worstTradeTicker: worst?.analysis.ticker ?? derived.metrics.worstTradeTicker,
+  };
+
+  return { ...derived, positions, metrics };
+}
