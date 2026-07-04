@@ -498,20 +498,52 @@ export function applyLiveOverlay(
   livePrices: Record<string, number | undefined>,
 ): DerivedTrackRecord {
   let changed = false;
+  const nowIso = new Date().toISOString();
   const positions = derived.positions.map((p) => {
     if (p.status !== "open") return p;
     const live = livePrices[p.analysis.ticker];
     if (!live || !Number.isFinite(live) || live <= 0) return p;
-    if (Math.abs(live - p.currentPrice) < 1e-6) return p;
-    changed = true;
     const returnPct = p.entryPrice > 0 ? ((live - p.entryPrice) / p.entryPrice) * 100 : 0;
     const returnAbs = p.shares * (live - p.entryPrice);
+    // Auto-Verkauf anhand des Live-Kurses: Stop-Loss / Take-Profit greifen sofort.
+    if (returnPct <= AUTO_STOP_LOSS_PCT) {
+      changed = true;
+      return {
+        ...p,
+        status: "closed" as const,
+        exitAt: nowIso,
+        exitPrice: live,
+        exitKind: "stop_loss" as ExitKind,
+        exitReason: `Auto-Stop-Loss live ausgelöst bei ${returnPct.toFixed(2)} %.`,
+        currentPrice: live,
+        returnPct,
+        returnAbs,
+        hasMeasurement: true,
+      };
+    }
+    if (returnPct >= AUTO_TAKE_PROFIT_PCT) {
+      changed = true;
+      return {
+        ...p,
+        status: "closed" as const,
+        exitAt: nowIso,
+        exitPrice: live,
+        exitKind: "take_profit" as ExitKind,
+        exitReason: `Auto-Take-Profit live ausgelöst bei +${returnPct.toFixed(2)} %.`,
+        currentPrice: live,
+        returnPct,
+        returnAbs,
+        hasMeasurement: true,
+      };
+    }
+    if (Math.abs(live - p.currentPrice) < 1e-6) return p;
+    changed = true;
     return {
       ...p,
       currentPrice: live,
       returnPct,
       returnAbs,
-      hasMeasurement: true, // live price counts as a measurement for aggregates
+      hasMeasurement: true,
     };
   });
   if (!changed) return derived;
@@ -520,9 +552,17 @@ export function applyLiveOverlay(
   const open = positions.filter((p) => p.status === "open");
   const realizedPnl = closed.reduce((s, p) => s + p.returnAbs, 0);
   const unrealizedPnl = open.reduce((s, p) => s + p.returnAbs, 0);
-  const totalEquity = STARTING_EQUITY + realizedPnl + unrealizedPnl;
+  // Cash neu ableiten: alle Käufe kosten notional, alle Verkäufe geben shares*exitPrice zurück.
+  const totalBuys = positions.reduce((s, p) => s + p.notional, 0);
+  const totalSells = closed.reduce((s, p) => s + p.shares * (p.exitPrice ?? p.currentPrice), 0);
+  const cash = STARTING_EQUITY - totalBuys + totalSells;
+  const investedValue = open.reduce((s, p) => s + p.shares * p.currentPrice, 0);
+  const totalEquity = cash + investedValue;
   const totalReturnAbs = totalEquity - STARTING_EQUITY;
   const totalReturnPct = (totalReturnAbs / STARTING_EQUITY) * 100;
+  const numAutoClosed = closed.filter(
+    (p) => p.exitKind === "stop_loss" || p.exitKind === "take_profit" || p.exitKind === "time_exit",
+  ).length;
 
   const measured = positions.filter((p) => p.hasMeasurement);
   const best = [...measured].sort((a, b) => b.returnPct - a.returnPct)[0];
@@ -532,9 +572,14 @@ export function applyLiveOverlay(
     ...derived.metrics,
     realizedPnl,
     unrealizedPnl,
+    cash,
+    investedValue,
     totalEquity,
     totalReturnAbs,
     totalReturnPct,
+    numOpen: open.length,
+    numClosed: closed.length,
+    numAutoClosed,
     bestTradePct: best?.returnPct ?? derived.metrics.bestTradePct,
     worstTradePct: worst?.returnPct ?? derived.metrics.worstTradePct,
     bestTradeTicker: best?.analysis.ticker ?? derived.metrics.bestTradeTicker,
@@ -543,3 +588,4 @@ export function applyLiveOverlay(
 
   return { ...derived, positions, metrics };
 }
+
