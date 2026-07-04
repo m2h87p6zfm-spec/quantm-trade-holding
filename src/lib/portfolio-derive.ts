@@ -3,7 +3,8 @@
 // allocation) without any new DB writes. The apex_* tables are anon-read +
 // service-role-write (RLS-locked), which is the auditability guarantee.
 import type { TrackRecordPayload } from "@/lib/trackrecord.functions";
-import type { DerivedPosition, ConvictionTier } from "@/components/track-record/PickDetailDrawer";
+import type { DerivedPosition, ConvictionTier, ExitKind } from "@/components/track-record/PickDetailDrawer";
+
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
@@ -19,6 +20,15 @@ const MIN_CONFIDENCE_TO_INVEST = 70;
 // Tranche braucht mindestens N Tage Abstand zur vorherigen UND eine
 // weiterhin starke Konfidenz.
 const TRANCHE_MIN_GAP_DAYS = 5;
+
+// Automatisches Risiko-Management für offene Positionen. Genau wie ein
+// echter Quant-Fonds hat das Modellportfolio harte Exit-Regeln, damit
+// nicht endlos gekauft und nie verkauft wird:
+//   Stop-Loss    → −8 % seit Kauf  → sofortiger Verkauf
+//   Take-Profit  → +25 % seit Kauf → Gewinn mitnehmen
+//   Zeit-Exit    → 90 Handelstage  → Kapital freimachen für neue Signale
+const AUTO_STOP_LOSS_PCT = -8;
+const AUTO_TAKE_PROFIT_PCT = 25;
 
 // Erste Tranche pro Konfidenz-Stufe und Anzahl maximaler Tranchen.
 function trancheRulesFor(confidence: number): {
@@ -38,12 +48,27 @@ export const TIER_LABEL: Record<ConvictionTier, string> = {
   base: "Basis-Konfidenz",
 };
 
+export const EXIT_KIND_LABEL: Record<ExitKind, string> = {
+  signal: "Engine-Verkauf",
+  stop_loss: "Stop-Loss (Auto)",
+  take_profit: "Take-Profit (Auto)",
+  time_exit: "Zeit-Exit 90 Tage",
+};
+
 export type PortfolioMetrics = {
   totalEquity: number;
   totalReturnPct: number;
   totalReturnAbs: number;
   realizedPnl: number;
   unrealizedPnl: number;
+  /** Freies Cash im Modellportfolio (Start 100.000 € minus offene Käufe plus geschlossene Erlöse). */
+  cash: number;
+  /** Aktuell in offenen Positionen gebundenes Kapital zu Marktpreisen. */
+  investedValue: number;
+  /** Wie viele Käufe die Engine wegen Cash-Limit nicht durchführen konnte. */
+  skippedForCash: number;
+  /** Wie viele Positionen automatisch geschlossen wurden (Stop-Loss / Take-Profit / Zeit-Exit). */
+  numAutoClosed: number;
   numOpen: number;
   numClosed: number;
   winRate: number;
@@ -57,6 +82,7 @@ export type PortfolioMetrics = {
   bestTradeTicker: string | null;
   worstTradeTicker: string | null;
 };
+
 
 export type EquityPoint = { date: string; equity: number; iso: string };
 
@@ -109,11 +135,15 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   const positions: DerivedPosition[] = [];
   const now = Date.now();
 
+  // Cash-Accounting: das Modellportfolio startet mit 100.000 € freiem Cash.
+  // Jeder Kauf bindet `notional`, jeder Verkauf gibt `shares * exitPrice`
+  // wieder frei. So sieht der Nutzer sofort, warum irgendwann keine neuen
+  // Käufe mehr entstehen (Cash-Limit) und wie sich das Portfolio-Volumen
+  // durch Gewinne/Verluste realer verändert.
+  let cash = STARTING_EQUITY;
+  let skippedForCash = 0;
+
   // Per-Ticker-Counter für Tranchen-Vergabe (Pyramiding).
-  // Wir laufen alle Analysen in chronologischer Reihenfolge durch und vergeben
-  // Tranche 1/2/3 nur, wenn (a) max-Tranchen der Konfidenz nicht überschritten,
-  // (b) mindestens TRANCHE_MIN_GAP_DAYS seit letzter Tranche vergangen sind und
-  // (c) Konfidenz weiter mindestens auf dem Tier der ersten Tranche liegt.
   const trancheState = new Map<
     string,
     { lastEntryTime: number; tranches: number; firstTier: ConvictionTier }
@@ -130,8 +160,6 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     const entryTime = new Date(a.analyzed_at).getTime();
     const rules = trancheRulesFor(a.confidence_score);
 
-    // Bestehende offene Tranchen für diesen Ticker? (alle KAUF-Analysen vor
-    // diesem Zeitpunkt, die noch nicht durch ein VERKAUFEN geschlossen wurden)
     const tArr = byTicker.get(a.ticker) ?? [];
     const lastSellBefore = tArr
       .filter((x) => x.verdict === "VERKAUFEN" && new Date(x.analyzed_at).getTime() < entryTime)
@@ -139,15 +167,20 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     const lastSellTime = lastSellBefore ? new Date(lastSellBefore.analyzed_at).getTime() : 0;
 
     const st = trancheState.get(a.ticker);
-    // Wenn zwischenzeitlich ein VERKAUFEN lag, Tranchen-Counter resetten.
     const effective = st && st.lastEntryTime > lastSellTime ? st : undefined;
 
     let trancheNum = 1;
     if (effective) {
       const gapDays = (entryTime - effective.lastEntryTime) / 86_400_000;
-      if (effective.tranches >= rules.maxTranches) continue;        // Cap erreicht
-      if (gapDays < TRANCHE_MIN_GAP_DAYS) continue;                  // Zu schnell
+      if (effective.tranches >= rules.maxTranches) continue;
+      if (gapDays < TRANCHE_MIN_GAP_DAYS) continue;
       trancheNum = effective.tranches + 1;
+    }
+
+    // Cash-Check: wenn nicht genug freies Cash, kann die Engine nicht kaufen.
+    if (cash < rules.notionalPerTranche) {
+      skippedForCash++;
+      continue;
     }
 
     trancheState.set(a.ticker, {
@@ -158,6 +191,12 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
 
     const entryAt = a.analyzed_at;
     const entryPrice = a.price_at_analysis;
+    const notional = rules.notionalPerTranche;
+    const tier = rules.tier;
+    const shares = entryPrice > 0 ? notional / entryPrice : 0;
+
+    // Kauf abwickeln → Cash reduzieren
+    cash -= notional;
 
     // VERKAUFEN nach diesem Eintritt schließt die Tranche.
     const sellAnalysis = tArr.find(
@@ -176,30 +215,71 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     let exitAt: string | null = null;
     let exitPrice: number | null = null;
     let exitReason: string | null = null;
+    let exitKind: ExitKind | null = null;
     let holdingDays = ageDays;
     let currentPrice = latestKnownPrice(a).price;
 
+    // 1) Explizites Engine-VERKAUFEN hat höchste Priorität.
     if (sellAnalysis) {
       status = "closed";
       exitAt = sellAnalysis.analyzed_at;
       exitPrice = sellAnalysis.price_at_analysis;
+      exitKind = "signal";
       exitReason = `Engine-Verdict wechselte am ${new Date(exitAt).toLocaleDateString("de-DE")} auf VERKAUFEN.`;
       holdingDays = Math.max(0, Math.floor((new Date(exitAt).getTime() - entryTime) / 86_400_000));
       currentPrice = exitPrice;
-    } else if (has90d && ageDays >= 90) {
-      status = "closed";
-      exitAt = new Date(entryTime + 90 * 86_400_000).toISOString();
-      exitPrice = Number(a.outcome!.price_after_90d);
-      exitReason = "Zeit-Exit: 90-Tage-Auswertungsfenster abgeschlossen.";
-      holdingDays = 90;
-      currentPrice = exitPrice;
+    } else {
+      // 2) Automatische Risiko-Regeln anhand der bisher gemessenen Outcome-Preise.
+      const outcomePoints: Array<{ days: number; price: number }> = [];
+      const o = a.outcome;
+      if (o?.price_after_7d != null) outcomePoints.push({ days: 7, price: Number(o.price_after_7d) });
+      if (o?.price_after_30d != null) outcomePoints.push({ days: 30, price: Number(o.price_after_30d) });
+      if (o?.price_after_60d != null) outcomePoints.push({ days: 60, price: Number(o.price_after_60d) });
+      if (o?.price_after_90d != null) outcomePoints.push({ days: 90, price: Number(o.price_after_90d) });
+
+      for (const pt of outcomePoints) {
+        if (ageDays < pt.days) break;
+        const ret = entryPrice > 0 ? ((pt.price - entryPrice) / entryPrice) * 100 : 0;
+        if (ret <= AUTO_STOP_LOSS_PCT) {
+          status = "closed";
+          exitKind = "stop_loss";
+          exitAt = new Date(entryTime + pt.days * 86_400_000).toISOString();
+          exitPrice = pt.price;
+          exitReason = `Auto-Stop-Loss ausgelöst nach ${pt.days} Tagen bei ${ret.toFixed(2)} %.`;
+          holdingDays = pt.days;
+          currentPrice = pt.price;
+          break;
+        }
+        if (ret >= AUTO_TAKE_PROFIT_PCT) {
+          status = "closed";
+          exitKind = "take_profit";
+          exitAt = new Date(entryTime + pt.days * 86_400_000).toISOString();
+          exitPrice = pt.price;
+          exitReason = `Auto-Take-Profit ausgelöst nach ${pt.days} Tagen bei +${ret.toFixed(2)} %.`;
+          holdingDays = pt.days;
+          currentPrice = pt.price;
+          break;
+        }
+      }
+
+      // 3) Zeit-Exit nach 90 Tagen, wenn nichts anderes vorher gegriffen hat.
+      if (status === "open" && has90d && ageDays >= 90) {
+        status = "closed";
+        exitKind = "time_exit";
+        exitAt = new Date(entryTime + 90 * 86_400_000).toISOString();
+        exitPrice = Number(a.outcome!.price_after_90d);
+        exitReason = "Zeit-Exit: 90-Tage-Auswertungsfenster abgeschlossen.";
+        holdingDays = 90;
+        currentPrice = exitPrice;
+      }
+    }
+
+    // Verkauf abwickeln → Cash wieder gutschreiben
+    if (status === "closed" && exitPrice != null) {
+      cash += shares * exitPrice;
     }
 
     const hasMeasurement = status === "closed" || hasAnyOutcomePrice;
-
-    const notional = rules.notionalPerTranche;
-    const tier = rules.tier;
-    const shares = entryPrice > 0 ? notional / entryPrice : 0;
     const returnPct =
       entryPrice > 0 ? ((currentPrice - entryPrice) / entryPrice) * 100 : 0;
     const returnAbs = shares * (currentPrice - entryPrice);
@@ -212,6 +292,7 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
       exitAt,
       exitPrice,
       exitReason,
+      exitKind,
       currentPrice,
       returnPct,
       returnAbs,
@@ -236,12 +317,15 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
   const losses = closed.filter((p) => p.returnPct < 0);
   const realizedPnl = closed.reduce((s, p) => s + p.returnAbs, 0);
   const unrealizedPnl = open.reduce((s, p) => s + p.returnAbs, 0);
-  const totalEquity = STARTING_EQUITY + realizedPnl + unrealizedPnl;
+  // Marktwert der offenen Positionen (Cash-Basis + Kursbewegung)
+  const investedValue = open.reduce((s, p) => s + p.shares * p.currentPrice, 0);
+  const totalEquity = cash + investedValue;
   const totalReturnAbs = totalEquity - STARTING_EQUITY;
   const totalReturnPct = (totalReturnAbs / STARTING_EQUITY) * 100;
+  const numAutoClosed = closed.filter(
+    (p) => p.exitKind === "stop_loss" || p.exitKind === "take_profit" || p.exitKind === "time_exit",
+  ).length;
 
-  // Best/worst trade: only count positions with a real measurement, otherwise
-  // brand-new open picks (returnPct = 0 fallback) would pollute the leaderboard.
   const measured = positions.filter((p) => p.hasMeasurement);
   const best = [...measured].sort((a, b) => b.returnPct - a.returnPct)[0];
   const worst = [...measured].sort((a, b) => a.returnPct - b.returnPct)[0];
@@ -252,6 +336,10 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     totalReturnAbs,
     realizedPnl,
     unrealizedPnl,
+    cash,
+    investedValue,
+    skippedForCash,
+    numAutoClosed,
     numOpen: open.length,
     numClosed: closed.length,
     winRate: closed.length ? (wins.length / closed.length) * 100 : 0,
@@ -267,6 +355,7 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     bestTradeTicker: best?.analysis.ticker ?? null,
     worstTradeTicker: worst?.analysis.ticker ?? null,
   };
+
 
   // Equity curve: walk through closed positions chronologically by exit date.
   // Each closed trade adds its € P&L to equity at exit time. Plus today's unrealized.
@@ -334,7 +423,19 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     stamp(60, o.price_after_60d, o.return_60d);
     stamp(90, o.price_after_90d, o.return_90d);
   }
+  // Auto-Verkäufe (Stop-Loss / Take-Profit / Zeit-Exit) im Audit-Log sichtbar machen.
+  for (const p of positions) {
+    if (p.status !== "closed" || !p.exitKind || p.exitKind === "signal" || !p.exitAt) continue;
+    audit.push({
+      id: `${p.analysis.id}-auto-${p.exitKind}`,
+      ts: p.exitAt,
+      action: "close",
+      ticker: p.analysis.ticker,
+      description: `${EXIT_KIND_LABEL[p.exitKind]} · ${p.analysis.ticker} verkauft zu ${(p.exitPrice ?? 0).toFixed(2)} — ${p.returnPct >= 0 ? "+" : ""}${p.returnPct.toFixed(2)} %`,
+    });
+  }
   audit.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+
 
   // Monthly returns (sum of trade returns by exit/entry month)
   const monthBuckets = new Map<string, number>();
@@ -397,20 +498,52 @@ export function applyLiveOverlay(
   livePrices: Record<string, number | undefined>,
 ): DerivedTrackRecord {
   let changed = false;
+  const nowIso = new Date().toISOString();
   const positions = derived.positions.map((p) => {
     if (p.status !== "open") return p;
     const live = livePrices[p.analysis.ticker];
     if (!live || !Number.isFinite(live) || live <= 0) return p;
-    if (Math.abs(live - p.currentPrice) < 1e-6) return p;
-    changed = true;
     const returnPct = p.entryPrice > 0 ? ((live - p.entryPrice) / p.entryPrice) * 100 : 0;
     const returnAbs = p.shares * (live - p.entryPrice);
+    // Auto-Verkauf anhand des Live-Kurses: Stop-Loss / Take-Profit greifen sofort.
+    if (returnPct <= AUTO_STOP_LOSS_PCT) {
+      changed = true;
+      return {
+        ...p,
+        status: "closed" as const,
+        exitAt: nowIso,
+        exitPrice: live,
+        exitKind: "stop_loss" as ExitKind,
+        exitReason: `Auto-Stop-Loss live ausgelöst bei ${returnPct.toFixed(2)} %.`,
+        currentPrice: live,
+        returnPct,
+        returnAbs,
+        hasMeasurement: true,
+      };
+    }
+    if (returnPct >= AUTO_TAKE_PROFIT_PCT) {
+      changed = true;
+      return {
+        ...p,
+        status: "closed" as const,
+        exitAt: nowIso,
+        exitPrice: live,
+        exitKind: "take_profit" as ExitKind,
+        exitReason: `Auto-Take-Profit live ausgelöst bei +${returnPct.toFixed(2)} %.`,
+        currentPrice: live,
+        returnPct,
+        returnAbs,
+        hasMeasurement: true,
+      };
+    }
+    if (Math.abs(live - p.currentPrice) < 1e-6) return p;
+    changed = true;
     return {
       ...p,
       currentPrice: live,
       returnPct,
       returnAbs,
-      hasMeasurement: true, // live price counts as a measurement for aggregates
+      hasMeasurement: true,
     };
   });
   if (!changed) return derived;
@@ -419,9 +552,17 @@ export function applyLiveOverlay(
   const open = positions.filter((p) => p.status === "open");
   const realizedPnl = closed.reduce((s, p) => s + p.returnAbs, 0);
   const unrealizedPnl = open.reduce((s, p) => s + p.returnAbs, 0);
-  const totalEquity = STARTING_EQUITY + realizedPnl + unrealizedPnl;
+  // Cash neu ableiten: alle Käufe kosten notional, alle Verkäufe geben shares*exitPrice zurück.
+  const totalBuys = positions.reduce((s, p) => s + p.notional, 0);
+  const totalSells = closed.reduce((s, p) => s + p.shares * (p.exitPrice ?? p.currentPrice), 0);
+  const cash = STARTING_EQUITY - totalBuys + totalSells;
+  const investedValue = open.reduce((s, p) => s + p.shares * p.currentPrice, 0);
+  const totalEquity = cash + investedValue;
   const totalReturnAbs = totalEquity - STARTING_EQUITY;
   const totalReturnPct = (totalReturnAbs / STARTING_EQUITY) * 100;
+  const numAutoClosed = closed.filter(
+    (p) => p.exitKind === "stop_loss" || p.exitKind === "take_profit" || p.exitKind === "time_exit",
+  ).length;
 
   const measured = positions.filter((p) => p.hasMeasurement);
   const best = [...measured].sort((a, b) => b.returnPct - a.returnPct)[0];
@@ -431,9 +572,14 @@ export function applyLiveOverlay(
     ...derived.metrics,
     realizedPnl,
     unrealizedPnl,
+    cash,
+    investedValue,
     totalEquity,
     totalReturnAbs,
     totalReturnPct,
+    numOpen: open.length,
+    numClosed: closed.length,
+    numAutoClosed,
     bestTradePct: best?.returnPct ?? derived.metrics.bestTradePct,
     worstTradePct: worst?.returnPct ?? derived.metrics.worstTradePct,
     bestTradeTicker: best?.analysis.ticker ?? derived.metrics.bestTradeTicker,
@@ -442,3 +588,4 @@ export function applyLiveOverlay(
 
   return { ...derived, positions, metrics };
 }
+

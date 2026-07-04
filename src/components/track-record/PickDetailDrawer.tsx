@@ -23,6 +23,8 @@ type Analysis = TrackRecordPayload["analyses"][number];
 
 export type ConvictionTier = "high" | "medium" | "base";
 
+export type ExitKind = "signal" | "stop_loss" | "take_profit" | "time_exit";
+
 export type DerivedPosition = {
   analysis: Analysis;
   status: "open" | "closed";
@@ -31,6 +33,8 @@ export type DerivedPosition = {
   exitAt: string | null;
   exitPrice: number | null;
   exitReason: string | null;
+  /** Grund der Schließung, wenn geschlossen. null = noch offen. */
+  exitKind: ExitKind | null;
   currentPrice: number;
   returnPct: number;
   returnAbs: number;
@@ -49,6 +53,7 @@ export type DerivedPosition = {
   /** Wie viele Tranchen insgesamt für diesen Ticker offen waren als diese gekauft wurde. */
   trancheTotal: number;
 };
+
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("de-DE", {

@@ -785,6 +785,16 @@ function PortfolioOverview({
           <KpiTile value={String(m.numOpen)} label="Offene Positionen" />
           <KpiTile value={String(m.numClosed)} label="Geschlossene" />
           <KpiTile
+            value={`${fmtMoney(m.cash)} €`}
+            label="Freies Cash"
+            tone={m.cash < 3_000 ? "negative" : "neutral"}
+          />
+          <KpiTile
+            value={String(m.numAutoClosed)}
+            label="Auto-Verkäufe"
+            tone={m.numAutoClosed > 0 ? "positive" : "neutral"}
+          />
+          <KpiTile
             value={`${m.avgGainPct >= 0 ? "+" : ""}${m.avgGainPct.toFixed(2)} %`}
             label="Ø Gewinn"
             tone="positive"
@@ -806,8 +816,14 @@ function PortfolioOverview({
             {m.unrealizedPnl >= 0 ? "+" : ""}
             {fmtMoney(m.unrealizedPnl)} €
           </span>
+          {m.skippedForCash > 0 && (
+            <>
+              {" "}· <span className="text-amber-500">{m.skippedForCash} Käufe wegen Cash-Limit übersprungen</span>
+            </>
+          )}
         </p>
       </section>
+
 
       {/* Strategy explainer: why & how we size positions */}
       <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
@@ -1327,7 +1343,15 @@ function PicksHistory({
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${status.tone}`}>
                       {status.label}
                     </span>
+                    {p.status === "closed" && p.exitKind && p.exitKind !== "signal" && (
+                      <div className="mt-1 text-[10px] font-medium text-muted-foreground">
+                        {p.exitKind === "stop_loss" ? "🛑 Stop-Loss (Auto)"
+                          : p.exitKind === "take_profit" ? "🎯 Take-Profit (Auto)"
+                          : "⏱ Zeit-Exit"}
+                      </div>
+                    )}
                   </td>
+
                   <td className="px-4 py-3 text-right text-muted-foreground">
                     <ArrowRight className="inline h-3.5 w-3.5" />
                   </td>
