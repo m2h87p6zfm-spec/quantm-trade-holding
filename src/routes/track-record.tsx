@@ -785,6 +785,16 @@ function PortfolioOverview({
           <KpiTile value={String(m.numOpen)} label="Offene Positionen" />
           <KpiTile value={String(m.numClosed)} label="Geschlossene" />
           <KpiTile
+            value={`${fmtMoney(m.cash)} €`}
+            label="Freies Cash"
+            tone={m.cash < 3_000 ? "negative" : "neutral"}
+          />
+          <KpiTile
+            value={String(m.numAutoClosed)}
+            label="Auto-Verkäufe"
+            tone={m.numAutoClosed > 0 ? "positive" : "neutral"}
+          />
+          <KpiTile
             value={`${m.avgGainPct >= 0 ? "+" : ""}${m.avgGainPct.toFixed(2)} %`}
             label="Ø Gewinn"
             tone="positive"
@@ -806,8 +816,14 @@ function PortfolioOverview({
             {m.unrealizedPnl >= 0 ? "+" : ""}
             {fmtMoney(m.unrealizedPnl)} €
           </span>
+          {m.skippedForCash > 0 && (
+            <>
+              {" "}· <span className="text-amber-500">{m.skippedForCash} Käufe wegen Cash-Limit übersprungen</span>
+            </>
+          )}
         </p>
       </section>
+
 
       {/* Strategy explainer: why & how we size positions */}
       <section className="rounded-2xl border border-border/60 bg-card/40 p-5 sm:p-6">
