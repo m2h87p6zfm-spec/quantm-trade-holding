@@ -423,7 +423,19 @@ export function derivePortfolio(payload: TrackRecordPayload): DerivedTrackRecord
     stamp(60, o.price_after_60d, o.return_60d);
     stamp(90, o.price_after_90d, o.return_90d);
   }
+  // Auto-Verkäufe (Stop-Loss / Take-Profit / Zeit-Exit) im Audit-Log sichtbar machen.
+  for (const p of positions) {
+    if (p.status !== "closed" || !p.exitKind || p.exitKind === "signal" || !p.exitAt) continue;
+    audit.push({
+      id: `${p.analysis.id}-auto-${p.exitKind}`,
+      ts: p.exitAt,
+      action: "close",
+      ticker: p.analysis.ticker,
+      description: `${EXIT_KIND_LABEL[p.exitKind]} · ${p.analysis.ticker} verkauft zu ${(p.exitPrice ?? 0).toFixed(2)} — ${p.returnPct >= 0 ? "+" : ""}${p.returnPct.toFixed(2)} %`,
+    });
+  }
   audit.sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+
 
   // Monthly returns (sum of trade returns by exit/entry month)
   const monthBuckets = new Map<string, number>();
