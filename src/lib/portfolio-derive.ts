@@ -21,6 +21,15 @@ const MIN_CONFIDENCE_TO_INVEST = 70;
 // weiterhin starke Konfidenz.
 const TRANCHE_MIN_GAP_DAYS = 5;
 
+// Automatisches Risiko-Management für offene Positionen. Genau wie ein
+// echter Quant-Fonds hat das Modellportfolio harte Exit-Regeln, damit
+// nicht endlos gekauft und nie verkauft wird:
+//   Stop-Loss    → −8 % seit Kauf  → sofortiger Verkauf
+//   Take-Profit  → +25 % seit Kauf → Gewinn mitnehmen
+//   Zeit-Exit    → 90 Handelstage  → Kapital freimachen für neue Signale
+const AUTO_STOP_LOSS_PCT = -8;
+const AUTO_TAKE_PROFIT_PCT = 25;
+
 // Erste Tranche pro Konfidenz-Stufe und Anzahl maximaler Tranchen.
 function trancheRulesFor(confidence: number): {
   notionalPerTranche: number;
@@ -39,12 +48,27 @@ export const TIER_LABEL: Record<ConvictionTier, string> = {
   base: "Basis-Konfidenz",
 };
 
+export const EXIT_KIND_LABEL: Record<ExitKind, string> = {
+  signal: "Engine-Verkauf",
+  stop_loss: "Stop-Loss (Auto)",
+  take_profit: "Take-Profit (Auto)",
+  time_exit: "Zeit-Exit 90 Tage",
+};
+
 export type PortfolioMetrics = {
   totalEquity: number;
   totalReturnPct: number;
   totalReturnAbs: number;
   realizedPnl: number;
   unrealizedPnl: number;
+  /** Freies Cash im Modellportfolio (Start 100.000 € minus offene Käufe plus geschlossene Erlöse). */
+  cash: number;
+  /** Aktuell in offenen Positionen gebundenes Kapital zu Marktpreisen. */
+  investedValue: number;
+  /** Wie viele Käufe die Engine wegen Cash-Limit nicht durchführen konnte. */
+  skippedForCash: number;
+  /** Wie viele Positionen automatisch geschlossen wurden (Stop-Loss / Take-Profit / Zeit-Exit). */
+  numAutoClosed: number;
   numOpen: number;
   numClosed: number;
   winRate: number;
@@ -58,6 +82,7 @@ export type PortfolioMetrics = {
   bestTradeTicker: string | null;
   worstTradeTicker: string | null;
 };
+
 
 export type EquityPoint = { date: string; equity: number; iso: string };
 
