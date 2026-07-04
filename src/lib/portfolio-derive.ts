@@ -3,7 +3,8 @@
 // allocation) without any new DB writes. The apex_* tables are anon-read +
 // service-role-write (RLS-locked), which is the auditability guarantee.
 import type { TrackRecordPayload } from "@/lib/trackrecord.functions";
-import type { DerivedPosition, ConvictionTier } from "@/components/track-record/PickDetailDrawer";
+import type { DerivedPosition, ConvictionTier, ExitKind } from "@/components/track-record/PickDetailDrawer";
+
 
 type Analysis = TrackRecordPayload["analyses"][number];
 
