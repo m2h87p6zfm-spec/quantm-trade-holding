@@ -1343,7 +1343,15 @@ function PicksHistory({
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${status.tone}`}>
                       {status.label}
                     </span>
+                    {p.status === "closed" && p.exitKind && p.exitKind !== "signal" && (
+                      <div className="mt-1 text-[10px] font-medium text-muted-foreground">
+                        {p.exitKind === "stop_loss" ? "🛑 Stop-Loss (Auto)"
+                          : p.exitKind === "take_profit" ? "🎯 Take-Profit (Auto)"
+                          : "⏱ Zeit-Exit"}
+                      </div>
+                    )}
                   </td>
+
                   <td className="px-4 py-3 text-right text-muted-foreground">
                     <ArrowRight className="inline h-3.5 w-3.5" />
                   </td>
